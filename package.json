@@ -3,26 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "packageManager": "pnpm@10.28.2",
-  "author": "hackycy <hackycy@outlook.com>",
-  "license": "MIT",
-  "homepage": "https://github.com/hackycy-collection/dragcraft#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/hackycy-collection/dragcraft.git"
-  },
-  "bugs": "https://github.com/hackycy-collection/dragcraft/issues",
-  "keywords": [],
   "sideEffects": false,
-  "exports": {
-    ".": "./dist/index.mjs",
-    "./package.json": "./package.json"
-  },
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.mts",
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "nr -r build",
     "dev": "nr -r dev",
@@ -48,6 +29,7 @@
     "tinyexec": "catalog:testing",
     "tsdown": "catalog:cli",
     "tsx": "catalog:cli",
+    "turbo": "catalog:cli",
     "typescript": "catalog:cli",
     "vite": "catalog:cli",
     "vitest": "catalog:testing",

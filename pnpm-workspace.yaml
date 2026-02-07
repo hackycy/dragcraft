@@ -1,13 +1,10 @@
-catalogMode: prefer
-ignoreWorkspaceRootCheck: true
-shellEmulator: true
-trustPolicy: no-downgrade
-
 packages:
   - playground
   - docs
   - packages/*
   - examples/*
+
+catalogMode: prefer
 
 catalogs:
   cli:
@@ -20,6 +17,7 @@ catalogs:
     simple-git-hooks: ^2.13.1
     tsdown: ^0.16.0
     tsx: ^4.20.6
+    turbo: ^2.8.3
     typescript: ^5.9.3
     vite: ^7.2.1
   inlined:
@@ -32,6 +30,12 @@ catalogs:
   types:
     '@types/node': ^24.10.0
 
+ignoreWorkspaceRootCheck: true
+
 onlyBuiltDependencies:
   - esbuild
   - simple-git-hooks
+
+shellEmulator: true
+
+trustPolicy: no-downgrade
