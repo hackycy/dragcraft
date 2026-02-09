@@ -9,12 +9,10 @@
     "dev": "nr -r dev",
     "lint": "eslint --cache .",
     "prepublishOnly": "nr build",
-    "release:tag": "bumpp -r",
-    "release": "bumpp -r && pnpm publish -r --access public",
+    "release": "bumpp -r",
     "test": "nr -r test",
     "typecheck": "tsc",
-    "prepare": "simple-git-hooks",
-    "open:packages": "npx open-packages-on-npm"
+    "prepare": "simple-git-hooks"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",

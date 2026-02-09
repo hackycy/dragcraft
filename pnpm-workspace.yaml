@@ -22,12 +22,17 @@ catalogs:
     vite: ^7.2.1
   inlined:
     '@antfu/utils': ^9.3.0
+  shared:
+    '@vue/reactivity': ^3.5.27
+    lodash-es: ^4.17.23
+    vue: ^3.5.27
   testing:
     tinyexec: ^1.0.2
     vitest: ^4.0.7
     vitest-package-exports: ^0.1.1
     yaml: ^2.8.1
   types:
+    '@types/lodash-es': ^4.17.12
     '@types/node': ^24.10.0
 
 ignoreWorkspaceRootCheck: true
