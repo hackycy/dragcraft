@@ -5,8 +5,8 @@
   "packageManager": "pnpm@10.28.2",
   "sideEffects": false,
   "scripts": {
-    "build": "nr -r build",
-    "dev": "nr -r dev",
+    "build": "turbo build",
+    "dev": "turbo dev",
     "lint": "eslint --cache .",
     "prepublishOnly": "nr build",
     "release": "bumpp -r",
