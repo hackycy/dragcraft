@@ -12,12 +12,12 @@ Core 是引擎核心，负责状态容器、命令管线、注册中心、历史
 - 可回溯性：任何变更都可回放、撤销/重做。
 - 注册中心优先：widgets/configs/renderers 通过 registry 统一注册与检索。
 - 扩展友好：副作用集中在插件与事件监听中，核心保持可预测。
-- 配置抽象化：页面配置、主题配置等全局配置均通过统一的 Config Schema 管理，由使用者决定配置分类。
+- 配置类型化：全局配置通过 type 区分，引擎不预设任何配置类型，完全由使用者定义。
 
 ### 子系统职责
-- engine: 组合根，串联子系统并提供统一 API，暴露配置分类管理接口。
+- engine: 组合根，串联子系统并提供统一 API。
 - state: 响应式状态仓库，支持快照/替换。
-- registry: widget/config/renderer 注册中心，支持配置分类注册。
+- registry: widget/config/renderer 注册中心。
 - schema: widget 与 config 的 schema 定义。
 - commands: 原子状态变更的唯一入口。
 - history: 撤销/重做快照记录。
@@ -27,11 +27,11 @@ Core 是引擎核心，负责状态容器、命令管线、注册中心、历史
 - types: schema 与 definition 的共享类型。
 
 ### 状态模型
-- GlobalConfigSchema[]: 全局配置集合，支持分类管理。
-  - 每个配置包含 `category` 字段标识配置类别（如 'page'、'theme'、'layout' 等）。
-  - 配置分类完全由使用者通过 registry 定义，引擎不预设固定分类。
-  - 示例：页面配置 `{ category: 'page', type: 'basic-page', props: { title: '', backgroundColor: '#fff' } }`
-  - 示例：主题配置 `{ category: 'theme', type: 'dark-theme', props: { primaryColor: '#000' } }`
+- GlobalConfigSchema[]: 全局配置集合。
+  - 每个配置通过 `type` 字段标识配置类型（如 'page-config'、'theme-config'、'layout-config' 等）。
+  - 配置类型完全由使用者通过 registry 定义，引擎不预设任何配置类型。
+  - 示例：页面配置 `{ id: 'xxx', type: 'page-config', props: { title: '', backgroundColor: '#fff' } }`
+  - 示例：主题配置 `{ id: 'yyy', type: 'theme-config', props: { primaryColor: '#000' } }`
 - WidgetSchema[]: 扁平化 widget 列表（不支持嵌套）。
 - activeId: 当前选中对象 ID（widget/globalConfig/null）。
 - activeType: 当前选中对象类型（'widget' | 'globalConfig'）。
@@ -53,19 +53,18 @@ Core 是引擎核心，负责状态容器、命令管线、注册中心、历史
 ### 扩展点
 - Registries
 	- registerWidget(definition): 注册 widget 物料定义。
-	- registerConfig(category, definition): 注册全局配置定义，需指定配置分类。
+	- registerConfig(definition): 注册全局配置定义。
 	- registerRenderer(definition): 注册渲染器定义。
-	- registerConfigCategory(category, options): 注册配置分类及其元信息（如显示名称、图标、描述）。
 - Plugins
-	- setup(engine): 注册命令、配置分类、配置定义或副作用逻辑。
+	- setup(engine): 注册命令、配置定义或副作用逻辑。
 - Event Bus
 	- 监听 `state:changed`、`command:before`、`command:executed`、`command:failed` 以及 dnd 事件。
 - Engine API
-	- engine.getConfigByCategory(category): 获取指定分类的所有配置。
+	- engine.addGlobalConfig(type, props): 添加新的全局配置。
 	- engine.updateGlobalConfig(id, props): 更新全局配置属性。
-	- engine.addGlobalConfig(category, type, props): 添加新的全局配置。
 	- engine.removeGlobalConfig(id): 删除全局配置。
-	- engine.listConfigCategories(): 列出所有已注册的配置分类。
+	- engine.getGlobalConfig(id): 获取指定 ID 的配置。
+	- engine.getGlobalConfigsByType(type): 获取指定类型的所有配置。
 
 ### 非目标
 - 不包含任何 UI 渲染。
@@ -74,47 +73,26 @@ Core 是引擎核心，负责状态容器、命令管线、注册中心、历史
 
 ### 建议使用流程
 1. 使用初始 schema 或默认值创建 `CoreEngine`。
-2. 通过 registry 注册配置分类（如 'page'、'theme'、'layout'）。
-3. 通过 registry 或 plugins 注册 widgets/configs/renderers。
-4. UI shell 监听 event bus，并通过 commands 完成所有变更。
-5. 表单引擎从 registry 读取表单 schema（widget 或 globalConfig）。
-6. renderer 根据 `widgets` 与当前 `globalConfigs` 构建视图。
+2. 通过 registry 或 plugins 注册 widgets/configs/renderers。
+3. UI shell 监听 event bus，并通过 commands 完成所有变更。
+4. 表单引擎从 registry 读取表单 schema（widget 或 globalConfig）。
+5. renderer 根据 `widgets` 与当前 `globalConfigs` 构建视图。
 
-## 配置分类系统详解
+## 配置系统详解
 
 ### 核心理念
 
-页面配置、主题配置等均属于全局配置（GlobalConfig）的不同 **分类（Category）**。引擎不预设任何固定分类，完全由使用者通过 API 定义。
+所有全局配置（如页面配置、主题配置、布局配置等）均通过 **type** 字段区分。引擎不预设任何配置类型，完全由使用者自由定义。每个配置类型对应一个配置定义（ConfigDefinition），包含该类型的 schema、默认值、标签等元信息。
 
-### 配置分类注册
+### 配置类型注册
 
 ```typescript
-// 1. 注册配置分类
-engine.registry.registerConfigCategory('page', {
+// 注册页面配置类型
+engine.registry.registerConfig({
+  type: 'page-config',
   label: '页面配置',
   icon: 'page-icon',
   description: '控制页面的基础属性，如标题、背景色等',
-  allowMultiple: false, // 此分类是否允许多个实例
-})
-
-engine.registry.registerConfigCategory('theme', {
-  label: '主题配置',
-  icon: 'theme-icon',
-  description: '全局主题样式配置',
-  allowMultiple: false,
-})
-
-engine.registry.registerConfigCategory('layout', {
-  label: '布局配置',
-  icon: 'layout-icon',
-  description: '页面布局模式配置',
-  allowMultiple: true, // 允许多个布局配置
-})
-
-// 2. 注册该分类下的配置定义
-engine.registry.registerConfig('page', {
-  type: 'basic-page',
-  label: '基础页面',
   schema: {
     title: { type: 'string', label: '页面标题', default: '' },
     backgroundColor: { type: 'color', label: '背景色', default: '#ffffff' },
@@ -123,13 +101,28 @@ engine.registry.registerConfig('page', {
   },
 })
 
-engine.registry.registerConfig('theme', {
-  type: 'dark-theme',
-  label: '深色主题',
+// 注册主题配置类型
+engine.registry.registerConfig({
+  type: 'theme-config',
+  label: '主题配置',
+  icon: 'theme-icon',
+  description: '全局主题样式配置',
   schema: {
     primaryColor: { type: 'color', label: '主色', default: '#000000' },
     secondaryColor: { type: 'color', label: '辅助色', default: '#333333' },
     fontFamily: { type: 'string', label: '字体', default: 'Arial' },
+  },
+})
+
+// 注册布局配置类型
+engine.registry.registerConfig({
+  type: 'layout-config',
+  label: '布局配置',
+  icon: 'layout-icon',
+  description: '页面布局模式配置',
+  schema: {
+    mode: { type: 'select', label: '布局模式', options: ['fluid', 'fixed'], default: 'fluid' },
+    maxWidth: { type: 'number', label: '最大宽度', default: 1200 },
   },
 })
 ```
@@ -138,18 +131,31 @@ engine.registry.registerConfig('theme', {
 
 ```typescript
 // 添加配置实例
-const pageConfigId = engine.addGlobalConfig('page', 'basic-page', {
+const pageConfigId = engine.addGlobalConfig('page-config', {
   title: '我的页面',
   backgroundColor: '#f5f5f5',
 })
 
-const themeConfigId = engine.addGlobalConfig('theme', 'dark-theme', {
+const themeConfigId = engine.addGlobalConfig('theme-config', {
   primaryColor: '#1a1a1a',
 })
 
-// 获取某个分类的所有配置实例
-const pageConfigs = engine.getConfigByCategory('page') // [{ id, category, type, props }]
-const themeConfigs = engine.getConfigByCategory('theme')
+// 添加多个布局配置实例（同一类型可以有多个实例）
+const layout1Id = engine.addGlobalConfig('layout-config', {
+  mode: 'fluid',
+  maxWidth: 1200,
+})
+
+const layout2Id = engine.addGlobalConfig('layout-config', {
+  mode: 'fixed',
+  maxWidth: 1000,
+})
+
+// 获取指定 ID 的配置
+const pageConfig = engine.getGlobalConfig(pageConfigId) // { id, type, props }
+
+// 获取指定类型的所有配置实例
+const layoutConfigs = engine.getGlobalConfigsByType('layout-config') // [{ id, type, props }, ...]
 
 // 更新配置
 engine.updateGlobalConfig(pageConfigId, {
@@ -172,9 +178,16 @@ interface EngineState {
 
 interface GlobalConfigSchema {
   id: string
-  category: string // 配置分类，如 'page', 'theme', 'layout'
-  type: string     // 配置类型，如 'basic-page', 'dark-theme'
+  type: string     // 配置类型，如 'page-config', 'theme-config', 'layout-config'
   props: Record<string, any> // 配置属性值
+}
+
+interface ConfigDefinition {
+  type: string     // 配置类型标识符（唯一）
+  label: string    // 显示名称
+  icon?: string    // 图标
+  description?: string // 描述
+  schema: Record<string, FieldSchema> // 配置字段定义
 }
 ```
 
@@ -182,55 +195,140 @@ interface GlobalConfigSchema {
 
 #### 场景 1：使用者只需要页面配置
 ```typescript
-// 只注册 page 分类
-engine.registry.registerConfigCategory('page', { ... })
-engine.registry.registerConfig('page', { type: 'basic-page', ... })
-
-// 初始化时添加一个页面配置实例
-engine.addGlobalConfig('page', 'basic-page', { title: '首页' })
-```
-
-#### 场景 2：使用者需要页面 + 主题配置
-```typescript
-// 注册两个分类
-engine.registry.registerConfigCategory('page', { ... })
-engine.registry.registerConfigCategory('theme', { ... })
-
-// 注册各自的配置定义
-engine.registry.registerConfig('page', { type: 'basic-page', ... })
-engine.registry.registerConfig('theme', { type: 'dark-theme', ... })
-engine.registry.registerConfig('theme', { type: 'light-theme', ... })
-
-// 初始化时添加实例
-engine.addGlobalConfig('page', 'basic-page', { ... })
-engine.addGlobalConfig('theme', 'dark-theme', { ... })
-```
-
-#### 场景 3：完全自定义配置分类
-```typescript
-// 使用者可以创建任意的配置分类
-engine.registry.registerConfigCategory('seo', {
-  label: 'SEO 配置',
-  description: '搜索引擎优化相关设置',
+// 只注册 page-config 类型
+engine.registry.registerConfig({
+  type: 'page-config',
+  label: '页面配置',
+  schema: { title: { type: 'string', default: '' } },
 })
 
-engine.registry.registerConfig('seo', {
-  type: 'basic-seo',
+// 初始化时添加一个页面配置实例
+engine.addGlobalConfig('page-config', { title: '首页' })
+```
+
+#### 场景 2：使用者需要多种配置类型
+```typescript
+// 注册多个配置类型
+engine.registry.registerConfig({
+  type: 'page-config',
+  label: '页面配置',
+  schema: { title: { type: 'string', default: '' } },
+})
+
+engine.registry.registerConfig({
+  type: 'theme-dark',
+  label: '深色主题',
+  schema: { primaryColor: { type: 'color', default: '#000' } },
+})
+
+engine.registry.registerConfig({
+  type: 'theme-light',
+  label: '浅色主题',
+  schema: { primaryColor: { type: 'color', default: '#fff' } },
+})
+
+// 初始化时添加实例
+engine.addGlobalConfig('page-config', { title: '首页' })
+engine.addGlobalConfig('theme-dark', { primaryColor: '#1a1a1a' })
+```
+
+#### 场景 3：完全自定义配置类型
+```typescript
+// 使用者可以创建任意的配置类型
+engine.registry.registerConfig({
+  type: 'seo-config',
+  label: 'SEO 配置',
+  description: '搜索引擎优化相关设置',
   schema: {
     metaTitle: { type: 'string', label: 'Meta Title', default: '' },
     metaDescription: { type: 'string', label: 'Meta Description', default: '' },
     keywords: { type: 'array', label: 'Keywords', default: [] },
   },
 })
+
+engine.addGlobalConfig('seo-config', {
+  metaTitle: '我的网站',
+  metaDescription: '这是一个很棒的网站',
+  keywords: ['lowcode', 'nocode'],
+})
+```
+
+#### 场景 4：同一类型的多个配置实例
+```typescript
+// 注册一个可以有多个实例的配置类型
+engine.registry.registerConfig({
+  type: 'banner-config',
+  label: '横幅配置',
+  schema: {
+    title: { type: 'string', default: '' },
+    imageUrl: { type: 'string', default: '' },
+  },
+})
+
+// 添加多个横幅配置
+const banner1 = engine.addGlobalConfig('banner-config', {
+  title: '首页横幅',
+  imageUrl: '/banner1.jpg',
+})
+
+const banner2 = engine.addGlobalConfig('banner-config', {
+  title: '活动横幅',
+  imageUrl: '/banner2.jpg',
+})
+
+// 获取所有横幅配置
+const allBanners = engine.getGlobalConfigsByType('banner-config')
 ```
 
 ### 优势
 
-1. **完全解耦**：引擎不预设任何配置分类，使用者完全自由定义。
-2. **高度灵活**：页面配置只是众多全局配置分类之一，没有特殊地位。
-3. **可扩展性强**：使用者可以根据业务需求添加任意数量的配置分类。
+1. **完全解耦**：引擎不预设任何配置类型，使用者完全自由定义。
+2. **简洁直观**：每个配置类型就是一个独立的类型定义，无需中间的分类层级。
+3. **高度灵活**：可以定义任意数量和种类的配置类型，同一类型可以有多个实例。
 4. **统一管理**：所有配置通过相同的 API 进行注册、管理和变更。
-5. **类型安全**：每个配置分类都有自己的 schema 定义，保证数据一致性。
+5. **类型安全**：每个配置类型都有自己的 schema 定义，保证数据一致性。
+6. **易于扩展**：添加新配置类型只需注册一次，无需额外的分类定义。
+
+### 设计优势解析
+
+#### 去除分类层级的好处
+
+**旧设计（Category-based）**：
+- 需要先注册 Category（如 'page'、'theme'）
+- 再在 Category 下注册具体的 Config Type（如 'basic-page'、'dark-theme'）
+- GlobalConfigSchema 包含 `{ category, type, props }`
+- 需要维护 `registerConfigCategory` 和 `registerConfig` 两个 API
+- 需要实现 `getConfigByCategory` 等分类相关的查询 API
+
+**新设计（Type-based）**：
+- 直接注册 Config Type（如 'page-config'、'theme-dark'、'theme-light'）
+- GlobalConfigSchema 只包含 `{ type, props }`
+- 只需要维护 `registerConfig` 一个注册 API
+- 查询通过 `getGlobalConfigsByType(type)` 按类型获取
+- 使用者如果需要分组，可以通过命名约定（如 'theme-dark'、'theme-light'）或在 UI 层实现分组逻辑
+
+#### 灵活性提升
+
+使用者可以根据自己的需求来组织配置：
+
+```typescript
+// 方式 1: 扁平化，每个配置类型独立
+registerConfig({ type: 'page-global-config', ... })
+registerConfig({ type: 'theme-dark', ... })
+registerConfig({ type: 'theme-light', ... })
+registerConfig({ type: 'seo-meta', ... })
+
+// 方式 2: 通过命名约定实现"伪分类"
+registerConfig({ type: 'page:global', ... })
+registerConfig({ type: 'page:settings', ... })
+registerConfig({ type: 'theme:dark', ... })
+registerConfig({ type: 'theme:light', ... })
+
+// 方式 3: 完全自由定义
+registerConfig({ type: 'my-awesome-config', ... })
+```
+
+引擎不关心配置如何命名或分组，这完全由使用者的业务逻辑决定。
 
 ## Monorepo 目录结构
 
