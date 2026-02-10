@@ -6,12 +6,12 @@
 
 | Package | Version |
 | ------- | ------- |
-| @dragcraft/core | 🚧 |
-| @dragcraft/designer | 🚧 |
-| @dragcraft/form-generator | 🚧 |
-| @dragcraft/renderer | 🚧 |
-| @dragcraft/utils | 🚧 |
-| @dragcraft/widgets | 🚧 |
+| [@dragcraft/core](./packages/core) | 🚧 |
+| [@dragcraft/designer](./packages/designer) | 🚧 |
+| [@dragcraft/form-generator](./packages/form-generator) | 🚧 |
+| [@dragcraft/renderer](./packages/renderer) | 🚧 |
+| [@dragcraft/utils](./packages/utils) | 🚧 |
+| [@dragcraft/widgets](./packages/widgets) | 🚧 |
 
 ## License
 
