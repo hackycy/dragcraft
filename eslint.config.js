@@ -4,6 +4,6 @@ import antfu from '@antfu/eslint-config'
 export default antfu(
   {
     type: 'lib',
-    ignores: ['skills/**', '*.md'],
+    ignores: ['skills/**', '*.md', 'packages/**', 'playground/**'],
   },
 )

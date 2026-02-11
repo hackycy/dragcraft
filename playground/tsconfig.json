@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "vue",
+    "paths": {
+      "@dragcraft/*": ["../packages/*/src"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue"]
+}
