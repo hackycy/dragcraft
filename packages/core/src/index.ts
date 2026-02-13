@@ -1,0 +1,51 @@
+export { createCommandBus } from './command-bus'
+
+export type { CommandBusInstance } from './command-bus'
+// ── Built-in command handlers ─────────────
+export {
+  addNodeHandler,
+  moveNodeHandler,
+  removeNodeHandler,
+  setGlobalConfigHandler,
+  updatePropsHandler,
+} from './commands'
+
+// ── Constants ─────────────────────────────
+export { CommandType, DEFAULT_MAX_HISTORY_SIZE, DEFAULT_SCHEMA_VERSION, EventName } from './constants'
+
+export type { CommandTypeValue, EventNameValue } from './constants'
+// ── Engine (main entry point) ─────────────
+export { createEngine } from './engine'
+export type { DesignerEngine } from './engine'
+export { createEventHub, EventHub } from './event-hub'
+export type { EventListener } from './event-hub'
+// ── Helpers (tree utilities) ──────────────
+export { findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkTree } from './helpers'
+export { createHistoryManager } from './history-manager'
+export type { HistoryManagerInstance } from './history-manager'
+
+export { createRegistry } from './registry'
+
+// ── Subsystem factories ───────────────────
+export { createDefaultSchema, createSchemaStore } from './schema-store'
+// ── Types ─────────────────────────────────
+export type {
+  AddNodePayload,
+  Command,
+  CommandContext,
+  CommandHandler,
+  ContainerMeta,
+  DesignerSchema,
+  DragTarget,
+  EngineOptions,
+  HistoryEntry,
+  MoveNodePayload,
+  NodeType,
+  RegistryInstance,
+  RemoveNodePayload,
+  SchemaNode,
+  SchemaStoreInstance,
+  SetGlobalConfigPayload,
+  UpdatePropsPayload,
+  WidgetMeta,
+} from './types'
