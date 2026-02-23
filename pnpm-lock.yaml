@@ -147,7 +147,11 @@ importers:
 
   packages/designer: {}
 
-  packages/form-generator: {}
+  packages/form-generator:
+    dependencies:
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
 
   packages/renderer:
     dependencies:
