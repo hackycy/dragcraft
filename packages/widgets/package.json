@@ -32,5 +32,9 @@
     "start": "tsx src/index.ts",
     "test": "vitest",
     "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@dragcraft/core": "workspace:*",
+    "vue": "catalog:shared"
   }
 }

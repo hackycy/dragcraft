@@ -172,7 +172,14 @@ importers:
         specifier: catalog:types
         version: 4.17.12
 
-  packages/widgets: {}
+  packages/widgets:
+    dependencies:
+      '@dragcraft/core':
+        specifier: workspace:*
+        version: link:../core
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
 
 packages:
 
