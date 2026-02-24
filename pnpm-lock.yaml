@@ -200,6 +200,22 @@ importers:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
 
+  playground:
+    dependencies:
+      '@dragcraft/designer':
+        specifier: workspace:*
+        version: link:../packages/designer
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
+    devDependencies:
+      '@vitejs/plugin-vue':
+        specifier: ^6.0.4
+        version: 6.0.4(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.28(typescript@5.9.3))
+      vite:
+        specifier: catalog:cli
+        version: 7.2.1(@types/node@24.10.0)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.1)
+
 packages:
 
   '@antfu/eslint-config@6.2.0':
@@ -789,6 +805,9 @@ packages:
   '@rolldown/pluginutils@1.0.0-beta.46':
     resolution: {integrity: sha512-xMNwJo/pHkEP/mhNVnW+zUiJDle6/hxrwO0mfSJuEVRbBfgrJFuUSRoZx/nYUw5pCjrysl9OkNXCkAdih8GCnA==}
 
+  '@rolldown/pluginutils@1.0.0-rc.2':
+    resolution: {integrity: sha512-izyXV/v+cHiRfozX62W9htOAvwMo4/bXKDrQ+vom1L1qRuexPock/7VZDAhnpHCLNejd3NJ6hiab+tO0D44Rgw==}
+
   '@rollup/rollup-android-arm-eabi@4.52.0':
     resolution: {integrity: sha512-VxDYCDqOaR7NXzAtvRx7G1u54d2kEHopb28YH/pKzY6y0qmogP3gG7CSiWsq9WvDFxOQMpNEyjVAHZFXfH3o/A==}
     cpu: [arm]
@@ -1017,6 +1036,13 @@ packages:
   '@typescript-eslint/visitor-keys@8.46.2':
     resolution: {integrity: sha512-tUFMXI4gxzzMXt4xpGJEsBsTox0XbNQ1y94EwlD/CuZwFcQP79xfQqMhau9HsRc/J0cAPA/HZt1dZPtGn9V/7w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@vitejs/plugin-vue@6.0.4':
+    resolution: {integrity: sha512-uM5iXipgYIn13UUQCZNdWkYk+sysBeA97d5mHsAoAt1u/wpN3+zxOmsVJWosuzX+IMGRzeYUNytztrYznboIkQ==}
+    engines: {node: ^20.19.0 || >=22.12.0}
+    peerDependencies:
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
+      vue: ^3.2.25
 
   '@vitest/eslint-plugin@1.4.1':
     resolution: {integrity: sha512-eBMCLeUhKvQxH7nPihmLUJUWXxqKovVFEmxbGKqkY/aN6hTAXGiRid8traRUOvgr82NJFJL3KPpE19fElOR7bg==}
@@ -3050,6 +3076,8 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.0-beta.46': {}
 
+  '@rolldown/pluginutils@1.0.0-rc.2': {}
+
   '@rollup/rollup-android-arm-eabi@4.52.0':
     optional: true
 
@@ -3259,6 +3287,12 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.46.2
       eslint-visitor-keys: 4.2.1
+
+  '@vitejs/plugin-vue@6.0.4(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.1))(vue@3.5.28(typescript@5.9.3))':
+    dependencies:
+      '@rolldown/pluginutils': 1.0.0-rc.2
+      vite: 7.2.1(@types/node@24.10.0)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.1)
+      vue: 3.5.28(typescript@5.9.3)
 
   '@vitest/eslint-plugin@1.4.1(eslint@9.39.1(jiti@2.6.0))(typescript@5.9.3)(vitest@4.0.7(@types/debug@4.1.12)(@types/node@24.10.0)(jiti@2.6.0)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:

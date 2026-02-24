@@ -1,0 +1,109 @@
+/* ── Canvas ───────────────────────────────── */
+
+.dc-canvas {
+  height: 100%;
+  overflow: auto;
+  background: var(--dc-canvas-bg);
+  padding: 24px;
+}
+
+.dc-root-renderer {
+  min-height: 100%;
+  background: var(--dc-bg);
+  border-radius: var(--dc-radius-lg);
+  box-shadow: var(--dc-shadow);
+}
+
+.dc-container-shell {
+  min-height: 200px;
+  padding: 16px;
+}
+
+/* ── Node Base ────────────────────────────── */
+
+.dc-node {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: var(--dc-radius);
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  cursor: default;
+}
+
+/* ── Container Node ──────────────────────── */
+
+.dc-node--container {
+  min-height: 40px;
+  border: 1px dashed var(--dc-border);
+  border-radius: var(--dc-radius);
+  margin: 4px 0;
+}
+
+.dc-container--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  border-style: dashed;
+  border-color: var(--dc-border);
+}
+
+.dc-container--empty::after {
+  content: '拖拽组件到这里';
+  color: var(--dc-text-placeholder);
+  font-size: var(--dc-font-size-sm);
+  pointer-events: none;
+}
+
+/* ── Widget Node ─────────────────────────── */
+
+.dc-node--widget {
+  margin: 4px 0;
+  padding: 2px;
+}
+
+/* ── Interaction States ──────────────────── */
+
+.dc-node--hovered {
+  border-color: var(--dc-primary);
+  border-style: dashed;
+}
+
+.dc-node--selected {
+  border-color: var(--dc-primary);
+  border-style: solid;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.dc-node--selected.dc-node--container {
+  border-style: solid;
+}
+
+.dc-node--drag-over {
+  background-color: rgba(24, 144, 255, 0.06);
+  border-color: var(--dc-primary);
+  border-style: dashed;
+}
+
+/* ── Drop Indicator ──────────────────────── */
+
+.dc-drop-indicator {
+  padding: 4px 0;
+  pointer-events: none;
+}
+
+.dc-drop-indicator__line {
+  height: 2px;
+  background: var(--dc-primary);
+  border-radius: 1px;
+}
+
+/* ── Widget Fallback ─────────────────────── */
+
+.dc-widget-fallback {
+  padding: 8px 12px;
+  color: var(--dc-danger);
+  font-size: var(--dc-font-size-sm);
+  border: 1px dashed var(--dc-danger);
+  border-radius: var(--dc-radius);
+  text-align: center;
+}

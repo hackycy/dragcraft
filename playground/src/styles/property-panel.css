@@ -1,0 +1,57 @@
+/* ── Property Panel ───────────────────────── */
+
+.dc-property-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── Tabs ─────────────────────────────────── */
+
+.dc-property-panel__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--dc-border-light);
+  flex-shrink: 0;
+}
+
+.dc-property-panel__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  font-size: var(--dc-font-size-sm);
+  font-weight: 500;
+  color: var(--dc-text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.dc-property-panel__tab:hover {
+  color: var(--dc-primary);
+}
+
+.dc-property-panel__tab--active {
+  color: var(--dc-primary);
+  border-bottom-color: var(--dc-primary);
+}
+
+/* ── Content ──────────────────────────────── */
+
+.dc-property-panel__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.dc-property-panel__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: var(--dc-text-placeholder);
+  font-size: var(--dc-font-size-sm);
+}
