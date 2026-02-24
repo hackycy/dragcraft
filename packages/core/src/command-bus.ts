@@ -8,7 +8,7 @@ import type {
   SchemaStoreInstance,
 } from './types'
 import { cloneDeep } from '@dragcraft/utils'
-import { toRaw } from '@vue/reactivity'
+import { toRaw } from 'vue'
 import { CommandType, EventName } from './constants'
 
 const COMMAND_EVENT_MAP: Record<string, string> = {

@@ -112,18 +112,21 @@ export default defineComponent({
         wrapperChildren.push(
           h('div', { class: 'dc-node__toolbar' }, [
             h('button', {
+              type: 'button',
               class: 'dc-node__toolbar-btn dc-node__toolbar-btn--up',
               title: '上移',
               disabled: isFirst,
               onClick: handleMoveUp,
             }, '\u2191'),
             h('button', {
+              type: 'button',
               class: 'dc-node__toolbar-btn dc-node__toolbar-btn--down',
               title: '下移',
               disabled: isLast,
               onClick: handleMoveDown,
             }, '\u2193'),
             h('button', {
+              type: 'button',
               class: 'dc-node__toolbar-btn dc-node__toolbar-btn--delete',
               title: '删除',
               onClick: handleDelete,

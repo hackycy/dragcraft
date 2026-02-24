@@ -1,7 +1,7 @@
-import type { Ref, ShallowRef } from '@vue/reactivity'
+import type { Ref, ShallowRef } from 'vue'
 import type { DesignerSchema, DragTarget, SchemaNode, SchemaStoreInstance } from './types'
 import { cloneDeep } from '@dragcraft/utils'
-import { ref, shallowRef, toRaw, triggerRef } from '@vue/reactivity'
+import { ref, shallowRef, toRaw, triggerRef } from 'vue'
 import { DEFAULT_SCHEMA_VERSION } from './constants'
 import { findNodeById as findNode } from './helpers'
 

@@ -47,9 +47,6 @@ catalogs:
       specifier: ^9.3.0
       version: 9.3.0
   shared:
-    '@vue/reactivity':
-      specifier: ^3.5.27
-      version: 3.5.27
     lodash-es:
       specifier: ^4.17.23
       version: 4.17.23
@@ -141,9 +138,9 @@ importers:
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
-      '@vue/reactivity':
+      vue:
         specifier: catalog:shared
-        version: 3.5.27
+        version: 3.5.28(typescript@5.9.3)
 
   packages/designer:
     dependencies:
@@ -1098,9 +1095,6 @@ packages:
   '@vue/compiler-ssr@3.5.28':
     resolution: {integrity: sha512-JCq//9w1qmC6UGLWJX7RXzrGpKkroubey/ZFqTpvEIDJEKGgntuDMqkuWiZvzTzTA5h2qZvFBFHY7fAAa9475g==}
 
-  '@vue/reactivity@3.5.27':
-    resolution: {integrity: sha512-vvorxn2KXfJ0nBEnj4GYshSgsyMNFnIQah/wczXlsNXt+ijhugmW+PpJ2cNPe4V6jpnBcs0MhCODKllWG+nvoQ==}
-
   '@vue/reactivity@3.5.28':
     resolution: {integrity: sha512-gr5hEsxvn+RNyu9/9o1WtdYdwDjg5FgjUSBEkZWqgTKlo/fvwZ2+8W6AfKsc9YN2k/+iHYdS9vZYAhpi10kNaw==}
 
@@ -1114,9 +1108,6 @@ packages:
     resolution: {integrity: sha512-pf+5ECKGj8fX95bNincbzJ6yp6nyzuLDhYZCeFxUNp8EBrQpPpQaLX3nNCp49+UbgbPun3CeVE+5CXVV1Xydfg==}
     peerDependencies:
       vue: 3.5.28
-
-  '@vue/shared@3.5.27':
-    resolution: {integrity: sha512-dXr/3CgqXsJkZ0n9F3I4elY8wM9jMJpP3pvRG52r6m0tu/MsAFIe6JpXVGeNMd/D9F4hQynWT8Rfuj0bdm9kFQ==}
 
   '@vue/shared@3.5.28':
     resolution: {integrity: sha512-cfWa1fCGBxrvaHRhvV3Is0MgmrbSCxYTXCSCau2I0a1Xw1N1pHAvkWCiXPRAqjvToILvguNyEwjevUqAuBQWvQ==}
@@ -3374,10 +3365,6 @@ snapshots:
       '@vue/compiler-dom': 3.5.28
       '@vue/shared': 3.5.28
 
-  '@vue/reactivity@3.5.27':
-    dependencies:
-      '@vue/shared': 3.5.27
-
   '@vue/reactivity@3.5.28':
     dependencies:
       '@vue/shared': 3.5.28
@@ -3399,8 +3386,6 @@ snapshots:
       '@vue/compiler-ssr': 3.5.28
       '@vue/shared': 3.5.28
       vue: 3.5.28(typescript@5.9.3)
-
-  '@vue/shared@3.5.27': {}
 
   '@vue/shared@3.5.28': {}
 

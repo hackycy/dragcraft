@@ -55,13 +55,14 @@ src/
 - 支持拖拽过程高亮反馈：`dragOverNodeId` 传递至 `RootRenderer` 驱动 `DropIndicator`。
 - 拖拽落地通过 core 命令提交（`ADD_NODE` / `MOVE_NODE`），不允许直接改 UI 本地状态。
 - 新 widget 添加后自动选中。
-- 点击画布空白处取消选中。
+- 点击画布空白处（包括 widget 之间的间隙区域）取消选中。利用 `data-node-id` 属性判断点击是否落在 widget 节点内。
 
 ### 右栏：配置区 (`DcPropertyPanel`)
 
 - 集成 `@dragcraft/form-generator` 的 `FormGenerator`。
 - 固定两个 Tab：`Global`（全局配置）与 `Widget`（当前选中组件配置）。
 - `Global` 永久可见；`Widget` 依赖当前选中节点。
+- 选中 widget 时自动切换到 `Widget` Tab，确保用户立即看到该组件的配置项。
 - 属性变更通过 `UPDATE_PROPS` / `SET_GLOBAL_CONFIG` 命令提交。
 - 节点切换时通过 `key` 强制重新挂载表单。
 

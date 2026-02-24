@@ -35,6 +35,6 @@
   },
   "dependencies": {
     "@dragcraft/utils": "workspace:*",
-    "@vue/reactivity": "catalog:shared"
+    "vue": "catalog:shared"
   }
 }

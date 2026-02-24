@@ -121,7 +121,7 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 
 **浮动工具栏**（选中时）：
 - 在 widget 右侧浮动显示 `dc-node__toolbar`。
-- 三个按钮：上移（↑）、下移（↓）、删除（✕）。
+- 三个按钮：上移（↑）、下移（↓）、删除（✕），均设置 `type="button"` 避免默认 submit 行为。
 - 通过 `engine.execute()` 执行 `MOVE_NODE` / `REMOVE_NODE` 命令。
 - 首个 widget 的上移和末尾 widget 的下移按钮禁用。
 

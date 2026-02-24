@@ -87,12 +87,10 @@ export default defineComponent({
 
     // Deselect when clicking canvas background
     const handleClick = (e: MouseEvent) => {
-      // Only deselect if clicking the canvas itself (not a child node)
       const target = e.target as HTMLElement
-      if (
-        target.classList.contains('dc-canvas')
-        || target.classList.contains('dc-root-renderer')
-      ) {
+      // Check if click landed on a widget node (has data-node-id that isn't root)
+      const nodeEl = target.closest('[data-node-id]') as HTMLElement | null
+      if (!nodeEl || nodeEl.dataset.nodeId === 'root') {
         engine.store.selectNode(null)
       }
     }

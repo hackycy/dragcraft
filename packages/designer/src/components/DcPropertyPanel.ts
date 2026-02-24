@@ -1,6 +1,6 @@
 import type { FieldChangePayload } from '@dragcraft/form-generator'
 import { FormGenerator } from '@dragcraft/form-generator'
-import { computed, defineComponent, h } from 'vue'
+import { computed, defineComponent, h, watch } from 'vue'
 import { usePropertyBinding } from '../composables/usePropertyBinding'
 import { useDesignerContext } from '../context'
 
@@ -38,6 +38,16 @@ export default defineComponent({
     const handleTabClick = (key: 'global' | 'widget') => {
       activeTab.value = key
     }
+
+    // Auto-switch to Widget tab when a node is selected
+    watch(
+      () => engine.store.selectedNodeId.value,
+      (newId) => {
+        if (newId) {
+          activeTab.value = 'widget'
+        }
+      },
+    )
 
     return () => {
       const currentTab = activeTab.value

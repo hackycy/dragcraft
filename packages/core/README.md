@@ -11,7 +11,7 @@
 
 ## 设计边界
 
-- 不包含任何 Vue/DOM/UI 代码（仅使用 `@vue/reactivity` 独立响应式系统）。
+- 不包含任何 DOM/UI 代码（仅使用 `vue` 的响应式 API：`shallowRef`、`ref`、`toRaw`、`triggerRef`）。
 - 不关心视觉渲染与样式实现。
 - 不直接依赖具体 widget 组件，只依赖协议。
 
@@ -83,7 +83,7 @@ src/
 
 ### 1) SchemaStore
 
-基于 `@vue/reactivity` 的 `shallowRef` / `ref` 实现响应式状态管理。
+基于 `vue` 的 `shallowRef` / `ref` 实现响应式状态管理（直接依赖 `vue` 而非 `@vue/reactivity`，确保与上层包共享同一 reactivity 实例）。
 
 接口（`SchemaStoreInstance`）：
 

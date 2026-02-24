@@ -1,4 +1,4 @@
-import type { Ref, ShallowRef } from '@vue/reactivity'
+import type { Ref, ShallowRef } from 'vue'
 
 // ──────────────────────────────────────────
 // Node types

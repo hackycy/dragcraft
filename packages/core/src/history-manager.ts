@@ -1,7 +1,7 @@
 import type { EventHub } from './event-hub'
 import type { DesignerSchema, HistoryEntry, SchemaStoreInstance } from './types'
 import { cloneDeep } from '@dragcraft/utils'
-import { toRaw } from '@vue/reactivity'
+import { toRaw } from 'vue'
 import { EventName } from './constants'
 
 export interface HistoryManagerInstance {
