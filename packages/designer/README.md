@@ -50,10 +50,11 @@ src/
 ### 中栏：画布区 (`DcCanvas`)
 
 - 集成 `@dragcraft/renderer` 的 `RootRenderer`。
-- 采用事件委托模式处理拖放：通过 `data-node-id` DOM 属性定位目标容器。
-- 支持画布容器壳自定义渲染（通过 `canvasContainerRenderer` 扩展点）。
+- 扁平模型：所有 widget 直接添加到 root.children 列表。
+- 拖拽始终 drop 到 root 节点（无容器查找逻辑）。
 - 支持拖拽过程高亮反馈：`dragOverNodeId` 传递至 `RootRenderer` 驱动 `DropIndicator`。
 - 拖拽落地通过 core 命令提交（`ADD_NODE` / `MOVE_NODE`），不允许直接改 UI 本地状态。
+- 新 widget 添加后自动选中。
 - 点击画布空白处取消选中。
 
 ### 右栏：配置区 (`DcPropertyPanel`)
@@ -85,7 +86,7 @@ const designer = createDesigner({
   // 可选：全局配置表单 schema
   globalConfigSchema: myGlobalFormSchema,
   // 可选：扩展点
-  extensions: { canvasContainerRenderer: PhoneShell },
+  extensions: { materialPanelRenderer: CustomPanel },
 })
 ```
 
@@ -123,7 +124,6 @@ const {
 | 扩展点 | 说明 |
 |--------|------|
 | `materialPanelRenderer` | 替换左栏整体渲染 |
-| `canvasContainerRenderer` | 替换中栏容器壳（手机壳等） |
 | `propertyPanelRenderer` | 替换右栏配置区渲染 |
 | `renderWidgetItem` | 自定义单个物料卡片渲染 `(meta: WidgetMeta) => Component` |
 | `rendererExtensions` | 透传给 `@dragcraft/renderer` 的扩展（`containerShell`、`dropIndicator`） |

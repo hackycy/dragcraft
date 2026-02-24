@@ -25,7 +25,6 @@ export const formCheckboxWidgetMeta: WidgetMeta = {
       },
     ],
   },
-  canHaveChildren: false,
 }
 
 export default defineComponent({

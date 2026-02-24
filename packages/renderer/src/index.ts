@@ -1,10 +1,8 @@
 // ── Components ───────────────────────────
 export {
-  ContainerRenderer,
   DefaultContainerShell,
   DefaultDropIndicator,
   DefaultWidgetFallback,
-  NodeRenderer,
   RootRenderer,
   WidgetRenderer,
 } from './components'

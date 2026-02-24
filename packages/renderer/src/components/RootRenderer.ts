@@ -1,11 +1,12 @@
 import type { DesignerEngine } from '@dragcraft/core'
-import type { PropType, Ref } from 'vue'
+import type { PropType, Ref, VNode } from 'vue'
 import type { ComponentMap, RendererExtensions } from '../types'
 import { computed, defineComponent, h, provide } from 'vue'
 import { createRendererContext } from '../context'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import DefaultContainerShell from './DefaultContainerShell'
-import NodeRenderer from './NodeRenderer'
+import DefaultDropIndicator from './DefaultDropIndicator'
+import WidgetRenderer from './WidgetRenderer'
 
 export default defineComponent({
   name: 'DcRootRenderer',
@@ -48,6 +49,22 @@ export default defineComponent({
       // Read schema.value to establish reactive dependency
       const schema = props.engine.store.schema.value
       const rootChildren = schema.root.children ?? []
+      const isDragOver = props.dragOverNodeId?.value === 'root'
+
+      // Resolve drop indicator component
+      const DropIndicator = props.extensions?.dropIndicator ?? DefaultDropIndicator
+
+      const childVNodes: VNode[] = rootChildren.map(child =>
+        h(WidgetRenderer, { key: child.id, node: child }),
+      )
+
+      // Show drop indicator when dragging over root
+      if (isDragOver) {
+        childVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
+      }
+
+      // Empty state placeholder
+      const isEmpty = rootChildren.length === 0 && !isDragOver
 
       return h(
         'div',
@@ -59,12 +76,11 @@ export default defineComponent({
         [
           h(
             ContainerShell.value,
-            null,
+            { class: { 'dc-container-shell--empty': isEmpty } },
             {
-              default: () =>
-                rootChildren.map(child =>
-                  h(NodeRenderer, { key: child.id, node: child }),
-                ),
+              default: () => isEmpty
+                ? [h('div', { class: 'dc-canvas-empty' }, '拖拽组件到这里')]
+                : childVNodes,
             },
           ),
         ],

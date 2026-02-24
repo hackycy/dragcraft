@@ -4,7 +4,6 @@ import type { HistoryManagerInstance } from './history-manager'
 import type {
   Command,
   CommandHandler,
-  ContainerMeta,
   DesignerSchema,
   EngineOptions,
   RegistryInstance,
@@ -35,7 +34,6 @@ export interface DesignerEngine {
   execute: <T = unknown>(command: Command<T>) => void
   registerHandler: <T = unknown>(type: string, handler: CommandHandler<T>) => void
   registerWidget: (meta: WidgetMeta) => void
-  registerContainer: (meta: ContainerMeta) => void
   exportSchema: () => DesignerSchema
   importSchema: (schema: DesignerSchema) => void
   dispose: () => void
@@ -68,10 +66,6 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
     registry.registerWidget(meta)
   }
 
-  function registerContainer(meta: ContainerMeta): void {
-    registry.registerContainer(meta)
-  }
-
   function exportSchema(): DesignerSchema {
     return store.getSchema()
   }
@@ -95,7 +89,6 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
     execute,
     registerHandler,
     registerWidget,
-    registerContainer,
     exportSchema,
     importSchema,
     dispose,

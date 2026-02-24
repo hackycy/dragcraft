@@ -55,7 +55,6 @@ export const linkWidgetMeta: WidgetMeta = {
       },
     ],
   },
-  canHaveChildren: false,
 }
 
 export default defineComponent({

@@ -31,7 +31,6 @@ export const formInputWidgetMeta: WidgetMeta = {
       },
     ],
   },
-  canHaveChildren: false,
 }
 
 export default defineComponent({

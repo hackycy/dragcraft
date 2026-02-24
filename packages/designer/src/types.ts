@@ -37,13 +37,11 @@ export interface DesignerOptions {
 export interface DesignerExtensions {
   /** Completely replace the left material panel */
   materialPanelRenderer?: Component
-  /** Replace the canvas container shell (e.g., phone frame) */
-  canvasContainerRenderer?: Component
   /** Completely replace the right property panel */
   propertyPanelRenderer?: Component
   /** Custom render function for a single material item card */
   renderWidgetItem?: (meta: WidgetMeta) => Component
-  /** Renderer extensions (containerShell, dropIndicator) forwarded to @dragcraft/renderer */
+  /** Renderer extensions (dropIndicator) forwarded to @dragcraft/renderer */
   rendererExtensions?: RendererExtensions
 }
 

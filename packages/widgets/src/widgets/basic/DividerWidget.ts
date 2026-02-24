@@ -50,7 +50,6 @@ export const dividerWidgetMeta: WidgetMeta = {
       },
     ],
   },
-  canHaveChildren: false,
 }
 
 export default defineComponent({

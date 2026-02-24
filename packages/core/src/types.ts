@@ -4,14 +4,12 @@ import type { Ref, ShallowRef } from '@vue/reactivity'
 // Node types
 // ──────────────────────────────────────────
 
-export type NodeType = 'container' | 'widget'
-
 export interface SchemaNode {
   id: string
   type: string
-  nodeType: NodeType
   props: Record<string, unknown>
   style?: Record<string, unknown>
+  /** Only used on the root node to hold the flat widget list */
   children?: SchemaNode[]
 }
 
@@ -37,7 +35,7 @@ export interface DragTarget {
 }
 
 // ──────────────────────────────────────────
-// Widget & Container meta protocols
+// Widget meta protocol
 // ──────────────────────────────────────────
 
 export interface WidgetMeta {
@@ -48,15 +46,8 @@ export interface WidgetMeta {
   defaultProps: Record<string, unknown>
   defaultStyle?: Record<string, unknown>
   formSchema: Record<string, unknown>
-  canHaveChildren?: boolean
-}
-
-export interface ContainerMeta {
-  type: string
-  title: string
-  icon?: string
-  defaultProps?: Record<string, unknown>
-  defaultStyle?: Record<string, unknown>
+  /** Whether to render a mask overlay on the widget in the canvas (default: true) */
+  mask?: boolean
 }
 
 // ──────────────────────────────────────────
@@ -83,15 +74,13 @@ export type CommandHandler<T = unknown> = (
 // ──────────────────────────────────────────
 
 export interface AddNodePayload {
-  parentId: string
   node: SchemaNode
   index?: number
 }
 
 export interface MoveNodePayload {
   nodeId: string
-  targetParentId: string
-  index?: number
+  index: number
 }
 
 export interface RemoveNodePayload {
@@ -148,11 +137,8 @@ export interface SchemaStoreInstance {
 
 export interface RegistryInstance {
   registerWidget: (meta: WidgetMeta) => void
-  registerContainer: (meta: ContainerMeta) => void
   registerGlobalConfigSchema: (schema: Record<string, unknown>) => void
   getWidget: (type: string) => WidgetMeta | undefined
-  getContainer: (type: string) => ContainerMeta | undefined
   getGlobalConfigSchema: () => Record<string, unknown> | undefined
   getAllWidgets: () => WidgetMeta[]
-  getAllContainers: () => ContainerMeta[]
 }

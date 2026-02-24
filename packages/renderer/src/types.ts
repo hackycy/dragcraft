@@ -7,9 +7,8 @@ import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 
 /**
  * Maps a node's `type` string to a Vue component.
- * Used for both widget and container node types.
  *
- * Example: { button: ButtonWidget, 'flex-row': FlexRowContainer }
+ * Example: { button: ButtonWidget, text: TextWidget }
  */
 export type ComponentMap = Record<string, Component>
 
@@ -47,7 +46,7 @@ export interface RendererOptions {
   /** Optional extension point overrides */
   extensions?: RendererExtensions
   /**
-   * Optional reactive ref tracking which container node is being dragged over.
+   * Optional reactive ref tracking whether root is being dragged over.
    * Managed externally by the designer package.
    * If not provided, drag-over visual state is disabled.
    */

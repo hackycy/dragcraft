@@ -1,25 +1,23 @@
 import type { CommandContext, MoveNodePayload } from '../types'
-import { findNodeById, insertNodeIntoTree, removeNodeFromTree } from '../helpers'
 
 export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): void {
   const { store } = ctx
   const rawSchema = store.getRawSchema()
+  const children = rawSchema.root.children
 
-  const targetParent = findNodeById(rawSchema.root, payload.targetParentId)
-  if (!targetParent) {
-    console.warn(`[dragcraft/core] MOVE_NODE: target parent "${payload.targetParentId}" not found`)
+  if (!children)
     return
-  }
-  if (targetParent.nodeType !== 'container') {
-    console.warn(`[dragcraft/core] MOVE_NODE: target parent "${payload.targetParentId}" is not a container`)
-    return
-  }
 
-  const removed = removeNodeFromTree(rawSchema.root, payload.nodeId)
-  if (!removed) {
+  const currentIndex = children.findIndex(c => c.id === payload.nodeId)
+  if (currentIndex === -1) {
     console.warn(`[dragcraft/core] MOVE_NODE: node "${payload.nodeId}" not found`)
     return
   }
 
-  insertNodeIntoTree(targetParent, removed, payload.index)
+  // Remove from current position
+  const [node] = children.splice(currentIndex, 1)
+
+  // Insert at target position (adjust for removal)
+  const targetIndex = Math.min(payload.index, children.length)
+  children.splice(targetIndex, 0, node)
 }

@@ -33,7 +33,6 @@ export const formTextareaWidgetMeta: WidgetMeta = {
       },
     ],
   },
-  canHaveChildren: false,
 }
 
 export default defineComponent({

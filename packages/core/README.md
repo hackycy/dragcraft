@@ -31,15 +31,13 @@ engine.registerWidget({
   formSchema: {},
 })
 
-// 添加节点
+// 添加节点（扁平模型，直接添加到 root.children）
 engine.execute({
   type: CommandType.ADD_NODE,
   payload: {
-    parentId: 'root',
     node: {
       id: 'btn-1',
       type: 'button',
-      nodeType: 'widget',
       props: { text: 'Hello' },
     },
   },
@@ -64,10 +62,10 @@ const schema = engine.exportSchema()
 src/
 ├── types.ts                  # 所有接口与类型定义
 ├── constants.ts              # 事件名、命令类型常量
-├── helpers.ts                # 节点树遍历工具函数
+├── helpers.ts                # 扁平列表操作工具函数
 ├── schema-store.ts           # SchemaStore - 响应式状态管理
 ├── event-hub.ts              # EventHub - 类型安全的事件总线
-├── registry.ts               # Registry - 物料/容器/配置注册中心
+├── registry.ts               # Registry - 物料/配置注册中心
 ├── history-manager.ts        # HistoryManager - undo/redo/事务
 ├── command-bus.ts            # CommandBus - 命令分发中枢
 ├── engine.ts                 # createEngine 工厂函数
@@ -101,7 +99,7 @@ src/
 | `selectNode(id \| null)` | 设置选中节点 |
 | `hoverNode(id \| null)` | 设置 hover 节点 |
 | `setDragTarget(target \| null)` | 设置拖拽目标 |
-| `getNodeById(id)` | 按 ID 查找节点（DFS） |
+| `getNodeById(id)` | 按 ID 查找节点（在 root.children 中线性查找） |
 | `patchNode(nodeId, partial)` | 局部更新节点 props/style |
 | `triggerUpdate()` | 手动触发响应式通知 |
 
@@ -118,8 +116,8 @@ src/
 
 内置命令类型（`CommandType`）：
 
-- `ADD_NODE` — 在指定父节点下添加子节点
-- `MOVE_NODE` — 移动节点到新的父节点
+- `ADD_NODE` — 添加 widget 到 root.children 扁平列表
+- `MOVE_NODE` — 在 root.children 中重排序
 - `REMOVE_NODE` — 删除节点
 - `UPDATE_PROPS` — 更新节点 props/style
 - `SET_GLOBAL_CONFIG` — 更新全局配置
@@ -144,20 +142,17 @@ src/
 
 ### 4) Registry
 
-物料、容器、配置 schema 的注册中心。
+物料与配置 schema 的注册中心。
 
 接口（`RegistryInstance`）：
 
 | 方法 | 说明 |
 |------|------|
 | `registerWidget(meta)` | 注册 widget 元信息 |
-| `registerContainer(meta)` | 注册容器元信息 |
 | `registerGlobalConfigSchema(schema)` | 注册全局配置表单 schema |
 | `getWidget(type)` | 获取 widget 元信息 |
-| `getContainer(type)` | 获取容器元信息 |
 | `getGlobalConfigSchema()` | 获取全局配置 schema |
 | `getAllWidgets()` | 获取所有已注册 widget |
-| `getAllContainers()` | 获取所有已注册容器 |
 
 ### 5) EventHub
 
@@ -194,7 +189,6 @@ interface DesignerEngine {
   execute(command): void
   registerHandler(type, handler): void
   registerWidget(meta): void
-  registerContainer(meta): void
   exportSchema(): DesignerSchema
   importSchema(schema): void
   dispose(): void
@@ -206,15 +200,12 @@ interface DesignerEngine {
 ### 节点结构
 
 ```ts
-type NodeType = 'container' | 'widget'
-
 interface SchemaNode {
   id: string
   type: string
-  nodeType: NodeType
   props: Record<string, unknown>
   style?: Record<string, unknown>
-  children?: SchemaNode[]
+  children?: SchemaNode[]  // 仅 root 节点使用
 }
 ```
 
@@ -239,7 +230,25 @@ interface WidgetMeta {
   defaultProps: Record<string, unknown>
   defaultStyle?: Record<string, unknown>
   formSchema: Record<string, unknown>
-  canHaveChildren?: boolean
+  mask?: boolean  // 默认 true，控制画布中是否覆盖透明遮罩
+}
+```
+
+### 命令 Payload
+
+```ts
+interface AddNodePayload {
+  node: SchemaNode
+  index?: number      // root.children 中的插入位置，默认追加末尾
+}
+
+interface MoveNodePayload {
+  nodeId: string
+  index: number        // root.children 中的目标位置
+}
+
+interface RemoveNodePayload {
+  nodeId: string
 }
 ```
 
@@ -256,15 +265,15 @@ CommandBus
   4. eventHub.emit(事件)    ── 领域事件 + schema:changed
 ```
 
-## 树工具函数
+## 工具函数
 
-导出供外部使用：
+导出供外部使用（扁平列表操作）：
 
-- `findNodeById(root, id)` — DFS 查找节点
-- `findParentNode(root, targetId)` — 查找父节点及索引
-- `removeNodeFromTree(root, nodeId)` — 从树中移除节点
-- `insertNodeIntoTree(parent, node, index?)` — 插入节点
-- `walkTree(root, visitor)` — 遍历整棵树
+- `findNodeById(root, id)` — 在 root.children 中线性查找节点
+- `findParentNode(root, targetId)` — 查找父节点及索引（parent 始终为 root）
+- `removeNodeFromTree(root, nodeId)` — 从 root.children 中移除节点
+- `insertNodeIntoTree(parent, node, index?)` — 插入节点到 children 列表
+- `walkTree(root, visitor)` — 遍历 root + root.children
 
 ## 与其他包协作
 

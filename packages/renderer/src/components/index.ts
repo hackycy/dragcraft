@@ -1,7 +1,5 @@
-export { default as ContainerRenderer } from './ContainerRenderer'
 export { default as DefaultContainerShell } from './DefaultContainerShell'
 export { default as DefaultDropIndicator } from './DefaultDropIndicator'
 export { default as DefaultWidgetFallback } from './DefaultWidgetFallback'
-export { default as NodeRenderer } from './NodeRenderer'
 export { default as RootRenderer } from './RootRenderer'
 export { default as WidgetRenderer } from './WidgetRenderer'

@@ -25,12 +25,6 @@ import {
   FormTextareaWidget,
   formTextareaWidgetMeta,
 } from './widgets/form'
-import {
-  FlexColumnWidget,
-  flexColumnWidgetMeta,
-  FlexRowWidget,
-  flexRowWidgetMeta,
-} from './widgets/layout'
 
 // ──────────────────────────────────────────
 // Widget definitions collection
@@ -52,9 +46,6 @@ export const allWidgetDefinitions: WidgetDefinition[] = [
   { meta: formSelectWidgetMeta, component: FormSelectWidget },
   { meta: formCheckboxWidgetMeta, component: FormCheckboxWidget },
   { meta: formRadioWidgetMeta, component: FormRadioWidget },
-  // layout group
-  { meta: flexRowWidgetMeta, component: FlexRowWidget },
-  { meta: flexColumnWidgetMeta, component: FlexColumnWidget },
 ]
 
 // ──────────────────────────────────────────
@@ -68,7 +59,6 @@ export const allWidgetDefinitions: WidgetDefinition[] = [
 export const widgetGroups: readonly WidgetGroupConfig[] = [
   { name: 'basic', title: '基础展示' },
   { name: 'form', title: '表单交互' },
-  { name: 'layout', title: '布局容器' },
 ]
 
 // ──────────────────────────────────────────

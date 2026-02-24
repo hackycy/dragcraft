@@ -6,7 +6,7 @@
 
 - 开箱即用：业务方只需要引入 `@dragcraft/designer` 即可完成设计器接入。
 - 单一出口：所有可用能力都由 `@dragcraft/designer` 统一导出（含类型、插件、默认实现）。
-- 高可定制：支持左侧物料区、中心画布容器、画布内物料渲染、右侧配置区按需替换。
+- 高可定制：支持左侧物料区、中心画布、右侧配置区按需替换。
 - 强内核：`@dragcraft/core` 不依赖 Vue，不包含 UI，负责状态、命令、历史、注册和事件语义。
 
 ## 二、Monorepo 目录结构
@@ -32,10 +32,10 @@ root
 
 负责：
 
-- Schema 状态树管理（页面、容器、组件节点）。
+- Schema 状态管理（根节点 + 扁平 widget 列表）。
 - 命令系统（新增、移动、删除、更新）。
 - 历史记录（undo/redo，批处理事务）。
-- 注册中心（widget、容器、表单 schema）。
+- 注册中心（widget、表单 schema）。
 - 事件总线（拖拽生命周期、选中变化、变更通知）。
 
 ### 3.2 UI Shell（Vue3）
@@ -43,47 +43,84 @@ root
 由 `@dragcraft/designer` 组合以下模块：
 
 - 左栏：物料面板（支持分组、搜索、拖拽、用户自定义渲染）。
-- 中栏：画布区域（支持容器壳自定义渲染，仅容器可替换；拖入高亮态）。
+- 中栏：画布区域（扁平 widget 列表渲染；拖入高亮态；mask 覆盖层控制交互；选中浮动工具栏）。
 - 右栏：配置面板（Tab：全局配置 / 当前选中 Widget 配置）。
 
-## 四、对外使用模式（唯一入口）
+## 四、数据模型
+
+### 4.1 扁平架构
+
+Schema 采用扁平 widget 列表模型，无树结构、无容器嵌套：
+
+```ts
+interface SchemaNode {
+  id: string
+  type: string
+  props: Record<string, unknown>
+  style?: Record<string, unknown>
+  children?: SchemaNode[] // 仅 root 节点使用
+}
+```
+
+- `root.children` 是扁平的 widget 数组。
+- 不存在 `nodeType`、不区分容器和 widget。
+- 不支持嵌套子节点（`children` 仅 root 保留）。
+
+### 4.2 Mask 概念
+
+每个 widget 可通过 `WidgetMeta.mask` 字段控制画布中的交互行为：
+
+- `mask: true`（默认）：widget 上方覆盖透明遮罩层，阻止直接交互，点击遮罩选中 widget。
+- `mask: false`：widget 可直接交互，hover 时右上角显示选中 handle。
+
+### 4.3 选中态与工具栏
+
+- 选中的 widget 显示明显的蓝色实线边框 + 阴影（`dc-node--selected`）。
+- 选中时在 widget 右侧浮动显示工具栏（上移 / 下移 / 删除）。
+- hover 状态显示蓝色虚线边框（`dc-node--hovered`）。
+
+## 五、对外使用模式（唯一入口）
 
 业务方标准接入流程：
 
 1. 安装并引入 `@dragcraft/designer`。
-2. 传入 `DesignerOptions`（物料、容器、表单 schema、初始 schema）。
+2. 传入 `DesignerOptions`（物料、表单 schema、初始 schema）。
 3. 在 Vue3 中挂载 `<DcDesigner />`。
 4. 通过 `designerApi` 调用所有操作（增删改查、历史、导入导出、事件订阅）。
 
-## 五、关键交互约束
+## 六、关键交互约束
 
-### 5.1 左侧物料区
+### 6.1 左侧物料区
 
-- 支持物料分组：基础组件 / 表单组件 / 业务组件等。
+- 支持物料分组：基础组件 / 表单组件。
 - 每个 widget 都定义自己的表单 schema（属性配置协议）。
 - 支持 `renderWidgetItem` 扩展点，用于自定义左栏物料卡片 UI。
 
-### 5.2 中间画布区
+### 6.2 中间画布区
 
-- 仅容器支持自定义渲染（如手机壳、平板壳、PC 画板壳）。
-- 组件落点仍由 core 的 schema 驱动，避免 UI 自定义破坏数据一致性。
+- 画布为 root 节点，所有 widget 平铺在 root.children 中。
+- 拖拽 widget 直接添加到 root 的扁平列表末尾。
+- 支持 mask 覆盖层（默认开启）控制 widget 在画布中的可交互性。
+- 选中 widget 后右侧浮动工具栏提供上移、下移、删除操作。
 - 拖拽悬停时支持 DropZone 高亮（边框、背景、占位提示态）。
-- 支持 `renderWidgetNode` 扩展点：画布内 widget 的展示可由用户重写。
+- 空画布显示"拖拽组件到这里"占位提示。
+- 点击画布空白处取消选中。
 
-### 5.3 右侧配置区
+### 6.3 右侧配置区
 
 - 采用 schema 表单驱动。
 - 固定包含两个 Tab：`Global`（全局配置）与 `Widget`（当前选中组件配置）。
 - 全局配置始终可见；Widget 配置随选中态变化。
+- 修改配置后画布实时预览效果。
 
-## 六、非功能性设计要求
+## 七、非功能性设计要求
 
 - 运行时一致性：所有写操作必须通过命令系统进入 core。
 - 可扩展性：所有可替换能力通过显式扩展点，不破坏默认行为。
 - 可测试性：core 可独立单元测试；UI 层以集成测试验证交互。
 - 向后兼容：schema 需包含版本号并提供迁移钩子。
 
-## 七、包职责总览
+## 八、包职责总览
 
 - `@dragcraft/core`：领域模型、状态机、命令、历史、事件、注册协议。
 - `@dragcraft/designer`：对外 API、Vue3 设计器布局与交互编排。

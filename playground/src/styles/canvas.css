@@ -19,6 +19,22 @@
   padding: 16px;
 }
 
+/* ── Empty Canvas Placeholder ────────────── */
+
+.dc-container-shell--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.dc-container-shell--empty::after {
+  content: '拖拽组件到这里';
+  color: var(--dc-text-placeholder);
+  font-size: var(--dc-font-size-sm);
+  pointer-events: none;
+}
+
 /* ── Node Base ────────────────────────────── */
 
 .dc-node {
@@ -29,31 +45,6 @@
   cursor: default;
 }
 
-/* ── Container Node ──────────────────────── */
-
-.dc-node--container {
-  min-height: 40px;
-  border: 1px dashed var(--dc-border);
-  border-radius: var(--dc-radius);
-  margin: 4px 0;
-}
-
-.dc-container--empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60px;
-  border-style: dashed;
-  border-color: var(--dc-border);
-}
-
-.dc-container--empty::after {
-  content: '拖拽组件到这里';
-  color: var(--dc-text-placeholder);
-  font-size: var(--dc-font-size-sm);
-  pointer-events: none;
-}
-
 /* ── Widget Node ─────────────────────────── */
 
 .dc-node--widget {
@@ -61,21 +52,112 @@
   padding: 2px;
 }
 
+/* ── Mask Overlay (mask=true, default) ───── */
+
+.dc-node--masked {
+  position: relative;
+}
+
+.dc-node__mask {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: pointer;
+}
+
+/* ── Selection Handle (mask=false) ────────── */
+
+.dc-node--unmasked {
+  position: relative;
+}
+
+.dc-node__handle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--dc-primary);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+}
+
+.dc-node--hovered .dc-node__handle {
+  opacity: 0.8;
+}
+
+.dc-node__handle:hover {
+  opacity: 1;
+}
+
+/* ── Floating Toolbar (when selected) ────── */
+
+.dc-node__toolbar {
+  position: absolute;
+  top: 0;
+  right: -36px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.dc-node__toolbar-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  background: var(--dc-bg);
+  color: var(--dc-text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.dc-node__toolbar-btn:hover {
+  color: var(--dc-primary);
+  border-color: var(--dc-primary);
+  background: rgba(24, 144, 255, 0.06);
+}
+
+.dc-node__toolbar-btn--delete:hover {
+  color: var(--dc-danger);
+  border-color: var(--dc-danger);
+  background: rgba(255, 77, 79, 0.06);
+}
+
+.dc-node__toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* ── Interaction States ──────────────────── */
 
-.dc-node--hovered {
+.dc-node--hovered:not(.dc-node--selected) {
   border-color: var(--dc-primary);
   border-style: dashed;
 }
 
 .dc-node--selected {
   border-color: var(--dc-primary);
+  border-width: 2px;
   border-style: solid;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-}
-
-.dc-node--selected.dc-node--container {
-  border-style: solid;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.15);
 }
 
 .dc-node--drag-over {

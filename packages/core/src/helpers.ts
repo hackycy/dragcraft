@@ -1,7 +1,8 @@
 import type { SchemaNode } from './types'
 
 /**
- * Depth-first search to find a node by ID.
+ * Find a node by ID in the flat structure.
+ * Only searches root and root.children (one level deep).
  */
 export function findNodeById(
   root: SchemaNode,
@@ -11,9 +12,8 @@ export function findNodeById(
     return root
   if (root.children) {
     for (const child of root.children) {
-      const found = findNodeById(child, id)
-      if (found)
-        return found
+      if (child.id === id)
+        return child
     }
   }
   return null
@@ -21,6 +21,7 @@ export function findNodeById(
 
 /**
  * Find the parent node of a given node ID.
+ * In the flat model, the parent is always root.
  * Returns { parent, index } or null if node is root or not found.
  */
 export function findParentNode(
@@ -28,14 +29,9 @@ export function findParentNode(
   targetId: string,
 ): { parent: SchemaNode, index: number } | null {
   if (root.children) {
-    for (let i = 0; i < root.children.length; i++) {
-      if (root.children[i].id === targetId) {
-        return { parent: root, index: i }
-      }
-      const found = findParentNode(root.children[i], targetId)
-      if (found)
-        return found
-    }
+    const index = root.children.findIndex(c => c.id === targetId)
+    if (index >= 0)
+      return { parent: root, index }
   }
   return null
 }
@@ -76,7 +72,7 @@ export function insertNodeIntoTree(
 }
 
 /**
- * Walk the entire tree, calling visitor for each node.
+ * Walk the flat widget list, calling visitor for each node.
  * If visitor returns false, stop traversal.
  */
 export function walkTree(
@@ -87,7 +83,8 @@ export function walkTree(
     return
   if (root.children) {
     for (const child of root.children) {
-      walkTree(child, visitor)
+      if (visitor(child) === false)
+        return
     }
   }
 }

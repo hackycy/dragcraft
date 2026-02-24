@@ -5,13 +5,13 @@
 ## 目标
 
 - 将数据结构稳定映射为可视组件。
-- 支持容器与 widget 的分层渲染。
+- 支持 mask 覆盖层与选中工具栏。
 - 支持可替换渲染策略，不破坏 schema 协议。
 
 ## 设计边界
 
 - 不承担业务状态管理，仅消费 core 状态。
-- 不直接修改 schema（不调用 `engine.execute()`）。
+- 不直接修改 schema（选中/删除/移动操作通过 `engine.execute()` 执行）。
 - 渲染必须幂等，避免副作用。
 - 不内置 CSS 样式，仅应用 CSS class 名。
 
@@ -51,10 +51,8 @@ src/
 │   ├── useNodeState.ts             # 节点交互状态（selected/hovered/drag-over）
 │   └── index.ts
 ├── components/
-│   ├── RootRenderer.ts             # 根入口，provide context，渲染根容器子节点
-│   ├── NodeRenderer.ts             # 分发：container → ContainerRenderer / widget → WidgetRenderer
-│   ├── ContainerRenderer.ts        # 容器渲染，递归子节点，drop indicator
-│   ├── WidgetRenderer.ts           # 物料渲染，解析组件，应用 props/style
+│   ├── RootRenderer.ts             # 根入口，provide context，渲染扁平 widget 列表
+│   ├── WidgetRenderer.ts           # Widget 渲染：解析组件 + mask + handle + 工具栏
 │   ├── DefaultContainerShell.ts    # 默认画布容器壳（plain div）
 │   ├── DefaultDropIndicator.ts     # 默认拖拽指示器
 │   ├── DefaultWidgetFallback.ts    # 未找到组件时的 fallback
@@ -75,25 +73,24 @@ type ComponentMap = Record<string, Component>
 const componentMap = {
   button: ButtonWidget,
   text: TextWidget,
-  'flex-row': FlexRowContainer,
 }
 ```
 
 由上层（designer）负责收集 ComponentMap 并传入 `RootRenderer`。
 
-### 渲染分层
+### 渲染管线
 
 ```
 RootRenderer          → 根入口，provide context，渲染容器壳
-  └─ NodeRenderer     → 按 nodeType 分发
-       ├─ ContainerRenderer  → 容器节点，递归渲染 children
-       └─ WidgetRenderer     → 物料节点，解析并渲染组件
+  └─ WidgetRenderer[] → 扁平遍历 root.children，逐个渲染 widget
+       ├─ 组件内容     → 从 componentMap 解析并渲染
+       ├─ Mask 覆盖层  → mask=true 时的透明遮罩（点击选中）
+       ├─ Handle 角标  → mask=false 时的 hover 选中按钮
+       └─ 浮动工具栏   → 选中时显示（上移/下移/删除）
 ```
 
-1. **RootRenderer**：接收 `engine`、`componentMap`、`extensions` 作为 props，创建 `RendererContext` 并通过 `provide` 注入子树。
-2. **NodeRenderer**：纯分发，按 `node.nodeType` 路由到 `ContainerRenderer` 或 `WidgetRenderer`。
-3. **ContainerRenderer**：渲染容器节点，支持自定义容器布局组件，递归渲染 children。
-4. **WidgetRenderer**：渲染物料节点，从 `componentMap` 解析组件并传入 `node.props`。
+1. **RootRenderer**：接收 `engine`、`componentMap`、`extensions` 作为 props，创建 `RendererContext` 并通过 `provide` 注入子树。遍历 `root.children` 直接渲染 `WidgetRenderer`。
+2. **WidgetRenderer**：渲染物料节点，从 `componentMap` 解析组件并传入 `node.props`。支持 mask 覆盖层、选中 handle 和浮动工具栏。
 
 ## 组件详解
 
@@ -104,19 +101,29 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 | `engine` | `DesignerEngine` | 是 | core 引擎实例 |
 | `componentMap` | `ComponentMap` | 是 | node.type → Vue 组件映射 |
 | `extensions` | `RendererExtensions` | 否 | 扩展点覆盖 |
-| `dragOverNodeId` | `Ref<string \| null>` | 否 | 拖拽悬停节点 ID（由 designer 管理） |
+| `dragOverNodeId` | `Ref<string \| null>` | 否 | 拖拽悬停状态（由 designer 管理） |
 
-### ContainerRenderer
-
-- 从 `componentMap` 查找容器布局组件（可选），找到则用该组件包裹 children，否则直接渲染 children。
-- `isDragOver` 时在末尾追加 `DropIndicator` 组件。
-- 空容器应用 `dc-container--empty` CSS class。
+空画布时显示 `dc-container-shell--empty` + "拖拽组件到这里"占位。
 
 ### WidgetRenderer
 
 - 从 `componentMap` 查找物料组件，未找到则渲染 `DefaultWidgetFallback`。
 - `node.props` 通过展开运算符传递给解析到的组件。
 - `node.style` 应用到外层 wrapper div 上。
+
+**Mask 覆盖层**（`mask !== false`，默认）：
+- 渲染 `dc-node__mask` 透明覆盖层，阻止 widget 交互。
+- 点击覆盖层调用 `engine.store.selectNode()` 选中 widget。
+
+**选中 Handle**（`mask === false`）：
+- widget 可直接交互，不覆盖遮罩。
+- hover 时右上角显示 `dc-node__handle` 角标按钮，点击选中 widget。
+
+**浮动工具栏**（选中时）：
+- 在 widget 右侧浮动显示 `dc-node__toolbar`。
+- 三个按钮：上移（↑）、下移（↓）、删除（✕）。
+- 通过 `engine.execute()` 执行 `MOVE_NODE` / `REMOVE_NODE` 命令。
+- 首个 widget 的上移和末尾 widget 的下移按钮禁用。
 
 ## Props/Style 策略
 
@@ -128,7 +135,7 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 
 ## 交互状态
 
-- **选中**：点击节点调用 `engine.store.selectNode(nodeId)`，`dc-node--selected` class。
+- **选中**：点击 mask 覆盖层或 handle 调用 `engine.store.selectNode(nodeId)`，`dc-node--selected` class。
 - **悬停**：mouseenter/mouseleave 调用 `engine.store.hoverNode()`，`dc-node--hovered` class。
 - **拖拽悬停**：由外部 `dragOverNodeId` ref 控制，`dc-node--drag-over` class + DropIndicator。
 
@@ -138,20 +145,25 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 |--------|------|----------|
 | `extensions.containerShell` | 替换根画布容器壳（手机壳、平板壳等） | `DefaultContainerShell`（plain div） |
 | `extensions.dropIndicator` | 替换拖拽指示器 | `DefaultDropIndicator`（水平线） |
-| `componentMap[type]` | 容器/物料的自定义渲染组件 | 容器：直接渲染 children / 物料：DefaultWidgetFallback |
+| `componentMap[type]` | 自定义 widget 渲染组件 | `DefaultWidgetFallback` |
 
 ## CSS Class 层级
 
 ```
 .dc-root-renderer
   .dc-container-shell
-    .dc-node.dc-node--container
-      .dc-node--selected
-      .dc-node--hovered
-      .dc-node--drag-over
-      .dc-container--empty
+    .dc-container-shell--empty          # 空画布
     .dc-node.dc-node--widget
+      .dc-node--masked                  # mask=true
+        .dc-node__mask                  # 透明覆盖层
+      .dc-node--unmasked                # mask=false
+        .dc-node__handle                # hover 角标
       .dc-node--selected
+        .dc-node__toolbar               # 浮动工具栏
+          .dc-node__toolbar-btn
+          .dc-node__toolbar-btn--up
+          .dc-node__toolbar-btn--down
+          .dc-node__toolbar-btn--delete
       .dc-node--hovered
     .dc-drop-indicator > .dc-drop-indicator__line
     .dc-widget-fallback
@@ -187,19 +199,20 @@ core 使用 `shallowRef` + `triggerRef` 对 schema 进行 in-place 修改。rend
 
 ## 与其他包协作
 
-- `@dragcraft/core`：消费 engine 的 store（schema、selectedNodeId、hoveredNodeId），调用 selectNode/hoverNode。
+- `@dragcraft/core`：消费 engine 的 store（schema、selectedNodeId、hoveredNodeId），调用 selectNode/hoverNode，执行 MOVE_NODE/REMOVE_NODE 命令。
 - `@dragcraft/designer`：接收 designer 传入的 engine、componentMap、extensions、dragOverNodeId。
 - `@dragcraft/widgets`：widgets 提供 Vue 组件，由 designer 收集到 componentMap 中。
 
 ## 约束
 
-- 所有写操作须通过 core 命令系统，renderer 不调用 `engine.execute()`。
 - 设置选中/悬停状态（`selectNode`/`hoverNode`）是安全的非 schema 修改操作。
+- 工具栏操作（移动/删除）通过 core 命令系统执行。
 - 渲染幂等，无副作用。
 
 ## 里程碑
 
 1. ~~完成类型定义与上下文系统。~~ ✅
-2. ~~完成组件渲染层（Root/Node/Container/Widget）。~~ ✅
+2. ~~完成组件渲染层（Root/Widget）。~~ ✅
 3. ~~完成默认组件与交互状态。~~ ✅
-4. 补齐单元测试。
+4. ~~完成 mask 覆盖层、选中 handle、浮动工具栏。~~ ✅
+5. 补齐单元测试。

@@ -10,7 +10,6 @@ import { getDefaultComponentMap, registerAllWidgets } from '@dragcraft/widgets'
  * ```ts
  * const designer = createDesigner({
  *   globalConfigSchema: myGlobalSchema,
- *   extensions: { canvasContainerRenderer: PhoneShell },
  * })
  * ```
  */

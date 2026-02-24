@@ -23,7 +23,7 @@ export interface WidgetDefinition {
 /**
  * Built-in widget group names for categorization in material panel.
  */
-export type WidgetGroup = 'basic' | 'form' | 'layout'
+export type WidgetGroup = 'basic' | 'form'
 
 /**
  * Widget group configuration with localized titles.
@@ -53,6 +53,3 @@ export type WidgetType
     | 'form-select'
     | 'form-checkbox'
     | 'form-radio'
-  // layout group
-    | 'flex-row'
-    | 'flex-column'

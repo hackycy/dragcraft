@@ -12,7 +12,6 @@ export function createDefaultSchema(): DesignerSchema {
     root: {
       id: 'root',
       type: 'root',
-      nodeType: 'container',
       props: {},
       children: [],
     },

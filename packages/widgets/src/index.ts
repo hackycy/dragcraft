@@ -23,11 +23,6 @@ export {
   buttonWidgetMeta,
   DividerWidget,
   dividerWidgetMeta,
-  // layout
-  FlexColumnWidget,
-  flexColumnWidgetMeta,
-  FlexRowWidget,
-  flexRowWidgetMeta,
   // form
   FormCheckboxWidget,
   formCheckboxWidgetMeta,
