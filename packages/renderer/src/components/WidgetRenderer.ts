@@ -61,6 +61,24 @@ export default defineComponent({
       }
     }
 
+    // Drag handle: initiate HTML5 drag for reordering
+    const handleDragHandleStart = (e: DragEvent) => {
+      e.stopPropagation()
+      engine.store.setDragTarget({
+        sourceNodeId: props.node.id,
+        widgetType: null,
+      })
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move'
+        e.dataTransfer.setData('text/plain', props.node.id)
+      }
+    }
+
+    const handleDragHandleEnd = (e: DragEvent) => {
+      e.stopPropagation()
+      engine.store.setDragTarget(null)
+    }
+
     return () => {
       // Read schema.value to establish reactive dependency
       void engine.store.schema.value
@@ -111,6 +129,13 @@ export default defineComponent({
 
         wrapperChildren.push(
           h('div', { class: 'dc-node__toolbar' }, [
+            h('div', {
+              class: 'dc-node__toolbar-btn dc-node__toolbar-btn--drag',
+              title: '拖拽排序',
+              draggable: true,
+              onDragstart: handleDragHandleStart,
+              onDragend: handleDragHandleEnd,
+            }, '\u2630'),
             h('button', {
               type: 'button',
               class: 'dc-node__toolbar-btn dc-node__toolbar-btn--up',

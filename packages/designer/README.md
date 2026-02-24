@@ -52,7 +52,8 @@ src/
 - 集成 `@dragcraft/renderer` 的 `RootRenderer`。
 - 扁平模型：所有 widget 直接添加到 root.children 列表。
 - 拖拽始终 drop 到 root 节点（无容器查找逻辑）。
-- 支持拖拽过程高亮反馈：`dragOverNodeId` 传递至 `RootRenderer` 驱动 `DropIndicator`。
+- 支持拖拽过程高亮反馈：`dragOverNodeId` + `dragOverIndex` 传递至 `RootRenderer`，驱动 `DropIndicator` 在精确位置渲染。
+- 拖拽位置通过鼠标 Y 坐标与各 widget 垂直中点比较实时计算，实现任意位置插入。
 - 拖拽落地通过 core 命令提交（`ADD_NODE` / `MOVE_NODE`），不允许直接改 UI 本地状态。
 - 新 widget 添加后自动选中。
 - 点击画布空白处（包括 widget 之间的间隙区域）取消选中。利用 `data-node-id` 属性判断点击是否落在 widget 节点内。

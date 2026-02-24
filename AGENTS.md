@@ -76,7 +76,8 @@ interface SchemaNode {
 ### 4.3 选中态与工具栏
 
 - 选中的 widget 显示明显的蓝色实线边框 + 阴影（`dc-node--selected`）。
-- 选中时在 widget 右侧浮动显示工具栏（上移 / 下移 / 删除）。
+- 选中时在 widget 右侧浮动显示工具栏（拖拽排序 / 上移 / 下移 / 删除）。
+- 拖拽排序按钮支持 HTML5 原生拖拽，拖住该按钮可将 widget 拖拽到画布中的目标位置进行排序，通过 `MOVE_NODE` 命令完成重排。
 - hover 状态显示蓝色虚线边框（`dc-node--hovered`）。
 
 ## 五、对外使用模式（唯一入口）
@@ -99,10 +100,10 @@ interface SchemaNode {
 ### 6.2 中间画布区
 
 - 画布为 root 节点，所有 widget 平铺在 root.children 中。
-- 拖拽 widget 直接添加到 root 的扁平列表末尾。
+- 拖拽 widget 支持任意位置插入，通过鼠标 Y 坐标与各 widget 垂直中点比较实时计算插入索引。
 - 支持 mask 覆盖层（默认开启）控制 widget 在画布中的可交互性。
-- 选中 widget 后右侧浮动工具栏提供上移、下移、删除操作。
-- 拖拽悬停时支持 DropZone 高亮（边框、背景、占位提示态）。
+- 选中 widget 后右侧浮动工具栏提供拖拽排序、上移、下移、删除操作。
+- 拖拽悬停时 DropIndicator 在精确插入位置渲染（由 `dragOverIndex` 驱动）。
 - 空画布显示"拖拽组件到这里"占位提示。
 - 点击画布空白处取消选中。
 

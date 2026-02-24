@@ -146,6 +146,14 @@
   pointer-events: none;
 }
 
+.dc-node__toolbar-btn--drag {
+  cursor: grab;
+}
+
+.dc-node__toolbar-btn--drag:active {
+  cursor: grabbing;
+}
+
 /* ── Interaction States ──────────────────── */
 
 .dc-node--hovered:not(.dc-node--selected) {

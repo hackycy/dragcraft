@@ -51,6 +51,12 @@ export interface RendererOptions {
    * If not provided, drag-over visual state is disabled.
    */
   dragOverNodeId?: Ref<string | null>
+  /**
+   * Optional reactive ref tracking the visual insertion index during drag-over.
+   * Determines where the drop indicator is rendered within the widget list.
+   * Managed externally by the designer package.
+   */
+  dragOverIndex?: Ref<number | null>
 }
 
 /**

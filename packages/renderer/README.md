@@ -86,7 +86,7 @@ RootRenderer          → 根入口，provide context，渲染容器壳
        ├─ 组件内容     → 从 componentMap 解析并渲染
        ├─ Mask 覆盖层  → mask=true 时的透明遮罩（点击选中）
        ├─ Handle 角标  → mask=false 时的 hover 选中按钮
-       └─ 浮动工具栏   → 选中时显示（上移/下移/删除）
+       └─ 浮动工具栏   → 选中时显示（拖拽排序/上移/下移/删除）
 ```
 
 1. **RootRenderer**：接收 `engine`、`componentMap`、`extensions` 作为 props，创建 `RendererContext` 并通过 `provide` 注入子树。遍历 `root.children` 直接渲染 `WidgetRenderer`。
@@ -102,6 +102,7 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 | `componentMap` | `ComponentMap` | 是 | node.type → Vue 组件映射 |
 | `extensions` | `RendererExtensions` | 否 | 扩展点覆盖 |
 | `dragOverNodeId` | `Ref<string \| null>` | 否 | 拖拽悬停状态（由 designer 管理） |
+| `dragOverIndex` | `Ref<number \| null>` | 否 | 拖拽插入位置索引（由 designer 管理），决定 DropIndicator 在 widget 列表中的渲染位置 |
 
 空画布时显示 `dc-container-shell--empty` + "拖拽组件到这里"占位。
 
@@ -121,7 +122,9 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 
 **浮动工具栏**（选中时）：
 - 在 widget 右侧浮动显示 `dc-node__toolbar`。
-- 三个按钮：上移（↑）、下移（↓）、删除（✕），均设置 `type="button"` 避免默认 submit 行为。
+- 四个按钮：拖拽排序（☰）、上移（↑）、下移（↓）、删除（✕）。
+- 拖拽排序按钮（`dc-node__toolbar-btn--drag`）：设置 `draggable=true`，拖拽时通过 `engine.store.setDragTarget()` 设置拖拽源为当前节点，配合画布 drop 处理完成节点重排序。拖拽结束时清除拖拽状态。
+- 上移/下移/删除按钮设置 `type="button"` 避免默认 submit 行为。
 - 通过 `engine.execute()` 执行 `MOVE_NODE` / `REMOVE_NODE` 命令。
 - 首个 widget 的上移和末尾 widget 的下移按钮禁用。
 
@@ -161,6 +164,7 @@ RootRenderer          → 根入口，provide context，渲染容器壳
       .dc-node--selected
         .dc-node__toolbar               # 浮动工具栏
           .dc-node__toolbar-btn
+          .dc-node__toolbar-btn--drag
           .dc-node__toolbar-btn--up
           .dc-node__toolbar-btn--down
           .dc-node__toolbar-btn--delete

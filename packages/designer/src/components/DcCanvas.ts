@@ -2,7 +2,7 @@ import type { SchemaNode } from '@dragcraft/core'
 import { CommandType } from '@dragcraft/core'
 import { RootRenderer } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
-import { computed, defineComponent, h } from 'vue'
+import { computed, defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
 
 export default defineComponent({
@@ -12,10 +12,36 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const { engine, componentMap, extensions, dragOverNodeId } = ctx
 
+    // Visual insertion index computed during dragover (0..n for n widgets)
+    const dragOverIndex = ref<number | null>(null)
+
     // Build renderer extensions (merge designer-level overrides)
     const rendererExtensions = computed(() => ({
       ...(extensions.rendererExtensions ?? {}),
     }))
+
+    // ── Helpers ──
+
+    /**
+     * Compute the visual drop index based on mouse Y position relative to
+     * widget elements in the canvas. Compares against each widget's vertical
+     * midpoint to determine the insertion gap.
+     */
+    function computeDropIndex(e: DragEvent): number {
+      const canvasEl = e.currentTarget as HTMLElement
+      const widgetEls = canvasEl.querySelectorAll<HTMLElement>(
+        '[data-node-id]:not([data-node-id="root"])',
+      )
+      const mouseY = e.clientY
+      for (let i = 0; i < widgetEls.length; i++) {
+        const rect = widgetEls[i].getBoundingClientRect()
+        const midY = rect.top + rect.height / 2
+        if (mouseY < midY) {
+          return i
+        }
+      }
+      return widgetEls.length
+    }
 
     // ── Drag event handlers (event delegation) ──
 
@@ -27,6 +53,7 @@ export default defineComponent({
         const dragTarget = engine.store.dragTarget.value
         e.dataTransfer.dropEffect = dragTarget?.sourceNodeId ? 'move' : 'copy'
       }
+      dragOverIndex.value = computeDropIndex(e)
     }
 
     const handleDragLeave = (e: DragEvent) => {
@@ -35,25 +62,37 @@ export default defineComponent({
       const canvasEl = e.currentTarget as HTMLElement
       if (!relatedTarget || !canvasEl.contains(relatedTarget)) {
         dragOverNodeId.value = null
+        dragOverIndex.value = null
       }
     }
 
     const handleDrop = (e: DragEvent) => {
       e.preventDefault()
       dragOverNodeId.value = null
+      const visualIndex = dragOverIndex.value
+      dragOverIndex.value = null
 
       const dragTarget = engine.store.dragTarget.value
       if (!dragTarget)
         return
 
       if (dragTarget.sourceNodeId) {
-        // Moving existing node — append to end
+        // Moving existing node to the computed position
         const children = engine.store.getRawSchema().root.children ?? []
+        const srcIdx = children.findIndex(c => c.id === dragTarget.sourceNodeId)
+
+        // Convert visual gap index to MOVE_NODE target index.
+        // After the source is removed, items after it shift left by 1.
+        let targetIdx = visualIndex ?? children.length
+        if (srcIdx !== -1 && targetIdx > srcIdx) {
+          targetIdx = targetIdx - 1
+        }
+
         engine.execute({
           type: CommandType.MOVE_NODE,
           payload: {
             nodeId: dragTarget.sourceNodeId,
-            index: children.length,
+            index: targetIdx,
           },
         })
       }
@@ -74,6 +113,7 @@ export default defineComponent({
           type: CommandType.ADD_NODE,
           payload: {
             node: newNode,
+            index: visualIndex ?? undefined,
           },
         })
 
@@ -111,6 +151,7 @@ export default defineComponent({
             componentMap,
             extensions: rendererExtensions.value,
             dragOverNodeId,
+            dragOverIndex,
           }),
         ],
       )

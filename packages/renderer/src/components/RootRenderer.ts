@@ -28,6 +28,10 @@ export default defineComponent({
       type: Object as PropType<Ref<string | null>>,
       default: undefined,
     },
+    dragOverIndex: {
+      type: Object as PropType<Ref<number | null>>,
+      default: undefined,
+    },
   },
 
   setup(props) {
@@ -58,9 +62,15 @@ export default defineComponent({
         h(WidgetRenderer, { key: child.id, node: child }),
       )
 
-      // Show drop indicator when dragging over root
+      // Show drop indicator at the computed insertion index
       if (isDragOver) {
-        childVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
+        const idx = props.dragOverIndex?.value
+        if (idx != null && idx >= 0 && idx <= childVNodes.length) {
+          childVNodes.splice(idx, 0, h(DropIndicator, { key: '__drop-indicator__' }))
+        }
+        else {
+          childVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
+        }
       }
 
       // Empty state placeholder
