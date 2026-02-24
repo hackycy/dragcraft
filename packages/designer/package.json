@@ -32,5 +32,13 @@
     "start": "tsx src/index.ts",
     "test": "vitest",
     "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@dragcraft/core": "workspace:*",
+    "@dragcraft/form-generator": "workspace:*",
+    "@dragcraft/renderer": "workspace:*",
+    "@dragcraft/utils": "workspace:*",
+    "@dragcraft/widgets": "workspace:*",
+    "vue": "catalog:shared"
   }
 }

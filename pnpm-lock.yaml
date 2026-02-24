@@ -145,7 +145,26 @@ importers:
         specifier: catalog:shared
         version: 3.5.27
 
-  packages/designer: {}
+  packages/designer:
+    dependencies:
+      '@dragcraft/core':
+        specifier: workspace:*
+        version: link:../core
+      '@dragcraft/form-generator':
+        specifier: workspace:*
+        version: link:../form-generator
+      '@dragcraft/renderer':
+        specifier: workspace:*
+        version: link:../renderer
+      '@dragcraft/utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@dragcraft/widgets':
+        specifier: workspace:*
+        version: link:../widgets
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
 
   packages/form-generator:
     dependencies:

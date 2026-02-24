@@ -1,0 +1,72 @@
+import type { PropType } from 'vue'
+import type { DesignerContext, DesignerInstance } from '../types'
+import { defineComponent, h, provide, ref } from 'vue'
+import { useDragDrop } from '../composables/useDragDrop'
+import { DESIGNER_CONTEXT_KEY } from '../types'
+import DcCanvas from './DcCanvas'
+import DcMaterialPanel from './DcMaterialPanel'
+import DcPropertyPanel from './DcPropertyPanel'
+import DcToolbar from './DcToolbar'
+
+export default defineComponent({
+  name: 'DcDesigner',
+
+  props: {
+    instance: {
+      type: Object as PropType<DesignerInstance>,
+      required: true,
+    },
+  },
+
+  setup(props) {
+    const { engine, componentMap, extensions, fieldComponentMap, globalConfigSchema } = props.instance
+    const searchQuery = ref('')
+    const activeTab = ref<'global' | 'widget'>('widget')
+
+    // Initialize drag-drop composable
+    const dragDrop = useDragDrop(engine)
+
+    // Build and provide context
+    const ctx: DesignerContext = {
+      engine,
+      componentMap,
+      extensions,
+      fieldComponentMap,
+      globalConfigSchema,
+      dragOverNodeId: dragDrop.dragOverNodeId,
+      searchQuery,
+      activeTab,
+    }
+    provide(DESIGNER_CONTEXT_KEY, ctx)
+
+    return () => {
+      // Resolve panel components (support extension overrides)
+      const MaterialPanel = extensions.materialPanelRenderer ?? DcMaterialPanel
+      const PropertyPanel = extensions.propertyPanelRenderer ?? DcPropertyPanel
+
+      return h(
+        'div',
+        { class: 'dc-designer' },
+        [
+          // Top toolbar
+          h(DcToolbar),
+          // Three-column body
+          h('div', { class: 'dc-designer__body' }, [
+            // Left: Material Panel
+            h('div', { class: 'dc-designer__panel dc-designer__panel--left' }, [
+              h(MaterialPanel),
+            ]),
+            // Center: Canvas
+            h('div', { class: 'dc-designer__panel dc-designer__panel--center' }, [
+              h(DcCanvas),
+            ]),
+            // Right: Property Panel
+            h('div', { class: 'dc-designer__panel dc-designer__panel--right' }, [
+              h(PropertyPanel),
+            ]),
+          ]),
+        ],
+      )
+    }
+  },
+})
