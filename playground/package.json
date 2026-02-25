@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@dragcraft/designer": "workspace:*",
+    "@dragcraft/themes": "workspace:*",
     "vue": "catalog:shared"
   },
   "devDependencies": {

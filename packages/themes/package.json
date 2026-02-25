@@ -1,0 +1,27 @@
+{
+  "name": "@dragcraft/themes",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Headless Component Library themes for dragcraft",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./dist/antd.css",
+    "./antd": "./dist/antd.css",
+    "./material": "./dist/material.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "postcss src/antd/index.css -o dist/antd.css && postcss src/material/index.css -o dist/material.css",
+    "dev": "pnpm run build --watch"
+  },
+  "devDependencies": {
+    "postcss": "catalog:cli",
+    "postcss-cli": "catalog:cli",
+    "postcss-import": "catalog:cli"
+  }
+}

@@ -303,3 +303,13 @@ form-generator 不内置样式，仅应用 class 名，由使用方或 designer 
 3. ~~完成内置字段组件（7 个）。~~ ✅
 4. ~~完成核心渲染组件（FormGenerator/FormSection/FormField）。~~ ✅
 5. 补齐单元测试。
+
+## 无头设计（Headless Design）
+
+本包采用无头组件模式：所有组件仅输出语义化 BEM CSS 类名（`dc-*`），不捆绑任何 CSS 样式文件。
+
+视觉样式由独立的 `@dragcraft/themes` 包提供，支持以下使用模式：
+
+- **开箱即用**：`import '@dragcraft/themes/antd'` 或 `import '@dragcraft/themes/material'`
+- **无头模式**：不导入皮肤，自行编写全部 CSS
+- **自定义换肤**：导入皮肤后覆盖 CSS 变量

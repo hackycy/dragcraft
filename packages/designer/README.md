@@ -202,3 +202,13 @@ const designer = createDesigner({
 - 仅使用 CSS class 名称，不包含内联样式。
 - provide/inject 上下文模式传递数据。
 - TypeScript-first，完整类型导出。
+
+## 无头设计（Headless Design）
+
+本包采用无头组件模式：所有组件仅输出语义化 BEM CSS 类名（`dc-*`），不捆绑任何 CSS 样式文件。
+
+视觉样式由独立的 `@dragcraft/themes` 包提供，支持以下使用模式：
+
+- **开箱即用**：`import '@dragcraft/themes/antd'` 或 `import '@dragcraft/themes/material'`
+- **无头模式**：不导入皮肤，自行编写全部 CSS
+- **自定义换肤**：导入皮肤后覆盖 CSS 变量

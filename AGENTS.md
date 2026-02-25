@@ -1,12 +1,13 @@
 # dragcraft
 
-采用 `Core Engine + UI Shell` 架构，构建核心与 UI 分离的低代码 / 无代码设计引擎。
+采用 `Core Engine + UI Shell + Headless Themes` 架构，构建核心与 UI 分离的低代码 / 无代码设计引擎。
 
 ## 一、产品目标
 
-- 开箱即用：业务方只需要引入 `@dragcraft/designer` 即可完成设计器接入。
+- 开箱即用：业务方只需要引入 `@dragcraft/designer` + `@dragcraft/themes` 即可完成设计器接入。
+- 无头组件：所有 UI 包仅输出语义化 BEM 类名，不捆绑任何 CSS —— 视觉样式由 `@dragcraft/themes` 独立提供。
 - 单一出口：所有可用能力都由 `@dragcraft/designer` 统一导出（含类型、插件、默认实现）。
-- 高可定制：支持左侧物料区、中心画布、右侧配置区按需替换。
+- 高可定制：支持左侧物料区、中心画布、右侧配置区按需替换；支持完全自定义样式（无头模式）。
 - 强内核：`@dragcraft/core`不包含 UI，负责状态、命令、历史、注册和事件语义。
 
 ## 二、Monorepo 目录结构
@@ -21,6 +22,7 @@ root
 │   ├── renderer         # Schema -> Vue 组件渲染层
 │   ├── form-generator   # Schema 表单引擎（配置面板）
 │   ├── widgets          # 物料协议与默认物料实现
+│   ├── themes           # 皮肤包（Ant Design / Material Design）
 │   └── utils            # 通用工具函数
 ├── playground           # 本地演示与联调
 └── docs                 # 详细设计文档
@@ -45,6 +47,16 @@ root
 - 左栏：物料面板（支持分组、搜索、拖拽、用户自定义渲染）。
 - 中栏：画布区域（扁平 widget 列表渲染；拖入高亮态；mask 覆盖层控制交互；选中浮动工具栏；画布内 slot 工具栏通过 `toolbarRenderer` 扩展点自定义）。
 - 右栏：配置面板（Tab：全局配置 / 当前选中 Widget 配置）。
+
+### 3.3 Themes（无头皮肤层）
+
+`@dragcraft/themes` 提供与组件逻辑完全解耦的 CSS 皮肤：
+
+- 所有 UI 包（designer, renderer, form-generator, widgets）仅输出语义化 BEM 类名，不携带任何 CSS。
+- 皮肤包基于 CSS 变量（Design Tokens）+ 共享组件样式实现，不同皮肤通过不同 tokens 产生视觉差异。
+- 内置两套 Light 皮肤：`antd`（Ant Design 风格）和 `material`（Material Design 风格）。
+- 用户可完全不导入皮肤（无头模式），自行编写全部 CSS。
+- 用户可导入皮肤后覆盖 CSS 变量实现快速换肤。
 
 ## 四、数据模型
 
@@ -84,10 +96,11 @@ interface SchemaNode {
 
 业务方标准接入流程：
 
-1. 安装并引入 `@dragcraft/designer`。
-2. 传入 `DesignerOptions`（物料、表单 schema、初始 schema）。
-3. 在 Vue3 中挂载 `<DcDesigner />`。
-4. 通过 `designerApi` 调用所有操作（增删改查、历史、导入导出、事件订阅）。
+1. 安装并引入 `@dragcraft/designer` 和 `@dragcraft/themes`。
+2. 导入皮肤样式：`import '@dragcraft/themes/antd'`（或 `'@dragcraft/themes/material'`）。
+3. 传入 `DesignerOptions`（物料、表单 schema、初始 schema）。
+4. 在 Vue3 中挂载 `<DcDesigner />`。
+5. 通过 `designerApi` 调用所有操作（增删改查、历史、导入导出、事件订阅）。
 
 ## 六、关键交互约束
 
@@ -124,8 +137,9 @@ interface SchemaNode {
 ## 八、包职责总览
 
 - `@dragcraft/core`：领域模型、状态机、命令、历史、事件、注册协议。
-- `@dragcraft/designer`：对外 API、Vue3 设计器布局与交互编排。
-- `@dragcraft/renderer`：将 schema 节点映射为组件树。
-- `@dragcraft/form-generator`：渲染属性面板 schema 表单。
-- `@dragcraft/widgets`：默认物料与物料协议实现。
+- `@dragcraft/designer`：对外 API、Vue3 设计器布局与交互编排（无头，不含 CSS）。
+- `@dragcraft/renderer`：将 schema 节点映射为组件树（无头，不含 CSS）。
+- `@dragcraft/form-generator`：渲染属性面板 schema 表单（无头，不含 CSS）。
+- `@dragcraft/widgets`：默认物料与物料协议实现（无头，不含 CSS）。
+- `@dragcraft/themes`：独立皮肤包，内置 antd 和 material 两套 Light 皮肤，基于 CSS 变量 + BEM 类名。
 - `@dragcraft/utils`：跨包复用的纯函数工具。

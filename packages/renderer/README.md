@@ -220,3 +220,13 @@ core 使用 `shallowRef` + `triggerRef` 对 schema 进行 in-place 修改。rend
 3. ~~完成默认组件与交互状态。~~ ✅
 4. ~~完成 mask 覆盖层、选中 handle、浮动工具栏。~~ ✅
 5. 补齐单元测试。
+
+## 无头设计（Headless Design）
+
+本包采用无头组件模式：所有组件仅输出语义化 BEM CSS 类名（`dc-*`），不捆绑任何 CSS 样式文件。
+
+视觉样式由独立的 `@dragcraft/themes` 包提供，支持以下使用模式：
+
+- **开箱即用**：`import '@dragcraft/themes/antd'` 或 `import '@dragcraft/themes/material'`
+- **无头模式**：不导入皮肤，自行编写全部 CSS
+- **自定义换肤**：导入皮肤后覆盖 CSS 变量

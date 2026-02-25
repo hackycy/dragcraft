@@ -1,0 +1,53 @@
+/* ── Material Design Overrides ────────────── */
+/* CSS 变量无法表达的 Material 风格差异 */
+
+/* ── Toolbar Buttons: Uppercase + Medium Weight ── */
+
+.dc-toolbar__btn {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* ── Widget Button: Material Style ───────── */
+
+.dc-widget-button {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+/* ── Material Item: Built-in Elevation ───── */
+
+.dc-material-item {
+  box-shadow: var(--dc-shadow-sm);
+}
+
+.dc-material-item:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Node Selected: Material Elevation ───── */
+
+.dc-node--selected {
+  box-shadow: 0 0 0 2px var(--dc-primary), 0 2px 8px var(--dc-primary-shadow);
+}
+
+/* ── Property Panel Tab: Taller ──────────── */
+
+.dc-property-panel__tab {
+  height: 42px;
+}
+
+/* ── Search Input: Taller ────────────────── */
+
+.dc-material-panel__search-input {
+  height: 36px;
+}
+
+/* ── Material Group Title: Sentence Case ─── */
+
+.dc-material-group__title {
+  text-transform: none;
+  letter-spacing: normal;
+}
