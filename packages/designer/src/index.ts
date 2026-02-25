@@ -26,6 +26,7 @@ export type {
   DesignerInstance,
   DesignerOptions,
   PropertyTabKey,
+  ToolbarSlotAPI,
   UseDesignerReturn,
 } from './types'
 export { DESIGNER_CONTEXT_KEY } from './types'

@@ -34,7 +34,7 @@ src/
     ├── DcMaterialItem.ts               # 可拖拽物料卡片
     ├── DcCanvas.ts                     # 中栏：画布区域
     ├── DcPropertyPanel.ts              # 右栏：属性配置面板
-    └── DcToolbar.ts                    # 顶部工具栏
+    └── DcToolbar.ts                    # 画布内 slot 工具栏
 ```
 
 ## UI 结构（左-中-右）
@@ -57,6 +57,7 @@ src/
 - 拖拽落地通过 core 命令提交（`ADD_NODE` / `MOVE_NODE`），不允许直接改 UI 本地状态。
 - 新 widget 添加后自动选中。
 - 点击画布空白处（包括 widget 之间的间隙区域）取消选中。利用 `data-node-id` 属性判断点击是否落在 widget 节点内。
+- 画布内集成 `DcToolbar`，通过 `toolbarRenderer` 扩展点渲染自定义工具栏内容（详见下方 Toolbar 章节）。
 
 ### 右栏：配置区 (`DcPropertyPanel`)
 
@@ -129,6 +130,45 @@ const {
 | `propertyPanelRenderer` | 替换右栏配置区渲染 |
 | `renderWidgetItem` | 自定义单个物料卡片渲染 `(meta: WidgetMeta) => Component` |
 | `rendererExtensions` | 透传给 `@dragcraft/renderer` 的扩展（`containerShell`、`dropIndicator`） |
+| `toolbarRenderer` | 画布内工具栏自定义渲染 `(api: ToolbarSlotAPI) => VNodeChild` |
+
+### 画布内 Toolbar（Slot-Based）
+
+工具栏位于画布区域内部顶部（`position: sticky`），采用 slot 模式渲染。
+默认不显示工具栏，需通过 `toolbarRenderer` 扩展点传入自定义渲染函数。
+
+```ts
+import { h } from 'vue'
+import type { ToolbarSlotAPI } from '@dragcraft/designer'
+
+const designer = createDesigner({
+  extensions: {
+    toolbarRenderer: (api: ToolbarSlotAPI) => [
+      h('button', {
+        class: 'dc-toolbar__btn',
+        onClick: () => api.undo(),
+        disabled: !api.canUndo(),
+      }, 'Undo'),
+      h('button', {
+        class: 'dc-toolbar__btn',
+        onClick: () => api.redo(),
+        disabled: !api.canRedo(),
+      }, 'Redo'),
+    ],
+  },
+})
+```
+
+`ToolbarSlotAPI` 提供以下操作：
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `undo` | `() => void` | 撤销上一步操作 |
+| `redo` | `() => void` | 重做上一步撤销 |
+| `canUndo` | `() => boolean` | 是否可撤销 |
+| `canRedo` | `() => boolean` | 是否可重做 |
+| `execute` | `(command) => void` | 执行引擎命令 |
+| `engine` | `DesignerEngine` | 引擎实例（高级用途） |
 
 ## 组件列表
 
@@ -138,9 +178,9 @@ const {
 | `DcMaterialPanel` | `dc-material-panel`, `dc-material-panel__search` | 左栏物料面板 |
 | `DcMaterialGroup` | `dc-material-group`, `dc-material-group__header`, `dc-material-group__body` | 可折叠分组 |
 | `DcMaterialItem` | `dc-material-item`, `dc-material-item__icon`, `dc-material-item__title` | 可拖拽卡片 |
-| `DcCanvas` | `dc-canvas` | 画布区域 |
+| `DcCanvas` | `dc-canvas`, `dc-canvas__content` | 画布区域 |
 | `DcPropertyPanel` | `dc-property-panel`, `dc-property-panel__tabs`, `dc-property-panel__tab` | 属性面板 |
-| `DcToolbar` | `dc-toolbar`, `dc-toolbar__btn` | 工具栏 |
+| `DcToolbar` | `dc-toolbar`, `dc-toolbar__btn`, `dc-toolbar__spacer` | 画布内 slot 工具栏 |
 
 ## 包内依赖原则
 
@@ -154,7 +194,7 @@ const {
 - 默认拖拽交互与高亮态。
 - 默认 widgets + 默认配置表单渲染。
 - 默认导入导出 schema API。
-- 默认 undo/redo 工具栏。
+- 画布内 slot 工具栏，通过 `toolbarRenderer` 扩展点自定义内容。
 
 ## 设计约束
 

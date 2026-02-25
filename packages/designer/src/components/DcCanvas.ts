@@ -4,6 +4,7 @@ import { RootRenderer } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
 import { computed, defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
+import DcToolbar from './DcToolbar'
 
 export default defineComponent({
   name: 'DcCanvas',
@@ -146,13 +147,18 @@ export default defineComponent({
           onClick: handleClick,
         },
         [
-          h(RootRenderer, {
-            engine,
-            componentMap,
-            extensions: rendererExtensions.value,
-            dragOverNodeId,
-            dragOverIndex,
-          }),
+          // Toolbar (inside canvas, above content)
+          h(DcToolbar),
+          // Canvas content area
+          h('div', { class: 'dc-canvas__content' }, [
+            h(RootRenderer, {
+              engine,
+              componentMap,
+              extensions: rendererExtensions.value,
+              dragOverNodeId,
+              dragOverIndex,
+            }),
+          ]),
         ],
       )
   },

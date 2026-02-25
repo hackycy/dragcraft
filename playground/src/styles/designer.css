@@ -20,6 +20,9 @@
   background: var(--dc-bg);
   border-bottom: 1px solid var(--dc-border-light);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .dc-toolbar__btn {
@@ -52,6 +55,10 @@
 .dc-toolbar__btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.dc-toolbar__spacer {
+  flex: 1;
 }
 
 /* ── Three-Column Body ───────────────────── */

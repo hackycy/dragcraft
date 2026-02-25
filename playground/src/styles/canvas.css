@@ -4,6 +4,9 @@
   height: 100%;
   overflow: auto;
   background: var(--dc-canvas-bg);
+}
+
+.dc-canvas__content {
   padding: 24px;
 }
 

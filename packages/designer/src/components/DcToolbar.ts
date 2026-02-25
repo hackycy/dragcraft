@@ -1,3 +1,4 @@
+import type { ToolbarSlotAPI } from '../types'
 import { defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 
@@ -6,32 +7,32 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
-    const { engine } = ctx
+    const { engine, extensions } = ctx
 
-    const handleUndo = () => engine.history.undo()
-    const handleRedo = () => engine.history.redo()
+    // Build the toolbar slot API once (functions are stable references)
+    const api: ToolbarSlotAPI = {
+      undo: () => engine.history.undo(),
+      redo: () => engine.history.redo(),
+      canUndo: () => engine.history.canUndo(),
+      canRedo: () => engine.history.canRedo(),
+      execute: engine.execute,
+      engine,
+    }
 
     return () => {
-      // Read reactive dependency for undo/redo state
+      const renderer = extensions.toolbarRenderer
+      if (!renderer) {
+        return null
+      }
+
+      // Read reactive dependency so canUndo/canRedo reflect current state
       void engine.store.schema.value
 
-      return h('div', { class: 'dc-toolbar' }, [
-        h('button', {
-          class: [
-            'dc-toolbar__btn',
-            'dc-toolbar__btn--undo',
-          ],
-          onClick: handleUndo,
-          disabled: !engine.history.canUndo(),
-        }, 'Undo'),
-        h('button', {
-          class: [
-            'dc-toolbar__btn',
-            'dc-toolbar__btn--redo',
-          ],
-          onClick: handleRedo,
-          disabled: !engine.history.canRedo(),
-        }, 'Redo'),
+      return h('div', {
+        class: 'dc-toolbar',
+        onClick: (e: MouseEvent) => e.stopPropagation(),
+      }, [
+        renderer(api),
       ])
     }
   },

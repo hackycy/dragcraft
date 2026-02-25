@@ -1,7 +1,7 @@
 import type { DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance, WidgetMeta } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { ComponentMap, RendererExtensions } from '@dragcraft/renderer'
-import type { Component, InjectionKey, Ref } from 'vue'
+import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
 // ──────────────────────────────────────────
 // Designer options (input to createDesigner)
@@ -28,6 +28,29 @@ export interface DesignerOptions {
 }
 
 // ──────────────────────────────────────────
+// Toolbar slot API
+// ──────────────────────────────────────────
+
+/**
+ * API object passed to the toolbarRenderer extension function.
+ * Provides common operations for toolbar buttons.
+ */
+export interface ToolbarSlotAPI {
+  /** Undo the last operation */
+  undo: () => void
+  /** Redo the last undone operation */
+  redo: () => void
+  /** Whether undo is available */
+  canUndo: () => boolean
+  /** Whether redo is available */
+  canRedo: () => boolean
+  /** Execute a command through the engine */
+  execute: DesignerEngine['execute']
+  /** The underlying engine instance for advanced use */
+  engine: DesignerEngine
+}
+
+// ──────────────────────────────────────────
 // Extension points
 // ──────────────────────────────────────────
 
@@ -43,6 +66,12 @@ export interface DesignerExtensions {
   renderWidgetItem?: (meta: WidgetMeta) => Component
   /** Renderer extensions (dropIndicator) forwarded to @dragcraft/renderer */
   rendererExtensions?: RendererExtensions
+  /**
+   * Custom toolbar content renderer, displayed inside the canvas area.
+   * Receives a ToolbarSlotAPI with undo/redo and engine operations.
+   * Return VNodes to render inside the toolbar container.
+   */
+  toolbarRenderer?: (api: ToolbarSlotAPI) => VNodeChild
 }
 
 // ──────────────────────────────────────────

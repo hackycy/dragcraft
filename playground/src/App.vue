@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
-import type { DesignerSchema } from '@dragcraft/designer'
-import { ref } from 'vue'
+import type { DesignerSchema, ToolbarSlotAPI } from '@dragcraft/designer'
+import { h, ref } from 'vue'
 import { globalConfigSchema } from './config/global-config-schema'
 import { initialSchema } from './config/initial-schema'
 
@@ -12,6 +12,28 @@ const designer = createDesigner({
     maxHistorySize: 50,
   },
   globalConfigSchema,
+  extensions: {
+    toolbarRenderer: (api: ToolbarSlotAPI) => [
+      h('button', {
+        class: 'dc-toolbar__btn dc-toolbar__btn--undo',
+        onClick: () => api.undo(),
+        disabled: !api.canUndo(),
+      }, 'Undo'),
+      h('button', {
+        class: 'dc-toolbar__btn dc-toolbar__btn--redo',
+        onClick: () => api.redo(),
+        disabled: !api.canRedo(),
+      }, 'Redo'),
+      h('div', { class: 'dc-toolbar__spacer' }),
+      h('button', {
+        class: 'dc-toolbar__btn',
+        onClick: () => {
+          const schema = api.engine.exportSchema()
+          console.log('Current schema:', schema)
+        },
+      }, 'Log Schema'),
+    ],
+  },
 })
 
 const { exportSchema, importSchema } = useDesigner(designer)

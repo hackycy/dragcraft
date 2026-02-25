@@ -6,7 +6,6 @@ import { DESIGNER_CONTEXT_KEY } from '../types'
 import DcCanvas from './DcCanvas'
 import DcMaterialPanel from './DcMaterialPanel'
 import DcPropertyPanel from './DcPropertyPanel'
-import DcToolbar from './DcToolbar'
 
 export default defineComponent({
   name: 'DcDesigner',
@@ -48,8 +47,6 @@ export default defineComponent({
         'div',
         { class: 'dc-designer' },
         [
-          // Top toolbar
-          h(DcToolbar),
           // Three-column body
           h('div', { class: 'dc-designer__body' }, [
             // Left: Material Panel
