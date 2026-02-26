@@ -7,6 +7,10 @@
 - 将数据结构稳定映射为可视组件。
 - 支持 mask 覆盖层与选中工具栏。
 - 支持可替换渲染策略，不破坏 schema 协议。
+- 提供完整的扩展点系统，任意子组件均可替换。
+- 通过 composable 暴露核心交互逻辑，支持完全自定义节点渲染。
+- 通过 event hooks 拦截选中、删除、移动、拖拽等操作。
+- 通过 action 系统配置每个节点的工具栏按钮。
 
 ## 设计边界
 
@@ -45,17 +49,26 @@ const componentMap = {
 
 ```
 src/
-├── types.ts                        # 类型定义 + InjectionKey
+├── types.ts                        # 类型定义 + InjectionKey + Props 接口
 ├── context.ts                      # createRendererContext + useRendererContext
+├── event-hooks.ts                  # RendererEventHooks 接口 + payload 类型
+├── action-registry.ts              # NodeActionRegistry + 默认 actions
 ├── composables/
 │   ├── useNodeState.ts             # 节点交互状态（selected/hovered/drag-over）
+│   ├── useWidgetNode.ts            # 节点状态 + 选中/hover 事件 + event hooks
+│   ├── useNodeActions.ts           # 按节点解析可用 actions
+│   ├── useNodeDrag.ts              # 拖拽 handle 行为 + event hooks
 │   └── index.ts
 ├── components/
 │   ├── RootRenderer.ts             # 根入口，provide context，渲染扁平 widget 列表
-│   ├── WidgetRenderer.ts           # Widget 渲染：解析组件 + mask + handle + 工具栏
+│   ├── WidgetRenderer.ts           # Widget 渲染编排层（composable + 扩展组件委托）
 │   ├── DefaultContainerShell.ts    # 默认画布容器壳（plain div）
 │   ├── DefaultDropIndicator.ts     # 默认拖拽指示器
 │   ├── DefaultWidgetFallback.ts    # 未找到组件时的 fallback
+│   ├── DefaultNodeMask.ts          # 默认 mask 覆盖层
+│   ├── DefaultNodeHandle.ts        # 默认选中 handle
+│   ├── DefaultNodeToolbar.ts       # 默认节点浮动工具栏
+│   ├── DefaultEmptyState.ts        # 默认空画布状态
 │   └── index.ts
 └── index.ts                        # 公共 API barrel export
 ```
@@ -81,16 +94,20 @@ const componentMap = {
 ### 渲染管线
 
 ```
-RootRenderer          → 根入口，provide context，渲染容器壳
+RootRenderer          → 根入口，provide context，渲染容器壳 + emptyState
   └─ WidgetRenderer[] → 扁平遍历 root.children，逐个渲染 widget
-       ├─ 组件内容     → 从 componentMap 解析并渲染
-       ├─ Mask 覆盖层  → mask=true 时的透明遮罩（点击选中）
-       ├─ Handle 角标  → mask=false 时的 hover 选中按钮
-       └─ 浮动工具栏   → 选中时显示（拖拽排序/上移/下移/删除）
+       ├─ useWidgetNode   → 状态 + 选中/hover 事件
+       ├─ useNodeActions  → 解析可用 actions
+       ├─ useNodeDrag     → 拖拽 handle 行为
+       ├─ 组件内容         → 从 componentMap 解析并渲染
+       ├─ NodeMask        → mask=true 时的透明遮罩（可替换）
+       ├─ NodeHandle      → mask=false 时的 hover 选中按钮（可替换）
+       ├─ NodeToolbar     → 选中时显示，基于 action 系统（可替换）
+       └─ NodeWrapper     → 可选外层包裹（全局或 per-widget）
 ```
 
-1. **RootRenderer**：接收 `engine`、`componentMap`、`extensions` 作为 props，创建 `RendererContext` 并通过 `provide` 注入子树。遍历 `root.children` 直接渲染 `WidgetRenderer`。
-2. **WidgetRenderer**：渲染物料节点，从 `componentMap` 解析组件并传入 `node.props`。支持 mask 覆盖层、选中 handle 和浮动工具栏。
+1. **RootRenderer**：接收 `engine`、`componentMap`、`extensions`、`eventHooks`、`actionRegistry` 作为 props，创建 `RendererContext` 并通过 `provide` 注入子树。遍历 `root.children` 渲染 `WidgetRenderer`。空画布时使用 `emptyState` 扩展点渲染占位。
+2. **WidgetRenderer**：编排层——调用 composable 获取逻辑，委托扩展组件渲染子部件。
 
 ## 组件详解
 
@@ -101,32 +118,164 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 | `engine` | `DesignerEngine` | 是 | core 引擎实例 |
 | `componentMap` | `ComponentMap` | 是 | node.type → Vue 组件映射 |
 | `extensions` | `RendererExtensions` | 否 | 扩展点覆盖 |
+| `eventHooks` | `RendererEventHooks` | 否 | 事件拦截钩子 |
+| `actionRegistry` | `NodeActionRegistry` | 否 | 节点动作注册表（默认提供 4 个内置动作） |
 | `dragOverNodeId` | `Ref<string \| null>` | 否 | 拖拽悬停状态（由 designer 管理） |
-| `dragOverIndex` | `Ref<number \| null>` | 否 | 拖拽插入位置索引（由 designer 管理），决定 DropIndicator 在 widget 列表中的渲染位置 |
-
-空画布时显示 `dc-container-shell--empty` + "拖拽组件到这里"占位。
+| `dragOverIndex` | `Ref<number \| null>` | 否 | 拖拽插入位置索引 |
 
 ### WidgetRenderer
 
-- 从 `componentMap` 查找物料组件，未找到则渲染 `DefaultWidgetFallback`。
-- `node.props` 通过展开运算符传递给解析到的组件。
-- `node.style` 应用到外层 wrapper div 上。
+- 通过 `useWidgetNode` 获取节点状态、选中/hover 事件处理。
+- 通过 `useNodeActions` 解析该节点可用的工具栏 actions。
+- 通过 `useNodeDrag` 获取拖拽 handle 行为。
+- 根据 `extensions` 解析 mask/handle/toolbar/fallback 子组件。
+- 支持 `meta.wrapper` 或 `extensions.nodeWrapper` 外层包裹。
 
-**Mask 覆盖层**（`mask !== false`，默认）：
-- 渲染 `dc-node__mask` 透明覆盖层，阻止 widget 交互。
-- 点击覆盖层调用 `engine.store.selectNode()` 选中 widget。
+## Node Action 系统
 
-**选中 Handle**（`mask === false`）：
-- widget 可直接交互，不覆盖遮罩。
-- hover 时右上角显示 `dc-node__handle` 角标按钮，点击选中 widget。
+工具栏按钮不再硬编码，改为通过 `NodeActionRegistry` 管理：
 
-**浮动工具栏**（选中时）：
-- 在 widget 右侧浮动显示 `dc-node__toolbar`。
-- 四个按钮：拖拽排序（☰）、上移（↑）、下移（↓）、删除（✕）。
-- 拖拽排序按钮（`dc-node__toolbar-btn--drag`）：设置 `draggable=true`，拖拽时通过 `engine.store.setDragTarget()` 设置拖拽源为当前节点，配合画布 drop 处理完成节点重排序。拖拽结束时清除拖拽状态。
-- 上移/下移/删除按钮设置 `type="button"` 避免默认 submit 行为。
-- 通过 `engine.execute()` 执行 `MOVE_NODE` / `REMOVE_NODE` 命令。
-- 首个 widget 的上移和末尾 widget 的下移按钮禁用。
+### 内置动作
+
+| Key | 排序 | 类型 | 说明 |
+|-----|------|------|------|
+| `drag` | 100 | `drag-handle` | 拖拽排序 |
+| `move-up` | 200 | `button` | 上移 |
+| `move-down` | 300 | `button` | 下移 |
+| `delete` | 400 | `button` | 删除 |
+
+### 动作定义
+
+```ts
+interface NodeActionDefinition {
+  key: string                                    // 唯一标识
+  label: string                                  // 显示文本
+  icon?: string | Component                      // 图标
+  type: 'button' | 'drag-handle'                 // 渲染类型
+  order: number                                  // 排序值
+  visible?: (ctx: NodeActionContext) => boolean   // 是否显示
+  disabled?: (ctx: NodeActionContext) => boolean  // 是否禁用
+  handler?: (ctx: NodeActionContext, e: MouseEvent) => void
+  className?: string                             // CSS 类名
+}
+```
+
+### 注册表
+
+```ts
+import { createNodeActionRegistry, createDefaultActions } from '@dragcraft/renderer'
+
+// 创建带默认 actions 的注册表
+const registry = createNodeActionRegistry()
+
+// 添加自定义 action
+registry.register({
+  key: 'duplicate',
+  label: '复制',
+  icon: '📋',
+  type: 'button',
+  order: 350,  // 在 move-down(300) 和 delete(400) 之间
+  handler: (ctx) => {
+    // 复制逻辑...
+  },
+})
+
+// 移除内置 action
+registry.unregister('move-up')
+```
+
+### Per-Widget 动作配置
+
+通过 `WidgetMeta.actions` 字段覆盖：
+
+```ts
+engine.registerWidget({
+  type: 'header',
+  title: '页头',
+  group: 'layout',
+  defaultProps: {},
+  formSchema: {},
+  actions: {
+    only: ['drag', 'delete'],       // 仅保留拖拽和删除
+    // 或
+    // exclude: ['move-up', 'move-down'],  // 排除上移下移
+  },
+})
+```
+
+## Event Hooks（事件拦截）
+
+Event hooks 在 composable 层拦截操作。`onBefore*` hook 返回 `false` 可取消操作。
+
+```ts
+interface RendererEventHooks {
+  // ── 选中 ──
+  onBeforeSelect?: (payload: SelectHookPayload) => boolean | void
+  onAfterSelect?: (payload: SelectHookPayload) => void
+  // ── 删除 ──
+  onBeforeDelete?: (payload: DeleteHookPayload) => boolean | void
+  onAfterDelete?: (payload: DeleteHookPayload) => void
+  // ── 移动 ──
+  onBeforeMove?: (payload: MoveHookPayload) => boolean | void
+  onAfterMove?: (payload: MoveHookPayload) => void
+  // ── 拖拽 ──
+  onBeforeDrag?: (payload: DragHookPayload) => boolean | void
+  onAfterDrag?: (payload: DragHookPayload) => void
+  // ── Hover ──
+  onHoverChange?: (payload: HoverHookPayload) => void
+}
+```
+
+使用示例——删除前弹出确认：
+
+```ts
+const eventHooks: RendererEventHooks = {
+  onBeforeDelete: ({ nodeId }) => {
+    return confirm(`确认删除节点 ${nodeId}？`)
+  },
+  onAfterDelete: ({ nodeId }) => {
+    console.log(`节点 ${nodeId} 已删除`)
+  },
+}
+```
+
+## 扩展点
+
+renderer 提供 8 个扩展点，均可通过 `extensions` 替换默认实现：
+
+| 扩展点 | 说明 | 默认实现 | Props 接口 |
+|--------|------|----------|------------|
+| `containerShell` | 根画布容器壳 | `DefaultContainerShell`（plain div） | — |
+| `dropIndicator` | 拖拽指示器 | `DefaultDropIndicator`（水平线） | — |
+| `nodeWrapper` | 包裹每个节点 | 无（直接渲染） | `NodeWrapperProps` |
+| `nodeToolbar` | 节点浮动工具栏 | `DefaultNodeToolbar`（action 驱动） | `NodeToolbarProps` |
+| `nodeMask` | mask 覆盖层 | `DefaultNodeMask`（透明点击层） | `NodeMaskProps` |
+| `nodeHandle` | 选中 handle | `DefaultNodeHandle`（hover 角标） | `NodeHandleProps` |
+| `emptyState` | 空画布状态 | `DefaultEmptyState`（图标+文字） | `EmptyStateProps` |
+| `widgetFallback` | 未知 widget fallback | `DefaultWidgetFallback`（错误提示） | `WidgetFallbackProps` |
+
+### Props 接口示例
+
+```ts
+interface NodeToolbarProps {
+  nodeId: string
+  nodeType: string
+  actions: ResolvedNodeAction[]
+  state: NodeInteractionState
+  onDragStart: (e: DragEvent) => void
+  onDragEnd: (e: DragEvent) => void
+}
+
+interface NodeMaskProps {
+  nodeId: string
+  nodeType: string
+  onSelect: (e: MouseEvent) => void
+}
+
+interface EmptyStateProps {
+  isDragOver: boolean
+}
+```
 
 ## Props/Style 策略
 
@@ -138,17 +287,10 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 
 ## 交互状态
 
-- **选中**：点击 mask 覆盖层或 handle 调用 `engine.store.selectNode(nodeId)`，`dc-node--selected` class。
-- **悬停**：mouseenter/mouseleave 调用 `engine.store.hoverNode()`，`dc-node--hovered` class。
+- **选中**：点击 mask 覆盖层或 handle 调用 `engine.store.selectNode(nodeId)`，`dc-node--selected` class。支持 `onBeforeSelect` hook 拦截。
+- **悬停**：mouseenter/mouseleave 调用 `engine.store.hoverNode()`，`dc-node--hovered` class。支持 `onHoverChange` hook 通知。
 - **拖拽悬停**：由外部 `dragOverNodeId` ref 控制，`dc-node--drag-over` class + DropIndicator。
-
-## 扩展点
-
-| 扩展点 | 说明 | 默认实现 |
-|--------|------|----------|
-| `extensions.containerShell` | 替换根画布容器壳（手机壳、平板壳等） | `DefaultContainerShell`（plain div） |
-| `extensions.dropIndicator` | 替换拖拽指示器 | `DefaultDropIndicator`（水平线） |
-| `componentMap[type]` | 自定义 widget 渲染组件 | `DefaultWidgetFallback` |
+- **不可选中**：`WidgetMeta.selectable === false` 时忽略选中事件。
 
 ## CSS Class 层级
 
@@ -156,17 +298,18 @@ RootRenderer          → 根入口，provide context，渲染容器壳
 .dc-root-renderer
   .dc-container-shell
     .dc-container-shell--empty          # 空画布
+      .dc-empty-state                   # 空状态组件
+        .dc-empty-state__icon
+        .dc-empty-state__text
     .dc-node.dc-node--widget
       .dc-node--masked                  # mask=true
-        .dc-node__mask                  # 透明覆盖层
+        .dc-node__mask                  # 透明覆盖层（可替换）
       .dc-node--unmasked                # mask=false
-        .dc-node__handle                # hover 角标
+        .dc-node__handle                # hover 角标（可替换）
       .dc-node--selected
-        .dc-node__toolbar               # 浮动工具栏
+        .dc-node__toolbar               # 浮动工具栏（可替换）
           .dc-node__toolbar-btn
           .dc-node__toolbar-btn--drag
-          .dc-node__toolbar-btn--up
-          .dc-node__toolbar-btn--down
           .dc-node__toolbar-btn--delete
       .dc-node--hovered
     .dc-drop-indicator > .dc-drop-indicator__line
@@ -194,6 +337,62 @@ interface NodeInteractionState {
 }
 ```
 
+### useWidgetNode(getNode, ctx)
+
+从 WidgetRenderer 提取的完整节点交互逻辑：
+
+```ts
+interface UseWidgetNodeReturn {
+  state: NodeInteractionState          // 响应式交互状态
+  resolvedComponent: ComputedRef       // 解析到的 Vue 组件
+  meta: ComputedRef                    // widget meta
+  useMask: ComputedRef<boolean>        // 是否使用 mask
+  selectable: ComputedRef<boolean>     // 是否可选中
+  draggable: ComputedRef<boolean>      // 是否可拖拽
+  wrapperClasses: ComputedRef          // 外层 CSS class
+  handleSelect: (e: MouseEvent) => void
+  handleMouseEnter: () => void
+  handleMouseLeave: () => void
+}
+```
+
+内部集成 `onBeforeSelect`、`onAfterSelect`、`onHoverChange` event hooks。
+
+### useNodeActions(getNode, ctx)
+
+解析节点可用 actions：
+
+```ts
+interface UseNodeActionsReturn {
+  actions: ComputedRef<ResolvedNodeAction[]>
+  actionContext: ComputedRef<NodeActionContext>
+}
+```
+
+### useNodeDrag(getNode, ctx)
+
+拖拽 handle 行为：
+
+```ts
+interface UseNodeDragReturn {
+  handleDragStart: (e: DragEvent) => void
+  handleDragEnd: (e: DragEvent) => void
+}
+```
+
+内部集成 `onBeforeDrag`、`onAfterDrag` event hooks。
+
+**自定义节点渲染时可直接使用这些 composable 获得核心逻辑：**
+
+```ts
+import { useWidgetNode, useNodeActions, useNodeDrag } from '@dragcraft/renderer'
+
+// 在自定义 WidgetRenderer 的 setup 中
+const { state, handleSelect, handleMouseEnter, handleMouseLeave } = useWidgetNode(getNode, ctx)
+const { actions } = useNodeActions(getNode, ctx)
+const { handleDragStart, handleDragEnd } = useNodeDrag(getNode, ctx)
+```
+
 ## 响应式策略
 
 core 使用 `shallowRef` + `triggerRef` 对 schema 进行 in-place 修改。renderer 的每个组件：
@@ -204,7 +403,7 @@ core 使用 `shallowRef` + `triggerRef` 对 schema 进行 in-place 修改。rend
 ## 与其他包协作
 
 - `@dragcraft/core`：消费 engine 的 store（schema、selectedNodeId、hoveredNodeId），调用 selectNode/hoverNode，执行 MOVE_NODE/REMOVE_NODE 命令。
-- `@dragcraft/designer`：接收 designer 传入的 engine、componentMap、extensions、dragOverNodeId。
+- `@dragcraft/designer`：接收 designer 传入的 engine、componentMap、extensions、eventHooks、actionRegistry、dragOverNodeId。
 - `@dragcraft/widgets`：widgets 提供 Vue 组件，由 designer 收集到 componentMap 中。
 
 ## 约束
@@ -219,7 +418,9 @@ core 使用 `shallowRef` + `triggerRef` 对 schema 进行 in-place 修改。rend
 2. ~~完成组件渲染层（Root/Widget）。~~ ✅
 3. ~~完成默认组件与交互状态。~~ ✅
 4. ~~完成 mask 覆盖层、选中 handle、浮动工具栏。~~ ✅
-5. 补齐单元测试。
+5. ~~完成 action 系统、event hooks、composable 提取。~~ ✅
+6. ~~完成扩展点系统（8 个扩展点）。~~ ✅
+7. 补齐单元测试。
 
 ## 无头设计（Headless Design）
 

@@ -1,6 +1,6 @@
 import type { DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance, WidgetMeta } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
-import type { ComponentMap, RendererExtensions } from '@dragcraft/renderer'
+import type { ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions } from '@dragcraft/renderer'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
 // ──────────────────────────────────────────
@@ -25,6 +25,10 @@ export interface DesignerOptions {
   globalConfigSchema?: FormSchema
   /** Extension point overrides */
   extensions?: DesignerExtensions
+  /** Renderer event hooks (interceptors for select, delete, move, drag) */
+  eventHooks?: RendererEventHooks
+  /** Custom node action definitions to add or override default actions */
+  customActions?: NodeActionDefinition[]
 }
 
 // ──────────────────────────────────────────
@@ -93,6 +97,10 @@ export interface DesignerInstance {
   fieldComponentMap: FieldComponentMap | undefined
   /** Global config form schema, if provided */
   globalConfigSchema: FormSchema | null
+  /** Renderer event hooks */
+  eventHooks: RendererEventHooks
+  /** Node action registry */
+  actionRegistry: NodeActionRegistry
   /** Dispose all resources */
   dispose: () => void
 }
@@ -110,6 +118,8 @@ export interface DesignerContext {
   extensions: DesignerExtensions
   fieldComponentMap: FieldComponentMap | undefined
   globalConfigSchema: FormSchema | null
+  eventHooks: RendererEventHooks
+  actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
   searchQuery: Ref<string>
   activeTab: Ref<PropertyTabKey>

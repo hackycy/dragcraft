@@ -1,5 +1,7 @@
-import type { DesignerEngine } from '@dragcraft/core'
+import type { DesignerEngine, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
+import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
+import type { RendererEventHooks } from './event-hooks'
 
 // ──────────────────────────────────────────
 // Component resolution
@@ -11,6 +13,85 @@ import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
  * Example: { button: ButtonWidget, text: TextWidget }
  */
 export type ComponentMap = Record<string, Component>
+
+// ──────────────────────────────────────────
+// Extension component prop interfaces
+// ──────────────────────────────────────────
+
+/**
+ * Props received by a custom nodeWrapper component.
+ * Must render a default slot containing the widget content.
+ */
+export interface NodeWrapperProps {
+  /** The schema node ID being wrapped */
+  nodeId: string
+  /** The widget type string */
+  nodeType: string
+  /** Reactive interaction state */
+  state: NodeInteractionState
+  /** The resolved widget meta, if available */
+  meta: WidgetMeta | undefined
+}
+
+/**
+ * Props received by a custom nodeToolbar component.
+ */
+export interface NodeToolbarProps {
+  /** The schema node ID */
+  nodeId: string
+  /** The widget type string */
+  nodeType: string
+  /** Pre-resolved actions for this node */
+  actions: ResolvedNodeAction[]
+  /** Reactive interaction state */
+  state: NodeInteractionState
+  /** Drag start handler for drag-handle type actions */
+  onDragStart: (e: DragEvent) => void
+  /** Drag end handler for drag-handle type actions */
+  onDragEnd: (e: DragEvent) => void
+}
+
+/**
+ * Props received by a custom nodeMask component.
+ */
+export interface NodeMaskProps {
+  /** The schema node ID */
+  nodeId: string
+  /** The widget type string */
+  nodeType: string
+  /** Select handler to call on click */
+  onSelect: (e: MouseEvent) => void
+}
+
+/**
+ * Props received by a custom nodeHandle component.
+ */
+export interface NodeHandleProps {
+  /** The schema node ID */
+  nodeId: string
+  /** The widget type string */
+  nodeType: string
+  /** Select handler to call on click */
+  onSelect: (e: MouseEvent) => void
+}
+
+/**
+ * Props received by a custom emptyState component.
+ */
+export interface EmptyStateProps {
+  /** Whether a drag operation is currently over the canvas */
+  isDragOver: boolean
+}
+
+/**
+ * Props received by a custom widgetFallback component.
+ */
+export interface WidgetFallbackProps {
+  /** The schema node ID */
+  nodeId: string
+  /** The unresolved widget type string */
+  nodeType: string
+}
 
 // ──────────────────────────────────────────
 // Extension points
@@ -29,6 +110,43 @@ export interface RendererExtensions {
    * during drag-over state.
    */
   dropIndicator?: Component
+
+  /**
+   * Wraps each rendered widget node. Receives NodeWrapperProps.
+   * Must render a default slot containing the widget content.
+   * Use this to add custom chrome, annotations, badges, etc.
+   */
+  nodeWrapper?: Component
+
+  /**
+   * Replaces the default per-node floating toolbar.
+   * Receives NodeToolbarProps with pre-resolved actions.
+   */
+  nodeToolbar?: Component
+
+  /**
+   * Replaces the default mask overlay for mask=true widgets.
+   * Receives NodeMaskProps.
+   */
+  nodeMask?: Component
+
+  /**
+   * Replaces the default selection handle for mask=false widgets.
+   * Receives NodeHandleProps.
+   */
+  nodeHandle?: Component
+
+  /**
+   * Replaces the default "drag components here" empty state.
+   * Receives EmptyStateProps.
+   */
+  emptyState?: Component
+
+  /**
+   * Replaces the default fallback for unknown widget types.
+   * Receives WidgetFallbackProps.
+   */
+  widgetFallback?: Component
 }
 
 // ──────────────────────────────────────────
@@ -45,6 +163,10 @@ export interface RendererOptions {
   componentMap: ComponentMap
   /** Optional extension point overrides */
   extensions?: RendererExtensions
+  /** Interceptable event hooks for renderer events */
+  eventHooks?: RendererEventHooks
+  /** Node action registry. If not provided, default actions are used. */
+  actionRegistry?: NodeActionRegistry
   /**
    * Optional reactive ref tracking whether root is being dragged over.
    * Managed externally by the designer package.
@@ -66,6 +188,8 @@ export interface RendererContext {
   engine: DesignerEngine
   componentMap: ComponentMap
   extensions: RendererExtensions
+  eventHooks: RendererEventHooks
+  actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
 }
 

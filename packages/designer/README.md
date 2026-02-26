@@ -90,6 +90,22 @@ const designer = createDesigner({
   globalConfigSchema: myGlobalFormSchema,
   // 可选：扩展点
   extensions: { materialPanelRenderer: CustomPanel },
+  // 可选：事件拦截钩子（选中/删除/移动/拖拽）
+  eventHooks: {
+    onBeforeDelete: ({ nodeId }) => confirm(`确认删除 ${nodeId}？`),
+    onAfterSelect: ({ nodeId }) => console.log('选中:', nodeId),
+  },
+  // 可选：自定义节点工具栏动作（追加到默认 4 个内置动作）
+  customActions: [
+    {
+      key: 'duplicate',
+      label: '复制',
+      icon: '📋',
+      type: 'button',
+      order: 350,
+      handler: (ctx) => { /* 复制逻辑 */ },
+    },
+  ],
 })
 ```
 
@@ -129,7 +145,7 @@ const {
 | `materialPanelRenderer` | 替换左栏整体渲染 |
 | `propertyPanelRenderer` | 替换右栏配置区渲染 |
 | `renderWidgetItem` | 自定义单个物料卡片渲染 `(meta: WidgetMeta) => Component` |
-| `rendererExtensions` | 透传给 `@dragcraft/renderer` 的扩展（`containerShell`、`dropIndicator`） |
+| `rendererExtensions` | 透传给 `@dragcraft/renderer` 的扩展点（共 8 个：`containerShell`、`dropIndicator`、`nodeWrapper`、`nodeToolbar`、`nodeMask`、`nodeHandle`、`emptyState`、`widgetFallback`） |
 | `toolbarRenderer` | 画布内工具栏自定义渲染 `(api: ToolbarSlotAPI) => VNodeChild` |
 
 ### 画布内 Toolbar（Slot-Based）

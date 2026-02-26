@@ -45,5 +45,6 @@ export type {
   SchemaStoreInstance,
   SetGlobalConfigPayload,
   UpdatePropsPayload,
+  WidgetActionConfig,
   WidgetMeta,
 } from './types'

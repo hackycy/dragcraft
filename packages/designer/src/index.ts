@@ -52,6 +52,7 @@ export type {
   SchemaStoreInstance,
   SetGlobalConfigPayload,
   UpdatePropsPayload,
+  WidgetActionConfig,
   WidgetMeta,
 } from '@dragcraft/core'
 
@@ -69,12 +70,33 @@ export type {
 
 // ── Re-exports: @dragcraft/renderer ─────
 export {
+  ActionKey,
+  createDefaultActions,
+  createNodeActionRegistry,
+  DefaultEmptyState,
+  DefaultNodeHandle,
+  DefaultNodeMask,
+  DefaultNodeToolbar,
   RootRenderer,
+  useNodeActions,
+  useNodeDrag,
+  useWidgetNode,
 } from '@dragcraft/renderer'
 export type {
   ComponentMap,
+  EmptyStateProps,
+  NodeActionContext,
+  NodeActionDefinition,
+  NodeActionRegistry,
+  NodeHandleProps,
+  NodeMaskProps,
+  NodeToolbarProps,
+  NodeWrapperProps,
+  RendererEventHooks,
   RendererExtensions,
   RendererOptions,
+  ResolvedNodeAction,
+  WidgetFallbackProps,
 } from '@dragcraft/renderer'
 
 // ── Re-exports: @dragcraft/widgets ──────

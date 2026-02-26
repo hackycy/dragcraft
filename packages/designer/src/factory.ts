@@ -1,5 +1,6 @@
 import type { DesignerInstance, DesignerOptions } from './types'
 import { createEngine } from '@dragcraft/core'
+import { createDefaultActions, createNodeActionRegistry } from '@dragcraft/renderer'
 import { getDefaultComponentMap, registerAllWidgets } from '@dragcraft/widgets'
 
 /**
@@ -10,6 +11,9 @@ import { getDefaultComponentMap, registerAllWidgets } from '@dragcraft/widgets'
  * ```ts
  * const designer = createDesigner({
  *   globalConfigSchema: myGlobalSchema,
+ *   eventHooks: {
+ *     onBeforeDelete: ({ nodeId }) => confirm(`Delete ${nodeId}?`),
+ *   },
  * })
  * ```
  */
@@ -54,6 +58,17 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     )
   }
 
+  // 9. Resolve event hooks
+  const eventHooks = options.eventHooks ?? {}
+
+  // 10. Create action registry with defaults + custom actions
+  const actionRegistry = createNodeActionRegistry(createDefaultActions())
+  if (options.customActions) {
+    for (const action of options.customActions) {
+      actionRegistry.register(action)
+    }
+  }
+
   function dispose(): void {
     engine.dispose()
   }
@@ -64,6 +79,8 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     extensions,
     fieldComponentMap,
     globalConfigSchema,
+    eventHooks,
+    actionRegistry,
     dispose,
   }
 }

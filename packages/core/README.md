@@ -230,8 +230,66 @@ interface WidgetMeta {
   defaultProps: Record<string, unknown>
   defaultStyle?: Record<string, unknown>
   formSchema: Record<string, unknown>
-  mask?: boolean  // 默认 true，控制画布中是否覆盖透明遮罩
+
+  // ── 渲染行为控制 ──
+  mask?: boolean        // 默认 true，控制画布中是否覆盖透明遮罩
+  selectable?: boolean  // 默认 true，是否允许在画布中选中
+  draggable?: boolean   // 默认 true，是否允许拖拽排序
+  deletable?: boolean   // 默认 true，是否允许通过工具栏删除
+
+  // ── Action 系统 ──
+  actions?: WidgetActionConfig  // Per-widget 工具栏动作配置
+
+  // ── 自定义包裹 ──
+  wrapper?: Component   // 覆盖全局 nodeWrapper 扩展，针对该 widget 类型自定义包裹组件
 }
+```
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `selectable` | `boolean` | `true` | 为 `false` 时节点无法被点击选中 |
+| `draggable` | `boolean` | `true` | 为 `false` 时隐藏拖拽 handle 和上移/下移按钮 |
+| `deletable` | `boolean` | `true` | 为 `false` 时隐藏删除按钮 |
+| `actions` | `WidgetActionConfig` | — | 控制工具栏可用动作（详见下方） |
+| `wrapper` | `Component` | — | 自定义该 widget 类型的包裹组件，接收 `NodeWrapperProps` |
+
+### WidgetActionConfig（Per-Widget 动作配置）
+
+```ts
+interface WidgetActionConfig {
+  /** 仅保留指定 key 的动作 */
+  only?: string[]
+  /** 排除指定 key 的动作 */
+  exclude?: string[]
+  /** 追加自定义动作定义 */
+  extra?: Array<{
+    key: string
+    label: string
+    icon?: string | Component
+    type: 'button' | 'drag-handle'
+    order: number
+    visible?: (ctx) => boolean
+    disabled?: (ctx) => boolean
+    handler?: (ctx, e: MouseEvent) => void
+    className?: string
+  }>
+}
+```
+
+示例——注册一个不可删除、只保留拖拽和上移/下移的 widget：
+
+```ts
+engine.registerWidget({
+  type: 'header',
+  title: '页头',
+  group: 'layout',
+  defaultProps: {},
+  formSchema: {},
+  deletable: false,
+  actions: {
+    exclude: ['delete'],
+  },
+})
 ```
 
 ### 命令 Payload

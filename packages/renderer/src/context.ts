@@ -1,5 +1,7 @@
 import type { RendererContext, RendererOptions } from './types'
 import { inject, ref } from 'vue'
+import { createNodeActionRegistry } from './action-registry'
+import { createDefaultEventHooks } from './event-hooks'
 import { RENDERER_CONTEXT_KEY } from './types'
 
 /**
@@ -11,6 +13,8 @@ export function createRendererContext(options: RendererOptions): RendererContext
     engine: options.engine,
     componentMap: options.componentMap,
     extensions: options.extensions ?? {},
+    eventHooks: options.eventHooks ?? createDefaultEventHooks(),
+    actionRegistry: options.actionRegistry ?? createNodeActionRegistry(),
     dragOverNodeId: options.dragOverNodeId ?? ref(null),
   }
 }

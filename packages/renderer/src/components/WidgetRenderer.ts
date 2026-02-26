@@ -1,11 +1,22 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
-import { CommandType } from '@dragcraft/core'
 import { defineComponent, h } from 'vue'
-import { useNodeState } from '../composables/useNodeState'
+import { useNodeActions } from '../composables/useNodeActions'
+import { useNodeDrag } from '../composables/useNodeDrag'
+import { useWidgetNode } from '../composables/useWidgetNode'
 import { useRendererContext } from '../context'
+import DefaultNodeHandle from './DefaultNodeHandle'
+import DefaultNodeMask from './DefaultNodeMask'
+import DefaultNodeToolbar from './DefaultNodeToolbar'
 import DefaultWidgetFallback from './DefaultWidgetFallback'
 
+/**
+ * WidgetRenderer — thin orchestration layer.
+ *
+ * Delegates all logic to composables (useWidgetNode, useNodeActions, useNodeDrag)
+ * and renders via configurable extension components (nodeMask, nodeHandle,
+ * nodeToolbar, widgetFallback, nodeWrapper).
+ */
 export default defineComponent({
   name: 'DcWidgetRenderer',
 
@@ -18,168 +29,104 @@ export default defineComponent({
 
   setup(props) {
     const ctx = useRendererContext()
-    const { engine, componentMap } = ctx
-    const nodeState = useNodeState(() => props.node.id, ctx)
+    const { extensions } = ctx
 
-    const handleSelect = (e: MouseEvent) => {
-      e.stopPropagation()
-      engine.store.selectNode(props.node.id)
-    }
-    const handleMouseEnter = () => engine.store.hoverNode(props.node.id)
-    const handleMouseLeave = () => engine.store.hoverNode(null)
-
-    // Toolbar actions
-    const handleDelete = (e: MouseEvent) => {
-      e.stopPropagation()
-      engine.execute({
-        type: CommandType.REMOVE_NODE,
-        payload: { nodeId: props.node.id },
-      })
-    }
-
-    const handleMoveUp = (e: MouseEvent) => {
-      e.stopPropagation()
-      const children = engine.store.getRawSchema().root.children ?? []
-      const currentIndex = children.findIndex(c => c.id === props.node.id)
-      if (currentIndex > 0) {
-        engine.execute({
-          type: CommandType.MOVE_NODE,
-          payload: { nodeId: props.node.id, index: currentIndex - 1 },
-        })
-      }
-    }
-
-    const handleMoveDown = (e: MouseEvent) => {
-      e.stopPropagation()
-      const children = engine.store.getRawSchema().root.children ?? []
-      const currentIndex = children.findIndex(c => c.id === props.node.id)
-      if (currentIndex >= 0 && currentIndex < children.length - 1) {
-        engine.execute({
-          type: CommandType.MOVE_NODE,
-          payload: { nodeId: props.node.id, index: currentIndex + 1 },
-        })
-      }
-    }
-
-    // Drag handle: initiate HTML5 drag for reordering
-    const handleDragHandleStart = (e: DragEvent) => {
-      e.stopPropagation()
-      engine.store.setDragTarget({
-        sourceNodeId: props.node.id,
-        widgetType: null,
-      })
-      if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = 'move'
-        e.dataTransfer.setData('text/plain', props.node.id)
-      }
-    }
-
-    const handleDragHandleEnd = (e: DragEvent) => {
-      e.stopPropagation()
-      engine.store.setDragTarget(null)
-    }
+    // Composables extract all logic
+    const widget = useWidgetNode(() => props.node, ctx)
+    const { actions } = useNodeActions(() => props.node, ctx)
+    const drag = useNodeDrag(() => props.node, ctx)
 
     return () => {
       // Read schema.value to establish reactive dependency
-      void engine.store.schema.value
+      void ctx.engine.store.schema.value
 
       const node = props.node
-      const ResolvedComponent = componentMap[node.type]
-      const widgetMeta = engine.registry.getWidget(node.type)
-      const useMask = widgetMeta?.mask !== false // default true
 
-      // Spread node.props to create a fresh snapshot for correct VNode diffing
+      // Resolve extension components with defaults
+      const NodeMask = extensions.nodeMask ?? DefaultNodeMask
+      const NodeHandle = extensions.nodeHandle ?? DefaultNodeHandle
+      const NodeToolbar = extensions.nodeToolbar ?? DefaultNodeToolbar
+      const WidgetFallback = extensions.widgetFallback ?? DefaultWidgetFallback
+
+      // Resolve per-widget or global wrapper
+      const NodeWrapper = widget.meta.value?.wrapper ?? extensions.nodeWrapper
+
+      // Render widget content
       const widgetProps = { ...node.props }
       const widgetStyle = node.style ? { ...node.style } : undefined
 
-      const innerContent = ResolvedComponent
-        ? h(ResolvedComponent, widgetProps)
-        : h(DefaultWidgetFallback, { nodeType: node.type })
+      const innerContent = widget.resolvedComponent.value
+        ? h(widget.resolvedComponent.value, widgetProps)
+        : h(WidgetFallback, { nodeId: node.id, nodeType: node.type })
 
-      // Build children array for the wrapper
+      // Assemble children
       const wrapperChildren: VNode[] = [innerContent]
 
-      // MASK OVERLAY (when mask=true): transparent overlay blocks widget interaction
-      if (useMask) {
+      // MASK (mask=true): transparent overlay blocks widget interaction
+      if (widget.useMask.value) {
         wrapperChildren.push(
-          h('div', {
-            class: 'dc-node__mask',
-            onClick: handleSelect,
+          h(NodeMask, {
+            nodeId: node.id,
+            nodeType: node.type,
+            onSelect: widget.handleSelect,
           }),
         )
       }
 
-      // SELECTION HANDLE (when mask=false): small handle on hover for selection
-      if (!useMask) {
+      // HANDLE (mask=false + selectable): small handle for selection
+      if (!widget.useMask.value && widget.selectable.value) {
         wrapperChildren.push(
-          h('div', {
-            class: 'dc-node__handle',
-            onClick: handleSelect,
-            title: '选中组件',
+          h(NodeHandle, {
+            nodeId: node.id,
+            nodeType: node.type,
+            onSelect: widget.handleSelect,
           }),
         )
       }
 
-      // SELECTION TOOLBAR (when selected): floating actions on the right side
-      if (nodeState.isSelected.value) {
-        const children = engine.store.getRawSchema().root.children ?? []
-        const currentIndex = children.findIndex(c => c.id === node.id)
-        const isFirst = currentIndex === 0
-        const isLast = currentIndex === children.length - 1
-
+      // TOOLBAR (when selected): action-driven floating toolbar
+      if (widget.state.isSelected.value) {
         wrapperChildren.push(
-          h('div', { class: 'dc-node__toolbar' }, [
-            h('div', {
-              class: 'dc-node__toolbar-btn dc-node__toolbar-btn--drag',
-              title: '拖拽排序',
-              draggable: true,
-              onDragstart: handleDragHandleStart,
-              onDragend: handleDragHandleEnd,
-            }, '\u2630'),
-            h('button', {
-              type: 'button',
-              class: 'dc-node__toolbar-btn dc-node__toolbar-btn--up',
-              title: '上移',
-              disabled: isFirst,
-              onClick: handleMoveUp,
-            }, '\u2191'),
-            h('button', {
-              type: 'button',
-              class: 'dc-node__toolbar-btn dc-node__toolbar-btn--down',
-              title: '下移',
-              disabled: isLast,
-              onClick: handleMoveDown,
-            }, '\u2193'),
-            h('button', {
-              type: 'button',
-              class: 'dc-node__toolbar-btn dc-node__toolbar-btn--delete',
-              title: '删除',
-              onClick: handleDelete,
-            }, '\u2715'),
-          ]),
+          h(NodeToolbar, {
+            nodeId: node.id,
+            nodeType: node.type,
+            actions: actions.value,
+            state: widget.state,
+            onDragStart: drag.handleDragStart,
+            onDragEnd: drag.handleDragEnd,
+          }),
         )
       }
 
-      return h(
+      // Build the core wrapper vnode
+      const coreWrapper = h(
         'div',
         {
-          'class': [
-            'dc-node',
-            'dc-node--widget',
-            {
-              'dc-node--masked': useMask,
-              'dc-node--unmasked': !useMask,
-            },
-            nodeState.interactionClasses.value,
-          ],
+          'class': widget.wrapperClasses.value,
           'style': widgetStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
-          'onMouseenter': handleMouseEnter,
-          'onMouseleave': handleMouseLeave,
+          'onMouseenter': widget.handleMouseEnter,
+          'onMouseleave': widget.handleMouseLeave,
         },
         wrapperChildren,
       )
+
+      // If nodeWrapper extension is provided, wrap the core content
+      if (NodeWrapper) {
+        return h(
+          NodeWrapper,
+          {
+            nodeId: node.id,
+            nodeType: node.type,
+            state: widget.state,
+            meta: widget.meta.value,
+          },
+          { default: () => coreWrapper },
+        )
+      }
+
+      return coreWrapper
     }
   },
 })

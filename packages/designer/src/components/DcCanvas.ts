@@ -11,7 +11,7 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
-    const { engine, componentMap, extensions, dragOverNodeId } = ctx
+    const { engine, componentMap, extensions, dragOverNodeId, eventHooks, actionRegistry } = ctx
 
     // Visual insertion index computed during dragover (0..n for n widgets)
     const dragOverIndex = ref<number | null>(null)
@@ -155,6 +155,8 @@ export default defineComponent({
               engine,
               componentMap,
               extensions: rendererExtensions.value,
+              eventHooks,
+              actionRegistry,
               dragOverNodeId,
               dragOverIndex,
             }),

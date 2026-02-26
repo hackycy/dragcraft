@@ -18,7 +18,7 @@ export default defineComponent({
   },
 
   setup(props) {
-    const { engine, componentMap, extensions, fieldComponentMap, globalConfigSchema } = props.instance
+    const { engine, componentMap, extensions, fieldComponentMap, globalConfigSchema, eventHooks, actionRegistry } = props.instance
     const searchQuery = ref('')
     const activeTab = ref<'global' | 'widget'>('widget')
 
@@ -32,6 +32,8 @@ export default defineComponent({
       extensions,
       fieldComponentMap,
       globalConfigSchema,
+      eventHooks,
+      actionRegistry,
       dragOverNodeId: dragDrop.dragOverNodeId,
       searchQuery,
       activeTab,

@@ -156,3 +156,53 @@ src/
 ### 方式二：完全自定义（无头模式）
 
 不导入任何皮肤，参照 `src/components/` 目录下的 CSS 文件，为所有 `dc-*` BEM 类名编写样式。
+
+## 画布相关 CSS 类
+
+以下 CSS 类在 `canvas.css` 中定义，用于画布区域的节点渲染：
+
+### 空状态
+
+| 类名 | 说明 |
+|------|------|
+| `.dc-empty-state` | 空画布占位组件容器 |
+| `.dc-empty-state__icon` | 空状态图标 |
+| `.dc-empty-state__text` | 空状态文字 |
+| `.dc-canvas-empty` | 空画布 legacy 回退样式 |
+
+### 节点交互
+
+| 类名 | 说明 |
+|------|------|
+| `.dc-node` | 节点基础容器 |
+| `.dc-node--widget` | widget 类型节点 |
+| `.dc-node--masked` | mask=true 的节点 |
+| `.dc-node--unmasked` | mask=false 的节点 |
+| `.dc-node--selected` | 选中状态 |
+| `.dc-node--hovered` | 悬停状态 |
+| `.dc-node--drag-over` | 拖拽悬停状态 |
+| `.dc-node__mask` | 透明遮罩覆盖层 |
+| `.dc-node__handle` | 选中 handle 角标（mask=false 时） |
+
+### 工具栏
+
+| 类名 | 说明 |
+|------|------|
+| `.dc-node__toolbar` | 浮动工具栏容器 |
+| `.dc-node__toolbar-btn` | 工具栏按钮 |
+| `.dc-node__toolbar-btn--drag` | 拖拽 handle 按钮 |
+| `.dc-node__toolbar-btn--delete` | 删除按钮（hover 时红色） |
+
+### 拖拽指示器
+
+| 类名 | 说明 |
+|------|------|
+| `.dc-drop-indicator` | 拖拽指示器容器 |
+| `.dc-drop-indicator__line` | 指示线 |
+
+### Fallback
+
+| 类名 | 说明 |
+|------|------|
+| `.dc-widget-fallback` | 未知 widget 类型 fallback |
+

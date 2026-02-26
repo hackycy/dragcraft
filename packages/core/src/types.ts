@@ -1,4 +1,4 @@
-import type { Ref, ShallowRef } from 'vue'
+import type { Component, Ref, ShallowRef } from 'vue'
 
 // ──────────────────────────────────────────
 // Node types
@@ -38,16 +38,72 @@ export interface DragTarget {
 // Widget meta protocol
 // ──────────────────────────────────────────
 
+/**
+ * Per-widget action configuration.
+ * Controls which actions appear in the node toolbar for this widget type.
+ */
+export interface WidgetActionConfig {
+  /** If provided, only show actions with these keys */
+  only?: string[]
+  /** Exclude actions with these keys */
+  exclude?: string[]
+  /** Additional action definitions to add for this widget type */
+  extra?: Array<{
+    key: string
+    label: string
+    icon?: string | Component
+    type: 'button' | 'drag-handle'
+    order: number
+    visible?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
+    disabled?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
+    handler?: (ctx: { node: SchemaNode, index: number, siblingCount: number }, e: MouseEvent) => void
+    className?: string
+  }>
+}
+
+/**
+ * Widget meta protocol — the contract every widget registers with the engine.
+ */
 export interface WidgetMeta {
+  /** Unique widget type identifier */
   type: string
+  /** Human-readable title for material panel */
   title: string
+  /** Group for categorization in material panel */
   group: string
+  /** Icon identifier */
   icon?: string
+  /** Default prop values when creating a new instance */
   defaultProps: Record<string, unknown>
+  /** Default inline styles when creating a new instance */
   defaultStyle?: Record<string, unknown>
+  /** Form schema for the property panel */
   formSchema: Record<string, unknown>
+
+  // ── Renderer behavior controls ──
+
   /** Whether to render a mask overlay on the widget in the canvas (default: true) */
   mask?: boolean
+  /** Whether this widget can be selected in the canvas (default: true) */
+  selectable?: boolean
+  /** Whether this widget can be dragged to reorder (default: true) */
+  draggable?: boolean
+  /** Whether this widget can be deleted via toolbar action (default: true) */
+  deletable?: boolean
+
+  // ── Action system ──
+
+  /** Per-widget toolbar action configuration */
+  actions?: WidgetActionConfig
+
+  // ── Custom wrapper ──
+
+  /**
+   * Custom wrapper component for this specific widget type.
+   * If provided, overrides the global nodeWrapper extension for this widget.
+   * Receives NodeWrapperProps and must render a default slot.
+   */
+  wrapper?: Component
 }
 
 // ──────────────────────────────────────────
