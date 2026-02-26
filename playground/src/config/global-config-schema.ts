@@ -43,7 +43,7 @@ export const globalConfigSchema: FormSchema = {
           key: 'padding',
           label: '内边距 (px)',
           component: 'number',
-          defaultValue: 16,
+          defaultValue: 0,
           props: {
             min: 0,
             max: 100,
@@ -53,7 +53,7 @@ export const globalConfigSchema: FormSchema = {
           key: 'maxWidth',
           label: '最大宽度 (px)',
           component: 'number',
-          defaultValue: 800,
+          defaultValue: 375,
           props: {
             min: 320,
             max: 1920,
