@@ -26,6 +26,12 @@ body {
   --dc-primary-shadow: rgba(7, 193, 96, 0.2);
 }
 
+.dc-root-renderer {
+  background: transparent;
+  box-shadow: none;
+  border-radius: none;
+}
+
 /* ── Phone Frame ─────────────────────────── */
 
 .phone-frame {
@@ -70,7 +76,7 @@ body {
 }
 
 .phone-frame__content {
-  min-height: 623px;
+  height: 750px;
   overflow-y: auto;
 }
 
