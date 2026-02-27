@@ -1,8 +1,9 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
+import { useToolbarPosition } from '../composables/useToolbarPosition'
 import { useWidgetNode } from '../composables/useWidgetNode'
 import { useRendererContext } from '../context'
 import DefaultNodeHandle from './DefaultNodeHandle'
@@ -35,6 +36,10 @@ export default defineComponent({
     const widget = useWidgetNode(() => props.node, ctx)
     const { actions } = useNodeActions(() => props.node, ctx)
     const drag = useNodeDrag(() => props.node, ctx)
+
+    // Element ref for toolbar fixed positioning (escapes overflow clipping)
+    const nodeElRef = ref<HTMLElement | null>(null)
+    const { position: toolbarPosition } = useToolbarPosition(nodeElRef)
 
     return () => {
       // Read schema.value to establish reactive dependency
@@ -92,6 +97,7 @@ export default defineComponent({
             nodeType: node.type,
             actions: actions.value,
             state: widget.state,
+            toolbarPosition: toolbarPosition.value,
             onDragStart: drag.handleDragStart,
             onDragEnd: drag.handleDragEnd,
           }),
@@ -102,6 +108,7 @@ export default defineComponent({
       const coreWrapper = h(
         'div',
         {
+          'ref': nodeElRef,
           'class': widget.wrapperClasses.value,
           'style': widgetStyle,
           'data-node-id': node.id,

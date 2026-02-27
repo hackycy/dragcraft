@@ -1,12 +1,16 @@
 import type { PropType } from 'vue'
 import type { ResolvedNodeAction } from '../action-registry'
-import type { NodeInteractionState } from '../types'
+import type { NodeInteractionState, ToolbarPositionData } from '../types'
 import { defineComponent, h } from 'vue'
 
 /**
  * Default per-node floating toolbar component.
  * Renders actions based on the resolved action list from the action registry.
  * Supports both 'button' and 'drag-handle' action types.
+ *
+ * When `toolbarPosition` is provided, uses `position: fixed` with viewport
+ * coordinates to escape all ancestor overflow clipping. Otherwise falls back
+ * to the classic `position: absolute` behavior via CSS.
  */
 export default defineComponent({
   name: 'DcDefaultNodeToolbar',
@@ -28,6 +32,10 @@ export default defineComponent({
       type: Object as PropType<NodeInteractionState>,
       required: true,
     },
+    toolbarPosition: {
+      type: Object as PropType<ToolbarPositionData>,
+      default: undefined,
+    },
     onDragStart: {
       type: Function as PropType<(e: DragEvent) => void>,
       required: true,
@@ -40,6 +48,9 @@ export default defineComponent({
 
   setup(props) {
     return () => {
+      const pos = props.toolbarPosition
+      const useFixed = pos != null
+
       const actionVNodes = props.actions.map((action) => {
         if (action.type === 'drag-handle') {
           return h('div', {
@@ -68,7 +79,21 @@ export default defineComponent({
         }, typeof action.icon === 'string' ? action.icon : (action.icon ? h(action.icon) : undefined))
       })
 
-      return h('div', { class: 'dc-node__toolbar' }, actionVNodes)
+      // Fixed positioning: inline style with viewport coordinates
+      // Absolute positioning (fallback): no inline style, CSS handles it
+      const style = useFixed
+        ? {
+            position: 'fixed' as const,
+            top: `${pos!.top}px`,
+            left: `${pos!.left}px`,
+            display: pos!.visible ? undefined : 'none',
+          }
+        : undefined
+
+      return h('div', {
+        class: ['dc-node__toolbar', { 'dc-node__toolbar--floating': useFixed }],
+        style,
+      }, actionVNodes)
     }
   },
 })

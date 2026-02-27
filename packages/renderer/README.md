@@ -58,6 +58,7 @@ src/
 │   ├── useWidgetNode.ts            # 节点状态 + 选中/hover 事件 + event hooks
 │   ├── useNodeActions.ts           # 按节点解析可用 actions
 │   ├── useNodeDrag.ts              # 拖拽 handle 行为 + event hooks
+│   ├── useToolbarPosition.ts       # 工具栏视口定位（解决 overflow 裁剪）
 │   └── index.ts
 ├── components/
 │   ├── RootRenderer.ts             # 根入口，provide context，渲染扁平 widget 列表
@@ -264,6 +265,7 @@ interface NodeToolbarProps {
   state: NodeInteractionState
   onDragStart: (e: DragEvent) => void
   onDragEnd: (e: DragEvent) => void
+  toolbarPosition?: ToolbarPositionData  // 视口定位坐标（解决 overflow 裁剪）
 }
 
 interface NodeMaskProps {
@@ -308,6 +310,7 @@ interface EmptyStateProps {
         .dc-node__handle                # hover 角标（可替换）
       .dc-node--selected
         .dc-node__toolbar               # 浮动工具栏（可替换）
+          .dc-node__toolbar--floating   # 固定定位变体（解决 overflow 裁剪）
           .dc-node__toolbar-btn
           .dc-node__toolbar-btn--drag
           .dc-node__toolbar-btn--delete
@@ -382,15 +385,50 @@ interface UseNodeDragReturn {
 
 内部集成 `onBeforeDrag`、`onAfterDrag` event hooks。
 
+### useToolbarPosition(elRef, options?)
+
+计算节点工具栏的视口固定坐标，解决工具栏被父级 `overflow: hidden/auto` 容器裁剪的问题。
+
+```ts
+interface UseToolbarPositionReturn {
+  position: Ref<ToolbarPositionData>  // { top, left, visible }
+  update: () => void                  // 手动触发重新计算
+}
+```
+
+内部使用 `requestAnimationFrame` 轮询（与 Floating UI 的 `autoUpdate` 策略一致），确保在所有场景下实时跟踪位置变化：
+- 滚动（scroll）
+- 窗口缩放（resize）
+- 拖拽过程中的 DOM 重排（drop indicator 插入/移除导致 widget 位移）
+- CSS 动画和过渡
+
+仅对选中的 widget 进行轮询（最多 1 个），通过值比较避免不必要的 Vue 响应式更新，性能开销可忽略。
+
+边界处理：
+- widget 不在视口内时 `visible = false`
+- 工具栏超出视口右侧时自动翻转到 widget 左侧
+- 工具栏超出视口顶部/底部时 clamp 到视口边界
+
+自定义工具栏使用示例：
+
+```ts
+import { useToolbarPosition } from '@dragcraft/renderer'
+
+const nodeElRef = ref<HTMLElement | null>(null)
+const { position } = useToolbarPosition(nodeElRef, { gap: 12 })
+// position.value → { top: 100, left: 420, visible: true }
+```
+
 **自定义节点渲染时可直接使用这些 composable 获得核心逻辑：**
 
 ```ts
-import { useWidgetNode, useNodeActions, useNodeDrag } from '@dragcraft/renderer'
+import { useWidgetNode, useNodeActions, useNodeDrag, useToolbarPosition } from '@dragcraft/renderer'
 
 // 在自定义 WidgetRenderer 的 setup 中
 const { state, handleSelect, handleMouseEnter, handleMouseLeave } = useWidgetNode(getNode, ctx)
 const { actions } = useNodeActions(getNode, ctx)
 const { handleDragStart, handleDragEnd } = useNodeDrag(getNode, ctx)
+const { position: toolbarPosition } = useToolbarPosition(nodeElRef)
 ```
 
 ## 响应式策略

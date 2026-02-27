@@ -21,9 +21,10 @@ export {
 } from './components'
 
 // ── Composables ──────────────────────────
-export { useNodeActions, useNodeDrag, useNodeState, useWidgetNode } from './composables'
+export { useNodeActions, useNodeDrag, useNodeState, useToolbarPosition, useWidgetNode } from './composables'
 export type { UseNodeActionsReturn } from './composables'
 export type { UseNodeDragReturn } from './composables'
+export type { UseToolbarPositionReturn } from './composables'
 export type { UseWidgetNodeReturn } from './composables'
 
 // ── Context ──────────────────────────────
@@ -52,6 +53,7 @@ export type {
   RendererContext,
   RendererExtensions,
   RendererOptions,
+  ToolbarPositionData,
   WidgetFallbackProps,
 } from './types'
 export { RENDERER_CONTEXT_KEY } from './types'

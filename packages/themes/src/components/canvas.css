@@ -179,6 +179,18 @@
   cursor: grabbing;
 }
 
+/* ── Floating Toolbar (fixed positioning variant) ── */
+
+.dc-node__toolbar--floating {
+  right: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border-radius: var(--dc-radius);
+  background: var(--dc-bg);
+  padding: 2px;
+  pointer-events: auto;
+}
+
 /* ── Interaction States ──────────────────── */
 
 .dc-node--hovered:not(.dc-node--selected) {

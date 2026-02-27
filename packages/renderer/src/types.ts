@@ -34,6 +34,19 @@ export interface NodeWrapperProps {
 }
 
 /**
+ * Viewport-relative position coordinates for floating toolbar.
+ * When provided, the toolbar uses position: fixed to escape overflow clipping.
+ */
+export interface ToolbarPositionData {
+  /** CSS top in pixels (viewport-relative) */
+  top: number
+  /** CSS left in pixels (viewport-relative) */
+  left: number
+  /** Whether the toolbar should be visible (widget is at least partially in viewport) */
+  visible: boolean
+}
+
+/**
  * Props received by a custom nodeToolbar component.
  */
 export interface NodeToolbarProps {
@@ -49,6 +62,12 @@ export interface NodeToolbarProps {
   onDragStart: (e: DragEvent) => void
   /** Drag end handler for drag-handle type actions */
   onDragEnd: (e: DragEvent) => void
+  /**
+   * Viewport-relative position for fixed positioning.
+   * When provided, the toolbar escapes overflow clipping by using position: fixed.
+   * If not provided, falls back to position: absolute behavior.
+   */
+  toolbarPosition?: ToolbarPositionData
 }
 
 /**

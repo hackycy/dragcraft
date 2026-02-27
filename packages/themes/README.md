@@ -189,6 +189,7 @@ src/
 | 类名 | 说明 |
 |------|------|
 | `.dc-node__toolbar` | 浮动工具栏容器 |
+| `.dc-node__toolbar--floating` | 固定定位变体（使用 `position: fixed` 解决 overflow 裁剪） |
 | `.dc-node__toolbar-btn` | 工具栏按钮 |
 | `.dc-node__toolbar-btn--drag` | 拖拽 handle 按钮 |
 | `.dc-node__toolbar-btn--delete` | 删除按钮（hover 时红色） |
