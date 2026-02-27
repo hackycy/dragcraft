@@ -2,6 +2,45 @@ import type { Ref } from 'vue'
 import type { ToolbarPositionData } from '../types'
 import { onBeforeUnmount, ref, watch } from 'vue'
 
+// ── Helpers ──
+
+const CLIP_OVERFLOW_RE = /auto|scroll|hidden|clip|overlay/
+
+/**
+ * Compute the effective visible clip rect by intersecting
+ * the viewport rect with all scrollable ancestor rects.
+ * Handles overflowX and overflowY independently.
+ */
+function getEffectiveClipRect(el: HTMLElement) {
+  let top = 0
+  let bottom = window.innerHeight
+  let left = 0
+  let right = window.innerWidth
+
+  let current = el.parentElement
+  while (current) {
+    const style = getComputedStyle(current)
+    const clipsY = CLIP_OVERFLOW_RE.test(style.overflowY)
+    const clipsX = CLIP_OVERFLOW_RE.test(style.overflowX)
+
+    if (clipsX || clipsY) {
+      const r = current.getBoundingClientRect()
+      if (clipsY) {
+        top = Math.max(top, r.top)
+        bottom = Math.min(bottom, r.bottom)
+      }
+      if (clipsX) {
+        left = Math.max(left, r.left)
+        right = Math.min(right, r.right)
+      }
+    }
+
+    current = current.parentElement
+  }
+
+  return { top, bottom, left, right }
+}
+
 /** Options for useToolbarPosition. */
 export interface UseToolbarPositionOptions {
   /** Horizontal gap (px) between widget right edge and toolbar left edge. Default: 8 */
@@ -25,11 +64,13 @@ export interface UseToolbarPositionReturn {
  * (scroll, resize, DOM reflow during drag, CSS animations, etc.). This is the
  * same approach used by Floating UI's `autoUpdate` with `animationFrame: true`.
  *
- * Only the selected widget's toolbar is tracked (at most 1 at a time), so the
- * overhead of rAF polling is negligible.
+ * The `isActive` ref controls when polling starts/stops. Pass the widget's
+ * `isSelected` computed so that only the selected widget incurs rAF overhead
+ * (at most 1 at a time). Non-selected widgets have zero polling cost.
  */
 export function useToolbarPosition(
   elRef: Ref<HTMLElement | null>,
+  isActive: Ref<boolean>,
   options: UseToolbarPositionOptions = {},
 ): UseToolbarPositionReturn {
   const { gap = 8, toolbarWidth = 32 } = options
@@ -52,17 +93,17 @@ export function useToolbarPosition(
     }
 
     const rect = el.getBoundingClientRect()
-    const vw = window.innerWidth
-    const vh = window.innerHeight
+    const clip = getEffectiveClipRect(el)
 
-    // Check if widget is at least partially visible in viewport
-    const isInViewport
-      = rect.bottom > 0
-        && rect.top < vh
-        && rect.right > 0
-        && rect.left < vw
+    // Check if widget is at least partially visible in effective clip area
+    // (viewport ∩ all scrollable ancestor containers)
+    const isVisible
+      = rect.bottom > clip.top
+        && rect.top < clip.bottom
+        && rect.right > clip.left
+        && rect.left < clip.right
 
-    if (!isInViewport) {
+    if (!isVisible) {
       applyPosition(position.value.top, position.value.left, false)
       return
     }
@@ -70,18 +111,14 @@ export function useToolbarPosition(
     let top = rect.top
     let left = rect.right + gap
 
-    // If toolbar would go off the right edge, flip to the left side
-    if (left + toolbarWidth > vw) {
+    // If toolbar would go off the right edge of clip area, flip to left side
+    if (left + toolbarWidth > clip.right) {
       left = rect.left - gap - toolbarWidth
     }
 
-    // Clamp top to viewport bounds
-    if (top < 0) {
-      top = 0
-    }
-    if (top > vh - 40) {
-      top = vh - 40
-    }
+    // Clamp top to effective clip bounds
+    top = Math.max(top, clip.top)
+    top = Math.min(top, clip.bottom - 40)
 
     applyPosition(top, left, true)
   }
@@ -116,11 +153,14 @@ export function useToolbarPosition(
 
   // ── Lifecycle management ──
 
-  watch(elRef, (newEl, oldEl) => {
-    if (oldEl)
-      stopPolling()
-    if (newEl)
+  watch([elRef, isActive] as const, ([newEl, active]) => {
+    stopPolling()
+    if (newEl && active) {
       startPolling()
+    }
+    else {
+      applyPosition(0, 0, false)
+    }
   }, { immediate: true })
 
   onBeforeUnmount(stopPolling)

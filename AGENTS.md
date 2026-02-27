@@ -22,7 +22,7 @@ root
 │   ├── renderer         # Schema -> Vue 组件渲染层
 │   ├── form-generator   # Schema 表单引擎（配置面板）
 │   ├── widgets          # 物料协议与通用工具（不含内置物料实现）
-│   ├── builtin-fields   # 内置表单字段组件（7 个），可选引入
+│   ├── builtin-fields    # 内置表单字段组件（7 个），可选引入
 │   ├── builtin-widgets  # 内置物料实现（10 个），可选引入
 │   ├── themes           # 皮肤包（Ant Design / Material Design）
 │   └── utils            # 通用工具函数

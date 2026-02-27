@@ -1,6 +1,6 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, ref, Teleport } from 'vue'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
 import { useToolbarPosition } from '../composables/useToolbarPosition'
@@ -39,7 +39,7 @@ export default defineComponent({
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
-    const { position: toolbarPosition } = useToolbarPosition(nodeElRef)
+    const { position: toolbarPosition } = useToolbarPosition(nodeElRef, widget.state.isSelected)
 
     return () => {
       // Read schema.value to establish reactive dependency
@@ -90,18 +90,18 @@ export default defineComponent({
       }
 
       // TOOLBAR (when selected): action-driven floating toolbar
-      if (widget.state.isSelected.value) {
-        wrapperChildren.push(
-          h(NodeToolbar, {
-            nodeId: node.id,
-            nodeType: node.type,
-            actions: actions.value,
-            state: widget.state,
-            toolbarPosition: toolbarPosition.value,
-            onDragStart: drag.handleDragStart,
-            onDragEnd: drag.handleDragEnd,
-          }),
-        )
+      // Teleported to <body> to escape all ancestor overflow clipping.
+      if (widget.state.isSelected.value && toolbarPosition.value.visible) {
+        const toolbarVNode = h(NodeToolbar, {
+          nodeId: node.id,
+          nodeType: node.type,
+          actions: actions.value,
+          state: widget.state,
+          toolbarPosition: toolbarPosition.value,
+          onDragStart: drag.handleDragStart,
+          onDragEnd: drag.handleDragEnd,
+        })
+        wrapperChildren.push(h(Teleport, { to: 'body' }, [toolbarVNode]))
       }
 
       // Build the core wrapper vnode

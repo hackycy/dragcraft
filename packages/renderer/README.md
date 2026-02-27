@@ -103,7 +103,7 @@ RootRenderer          → 根入口，provide context，渲染容器壳 + emptyS
        ├─ 组件内容         → 从 componentMap 解析并渲染
        ├─ NodeMask        → mask=true 时的透明遮罩（可替换）
        ├─ NodeHandle      → mask=false 时的 hover 选中按钮（可替换）
-       ├─ NodeToolbar     → 选中时显示，基于 action 系统（可替换）
+       ├─ NodeToolbar     → 选中时显示，Teleport 到 body（可替换）
        └─ NodeWrapper     → 可选外层包裹（全局或 per-widget）
 ```
 
@@ -385,9 +385,9 @@ interface UseNodeDragReturn {
 
 内部集成 `onBeforeDrag`、`onAfterDrag` event hooks。
 
-### useToolbarPosition(elRef, options?)
+### useToolbarPosition(elRef, isActive, options?)
 
-计算节点工具栏的视口固定坐标，解决工具栏被父级 `overflow: hidden/auto` 容器裁剪的问题。
+计算节点工具栏的视口固定坐标，解决工具栏被父级 `overflow: hidden/auto` 容器裁剪的问题。内部自动检测所有可滚动祖先容器（`overflow: auto/scroll/hidden/clip/overlay`），计算有效可见区域（视口 ∩ 祖先容器裁剪区域），确保 widget 滚出容器时 toolbar 正确隐藏。
 
 ```ts
 interface UseToolbarPositionReturn {
@@ -396,18 +396,22 @@ interface UseToolbarPositionReturn {
 }
 ```
 
+`isActive`（`Ref<boolean>`）控制 rAF 轮询的启停——传入 widget 的 `isSelected` 状态，仅选中 widget 产生轮询开销（最多 1 个），非选中 widget 零开销。
+
 内部使用 `requestAnimationFrame` 轮询（与 Floating UI 的 `autoUpdate` 策略一致），确保在所有场景下实时跟踪位置变化：
 - 滚动（scroll）
 - 窗口缩放（resize）
 - 拖拽过程中的 DOM 重排（drop indicator 插入/移除导致 widget 位移）
 - CSS 动画和过渡
 
-仅对选中的 widget 进行轮询（最多 1 个），通过值比较避免不必要的 Vue 响应式更新，性能开销可忽略。
+通过值比较避免不必要的 Vue 响应式更新，性能开销可忽略。
+
+WidgetRenderer 内部使用 Vue `Teleport` 将 toolbar VNode 渲染到 `<body>` 下，使其完全脱离祖先 overflow 裁剪链，`position: fixed` 在 `<body>` 直接子级下无任何干扰。
 
 边界处理：
-- widget 不在视口内时 `visible = false`
-- 工具栏超出视口右侧时自动翻转到 widget 左侧
-- 工具栏超出视口顶部/底部时 clamp 到视口边界
+- widget 不在有效可见区域内时 `visible = false`（有效可见区域 = 视口 ∩ 所有可滚动祖先容器的裁剪区域）
+- 工具栏超出可见区域右侧时自动翻转到 widget 左侧
+- 工具栏超出可见区域顶部/底部时 clamp 到可见区域边界
 
 自定义工具栏使用示例：
 
@@ -415,7 +419,8 @@ interface UseToolbarPositionReturn {
 import { useToolbarPosition } from '@dragcraft/renderer'
 
 const nodeElRef = ref<HTMLElement | null>(null)
-const { position } = useToolbarPosition(nodeElRef, { gap: 12 })
+const isActive = computed(() => true) // 或根据选中状态控制
+const { position } = useToolbarPosition(nodeElRef, isActive, { gap: 12 })
 // position.value → { top: 100, left: 420, visible: true }
 ```
 
@@ -428,7 +433,7 @@ import { useWidgetNode, useNodeActions, useNodeDrag, useToolbarPosition } from '
 const { state, handleSelect, handleMouseEnter, handleMouseLeave } = useWidgetNode(getNode, ctx)
 const { actions } = useNodeActions(getNode, ctx)
 const { handleDragStart, handleDragEnd } = useNodeDrag(getNode, ctx)
-const { position: toolbarPosition } = useToolbarPosition(nodeElRef)
+const { position: toolbarPosition } = useToolbarPosition(nodeElRef, state.isSelected)
 ```
 
 ## 响应式策略
