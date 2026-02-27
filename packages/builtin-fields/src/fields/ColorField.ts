@@ -1,14 +1,14 @@
+import type { FieldSchema } from '@dragcraft/form-generator'
 import type { PropType } from 'vue'
-import type { FieldSchema } from '../../types'
 import { defineComponent, h } from 'vue'
 
 export default defineComponent({
-  name: 'DcSwitchField',
+  name: 'DcColorField',
 
   props: {
     modelValue: {
-      type: Boolean as PropType<boolean>,
-      default: false,
+      type: String as PropType<string>,
+      default: '#000000',
     },
     disabled: {
       type: Boolean,
@@ -23,17 +23,17 @@ export default defineComponent({
   emits: ['update:modelValue'],
 
   setup(props, { emit }) {
-    const handleChange = (e: Event) => {
-      emit('update:modelValue', (e.target as HTMLInputElement).checked)
+    const handleInput = (e: Event) => {
+      emit('update:modelValue', (e.target as HTMLInputElement).value)
     }
 
     return () =>
       h('input', {
-        type: 'checkbox',
-        class: 'dc-field-switch',
-        checked: props.modelValue ?? false,
+        type: 'color',
+        class: 'dc-field-color',
+        value: props.modelValue ?? '#000000',
         disabled: props.disabled,
-        onChange: handleChange,
+        onInput: handleInput,
       })
   },
 })

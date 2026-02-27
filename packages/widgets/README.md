@@ -1,64 +1,54 @@
 # @dragcraft/widgets
 
-`@dragcraft/widgets` 提供默认物料集合与物料协议定义。
+`@dragcraft/widgets` 提供物料协议定义与通用工具函数。
 
 ## 目标
 
-- 提供可直接使用的基础 widget（如 Button、Image、Text）。
-- 支持分组管理，便于左栏物料区分类展示。
-- 每个 widget 内置 form schema，用于右栏配置。
+- 定义 `WidgetDefinition`、`WidgetGroupConfig` 等物料协议类型。
+- 提供通用工具函数（批量注册、构建 ComponentMap、按分组过滤等）。
+- 不包含任何具体的物料实现（内置物料已迁移至 `@dragcraft/builtin-widgets`）。
 
 ## 设计边界
 
 - 不依赖 `@dragcraft/form-generator`（formSchema 保持松耦合，运行时遵循 FormSchema 结构）。
 - 不依赖 `@dragcraft/renderer`（ComponentMap 由消费方桥接）。
-- 仅依赖 `@dragcraft/core`（WidgetMeta 类型）和 `vue`（组件定义）。
-- 所有组件使用原生 HTML 元素，不引入第三方 UI 库。
-- 不内置 CSS 样式，仅应用 CSS class 名。
+- 仅依赖 `@dragcraft/core`（WidgetMeta 类型）和 `vue`（Component 类型）。
+- 纯协议包，不包含 Vue 组件实现。
 
 ## 快速上手
 
 ```ts
-import { createEngine } from '@dragcraft/core'
-import { RootRenderer } from '@dragcraft/renderer'
-import { getDefaultComponentMap, registerAllWidgets } from '@dragcraft/widgets'
+import { buildComponentMap, getWidgetMetas, registerWidgets } from '@dragcraft/widgets'
+import type { WidgetDefinition } from '@dragcraft/widgets'
 
-// 1. 创建引擎
-const engine = createEngine()
+// 自定义 widget definitions
+const myDefinitions: WidgetDefinition[] = [
+  { meta: myWidgetMeta, component: MyWidget },
+]
 
-// 2. 批量注册所有默认物料元信息
-registerAllWidgets(engine)
+// 批量注册
+registerWidgets(engine, myDefinitions)
 
-// 3. 获取组件映射给 renderer 使用
-const componentMap = getDefaultComponentMap()
+// 构建组件映射
+const componentMap = buildComponentMap(myDefinitions)
 
-// 4. 在 Vue 模板中使用
-// <RootRenderer :engine="engine" :component-map="componentMap" />
+// 提取 metas
+const metas = getWidgetMetas(myDefinitions)
+```
+
+如需使用内置物料，请引入 `@dragcraft/builtin-widgets`：
+
+```ts
+import { getAllWidgetMetas, getDefaultComponentMap } from '@dragcraft/builtin-widgets'
 ```
 
 ## 文件结构
 
 ```
 src/
-├── index.ts                       # 公共 API barrel export
-├── types.ts                       # WidgetDefinition、WidgetGroup 等类型
-├── helpers.ts                     # registerAllWidgets、getDefaultComponentMap 等辅助函数
-└── widgets/
-    ├── index.ts                   # widgets barrel export
-    ├── basic/
-    │   ├── index.ts
-    │   ├── TextWidget.ts          # 文本 (type: 'text')
-    │   ├── ButtonWidget.ts        # 按钮 (type: 'button')
-    │   ├── ImageWidget.ts         # 图片 (type: 'image')
-    │   ├── LinkWidget.ts          # 链接 (type: 'link')
-    │   └── DividerWidget.ts       # 分割线 (type: 'divider')
-    └── form/
-        ├── index.ts
-        ├── FormInputWidget.ts     # 输入框 (type: 'form-input')
-        ├── FormTextareaWidget.ts  # 多行文本 (type: 'form-textarea')
-        ├── FormSelectWidget.ts    # 下拉选择 (type: 'form-select')
-        ├── FormCheckboxWidget.ts  # 复选框 (type: 'form-checkbox')
-        └── FormRadioWidget.ts     # 单选组 (type: 'form-radio')
+├── index.ts      # 公共 API barrel export
+├── types.ts      # WidgetDefinition、WidgetGroup、WidgetGroupConfig 类型
+└── helpers.ts    # 通用工具函数（registerWidgets、buildComponentMap 等）
 ```
 
 ## Widget 协议
@@ -92,98 +82,34 @@ interface WidgetMeta {
 
 ## 分组机制
 
-| 分组 | 名称 | 说明 |
-|------|------|------|
-| `basic` | 基础展示 | 文本、按钮、图片、链接、分割线 |
-| `form` | 表单交互 | 输入框、多行文本、下拉选择、复选框、单选组 |
+```ts
+// WidgetGroup 为 string 类型，支持任意自定义分组
+type WidgetGroup = string
 
-> 分组字段可由业务方扩展，designer 左栏根据 group 自动聚合。
+interface WidgetGroupConfig {
+  name: string
+  title: string
+}
+```
 
-## 内置物料一览
+分组字段可由业务方自由定义，designer 左栏根据 group 自动聚合。
 
-### Basic 组（基础展示）
-
-| type | 标题 | 主要 Props |
-|------|------|-----------|
-| `text` | 文本 | content, fontSize, fontWeight, color, textAlign |
-| `button` | 按钮 | text, type, disabled, size |
-| `image` | 图片 | src, alt, objectFit |
-| `link` | 链接 | text, href, target, color |
-| `divider` | 分割线 | direction, color, thickness |
-
-### Form 组（表单交互）
-
-| type | 标题 | 主要 Props |
-|------|------|-----------|
-| `form-input` | 输入框 | label, placeholder, value, required, disabled |
-| `form-textarea` | 多行文本 | label, placeholder, value, rows, required, disabled |
-| `form-select` | 下拉选择 | label, placeholder, value, options, required, disabled |
-| `form-checkbox` | 复选框 | label, checked, disabled |
-| `form-radio` | 单选组 | label, value, options, direction, disabled |
-
-## Mask 配置
-
-`WidgetMeta.mask` 控制 widget 在画布中的交互行为：
-
-- `mask: true`（默认）：widget 上方覆盖透明遮罩，阻止直接交互，点击遮罩选中。
-- `mask: false`：widget 可直接交互，hover 时显示右上角选中 handle。
-
-大多数 widget 使用默认 mask。需要在画布中直接交互的 widget（如表单输入框）可设置 `mask: false`。
-
-## 辅助函数
+## 通用工具函数
 
 | 函数 | 说明 |
 |------|------|
-| `registerAllWidgets(engine)` | 批量注册所有物料元信息到 engine.registry |
-| `getDefaultComponentMap()` | 构建 `Record<string, Component>` 映射给 renderer 使用 |
-| `getAllWidgetMetas()` | 返回所有 WidgetMeta 数组 |
-| `getWidgetsByGroup(group)` | 按分组过滤 WidgetDefinition |
-| `allWidgetDefinitions` | 所有 WidgetDefinition 数组（可直接读取） |
-| `widgetGroups` | 分组配置数组 |
-
-## CSS Class 命名
-
-```
-.dc-widget-text
-.dc-widget-button / .dc-widget-button--small / .dc-widget-button--medium / .dc-widget-button--large
-.dc-widget-image
-.dc-widget-link
-.dc-widget-divider / .dc-widget-divider--horizontal / .dc-widget-divider--vertical
-.dc-widget-form-input / .dc-widget-form-input__label / .dc-widget-form-input__field / .dc-widget-form-input__required
-.dc-widget-form-textarea / .dc-widget-form-textarea__label / .dc-widget-form-textarea__field / .dc-widget-form-textarea__required
-.dc-widget-form-select / .dc-widget-form-select__label / .dc-widget-form-select__field / .dc-widget-form-select__required
-.dc-widget-form-checkbox / .dc-widget-form-checkbox__input / .dc-widget-form-checkbox__label
-.dc-widget-form-radio / .dc-widget-form-radio__label / .dc-widget-form-radio__group / .dc-widget-form-radio__item
-```
-
-widgets 不内置样式，仅应用 class 名，由使用方或 designer 提供样式。
+| `registerWidgets(engine, definitions)` | 批量注册 widget 元信息到 engine.registry |
+| `buildComponentMap(definitions)` | 从 definitions 构建 `Record<string, Component>` 映射 |
+| `getWidgetMetas(definitions)` | 从 definitions 提取所有 WidgetMeta 数组 |
+| `filterByGroup(definitions, group)` | 按分组过滤 WidgetDefinition |
 
 ## 与其他包协作
 
-- `@dragcraft/core`：向 registry 注入 widget 元信息，通过 `type` 保持 schema 与渲染映射一致。
-- `@dragcraft/renderer`：widgets 提供 Vue 组件，由 designer 收集到 componentMap 中传给 RootRenderer。
-- `@dragcraft/form-generator`：widget 的 `formSchema` 字段遵循 `FormSchema` 结构（运行时契约，无编译时依赖）。
-- `@dragcraft/designer`：调用 `registerAllWidgets` 和 `getDefaultComponentMap` 完成初始化。
+- `@dragcraft/core`：依赖 WidgetMeta 类型定义。
+- `@dragcraft/builtin-widgets`：依赖本包的 WidgetDefinition 和 WidgetGroupConfig 类型，提供 10 个内置物料实现。
+- `@dragcraft/designer`：不再依赖本包（designer 由用户传入 widgetMetas 和 componentMap）。
 
 ## 约束
 
-- 所有组件使用 `defineComponent` + `h()` render 函数。
-- 不引入第三方 UI 库，全部使用原生 HTML 元素。
-- formSchema 遵循 form-generator 的 FormSchema 运行时结构但不引入其类型。
-
-## 里程碑
-
-1. ~~完成类型定义与辅助函数。~~ ✅
-2. ~~完成 basic 组物料（5 个）。~~ ✅
-3. ~~完成 form 组物料（5 个）。~~ ✅
-4. 补齐单元测试。
-
-## 无头设计（Headless Design）
-
-本包采用无头组件模式：所有组件仅输出语义化 BEM CSS 类名（`dc-*`），不捆绑任何 CSS 样式文件。
-
-视觉样式由独立的 `@dragcraft/themes` 包提供，支持以下使用模式：
-
-- **开箱即用**：`import '@dragcraft/themes/antd'` 或 `import '@dragcraft/themes/material'`
-- **无头模式**：不导入皮肤，自行编写全部 CSS
-- **自定义换肤**：导入皮肤后覆盖 CSS 变量
+- 纯类型 + 工具函数包，不包含 Vue 组件。
+- 不引入第三方 UI 库。

@@ -21,35 +21,15 @@ export interface WidgetDefinition {
 // ──────────────────────────────────────────
 
 /**
- * Built-in widget group names for categorization in material panel.
+ * Widget group name type.
+ * Accepts any string to support custom groups beyond built-in ones.
  */
-export type WidgetGroup = 'basic' | 'form'
+export type WidgetGroup = string
 
 /**
  * Widget group configuration with localized titles.
  */
 export interface WidgetGroupConfig {
-  name: WidgetGroup
+  name: string
   title: string
 }
-
-// ──────────────────────────────────────────
-// Widget type strings
-// ──────────────────────────────────────────
-
-/**
- * All supported built-in widget type strings.
- */
-export type WidgetType
-  // basic group
-  = | 'text'
-    | 'button'
-    | 'image'
-    | 'link'
-    | 'divider'
-  // form group
-    | 'form-input'
-    | 'form-textarea'
-    | 'form-select'
-    | 'form-checkbox'
-    | 'form-radio'

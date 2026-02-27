@@ -1,4 +1,3 @@
-import { widgetGroups } from '@dragcraft/widgets'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import DcMaterialGroup from './DcMaterialGroup'
@@ -8,14 +7,18 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
-    const { engine, searchQuery } = ctx
+    const { engine, searchQuery, widgetGroups } = ctx
 
     // Filter widgets by search query, grouped by widget group
     const filteredGroups = computed(() => {
       const allWidgets = engine.registry.getAllWidgets()
       const query = searchQuery.value.toLowerCase().trim()
 
-      return widgetGroups
+      // Use provided widget groups, or derive from registered widgets
+      const groups = widgetGroups
+        ?? [...new Set(allWidgets.map(w => w.group))].map(name => ({ name, title: name }))
+
+      return groups
         .map((group) => {
           const widgets = allWidgets.filter(w => w.group === group.name)
           const filtered = query

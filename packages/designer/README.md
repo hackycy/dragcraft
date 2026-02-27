@@ -5,8 +5,9 @@
 ## 对外定位
 
 - 业务方仅需引入本包即可使用设计器。
-- 本包统一导出：组件、API、类型、默认插件、默认物料。
-- 内部协调 `core/renderer/form-generator/widgets`，对外屏蔽复杂度。
+- 本包统一导出：组件、API、类型。
+- 物料和字段组件由用户显式传入（可使用 `@dragcraft/builtin-widgets` 和 `@dragcraft/builtin-fields`，也可完全自定义）。
+- 内部协调 `core/renderer/form-generator`，对外屏蔽复杂度。
 
 ## 技术栈
 
@@ -74,18 +75,18 @@ src/
 
 ```ts
 import { createDesigner } from '@dragcraft/designer'
+import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
+import { getAllWidgetMetas, getDefaultComponentMap } from '@dragcraft/builtin-widgets'
 
 const designer = createDesigner({
   // 可选：核心引擎选项
   engineOptions: { initialSchema, maxHistorySize: 50 },
-  // 可选：是否注册内置物料（默认 true）
-  registerDefaultWidgets: true,
-  // 可选：额外物料
-  extraWidgets: [myCustomWidgetMeta],
-  // 可选：额外组件映射
-  extraComponentMap: { 'my-widget': MyWidgetComponent },
+  // 用户传入的 widget 元信息
+  widgetMetas: getAllWidgetMetas(),
+  // 用户传入的组件映射
+  componentMap: getDefaultComponentMap(),
   // 可选：自定义表单字段组件
-  fieldComponentMap: { 'code-editor': CodeEditorField },
+  fieldComponentMap: buildDefaultFieldComponentMap(),
   // 可选：全局配置表单 schema
   globalConfigSchema: myGlobalFormSchema,
   // 可选：扩展点

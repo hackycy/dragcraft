@@ -4,7 +4,7 @@
 
 ## 一、产品目标
 
-- 开箱即用：业务方只需要引入 `@dragcraft/designer` + `@dragcraft/themes` 即可完成设计器接入。
+- 开箱即用：业务方引入 `@dragcraft/designer` + `@dragcraft/themes` + `@dragcraft/builtin-widgets` + `@dragcraft/builtin-fields` 即可完成设计器接入；也可不引入内置包，完全自定义物料和字段。
 - 无头组件：所有 UI 包仅输出语义化 BEM 类名，不捆绑任何 CSS —— 视觉样式由 `@dragcraft/themes` 独立提供。
 - 单一出口：所有可用能力都由 `@dragcraft/designer` 统一导出（含类型、插件、默认实现）。
 - 高可定制：支持左侧物料区、中心画布、右侧配置区按需替换；支持完全自定义样式（无头模式）。
@@ -21,7 +21,9 @@ root
 │   ├── designer         # 对外唯一入口（Vue3 UI Shell）
 │   ├── renderer         # Schema -> Vue 组件渲染层
 │   ├── form-generator   # Schema 表单引擎（配置面板）
-│   ├── widgets          # 物料协议与默认物料实现
+│   ├── widgets          # 物料协议与通用工具（不含内置物料实现）
+│   ├── builtin-fields   # 内置表单字段组件（7 个），可选引入
+│   ├── builtin-widgets  # 内置物料实现（10 个），可选引入
 │   ├── themes           # 皮肤包（Ant Design / Material Design）
 │   └── utils            # 通用工具函数
 ├── playground           # 本地演示与联调
@@ -96,11 +98,11 @@ interface SchemaNode {
 
 业务方标准接入流程：
 
-1. 安装并引入 `@dragcraft/designer` 和 `@dragcraft/themes`。
+1. 安装并引入 `@dragcraft/designer`、`@dragcraft/themes`，以及按需引入 `@dragcraft/builtin-widgets` 和 `@dragcraft/builtin-fields`。
 2. 导入皮肤样式：`import '@dragcraft/themes/antd'`（或 `'@dragcraft/themes/material'`）。
-3. 传入 `DesignerOptions`（物料、表单 schema、初始 schema）。
+3. 通过 `createDesigner()` 传入 `DesignerOptions`，显式提供 `widgetMetas`、`componentMap`、`fieldComponentMap` 等。
 4. 在 Vue3 中挂载 `<DcDesigner />`。
-5. 通过 `designerApi` 调用所有操作（增删改查、历史、导入导出、事件订阅）。
+5. 通过 `useDesigner()` 调用所有操作（增删改查、历史、导入导出、事件订阅）。
 
 ## 六、关键交互约束
 
@@ -139,7 +141,9 @@ interface SchemaNode {
 - `@dragcraft/core`：领域模型、状态机、命令、历史、事件、注册协议。
 - `@dragcraft/designer`：对外 API、Vue3 设计器布局与交互编排（无头，不含 CSS）。
 - `@dragcraft/renderer`：将 schema 节点映射为组件树（无头，不含 CSS）。
-- `@dragcraft/form-generator`：渲染属性面板 schema 表单（无头，不含 CSS）。
-- `@dragcraft/widgets`：默认物料与物料协议实现（无头，不含 CSS）。
+- `@dragcraft/form-generator`：渲染属性面板 schema 表单引擎（无头，不含 CSS，不含内置字段组件）。
+- `@dragcraft/widgets`：物料协议与通用工具函数（不含内置物料实现）。
+- `@dragcraft/builtin-fields`：内置表单字段组件（7 个：input / number / textarea / select / switch / color / slider），可选引入。
+- `@dragcraft/builtin-widgets`：内置物料实现（10 个：5 基础 + 5 表单），可选引入。
 - `@dragcraft/themes`：独立皮肤包，内置 antd 和 material 两套 Light 皮肤，基于 CSS 变量 + BEM 类名。
 - `@dragcraft/utils`：跨包复用的纯函数工具。

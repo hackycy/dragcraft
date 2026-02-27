@@ -28,6 +28,7 @@ export type {
   PropertyTabKey,
   ToolbarSlotAPI,
   UseDesignerReturn,
+  WidgetGroupConfig,
 } from './types'
 export { DESIGNER_CONTEXT_KEY } from './types'
 
@@ -62,6 +63,7 @@ export {
 } from '@dragcraft/form-generator'
 export type {
   FieldChangePayload,
+  FieldComponentMap,
   FieldSchema,
   FormSchema,
   SectionSchema,
@@ -98,18 +100,3 @@ export type {
   ResolvedNodeAction,
   WidgetFallbackProps,
 } from '@dragcraft/renderer'
-
-// ── Re-exports: @dragcraft/widgets ──────
-export {
-  getAllWidgetMetas,
-  getDefaultComponentMap,
-  getWidgetsByGroup,
-  registerAllWidgets,
-  widgetGroups,
-} from '@dragcraft/widgets'
-export type {
-  WidgetDefinition,
-  WidgetGroup,
-  WidgetGroupConfig,
-  WidgetType,
-} from '@dragcraft/widgets'

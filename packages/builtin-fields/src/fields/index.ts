@@ -1,4 +1,4 @@
-import type { FieldComponentMap } from '../../types'
+import type { FieldComponentMap } from '@dragcraft/form-generator'
 import ColorField from './ColorField'
 import InputField from './InputField'
 import NumberField from './NumberField'
@@ -19,7 +19,16 @@ export {
 
 /**
  * Returns the default mapping of field component names to Vue components.
- * Users can override any of these via the `fieldComponentMap` prop on FormGenerator.
+ * Pass this to FormGenerator's `fieldComponentMap` prop to use built-in fields.
+ *
+ * @example
+ * ```ts
+ * import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
+ *
+ * h(FormGenerator, {
+ *   fieldComponentMap: buildDefaultFieldComponentMap(),
+ * })
+ * ```
  */
 export function buildDefaultFieldComponentMap(): FieldComponentMap {
   return {

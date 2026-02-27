@@ -1,113 +1,58 @@
 import type { DesignerEngine, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
-import type { WidgetDefinition, WidgetGroupConfig } from './types'
-import {
-  ButtonWidget,
-  buttonWidgetMeta,
-  DividerWidget,
-  dividerWidgetMeta,
-  ImageWidget,
-  imageWidgetMeta,
-  LinkWidget,
-  linkWidgetMeta,
-  TextWidget,
-  textWidgetMeta,
-} from './widgets/basic'
-import {
-  FormCheckboxWidget,
-  formCheckboxWidgetMeta,
-  FormInputWidget,
-  formInputWidgetMeta,
-  FormRadioWidget,
-  formRadioWidgetMeta,
-  FormSelectWidget,
-  formSelectWidgetMeta,
-  FormTextareaWidget,
-  formTextareaWidgetMeta,
-} from './widgets/form'
+import type { WidgetDefinition } from './types'
 
 // ──────────────────────────────────────────
-// Widget definitions collection
+// Generic helper functions
 // ──────────────────────────────────────────
 
 /**
- * All built-in widget definitions (meta + component).
- */
-export const allWidgetDefinitions: WidgetDefinition[] = [
-  // basic group
-  { meta: textWidgetMeta, component: TextWidget },
-  { meta: buttonWidgetMeta, component: ButtonWidget },
-  { meta: imageWidgetMeta, component: ImageWidget },
-  { meta: linkWidgetMeta, component: LinkWidget },
-  { meta: dividerWidgetMeta, component: DividerWidget },
-  // form group
-  { meta: formInputWidgetMeta, component: FormInputWidget },
-  { meta: formTextareaWidgetMeta, component: FormTextareaWidget },
-  { meta: formSelectWidgetMeta, component: FormSelectWidget },
-  { meta: formCheckboxWidgetMeta, component: FormCheckboxWidget },
-  { meta: formRadioWidgetMeta, component: FormRadioWidget },
-]
-
-// ──────────────────────────────────────────
-// Widget group configs
-// ──────────────────────────────────────────
-
-/**
- * Built-in widget group configurations with localized titles.
- * Used by the designer's material panel to organize widgets.
- */
-export const widgetGroups: readonly WidgetGroupConfig[] = [
-  { name: 'basic', title: '基础展示' },
-  { name: 'form', title: '表单交互' },
-]
-
-// ──────────────────────────────────────────
-// Helper functions
-// ──────────────────────────────────────────
-
-/**
- * Returns all built-in widget WidgetMeta definitions.
- */
-export function getAllWidgetMetas(): WidgetMeta[] {
-  return allWidgetDefinitions.map(def => def.meta)
-}
-
-/**
- * Registers all built-in widgets with the given DesignerEngine.
- * Call this during engine initialization before rendering.
+ * Registers a list of widget definitions with the given DesignerEngine.
  *
  * @example
  * ```ts
- * const engine = createEngine()
- * registerAllWidgets(engine)
+ * import { registerWidgets } from '@dragcraft/widgets'
+ * import { allWidgetDefinitions } from '@dragcraft/builtin-widgets'
+ *
+ * registerWidgets(engine, allWidgetDefinitions)
  * ```
  */
-export function registerAllWidgets(engine: DesignerEngine): void {
-  for (const def of allWidgetDefinitions) {
+export function registerWidgets(engine: DesignerEngine, definitions: WidgetDefinition[]): void {
+  for (const def of definitions) {
     engine.registerWidget(def.meta)
   }
 }
 
 /**
- * Builds the default component map for use with RootRenderer.
+ * Builds a component map from widget definitions.
  * Maps each widget's `type` to its Vue component.
  *
  * @example
  * ```ts
- * <RootRenderer :engine="engine" :component-map="getDefaultComponentMap()" />
+ * import { buildComponentMap } from '@dragcraft/widgets'
+ * import { allWidgetDefinitions } from '@dragcraft/builtin-widgets'
+ *
+ * const componentMap = buildComponentMap(allWidgetDefinitions)
  * ```
  */
-export function getDefaultComponentMap(): Record<string, Component> {
+export function buildComponentMap(definitions: WidgetDefinition[]): Record<string, Component> {
   const map: Record<string, Component> = {}
-  for (const def of allWidgetDefinitions) {
+  for (const def of definitions) {
     map[def.meta.type] = def.component
   }
   return map
 }
 
 /**
- * Returns widget definitions filtered by group name.
+ * Extracts all WidgetMeta from widget definitions.
  */
-export function getWidgetsByGroup(group: string): WidgetDefinition[] {
-  return allWidgetDefinitions.filter(def => def.meta.group === group)
+export function getWidgetMetas(definitions: WidgetDefinition[]): WidgetMeta[] {
+  return definitions.map(def => def.meta)
+}
+
+/**
+ * Filters widget definitions by group name.
+ */
+export function filterByGroup(definitions: WidgetDefinition[], group: string): WidgetDefinition[] {
+  return definitions.filter(def => def.meta.group === group)
 }

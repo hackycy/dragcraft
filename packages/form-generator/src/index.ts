@@ -1,18 +1,6 @@
 // ── Components ───────────────────────────
 export { FormGenerator } from './components'
 
-// ── Field Components (for advanced usage / override) ──
-export {
-  buildDefaultFieldComponentMap,
-  ColorField,
-  InputField,
-  NumberField,
-  SelectField,
-  SliderField,
-  SwitchField,
-  TextareaField,
-} from './components/fields'
-
 // ── Composables ──────────────────────────
 export { useFieldState, useFormValidation } from './composables'
 export type { FieldState } from './composables'

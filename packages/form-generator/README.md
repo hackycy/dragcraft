@@ -60,15 +60,6 @@ src/
 │   ├── FormGenerator.ts             # 根入口，provide context，渲染 sections
 │   ├── FormSection.ts               # 可折叠 section（标题 + 字段列表）
 │   ├── FormField.ts                 # 字段包装器（解析组件、visible/disabled/验证）
-│   ├── fields/
-│   │   ├── InputField.ts            # <input type="text">
-│   │   ├── NumberField.ts           # <input type="number">
-│   │   ├── TextareaField.ts         # <textarea>
-│   │   ├── SelectField.ts           # <select>
-│   │   ├── SwitchField.ts           # <input type="checkbox">
-│   │   ├── ColorField.ts            # <input type="color">
-│   │   ├── SliderField.ts          # <input type="range">
-│   │   └── index.ts                 # barrel + buildDefaultFieldComponentMap()
 │   └── index.ts
 └── index.ts                          # 公共 API barrel export
 ```
@@ -145,17 +136,29 @@ FormGenerator              → 根组件，provide context，渲染 sections
 
 ## 内置字段组件
 
-| 组件 | type 字符串 | HTML 元素 | field.props 支持 |
-|------|------------|-----------|-----------------|
-| InputField | `'input'` | `<input type="text">` | `placeholder` |
-| NumberField | `'number'` | `<input type="number">` | `min`, `max`, `step`, `placeholder` |
-| TextareaField | `'textarea'` | `<textarea>` | `placeholder`, `rows` |
-| SelectField | `'select'` | `<select>` | `options: Array<{label,value}>`, `placeholder` |
-| SwitchField | `'switch'` | `<input type="checkbox">` | 无 |
-| ColorField | `'color'` | `<input type="color">` | 无 |
-| SliderField | `'slider'` | `<input type="range">` | `min`, `max`, `step` |
+本包不再内置字段组件。内置的 7 个字段组件（input / number / textarea / select / switch / color / slider）已迁移到独立包 `@dragcraft/builtin-fields`。
 
-全部使用原生 HTML 元素，无第三方 UI 库依赖。
+使用内置字段：
+
+```ts
+import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
+
+h(FormGenerator, {
+  fieldComponentMap: buildDefaultFieldComponentMap(),
+  // ...
+})
+```
+
+也可以不使用内置字段，完全自定义：
+
+```ts
+h(FormGenerator, {
+  fieldComponentMap: {
+    'input': MyCustomInput,
+    'icon-picker': MyIconPicker,
+  },
+})
+```
 
 ### 自定义字段组件
 
@@ -300,7 +303,7 @@ form-generator 不内置样式，仅应用 class 名，由使用方或 designer 
 
 1. ~~完成类型定义与上下文系统。~~ ✅
 2. ~~完成 composables（useFieldState、useFormValidation）。~~ ✅
-3. ~~完成内置字段组件（7 个）。~~ ✅
+3. ~~内置字段组件已迁移至 `@dragcraft/builtin-fields`。~~ ✅
 4. ~~完成核心渲染组件（FormGenerator/FormSection/FormField）。~~ ✅
 5. 补齐单元测试。
 

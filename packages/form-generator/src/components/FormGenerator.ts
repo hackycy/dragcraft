@@ -3,7 +3,6 @@ import type { FieldChangePayload, FieldComponentMap, FormGeneratorContext, FormS
 import { computed, defineComponent, h, provide, reactive, watch } from 'vue'
 import { useFormValidation } from '../composables/useFormValidation'
 import { FORM_GENERATOR_CONTEXT_KEY } from '../types'
-import { buildDefaultFieldComponentMap } from './fields'
 import FormSection from './FormSection'
 
 export default defineComponent({
@@ -53,9 +52,8 @@ export default defineComponent({
       { deep: false },
     )
 
-    // Merge field component maps (user overrides take precedence)
+    // Use user-provided field component map
     const mergedFieldComponentMap = computed(() => ({
-      ...buildDefaultFieldComponentMap(),
       ...(props.fieldComponentMap ?? {}),
     }))
 

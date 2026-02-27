@@ -142,6 +142,27 @@ importers:
         specifier: catalog:testing
         version: 2.8.1
 
+  packages/builtin-fields:
+    dependencies:
+      '@dragcraft/form-generator':
+        specifier: workspace:*
+        version: link:../form-generator
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
+
+  packages/builtin-widgets:
+    dependencies:
+      '@dragcraft/core':
+        specifier: workspace:*
+        version: link:../core
+      '@dragcraft/widgets':
+        specifier: workspace:*
+        version: link:../widgets
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
+
   packages/core:
     dependencies:
       '@dragcraft/utils':
@@ -165,9 +186,6 @@ importers:
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
-      '@dragcraft/widgets':
-        specifier: workspace:*
-        version: link:../widgets
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
@@ -220,6 +238,12 @@ importers:
 
   playground:
     dependencies:
+      '@dragcraft/builtin-fields':
+        specifier: workspace:*
+        version: link:../packages/builtin-fields
+      '@dragcraft/builtin-widgets':
+        specifier: workspace:*
+        version: link:../packages/builtin-widgets
       '@dragcraft/designer':
         specifier: workspace:*
         version: link:../packages/designer

@@ -1,8 +1,8 @@
 {
-  "name": "@dragcraft/designer",
+  "name": "@dragcraft/builtin-widgets",
   "type": "module",
   "version": "0.0.0",
-  "description": "@dragcraft/designer",
+  "description": "@dragcraft/builtin-widgets",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
   "homepage": "https://github.com/hackycy-collection/dragcraft#readme",
@@ -35,9 +35,7 @@
   },
   "dependencies": {
     "@dragcraft/core": "workspace:*",
-    "@dragcraft/form-generator": "workspace:*",
-    "@dragcraft/renderer": "workspace:*",
-    "@dragcraft/utils": "workspace:*",
+    "@dragcraft/widgets": "workspace:*",
     "vue": "catalog:shared"
   }
 }

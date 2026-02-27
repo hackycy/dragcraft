@@ -4,22 +4,40 @@ import type { ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEv
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
 // ──────────────────────────────────────────
+// Widget group config (inline definition to avoid @dragcraft/widgets dependency)
+// ──────────────────────────────────────────
+
+/**
+ * Widget group configuration with display title.
+ * Used by DcMaterialPanel to organize widgets into named groups.
+ */
+export interface WidgetGroupConfig {
+  /** Group identifier (matches WidgetMeta.group) */
+  name: string
+  /** Display title shown in the material panel */
+  title: string
+}
+
+// ──────────────────────────────────────────
 // Designer options (input to createDesigner)
 // ──────────────────────────────────────────
 
 /**
  * Options accepted by createDesigner.
+ *
+ * Users must explicitly provide widget metas and component maps.
+ * Use `@dragcraft/builtin-widgets` and `@dragcraft/builtin-fields` for built-in defaults.
  */
 export interface DesignerOptions {
   /** Core engine options (initialSchema, maxHistorySize) */
   engineOptions?: EngineOptions
-  /** Whether to auto-register built-in widgets (default: true) */
-  registerDefaultWidgets?: boolean
-  /** Additional widget metas to register beyond built-in ones */
-  extraWidgets?: WidgetMeta[]
-  /** Additional component map entries to merge with defaults */
-  extraComponentMap?: ComponentMap
-  /** Override field component map for form-generator */
+  /** Widget metas to register with the engine */
+  widgetMetas?: WidgetMeta[]
+  /** Widget type → Vue component map for canvas rendering */
+  componentMap?: ComponentMap
+  /** Widget group configurations for material panel. If not provided, groups are derived from registered widgets. */
+  widgetGroups?: WidgetGroupConfig[]
+  /** Field type → Vue component map for form-generator */
   fieldComponentMap?: FieldComponentMap
   /** Global config form schema for the right panel Global tab */
   globalConfigSchema?: FormSchema
@@ -91,6 +109,8 @@ export interface DesignerInstance {
   engine: DesignerEngine
   /** Merged component map (default + extra) */
   componentMap: ComponentMap
+  /** Widget group configurations for material panel */
+  widgetGroups: WidgetGroupConfig[] | undefined
   /** Resolved designer extensions */
   extensions: DesignerExtensions
   /** Override field component map for form-generator */
@@ -115,6 +135,7 @@ export interface DesignerInstance {
 export interface DesignerContext {
   engine: DesignerEngine
   componentMap: ComponentMap
+  widgetGroups: WidgetGroupConfig[] | undefined
   extensions: DesignerExtensions
   fieldComponentMap: FieldComponentMap | undefined
   globalConfigSchema: FormSchema | null

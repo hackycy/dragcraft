@@ -1,5 +1,5 @@
+import type { FieldSchema } from '@dragcraft/form-generator'
 import type { PropType } from 'vue'
-import type { FieldSchema } from '../../types'
 import { defineComponent, h } from 'vue'
 
 export default defineComponent({

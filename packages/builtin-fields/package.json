@@ -1,8 +1,8 @@
 {
-  "name": "@dragcraft/designer",
+  "name": "@dragcraft/builtin-fields",
   "type": "module",
   "version": "0.0.0",
-  "description": "@dragcraft/designer",
+  "description": "@dragcraft/builtin-fields",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
   "homepage": "https://github.com/hackycy-collection/dragcraft#readme",
@@ -34,10 +34,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@dragcraft/core": "workspace:*",
     "@dragcraft/form-generator": "workspace:*",
-    "@dragcraft/renderer": "workspace:*",
-    "@dragcraft/utils": "workspace:*",
     "vue": "catalog:shared"
   }
 }

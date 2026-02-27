@@ -1,14 +1,14 @@
+import type { FieldSchema } from '@dragcraft/form-generator'
 import type { PropType } from 'vue'
-import type { FieldSchema } from '../../types'
 import { defineComponent, h } from 'vue'
 
 export default defineComponent({
-  name: 'DcColorField',
+  name: 'DcTextareaField',
 
   props: {
     modelValue: {
       type: String as PropType<string>,
-      default: '#000000',
+      default: '',
     },
     disabled: {
       type: Boolean,
@@ -24,15 +24,16 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const handleInput = (e: Event) => {
-      emit('update:modelValue', (e.target as HTMLInputElement).value)
+      emit('update:modelValue', (e.target as HTMLTextAreaElement).value)
     }
 
     return () =>
-      h('input', {
-        type: 'color',
-        class: 'dc-field-color',
-        value: props.modelValue ?? '#000000',
+      h('textarea', {
+        class: 'dc-field-textarea',
+        value: props.modelValue ?? '',
         disabled: props.disabled,
+        rows: (props.field.props?.rows as number) ?? 3,
+        placeholder: (props.field.props?.placeholder as string) ?? '',
         onInput: handleInput,
       })
   },
