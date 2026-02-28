@@ -12,7 +12,8 @@
     "@dragcraft/builtin-widgets": "workspace:*",
     "@dragcraft/designer": "workspace:*",
     "@dragcraft/themes": "workspace:*",
-    "vue": "catalog:shared"
+    "vue": "catalog:shared",
+    "vue-router": "^4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.4",

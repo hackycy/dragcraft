@@ -197,13 +197,13 @@ const CardWidget = defineComponent({
 
 const InputField = defineComponent({
   name: 'InputField',
-  props: { schema: { type: Object, required: true }, modelValue: { type: [String, Number], default: '' } },
+  props: { field: { type: Object, required: true }, modelValue: { type: [String, Number], default: '' } },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     return () => h('input', {
       type: 'text',
       value: props.modelValue,
-      placeholder: (props.schema as Record<string, unknown>).placeholder as string ?? '',
+      placeholder: (props.field as Record<string, unknown>).placeholder as string ?? '',
       style: 'width:100%;padding:4px 8px;border:1px solid #d9d9d9;border-radius:4px;font-size:13px;box-sizing:border-box;',
       onInput: (e: Event) => emit('update:modelValue', (e.target as HTMLInputElement).value),
     })
@@ -212,7 +212,7 @@ const InputField = defineComponent({
 
 const NumberField = defineComponent({
   name: 'NumberField',
-  props: { schema: { type: Object, required: true }, modelValue: { type: Number, default: 0 } },
+  props: { field: { type: Object, required: true }, modelValue: { type: Number, default: 0 } },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     return () => h('input', {
@@ -226,7 +226,7 @@ const NumberField = defineComponent({
 
 const ColorField = defineComponent({
   name: 'ColorField',
-  props: { schema: { type: Object, required: true }, modelValue: { type: String, default: '#000000' } },
+  props: { field: { type: Object, required: true }, modelValue: { type: String, default: '#000000' } },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     return () => h('input', {
@@ -240,10 +240,10 @@ const ColorField = defineComponent({
 
 const SliderField = defineComponent({
   name: 'SliderField',
-  props: { schema: { type: Object, required: true }, modelValue: { type: Number, default: 0 } },
+  props: { field: { type: Object, required: true }, modelValue: { type: Number, default: 0 } },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
-    const s = props.schema as Record<string, unknown>
+    const s = props.field as Record<string, unknown>
     return () => h('input', {
       type: 'range',
       value: props.modelValue,
@@ -257,7 +257,7 @@ const SliderField = defineComponent({
 
 const SwitchField = defineComponent({
   name: 'SwitchField',
-  props: { schema: { type: Object, required: true }, modelValue: { type: Boolean, default: false } },
+  props: { field: { type: Object, required: true }, modelValue: { type: Boolean, default: false } },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     return () =>
