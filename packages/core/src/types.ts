@@ -40,7 +40,7 @@ export interface DragTarget {
 
 /**
  * Context provided when evaluating per-instance behavior fields
- * (mask, selectable, draggable, deletable).
+ * (mask, selectable, draggable, sortable, deletable).
  * Available inside a computed — schema changes trigger re-evaluation.
  */
 export interface InstanceBehaviorContext {
@@ -131,6 +131,13 @@ export interface WidgetMeta {
   selectable?: BehaviorPredicate<InstanceBehaviorContext>
   /** Whether this widget can be dragged to reorder (default: true). Accepts boolean or predicate. */
   draggable?: BehaviorPredicate<InstanceBehaviorContext>
+  /**
+   * Whether this widget's position can be changed by reordering (default: true).
+   * When false, the widget is locked at its current array index — it cannot
+   * be dragged, and operations on other widgets that would shift this widget's
+   * index are forbidden. Implies draggable=false.
+   */
+  sortable?: BehaviorPredicate<InstanceBehaviorContext>
   /** Whether this widget can be deleted via toolbar action (default: true). Accepts boolean or predicate. */
   deletable?: BehaviorPredicate<InstanceBehaviorContext>
 

@@ -1,6 +1,6 @@
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Ref } from 'vue'
-import { CommandType, resolveBehavior } from '@dragcraft/core'
+import { CommandType, getLockedIndices, isInsertAllowed, isMoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { generateShortId } from '@dragcraft/utils'
 import { ref } from 'vue'
 
@@ -81,11 +81,23 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (dragTarget.sourceNodeId) {
       // Moving existing node
       const children = engine.store.getRawSchema().root.children ?? []
+      const targetIndex = index ?? children.length
+
+      // Sortable guard: check if move would displace locked widgets
+      const lockedIndices = getLockedIndices(children, engine.registry, engine.store.getRawSchema())
+      if (lockedIndices.size > 0) {
+        const srcIdx = children.findIndex(c => c.id === dragTarget.sourceNodeId)
+        if (srcIdx !== -1 && !isMoveAllowed(srcIdx, targetIndex, lockedIndices)) {
+          engine.store.setDragTarget(null)
+          return
+        }
+      }
+
       engine.execute({
         type: CommandType.MOVE_NODE,
         payload: {
           nodeId: dragTarget.sourceNodeId,
-          index: index ?? children.length,
+          index: targetIndex,
         },
       })
     }
@@ -98,6 +110,16 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       // Guard: check creatable at drop time (defensive — material item already guards drag)
       if (!resolveBehavior(meta.creatable, { widgetType: meta.type, schema: engine.store.getRawSchema() }))
         return
+
+      // Sortable guard: check if insert would displace locked widgets
+      if (index !== undefined) {
+        const children = engine.store.getRawSchema().root.children ?? []
+        const lockedIndices = getLockedIndices(children, engine.registry, engine.store.getRawSchema())
+        if (lockedIndices.size > 0 && !isInsertAllowed(index, lockedIndices)) {
+          engine.store.setDragTarget(null)
+          return
+        }
+      }
 
       const newNode: SchemaNode = {
         id: generateShortId(),

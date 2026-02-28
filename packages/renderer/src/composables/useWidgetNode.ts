@@ -18,6 +18,8 @@ export interface UseWidgetNodeReturn {
   selectable: ComputedRef<boolean>
   /** Whether this node is draggable (from meta.draggable, default true) */
   draggable: ComputedRef<boolean>
+  /** Whether this node is sortable / position-locked (from meta.sortable, default true) */
+  sortable: ComputedRef<boolean>
   /** CSS classes for the node wrapper */
   wrapperClasses: ComputedRef<Array<string | Record<string, boolean>>>
   /** Handle select event */
@@ -65,7 +67,19 @@ export function useWidgetNode(
     return field(ctx)
   })
 
+  const sortable = computed(() => {
+    const field = meta.value?.sortable
+    if (typeof field !== 'function')
+      return field !== false
+    void engine.store.schema.value
+    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
+    return field(ctx)
+  })
+
   const draggable = computed(() => {
+    // sortable: false implies not draggable
+    if (!sortable.value)
+      return false
     const field = meta.value?.draggable
     if (typeof field !== 'function')
       return field !== false
@@ -81,6 +95,7 @@ export function useWidgetNode(
       'dc-node--masked': useMask.value,
       'dc-node--unmasked': !useMask.value,
       'dc-node--non-selectable': !selectable.value,
+      'dc-node--locked': !sortable.value,
     },
     state.interactionClasses.value,
   ])
@@ -143,6 +158,7 @@ export function useWidgetNode(
     useMask,
     selectable,
     draggable,
+    sortable,
     wrapperClasses,
     handleSelect,
     handleMouseEnter,

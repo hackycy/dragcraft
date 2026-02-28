@@ -1,7 +1,8 @@
 import type { CommandContext, MoveNodePayload } from '../types'
+import { getLockedIndices, isMoveAllowed } from '../sortable'
 
 export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): void {
-  const { store } = ctx
+  const { store, registry } = ctx
   const rawSchema = store.getRawSchema()
   const children = rawSchema.root.children
 
@@ -11,6 +12,16 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
   const currentIndex = children.findIndex(c => c.id === payload.nodeId)
   if (currentIndex === -1) {
     console.warn(`[dragcraft/core] MOVE_NODE: node "${payload.nodeId}" not found`)
+    return
+  }
+
+  // ── Sortable constraint ──
+  const lockedIndices = getLockedIndices(children, registry, rawSchema)
+  if (lockedIndices.size > 0 && !isMoveAllowed(currentIndex, payload.index, lockedIndices)) {
+    console.warn(
+      `[dragcraft/core] MOVE_NODE: blocked by sortable constraint`
+      + ` (src=${currentIndex}, target=${payload.index})`,
+    )
     return
   }
 

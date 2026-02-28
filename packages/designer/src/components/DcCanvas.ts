@@ -1,5 +1,5 @@
 import type { SchemaNode } from '@dragcraft/core'
-import { CommandType, resolveBehavior } from '@dragcraft/core'
+import { CommandType, findNearestValidIndex, getLockedIndices, getValidDropIndices, resolveBehavior } from '@dragcraft/core'
 import { RootRenderer } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
 import { computed, defineComponent, h, ref } from 'vue'
@@ -44,6 +44,25 @@ export default defineComponent({
       return widgetEls.length
     }
 
+    // ── Sortable constraint helpers ──
+
+    // Cached locked indices (recomputed only when schema changes)
+    const lockedIndices = computed(() => {
+      void engine.store.schema.value
+      const children = engine.store.getRawSchema().root.children ?? []
+      return getLockedIndices(children, engine.registry, engine.store.getRawSchema())
+    })
+
+    // Valid drop indices for the current drag operation
+    const validDropIndices = computed(() => {
+      const dragTarget = engine.store.dragTarget.value
+      if (!dragTarget)
+        return null
+      void engine.store.schema.value
+      const children = engine.store.getRawSchema().root.children ?? []
+      return getValidDropIndices(children, lockedIndices.value, dragTarget.sourceNodeId)
+    })
+
     // ── Drag event handlers (event delegation) ──
 
     const handleDragOver = (e: DragEvent) => {
@@ -54,7 +73,24 @@ export default defineComponent({
         const dragTarget = engine.store.dragTarget.value
         e.dataTransfer.dropEffect = dragTarget?.sourceNodeId ? 'move' : 'copy'
       }
-      dragOverIndex.value = computeDropIndex(e)
+
+      const rawIndex = computeDropIndex(e)
+      const valid = validDropIndices.value
+
+      if (valid && valid.size > 0) {
+        // Clamp to nearest valid position
+        dragOverIndex.value = valid.has(rawIndex)
+          ? rawIndex
+          : findNearestValidIndex(rawIndex, valid)
+      }
+      else if (valid && valid.size === 0) {
+        // No valid positions at all — don't show drop indicator
+        dragOverIndex.value = null
+      }
+      else {
+        // No active drag or no locked widgets — use raw index
+        dragOverIndex.value = rawIndex
+      }
     }
 
     const handleDragLeave = (e: DragEvent) => {
@@ -76,6 +112,12 @@ export default defineComponent({
       const dragTarget = engine.store.dragTarget.value
       if (!dragTarget)
         return
+
+      // No valid drop position (sortable constraints block all positions)
+      if (visualIndex === null) {
+        engine.store.setDragTarget(null)
+        return
+      }
 
       if (dragTarget.sourceNodeId) {
         // Moving existing node to the computed position

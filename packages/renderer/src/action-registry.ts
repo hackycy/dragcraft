@@ -1,7 +1,7 @@
 import type { DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { RendererEventHooks } from './event-hooks'
-import { CommandType, resolveBehavior } from '@dragcraft/core'
+import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { fireAfterHook, resolveBeforeHook } from './event-hooks'
 
 /**
@@ -134,7 +134,11 @@ export function createDefaultActions(): NodeActionDefinition[] {
       icon: '\u2630',
       type: 'drag-handle',
       order: 100,
-      visible: ctx => resolveBehavior(ctx.meta?.draggable, toInstanceCtx(ctx)),
+      visible: (ctx) => {
+        const instanceCtx = toInstanceCtx(ctx)
+        return resolveBehavior(ctx.meta?.draggable, instanceCtx)
+          && resolveBehavior(ctx.meta?.sortable, instanceCtx)
+      },
     },
     {
       key: ActionKey.MOVE_UP,
@@ -142,8 +146,20 @@ export function createDefaultActions(): NodeActionDefinition[] {
       icon: '\u2191',
       type: 'button',
       order: 200,
-      visible: ctx => resolveBehavior(ctx.meta?.draggable, toInstanceCtx(ctx)),
-      disabled: ctx => ctx.index === 0,
+      visible: (ctx) => {
+        const instanceCtx = toInstanceCtx(ctx)
+        return resolveBehavior(ctx.meta?.draggable, instanceCtx)
+          && resolveBehavior(ctx.meta?.sortable, instanceCtx)
+      },
+      disabled: (ctx) => {
+        if (ctx.index === 0)
+          return true
+        const children = ctx.engine.store.getRawSchema().root.children ?? []
+        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema())
+        if (lockedIndices.size === 0)
+          return false
+        return !isMoveAllowed(ctx.index, ctx.index - 1, lockedIndices)
+      },
       handler: (ctx, e) => {
         e.stopPropagation()
         if (ctx.index > 0) {
@@ -160,8 +176,20 @@ export function createDefaultActions(): NodeActionDefinition[] {
       icon: '\u2193',
       type: 'button',
       order: 300,
-      visible: ctx => resolveBehavior(ctx.meta?.draggable, toInstanceCtx(ctx)),
-      disabled: ctx => ctx.index >= ctx.siblingCount - 1,
+      visible: (ctx) => {
+        const instanceCtx = toInstanceCtx(ctx)
+        return resolveBehavior(ctx.meta?.draggable, instanceCtx)
+          && resolveBehavior(ctx.meta?.sortable, instanceCtx)
+      },
+      disabled: (ctx) => {
+        if (ctx.index >= ctx.siblingCount - 1)
+          return true
+        const children = ctx.engine.store.getRawSchema().root.children ?? []
+        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema())
+        if (lockedIndices.size === 0)
+          return false
+        return !isMoveAllowed(ctx.index, ctx.index + 1, lockedIndices)
+      },
       handler: (ctx, e) => {
         e.stopPropagation()
         if (ctx.index < ctx.siblingCount - 1) {
@@ -180,6 +208,13 @@ export function createDefaultActions(): NodeActionDefinition[] {
       order: 400,
       className: 'dc-node__toolbar-btn--delete',
       visible: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
+      disabled: (ctx) => {
+        const children = ctx.engine.store.getRawSchema().root.children ?? []
+        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema())
+        if (lockedIndices.size === 0)
+          return false
+        return !isRemoveAllowed(ctx.index, lockedIndices)
+      },
       handler: (ctx, e) => {
         e.stopPropagation()
         ctx.engine.execute({

@@ -140,10 +140,10 @@ RootRenderer          → 根入口，provide context，渲染容器壳 + emptyS
 
 | Key | 排序 | 类型 | 说明 |
 |-----|------|------|------|
-| `drag` | 100 | `drag-handle` | 拖拽排序 |
-| `move-up` | 200 | `button` | 上移 |
-| `move-down` | 300 | `button` | 下移 |
-| `delete` | 400 | `button` | 删除 |
+| `drag` | 100 | `drag-handle` | 拖拽排序（`sortable=false` 或 `draggable=false` 时隐藏） |
+| `move-up` | 200 | `button` | 上移（`sortable=false` 时隐藏；目标位置不合法时禁用） |
+| `move-down` | 300 | `button` | 下移（`sortable=false` 时隐藏；目标位置不合法时禁用） |
+| `delete` | 400 | `button` | 删除（`deletable=false` 时隐藏；删除会导致锁定 widget 位移时禁用） |
 
 ### 动作定义
 
@@ -338,10 +338,11 @@ interface EmptyStateProps {
 - **悬停**：mouseenter/mouseleave 调用 `engine.store.hoverNode()`，`dc-node--hovered` class。支持 `onHoverChange` hook 通知。
 - **拖拽悬停**：由外部 `dragOverNodeId` ref 控制，`dc-node--drag-over` class + DropIndicator。
 - **不可选中**：`WidgetMeta.selectable` 为 `false` 或谓词函数返回 `false` 时忽略选中事件。
+- **位置锁定**：`WidgetMeta.sortable` 为 `false` 时，widget 锁定在当前数组索引位置，`dc-node--locked` class。隐含 `draggable=false`，拖拽 handle、上移/下移按钮均隐藏。其他 widget 的拖拽/插入/删除操作不可导致锁定 widget 的索引变化。
 
 ### 动态行为控制
 
-`WidgetMeta` 的行为控制字段（`mask`、`selectable`、`draggable`、`deletable`）支持 `BehaviorPredicate<InstanceBehaviorContext>` 类型，即可传入静态布尔值，也可传入 `(ctx) => boolean` 函数。
+`WidgetMeta` 的行为控制字段（`mask`、`selectable`、`draggable`、`sortable`、`deletable`）支持 `BehaviorPredicate<InstanceBehaviorContext>` 类型，即可传入静态布尔值，也可传入 `(ctx) => boolean` 函数。
 
 当传入函数时，renderer 在 `computed` 内部求值并读取 `engine.store.schema.value` 建立响应式依赖，schema 变更后自动重新求值。静态布尔值走快速路径，不会因 schema 变更产生额外计算开销。
 
@@ -366,6 +367,7 @@ interface EmptyStateProps {
           .dc-node__toolbar-btn--drag
           .dc-node__toolbar-btn--delete
       .dc-node--hovered
+      .dc-node--locked                  # sortable=false，位置锁定
     .dc-drop-indicator > .dc-drop-indicator__line
     .dc-widget-fallback
 ```
@@ -403,6 +405,7 @@ interface UseWidgetNodeReturn {
   useMask: ComputedRef<boolean>        // 是否使用 mask
   selectable: ComputedRef<boolean>     // 是否可选中
   draggable: ComputedRef<boolean>      // 是否可拖拽
+  sortable: ComputedRef<boolean>       // 是否可排序（false 时位置锁定）
   wrapperClasses: ComputedRef          // 外层 CSS class
   handleSelect: (e: MouseEvent) => void
   handleMouseEnter: () => void

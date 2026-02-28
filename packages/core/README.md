@@ -63,6 +63,7 @@ src/
 ├── types.ts                  # 所有接口与类型定义
 ├── constants.ts              # 事件名、命令类型常量
 ├── helpers.ts                # 扁平列表操作工具函数
+├── sortable.ts               # 位置锁定约束验证工具函数
 ├── schema-store.ts           # SchemaStore - 响应式状态管理
 ├── event-hub.ts              # EventHub - 类型安全的事件总线
 ├── registry.ts               # Registry - 物料/配置注册中心
@@ -224,7 +225,7 @@ interface DesignerSchema {
 ```ts
 // ── 行为控制类型 ──
 
-/** 每实例行为求值上下文（mask/selectable/draggable/deletable） */
+/** 每实例行为求值上下文（mask/selectable/draggable/sortable/deletable） */
 interface InstanceBehaviorContext {
   node: SchemaNode          // 当前节点实例
   schema: DesignerSchema    // 当前 schema（响应式读取）
@@ -252,6 +253,7 @@ interface WidgetMeta {
   mask?: BehaviorPredicate<InstanceBehaviorContext>        // 默认 true
   selectable?: BehaviorPredicate<InstanceBehaviorContext>  // 默认 true
   draggable?: BehaviorPredicate<InstanceBehaviorContext>   // 默认 true
+  sortable?: BehaviorPredicate<InstanceBehaviorContext>    // 默认 true
   deletable?: BehaviorPredicate<InstanceBehaviorContext>   // 默认 true
 
   // ── 物料面板控制 ──
@@ -270,6 +272,7 @@ interface WidgetMeta {
 | `mask` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时不渲染透明遮罩，直接交互 |
 | `selectable` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时节点无法被点击选中 |
 | `draggable` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时隐藏拖拽 handle 和上移/下移按钮 |
+| `sortable` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时锁定 widget 在当前数组索引位置。隐含 `draggable=false`，且其他 widget 的操作不可导致该 widget 的索引变化 |
 | `deletable` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时隐藏删除按钮 |
 | `creatable` | `BehaviorPredicate<TypeBehaviorContext>` | `true` | 为 `false` 时物料面板该项禁用，不可拖入画布 |
 | `actions` | `WidgetActionConfig` | — | 控制工具栏可用动作（详见下方） |
@@ -304,6 +307,42 @@ engine.registerWidget({
 ```
 
 拖入一个 Tab 后，物料面板的 Tab 卡片自动变为禁用状态，画布 drop 也会拒绝第二个 Tab。删除后自动恢复。
+
+### 位置锁定示例
+
+```ts
+// 页头——始终固定在 index 0，不可删除、不可拖动
+engine.registerWidget({
+  type: 'header',
+  title: '页头',
+  group: 'layout',
+  defaultProps: { title: 'My Page' },
+  formSchema: {},
+  sortable: false,
+  deletable: false,
+})
+
+// 动态锁定——配置面板中切换锁定状态
+engine.registerWidget({
+  type: 'section',
+  title: '区块',
+  group: 'layout',
+  defaultProps: { locked: false },
+  formSchema: {
+    sections: [{
+      title: '配置',
+      fields: [{ key: 'locked', label: '锁定位置', component: 'switch' }],
+    }],
+  },
+  sortable: (ctx) => !ctx.node.props.locked,
+})
+```
+
+当 `sortable: false` 时：
+- Widget 不可被拖拽（隐含 `draggable=false`）
+- 上移/下移按钮不可见
+- 其他 widget 不可插入到该 widget 之前（会导致索引偏移）
+- 其他 widget 不可从该 widget 之前移除（会导致索引偏移）
 
 ### WidgetActionConfig（Per-Widget 动作配置）
 
@@ -384,6 +423,15 @@ CommandBus
 - `removeNodeFromTree(root, nodeId)` — 从 root.children 中移除节点
 - `insertNodeIntoTree(parent, node, index?)` — 插入节点到 children 列表
 - `walkTree(root, visitor)` — 遍历 root + root.children
+
+导出供外部使用（位置锁定约束）：
+
+- `getLockedIndices(children, registry, schema)` — 获取所有 `sortable=false` 的 widget 索引集合
+- `isInsertAllowed(insertIndex, lockedIndices)` — 判断在指定位置插入是否合法
+- `isMoveAllowed(srcIdx, targetIdx, lockedIndices)` — 判断移动操作是否合法
+- `isRemoveAllowed(removeIndex, lockedIndices)` — 判断删除操作是否合法
+- `getValidDropIndices(children, lockedIndices, sourceNodeId)` — 计算拖拽的合法落点位置
+- `findNearestValidIndex(rawIndex, validIndices)` — 找最近合法位置
 
 ## 与其他包协作
 

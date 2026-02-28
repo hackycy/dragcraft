@@ -31,6 +31,16 @@ export { createRegistry } from './registry'
 
 // ── Subsystem factories ───────────────────
 export { createDefaultSchema, createSchemaStore } from './schema-store'
+
+// ── Sortable constraints ─────────────────
+export {
+  findNearestValidIndex,
+  getLockedIndices,
+  getValidDropIndices,
+  isInsertAllowed,
+  isMoveAllowed,
+  isRemoveAllowed,
+} from './sortable'
 // ── Types ─────────────────────────────────
 export type {
   AddNodePayload,
