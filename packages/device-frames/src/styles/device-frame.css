@@ -1,0 +1,86 @@
+/* ── Device Frame Base ───────────────────── */
+
+.dc-device-frame {
+  position: relative;
+  margin: 24px auto;
+  background: var(--dc-device-frame-bg);
+  border: var(--dc-device-frame-border-width) solid var(--dc-device-frame-border-color);
+  box-shadow: var(--dc-device-frame-shadow);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.dc-device-frame__status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--dc-device-frame-status-height);
+  padding: 0 24px;
+  background: var(--dc-device-frame-status-bg);
+  font-size: var(--dc-device-frame-status-font-size);
+  font-weight: 600;
+  color: var(--dc-device-frame-status-color);
+  user-select: none;
+  border-bottom: var(--dc-device-frame-status-border);
+}
+
+.dc-device-frame__status-time {
+  font-variant-numeric: tabular-nums;
+}
+
+.dc-device-frame__status-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.dc-device-frame__content {
+  overflow-y: auto;
+}
+
+/* ── Device Picker ──────────────────────── */
+
+.dc-device-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dc-device-picker-gap);
+  border: 1px solid var(--dc-border, #e8e8e8);
+  border-radius: 6px;
+  padding: 2px;
+  background: var(--dc-bg, #ffffff);
+}
+
+.dc-device-picker__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-family: var(--dc-font-family, inherit);
+  border: none;
+  border-radius: 4px;
+  background: var(--dc-device-picker-btn-bg);
+  color: var(--dc-device-picker-btn-color);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.dc-device-picker__btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--dc-text, #1a1a1a);
+}
+
+.dc-device-picker__btn--active {
+  background: var(--dc-device-picker-btn-active-bg);
+  color: var(--dc-device-picker-btn-active-color);
+}
+
+.dc-device-picker__btn--active:hover {
+  background: var(--dc-device-picker-btn-active-bg);
+  color: var(--dc-device-picker-btn-active-color);
+  opacity: 0.9;
+}

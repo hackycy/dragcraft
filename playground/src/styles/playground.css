@@ -32,55 +32,7 @@ body {
   border-radius: none;
 }
 
-/* ── Phone Frame ─────────────────────────── */
-
-.phone-frame {
-  position: relative;
-  width: 375px;
-  min-height: 667px;
-  margin: 24px auto;
-  background: #ffffff;
-  border: 3px solid #1a1a1a;
-  border-radius: 40px;
-  box-shadow:
-    0 0 0 2px #333,
-    0 12px 40px rgba(0, 0, 0, 0.25),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.phone-frame__status-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 44px;
-  padding: 0 24px;
-  background: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1a1a1a;
-  user-select: none;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.phone-frame__status-time {
-  font-variant-numeric: tabular-nums;
-}
-
-.phone-frame__status-icons {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.phone-frame__content {
-  height: 750px;
-  overflow-y: auto;
-}
-
-/* Override the canvas center panel to use neutral background for phone frame */
+/* Override the canvas center panel to use neutral background for device frames */
 .dc-designer__panel--center {
   background: #f0f2f5 !important;
 }

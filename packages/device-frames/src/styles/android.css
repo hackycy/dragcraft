@@ -1,0 +1,32 @@
+/* ── Android Frame ───────────────────────── */
+
+.dc-device-frame--android {
+  width: 360px;
+  border-radius: 20px;
+}
+
+.dc-device-frame--android .dc-device-frame__content {
+  height: 800px;
+}
+
+/* Navigation bar */
+.dc-device-frame__nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  height: var(--dc-device-frame-nav-height);
+  background: var(--dc-device-frame-nav-bg);
+  border-top: 1px solid #f0f0f0;
+  user-select: none;
+}
+
+.dc-device-frame__nav-btn {
+  font-size: 16px;
+  color: #999;
+  cursor: default;
+}
+
+.dc-device-frame__nav-btn--home {
+  font-size: 20px;
+}

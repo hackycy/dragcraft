@@ -1,0 +1,59 @@
+/* ── Desktop Frame ───────────────────────── */
+
+.dc-device-frame--desktop {
+  width: 1280px;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.dc-device-frame--desktop .dc-device-frame__content {
+  height: 800px;
+}
+
+/* Browser title bar */
+.dc-device-frame__title-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--dc-device-frame-titlebar-height);
+  padding: 0 12px;
+  background: var(--dc-device-frame-titlebar-bg);
+  border-bottom: 1px solid #d9d9d9;
+  user-select: none;
+}
+
+.dc-device-frame__traffic-lights {
+  display: flex;
+  gap: 8px;
+}
+
+.dc-device-frame__traffic-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dc-device-frame__traffic-dot--close {
+  background: #ff5f57;
+}
+
+.dc-device-frame__traffic-dot--minimize {
+  background: #febc2e;
+}
+
+.dc-device-frame__traffic-dot--maximize {
+  background: #28c840;
+}
+
+.dc-device-frame__url-bar {
+  flex: 1;
+  height: 24px;
+  padding: 0 12px;
+  background: var(--dc-device-frame-urlbar-bg);
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #999;
+  display: flex;
+  align-items: center;
+}

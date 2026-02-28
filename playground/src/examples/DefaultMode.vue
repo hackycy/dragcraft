@@ -1,30 +1,22 @@
 <script setup lang="ts">
 import { CommandType, createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
-import type { DesignerSchema, NodeActionContext, ToolbarSlotAPI } from '@dragcraft/designer'
+import type { DesignerSchema, NodeActionContext } from '@dragcraft/designer'
 import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
 import { getAllWidgetMetas, getDefaultComponentMap, widgetGroups } from '@dragcraft/builtin-widgets'
-import { defineComponent, h, ref } from 'vue'
+import {
+  createDeviceFrameContext,
+  createDeviceToolbarRenderer,
+  DEVICE_FRAME_CONTEXT_KEY,
+  DeviceFrameShell,
+} from '@dragcraft/device-frames'
+import { defineComponent, h, provide, ref } from 'vue'
 import { globalConfigSchema } from '../config/global-config-schema'
 import { initialSchema } from '../config/initial-schema'
 
-// ── Phone Frame Shell (containerShell extension) ──
+// ── Device Frame Context ────────────────────
 
-const PhoneFrameShell = defineComponent({
-  name: 'PhoneFrameShell',
-  setup(_, { slots }) {
-    return () =>
-      h('div', { class: 'phone-frame' }, [
-        h('div', { class: 'phone-frame__status-bar' }, [
-          h('span', { class: 'phone-frame__status-time' }, '9:41'),
-          h('span', { class: 'phone-frame__status-icons' }, [
-            h('span', null, '\u25D0'),
-            h('span', null, '\u25AC'),
-          ]),
-        ]),
-        h('div', { class: 'phone-frame__content dc-container-shell' }, slots.default?.()),
-      ])
-  },
-})
+const deviceCtx = createDeviceFrameContext({ initialDevice: 'iphone' })
+provide(DEVICE_FRAME_CONTEXT_KEY, deviceCtx)
 
 // ── Mini-Program Empty State ────────────────────
 
@@ -94,32 +86,10 @@ const designer = createDesigner({
   ],
   extensions: {
     rendererExtensions: {
-      containerShell: PhoneFrameShell,
+      containerShell: DeviceFrameShell,
       emptyState: MiniProgramEmptyState,
     },
-    toolbarRenderer: (api: ToolbarSlotAPI) => [
-      h('button', {
-        class: 'dc-toolbar__btn dc-toolbar__btn--icon',
-        onClick: () => api.undo(),
-        disabled: !api.canUndo(),
-        title: '\u64A4\u9500',
-      }, '\u21A9'),
-      h('button', {
-        class: 'dc-toolbar__btn dc-toolbar__btn--icon',
-        onClick: () => api.redo(),
-        disabled: !api.canRedo(),
-        title: '\u91CD\u505A',
-      }, '\u21AA'),
-      h('div', { class: 'dc-toolbar__spacer' }),
-      h('button', {
-        class: 'dc-toolbar__btn',
-        onClick: () => {
-          const schema = api.engine.exportSchema()
-          console.log('Current schema:', JSON.stringify(schema, null, 2))
-        },
-        title: '\u8F93\u51FA\u5230\u63A7\u5236\u53F0',
-      }, '\u{1F4CB} Log'),
-    ],
+    toolbarRenderer: createDeviceToolbarRenderer(deviceCtx),
   },
 })
 

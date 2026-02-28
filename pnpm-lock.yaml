@@ -190,6 +190,22 @@ importers:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
 
+  packages/device-frames:
+    dependencies:
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
+    devDependencies:
+      postcss:
+        specifier: catalog:cli
+        version: 8.5.6
+      postcss-cli:
+        specifier: catalog:cli
+        version: 11.0.1(jiti@2.6.0)(postcss@8.5.6)(tsx@4.20.6)
+      postcss-import:
+        specifier: catalog:cli
+        version: 16.1.1(postcss@8.5.6)
+
   packages/form-generator:
     dependencies:
       vue:
@@ -247,6 +263,9 @@ importers:
       '@dragcraft/designer':
         specifier: workspace:*
         version: link:../packages/designer
+      '@dragcraft/device-frames':
+        specifier: workspace:*
+        version: link:../packages/device-frames
       '@dragcraft/themes':
         specifier: workspace:*
         version: link:../packages/themes
