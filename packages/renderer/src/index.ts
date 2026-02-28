@@ -31,11 +31,12 @@ export type { UseWidgetNodeReturn } from './composables'
 export { createRendererContext, useRendererContext } from './context'
 
 // ── Event Hooks ─────────────────────────
-export { createDefaultEventHooks } from './event-hooks'
+export { createDefaultEventHooks, fireAfterHook, resolveBeforeHook } from './event-hooks'
 export type {
   DeleteHookPayload,
   DragHookPayload,
   HoverHookPayload,
+  MaybePromise,
   MoveHookPayload,
   RendererEventHooks,
   SelectHookPayload,

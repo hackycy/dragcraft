@@ -206,28 +206,49 @@ engine.registerWidget({
 
 ## Event Hooks（事件拦截）
 
-Event hooks 在 composable 层拦截操作。`onBefore*` hook 返回 `false` 可取消操作。
+Event hooks 在 composable 层拦截操作。`onBefore*` hook 返回 `false` 可取消操作。支持同步和异步（Promise）两种模式。
 
 ```ts
+type MaybePromise<T> = T | Promise<T>
+
 interface RendererEventHooks {
   // ── 选中 ──
-  onBeforeSelect?: (payload: SelectHookPayload) => boolean | void
-  onAfterSelect?: (payload: SelectHookPayload) => void
+  onBeforeSelect?: (payload: SelectHookPayload) => MaybePromise<boolean | void>
+  onAfterSelect?: (payload: SelectHookPayload) => MaybePromise<void>
   // ── 删除 ──
-  onBeforeDelete?: (payload: DeleteHookPayload) => boolean | void
-  onAfterDelete?: (payload: DeleteHookPayload) => void
+  onBeforeDelete?: (payload: DeleteHookPayload) => MaybePromise<boolean | void>
+  onAfterDelete?: (payload: DeleteHookPayload) => MaybePromise<void>
   // ── 移动 ──
-  onBeforeMove?: (payload: MoveHookPayload) => boolean | void
-  onAfterMove?: (payload: MoveHookPayload) => void
-  // ── 拖拽 ──
+  onBeforeMove?: (payload: MoveHookPayload) => MaybePromise<boolean | void>
+  onAfterMove?: (payload: MoveHookPayload) => MaybePromise<void>
+  // ── 拖拽（onBeforeDrag 保持同步 — 浏览器 DragEvent 约束） ──
   onBeforeDrag?: (payload: DragHookPayload) => boolean | void
-  onAfterDrag?: (payload: DragHookPayload) => void
-  // ── Hover ──
+  onAfterDrag?: (payload: DragHookPayload) => MaybePromise<void>
+  // ── Hover（保持同步 — 高频事件） ──
   onHoverChange?: (payload: HoverHookPayload) => void
 }
 ```
 
-使用示例——删除前弹出确认：
+### 同步与异步
+
+钩子支持返回 `boolean | void`（同步）或 `Promise<boolean | void>`（异步）。同步钩子走快速路径，零额外开销。
+
+**保持同步的例外**：
+- `onBeforeDrag`：浏览器 DragEvent 要求 `preventDefault()` 必须同步调用，无法等待 Promise。
+- `onHoverChange`：高频信息通知事件，不支持取消。
+
+### 错误处理
+
+- **Before 钩子**：异常或 Promise 拒绝时操作**取消**（fail-closed），错误输出到 `console.error`。
+- **After 钩子**：fire-and-forget，异常仅 `console.error`，不影响应用状态。
+
+### 并发防护
+
+异步 before 钩子执行期间，重复触发的同一操作会被自动丢弃（闭包级锁），防止并发导致的状态不一致。
+
+### 使用示例
+
+同步——删除前弹出确认：
 
 ```ts
 const eventHooks: RendererEventHooks = {
@@ -239,6 +260,30 @@ const eventHooks: RendererEventHooks = {
   },
 }
 ```
+
+异步——自定义弹窗确认（Promise）：
+
+```ts
+const eventHooks: RendererEventHooks = {
+  onBeforeDelete: async ({ nodeId }) => {
+    // 调用自定义异步弹窗组件
+    const confirmed = await showConfirmDialog(`确认删除节点 ${nodeId}？`)
+    return confirmed
+  },
+  onBeforeMove: async ({ nodeId, direction }) => {
+    // 调用服务端校验
+    const allowed = await api.validateMove(nodeId, direction)
+    return allowed
+  },
+}
+```
+
+### 工具函数
+
+renderer 导出两个工具函数，供自定义扩展复用：
+
+- `resolveBeforeHook(result)` — 归一化 Promise before 钩子结果
+- `fireAfterHook(hook, payload)` — fire-and-forget 调用 after 钩子
 
 ## 扩展点
 
@@ -359,7 +404,7 @@ interface UseWidgetNodeReturn {
 }
 ```
 
-内部集成 `onBeforeSelect`、`onAfterSelect`、`onHoverChange` event hooks。
+内部集成 `onBeforeSelect`、`onAfterSelect`、`onHoverChange` event hooks。支持异步 before 钩子（返回 Promise 时内部自动处理，外部签名不变）。
 
 ### useNodeActions(getNode, ctx)
 
@@ -383,7 +428,7 @@ interface UseNodeDragReturn {
 }
 ```
 
-内部集成 `onBeforeDrag`、`onAfterDrag` event hooks。
+内部集成 `onBeforeDrag`（同步）、`onAfterDrag`（支持异步） event hooks。
 
 ### useToolbarPosition(elRef, isActive, options?)
 

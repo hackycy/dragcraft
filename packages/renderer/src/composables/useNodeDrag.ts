@@ -1,5 +1,6 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { RendererContext } from '../types'
+import { fireAfterHook } from '../event-hooks'
 
 export interface UseNodeDragReturn {
   /** Start a drag operation from the drag handle */
@@ -47,7 +48,7 @@ export function useNodeDrag(
   const handleDragEnd = (e: DragEvent) => {
     e.stopPropagation()
     engine.store.setDragTarget(null)
-    eventHooks.onAfterDrag?.({ nodeId: getNode().id, event: e })
+    fireAfterHook(eventHooks.onAfterDrag, { nodeId: getNode().id, event: e })
   }
 
   return { handleDragStart, handleDragEnd }

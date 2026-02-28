@@ -2,6 +2,7 @@ import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { RendererEventHooks } from './event-hooks'
 import { CommandType } from '@dragcraft/core'
+import { fireAfterHook, resolveBeforeHook } from './event-hooks'
 
 // ──────────────────────────────────────────
 // Node action context
@@ -77,7 +78,7 @@ export interface ResolvedNodeAction {
   order: number
   visible: boolean
   disabled: boolean
-  handler: (event: MouseEvent) => void
+  handler: (event: MouseEvent) => void | Promise<void>
   className?: string
 }
 
@@ -241,6 +242,9 @@ export function createNodeActionRegistry(
 
           const disabled = def.disabled ? def.disabled(ctx) : false
 
+          // Per-action guard against concurrent async invocations
+          let pending = false
+
           return {
             key: def.key,
             label: def.label,
@@ -249,45 +253,84 @@ export function createNodeActionRegistry(
             order: def.order,
             visible: true,
             disabled,
-            handler: (event: MouseEvent) => {
-              // Integrate event hooks for built-in actions
-              if (def.key === ActionKey.DELETE && eventHooks.onBeforeDelete) {
-                const result = eventHooks.onBeforeDelete({ nodeId: ctx.node.id, event })
-                if (result === false)
-                  return
-              }
+            handler: (event: MouseEvent): void | Promise<void> => {
+              if (pending)
+                return
 
-              if ((def.key === ActionKey.MOVE_UP || def.key === ActionKey.MOVE_DOWN) && eventHooks.onBeforeMove) {
-                const direction = def.key === ActionKey.MOVE_UP ? 'up' as const : 'down' as const
-                const toIndex = direction === 'up' ? ctx.index - 1 : ctx.index + 1
-                const result = eventHooks.onBeforeMove({
-                  nodeId: ctx.node.id,
-                  direction,
-                  fromIndex: ctx.index,
-                  toIndex,
-                  event,
-                })
-                if (result === false)
-                  return
-              }
-
-              def.handler?.(ctx, event)
-
-              // After hooks
+              // ── DELETE action ──
               if (def.key === ActionKey.DELETE) {
-                eventHooks.onAfterDelete?.({ nodeId: ctx.node.id, event })
+                const beforeHook = eventHooks.onBeforeDelete
+                if (beforeHook) {
+                  const hookResult = beforeHook({ nodeId: ctx.node.id, event })
+
+                  // Fast path: sync hook returned a non-promise value
+                  if (typeof hookResult === 'boolean' || hookResult === undefined) {
+                    if (hookResult === false)
+                      return
+                    def.handler?.(ctx, event)
+                    fireAfterHook(eventHooks.onAfterDelete, { nodeId: ctx.node.id, event })
+                    return
+                  }
+
+                  // Async path: hook returned a Promise
+                  pending = true
+                  return resolveBeforeHook(hookResult).then((allowed) => {
+                    pending = false
+                    if (!allowed)
+                      return
+                    def.handler?.(ctx, event)
+                    fireAfterHook(eventHooks.onAfterDelete, { nodeId: ctx.node.id, event })
+                  })
+                }
+
+                def.handler?.(ctx, event)
+                fireAfterHook(eventHooks.onAfterDelete, { nodeId: ctx.node.id, event })
+                return
               }
+
+              // ── MOVE UP / MOVE DOWN actions ──
               if (def.key === ActionKey.MOVE_UP || def.key === ActionKey.MOVE_DOWN) {
                 const direction = def.key === ActionKey.MOVE_UP ? 'up' as const : 'down' as const
                 const toIndex = direction === 'up' ? ctx.index - 1 : ctx.index + 1
-                eventHooks.onAfterMove?.({
+                const movePayload = {
                   nodeId: ctx.node.id,
                   direction,
                   fromIndex: ctx.index,
                   toIndex,
                   event,
-                })
+                }
+
+                const beforeHook = eventHooks.onBeforeMove
+                if (beforeHook) {
+                  const hookResult = beforeHook(movePayload)
+
+                  // Fast path: sync
+                  if (typeof hookResult === 'boolean' || hookResult === undefined) {
+                    if (hookResult === false)
+                      return
+                    def.handler?.(ctx, event)
+                    fireAfterHook(eventHooks.onAfterMove, movePayload)
+                    return
+                  }
+
+                  // Async path
+                  pending = true
+                  return resolveBeforeHook(hookResult).then((allowed) => {
+                    pending = false
+                    if (!allowed)
+                      return
+                    def.handler?.(ctx, event)
+                    fireAfterHook(eventHooks.onAfterMove, movePayload)
+                  })
+                }
+
+                def.handler?.(ctx, event)
+                fireAfterHook(eventHooks.onAfterMove, movePayload)
+                return
               }
+
+              // ── Custom / other actions: just call the handler ──
+              def.handler?.(ctx, event)
             },
             className: def.className,
           }

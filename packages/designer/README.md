@@ -91,9 +91,10 @@ const designer = createDesigner({
   globalConfigSchema: myGlobalFormSchema,
   // 可选：扩展点
   extensions: { materialPanelRenderer: CustomPanel },
-  // 可选：事件拦截钩子（选中/删除/移动/拖拽）
+  // 可选：事件拦截钩子（选中/删除/移动/拖拽，支持同步和 Promise 异步）
   eventHooks: {
     onBeforeDelete: ({ nodeId }) => confirm(`确认删除 ${nodeId}？`),
+    // 异步示例：onBeforeDelete: async ({ nodeId }) => await showConfirmDialog(`删除 ${nodeId}？`),
     onAfterSelect: ({ nodeId }) => console.log('选中:', nodeId),
   },
   // 可选：自定义节点工具栏动作（追加到默认 4 个内置动作）

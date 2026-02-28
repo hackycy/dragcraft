@@ -62,7 +62,10 @@ const designer = createDesigner({
   globalConfigSchema,
   eventHooks: {
     onBeforeDelete: () => {
-      return confirm('\u786E\u8BA4\u5220\u9664\u8BE5\u7EC4\u4EF6\uFF1F')
+      // Supports both sync and async — return a Promise for async confirmation
+      return new Promise<boolean>((resolve) => {
+        resolve(confirm('\u786E\u8BA4\u5220\u9664\u8BE5\u7EC4\u4EF6\uFF1F'))
+      })
     },
   },
   customActions: [

@@ -2,6 +2,7 @@ import type { SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext } from '../types'
 import { computed } from 'vue'
+import { fireAfterHook, resolveBeforeHook } from '../event-hooks'
 import { useNodeState } from './useNodeState'
 
 export interface UseWidgetNodeReturn {
@@ -59,19 +60,44 @@ export function useWidgetNode(
     state.interactionClasses.value,
   ])
 
+  // Guard against concurrent async selections
+  let selectPending = false
+
   const handleSelect = (e: MouseEvent) => {
-    if (!selectable.value)
+    if (!selectable.value || selectPending)
       return
     e.stopPropagation()
 
     const nodeId = getNode().id
-    if (eventHooks.onBeforeSelect) {
-      const result = eventHooks.onBeforeSelect({ nodeId, event: e })
-      if (result === false)
+    const beforeHook = eventHooks.onBeforeSelect
+
+    if (beforeHook) {
+      const hookResult = beforeHook({ nodeId, event: e })
+
+      // Fast path: sync hook returned a non-promise value
+      if (typeof hookResult === 'boolean' || hookResult === undefined) {
+        if (hookResult === false)
+          return
+        engine.store.selectNode(nodeId)
+        fireAfterHook(eventHooks.onAfterSelect, { nodeId })
         return
+      }
+
+      // Async path: hook returned a Promise
+      selectPending = true
+      resolveBeforeHook(hookResult).then((allowed) => {
+        selectPending = false
+        if (!allowed)
+          return
+        engine.store.selectNode(nodeId)
+        fireAfterHook(eventHooks.onAfterSelect, { nodeId })
+      })
+      return
     }
+
+    // No before hook at all
     engine.store.selectNode(nodeId)
-    eventHooks.onAfterSelect?.({ nodeId })
+    fireAfterHook(eventHooks.onAfterSelect, { nodeId })
   }
 
   const handleMouseEnter = () => {
