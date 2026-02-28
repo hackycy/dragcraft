@@ -1,3 +1,6 @@
+// ── Behavior utilities ──────────────────
+export { resolveBehavior } from './behavior'
+
 export { createCommandBus } from './command-bus'
 
 export type { CommandBusInstance } from './command-bus'
@@ -31,6 +34,7 @@ export { createDefaultSchema, createSchemaStore } from './schema-store'
 // ── Types ─────────────────────────────────
 export type {
   AddNodePayload,
+  BehaviorPredicate,
   Command,
   CommandContext,
   CommandHandler,
@@ -38,12 +42,14 @@ export type {
   DragTarget,
   EngineOptions,
   HistoryEntry,
+  InstanceBehaviorContext,
   MoveNodePayload,
   RegistryInstance,
   RemoveNodePayload,
   SchemaNode,
   SchemaStoreInstance,
   SetGlobalConfigPayload,
+  TypeBehaviorContext,
   UpdatePropsPayload,
   WidgetActionConfig,
   WidgetMeta,

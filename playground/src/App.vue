@@ -1,10 +1,37 @@
 <script setup lang="ts">
+import { markRaw, ref, shallowRef } from 'vue'
 import DefaultMode from './examples/DefaultMode.vue'
+import CustomMode from './examples/CustomMode.vue'
+import DynamicBehaviorMode from './examples/DynamicBehaviorMode.vue'
+
+const modes = [
+  { key: 'default', label: 'Default Mode', component: markRaw(DefaultMode) },
+  { key: 'custom', label: 'Custom Mode', component: markRaw(CustomMode) },
+  { key: 'dynamic', label: 'Dynamic Behavior', component: markRaw(DynamicBehaviorMode) },
+]
+
+const activeMode = ref('dynamic')
+const activeComponent = shallowRef(modes[2].component)
+
+function switchMode(mode: typeof modes[number]) {
+  activeMode.value = mode.key
+  activeComponent.value = mode.component
+}
 </script>
 
 <template>
   <div class="playground-root">
-    <DefaultMode />
+    <div class="playground-mode-switcher">
+      <button
+        v-for="mode in modes"
+        :key="mode.key"
+        :class="['playground-mode-switcher__btn', { 'playground-mode-switcher__btn--active': activeMode === mode.key }]"
+        @click="switchMode(mode)"
+      >
+        {{ mode.label }}
+      </button>
+    </div>
+    <component :is="activeComponent" />
   </div>
 </template>
 

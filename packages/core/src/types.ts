@@ -35,6 +35,49 @@ export interface DragTarget {
 }
 
 // ──────────────────────────────────────────
+// Behavior control types
+// ──────────────────────────────────────────
+
+/**
+ * Context provided when evaluating per-instance behavior fields
+ * (mask, selectable, draggable, deletable).
+ * Available inside a computed — schema changes trigger re-evaluation.
+ */
+export interface InstanceBehaviorContext {
+  /** The specific node being evaluated */
+  node: SchemaNode
+  /** The current designer schema (read from reactive ref) */
+  schema: DesignerSchema
+}
+
+/**
+ * Context provided when evaluating per-type behavior fields (creatable).
+ * No specific node exists yet — used in the material panel.
+ */
+export interface TypeBehaviorContext {
+  /** The widget type identifier */
+  widgetType: string
+  /** The current designer schema (read from reactive ref) */
+  schema: DesignerSchema
+}
+
+/**
+ * A behavior field that accepts either a static boolean or
+ * a predicate function evaluated at runtime.
+ *
+ * @example
+ * // Static
+ * draggable: false
+ *
+ * // Dynamic — singleton pattern
+ * creatable: (ctx) => {
+ *   const children = ctx.schema.root.children ?? []
+ *   return !children.some(c => c.type === 'tab')
+ * }
+ */
+export type BehaviorPredicate<Ctx> = boolean | ((ctx: Ctx) => boolean)
+
+// ──────────────────────────────────────────
 // Widget meta protocol
 // ──────────────────────────────────────────
 
@@ -82,14 +125,23 @@ export interface WidgetMeta {
 
   // ── Renderer behavior controls ──
 
-  /** Whether to render a mask overlay on the widget in the canvas (default: true) */
-  mask?: boolean
-  /** Whether this widget can be selected in the canvas (default: true) */
-  selectable?: boolean
-  /** Whether this widget can be dragged to reorder (default: true) */
-  draggable?: boolean
-  /** Whether this widget can be deleted via toolbar action (default: true) */
-  deletable?: boolean
+  /** Whether to render a mask overlay on the widget in the canvas (default: true). Accepts boolean or predicate. */
+  mask?: BehaviorPredicate<InstanceBehaviorContext>
+  /** Whether this widget can be selected in the canvas (default: true). Accepts boolean or predicate. */
+  selectable?: BehaviorPredicate<InstanceBehaviorContext>
+  /** Whether this widget can be dragged to reorder (default: true). Accepts boolean or predicate. */
+  draggable?: BehaviorPredicate<InstanceBehaviorContext>
+  /** Whether this widget can be deleted via toolbar action (default: true). Accepts boolean or predicate. */
+  deletable?: BehaviorPredicate<InstanceBehaviorContext>
+
+  // ── Material panel controls ──
+
+  /**
+   * Whether new instances can be created from the material panel (default: true).
+   * When false or predicate returns false, the material item appears disabled
+   * and cannot be dragged. Evaluated per-type, not per-instance.
+   */
+  creatable?: BehaviorPredicate<TypeBehaviorContext>
 
   // ── Action system ──
 

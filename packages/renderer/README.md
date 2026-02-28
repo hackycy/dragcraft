@@ -337,7 +337,13 @@ interface EmptyStateProps {
 - **选中**：点击 mask 覆盖层或 handle 调用 `engine.store.selectNode(nodeId)`，`dc-node--selected` class。支持 `onBeforeSelect` hook 拦截。
 - **悬停**：mouseenter/mouseleave 调用 `engine.store.hoverNode()`，`dc-node--hovered` class。支持 `onHoverChange` hook 通知。
 - **拖拽悬停**：由外部 `dragOverNodeId` ref 控制，`dc-node--drag-over` class + DropIndicator。
-- **不可选中**：`WidgetMeta.selectable === false` 时忽略选中事件。
+- **不可选中**：`WidgetMeta.selectable` 为 `false` 或谓词函数返回 `false` 时忽略选中事件。
+
+### 动态行为控制
+
+`WidgetMeta` 的行为控制字段（`mask`、`selectable`、`draggable`、`deletable`）支持 `BehaviorPredicate<InstanceBehaviorContext>` 类型，即可传入静态布尔值，也可传入 `(ctx) => boolean` 函数。
+
+当传入函数时，renderer 在 `computed` 内部求值并读取 `engine.store.schema.value` 建立响应式依赖，schema 变更后自动重新求值。静态布尔值走快速路径，不会因 schema 变更产生额外计算开销。
 
 ## CSS Class 层级
 

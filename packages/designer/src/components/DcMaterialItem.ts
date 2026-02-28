@@ -1,6 +1,6 @@
-import type { WidgetMeta } from '@dragcraft/core'
+import type { TypeBehaviorContext, WidgetMeta } from '@dragcraft/core'
 import type { PropType } from 'vue'
-import { defineComponent, h } from 'vue'
+import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 
 export default defineComponent({
@@ -17,7 +17,24 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const { engine, extensions } = ctx
 
+    const isCreatable = computed(() => {
+      const field = props.meta.creatable
+      if (typeof field !== 'function')
+        return field !== false
+      // Dynamic: establish schema reactivity so this re-evaluates on schema changes
+      void engine.store.schema.value
+      const behaviorCtx: TypeBehaviorContext = {
+        widgetType: props.meta.type,
+        schema: engine.store.getRawSchema(),
+      }
+      return field(behaviorCtx)
+    })
+
     const handleDragStart = (e: DragEvent) => {
+      if (!isCreatable.value) {
+        e.preventDefault()
+        return
+      }
       engine.store.setDragTarget({
         sourceNodeId: null,
         widgetType: props.meta.type,
@@ -34,12 +51,14 @@ export default defineComponent({
 
     return () => {
       const meta = props.meta
+      const creatable = isCreatable.value
 
       // Support custom widget item renderer via extension
       if (extensions.renderWidgetItem) {
         const CustomItem = extensions.renderWidgetItem(meta)
         return h(CustomItem, {
-          draggable: true,
+          draggable: creatable,
+          disabled: !creatable,
           onDragstart: handleDragStart,
           onDragend: handleDragEnd,
         })
@@ -48,8 +67,11 @@ export default defineComponent({
       return h(
         'div',
         {
-          class: 'dc-material-item',
-          draggable: true,
+          class: [
+            'dc-material-item',
+            { 'dc-material-item--disabled': !creatable },
+          ],
+          draggable: creatable,
           onDragstart: handleDragStart,
           onDragend: handleDragEnd,
         },

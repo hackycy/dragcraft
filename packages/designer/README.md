@@ -47,6 +47,7 @@ src/
 - 支持拖拽源创建（drag start 时设置 `engine.store.setDragTarget`）。
 - 支持 `renderWidgetItem` 自定义渲染物料卡片。
 - 支持读取 widget 自带 form schema 供右侧配置联动。
+- 支持 `WidgetMeta.creatable` 动态控制物料卡片是否可拖拽。当 `creatable` 为 `false` 或谓词函数返回 `false` 时，物料卡片渲染 `dc-material-item--disabled` CSS class，`draggable` 属性设为 `false`，自定义 `renderWidgetItem` 会收到 `disabled` prop。`creatable` 为函数时响应式求值，schema 变更后自动更新禁用状态。
 
 ### 中栏：画布区 (`DcCanvas`)
 
@@ -195,7 +196,7 @@ const designer = createDesigner({
 | `DcDesigner` | `dc-designer`, `dc-designer__body`, `dc-designer__panel--left/center/right` | 根组件 |
 | `DcMaterialPanel` | `dc-material-panel`, `dc-material-panel__search` | 左栏物料面板 |
 | `DcMaterialGroup` | `dc-material-group`, `dc-material-group__header`, `dc-material-group__body` | 可折叠分组 |
-| `DcMaterialItem` | `dc-material-item`, `dc-material-item__icon`, `dc-material-item__title` | 可拖拽卡片 |
+| `DcMaterialItem` | `dc-material-item`, `dc-material-item--disabled`, `dc-material-item__icon`, `dc-material-item__title` | 可拖拽卡片 |
 | `DcCanvas` | `dc-canvas`, `dc-canvas__content` | 画布区域 |
 | `DcPropertyPanel` | `dc-property-panel`, `dc-property-panel__tabs`, `dc-property-panel__tab` | 属性面板 |
 | `DcToolbar` | `dc-toolbar`, `dc-toolbar__btn`, `dc-toolbar__spacer` | 画布内 slot 工具栏 |

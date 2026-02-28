@@ -1,5 +1,5 @@
 import type { SchemaNode } from '@dragcraft/core'
-import { CommandType } from '@dragcraft/core'
+import { CommandType, resolveBehavior } from '@dragcraft/core'
 import { RootRenderer } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
 import { computed, defineComponent, h, ref } from 'vue'
@@ -101,6 +101,10 @@ export default defineComponent({
         // Adding new widget from material panel
         const meta = engine.registry.getWidget(dragTarget.widgetType)
         if (!meta)
+          return
+
+        // Guard: check creatable at drop time (defensive — material item already guards drag)
+        if (!resolveBehavior(meta.creatable, { widgetType: meta.type, schema: engine.store.getRawSchema() }))
           return
 
         const newNode: SchemaNode = {

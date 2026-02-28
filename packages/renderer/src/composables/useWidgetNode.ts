@@ -1,4 +1,4 @@
-import type { SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext } from '../types'
 import { computed } from 'vue'
@@ -45,9 +45,34 @@ export function useWidgetNode(
 
   const meta = computed(() => engine.registry.getWidget(getNode().type))
   const resolvedComponent = computed(() => componentMap[getNode().type])
-  const useMask = computed(() => meta.value?.mask !== false)
-  const selectable = computed(() => meta.value?.selectable !== false)
-  const draggable = computed(() => meta.value?.draggable !== false)
+
+  const useMask = computed(() => {
+    const field = meta.value?.mask
+    if (typeof field !== 'function')
+      return field !== false
+    // Dynamic: read schema.value to establish reactive dependency
+    void engine.store.schema.value
+    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
+    return field(ctx)
+  })
+
+  const selectable = computed(() => {
+    const field = meta.value?.selectable
+    if (typeof field !== 'function')
+      return field !== false
+    void engine.store.schema.value
+    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
+    return field(ctx)
+  })
+
+  const draggable = computed(() => {
+    const field = meta.value?.draggable
+    if (typeof field !== 'function')
+      return field !== false
+    void engine.store.schema.value
+    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
+    return field(ctx)
+  })
 
   const wrapperClasses = computed<Array<string | Record<string, boolean>>>(() => [
     'dc-node',

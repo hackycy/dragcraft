@@ -222,6 +222,23 @@ interface DesignerSchema {
 ### 物料协议
 
 ```ts
+// ── 行为控制类型 ──
+
+/** 每实例行为求值上下文（mask/selectable/draggable/deletable） */
+interface InstanceBehaviorContext {
+  node: SchemaNode          // 当前节点实例
+  schema: DesignerSchema    // 当前 schema（响应式读取）
+}
+
+/** 每类型行为求值上下文（creatable） */
+interface TypeBehaviorContext {
+  widgetType: string        // 组件类型标识
+  schema: DesignerSchema    // 当前 schema（响应式读取）
+}
+
+/** 接受静态布尔或运行时谓词函数 */
+type BehaviorPredicate<Ctx> = boolean | ((ctx: Ctx) => boolean)
+
 interface WidgetMeta {
   type: string
   title: string
@@ -231,11 +248,14 @@ interface WidgetMeta {
   defaultStyle?: Record<string, unknown>
   formSchema: Record<string, unknown>
 
-  // ── 渲染行为控制 ──
-  mask?: boolean        // 默认 true，控制画布中是否覆盖透明遮罩
-  selectable?: boolean  // 默认 true，是否允许在画布中选中
-  draggable?: boolean   // 默认 true，是否允许拖拽排序
-  deletable?: boolean   // 默认 true，是否允许通过工具栏删除
+  // ── 渲染行为控制（支持静态布尔 或 动态函数） ──
+  mask?: BehaviorPredicate<InstanceBehaviorContext>        // 默认 true
+  selectable?: BehaviorPredicate<InstanceBehaviorContext>  // 默认 true
+  draggable?: BehaviorPredicate<InstanceBehaviorContext>   // 默认 true
+  deletable?: BehaviorPredicate<InstanceBehaviorContext>   // 默认 true
+
+  // ── 物料面板控制 ──
+  creatable?: BehaviorPredicate<TypeBehaviorContext>       // 默认 true
 
   // ── Action 系统 ──
   actions?: WidgetActionConfig  // Per-widget 工具栏动作配置
@@ -247,11 +267,43 @@ interface WidgetMeta {
 
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `selectable` | `boolean` | `true` | 为 `false` 时节点无法被点击选中 |
-| `draggable` | `boolean` | `true` | 为 `false` 时隐藏拖拽 handle 和上移/下移按钮 |
-| `deletable` | `boolean` | `true` | 为 `false` 时隐藏删除按钮 |
+| `mask` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时不渲染透明遮罩，直接交互 |
+| `selectable` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时节点无法被点击选中 |
+| `draggable` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时隐藏拖拽 handle 和上移/下移按钮 |
+| `deletable` | `BehaviorPredicate<InstanceBehaviorContext>` | `true` | 为 `false` 时隐藏删除按钮 |
+| `creatable` | `BehaviorPredicate<TypeBehaviorContext>` | `true` | 为 `false` 时物料面板该项禁用，不可拖入画布 |
 | `actions` | `WidgetActionConfig` | — | 控制工具栏可用动作（详见下方） |
 | `wrapper` | `Component` | — | 自定义该 widget 类型的包裹组件，接收 `NodeWrapperProps` |
+
+行为控制字段同时支持静态布尔值和动态谓词函数。当传入函数时，函数在 Vue `computed` 内部求值，schema 变更会自动触发重新求值。
+
+### resolveBehavior 工具函数
+
+```ts
+import { resolveBehavior } from '@dragcraft/core'
+
+// 解析行为字段：undefined → defaultValue, boolean → 直接返回, function → 调用
+resolveBehavior(field, ctx, defaultValue?)
+```
+
+### 动态行为示例——单例模式（画布只允许一个 Tab）
+
+```ts
+engine.registerWidget({
+  type: 'tab',
+  title: 'Tab 页签',
+  group: 'layout',
+  defaultProps: {},
+  formSchema: {},
+  // 画布中只能存在一个 Tab 实例
+  creatable: (ctx) => {
+    const children = ctx.schema.root.children ?? []
+    return !children.some(c => c.type === 'tab')
+  },
+})
+```
+
+拖入一个 Tab 后，物料面板的 Tab 卡片自动变为禁用状态，画布 drop 也会拒绝第二个 Tab。删除后自动恢复。
 
 ### WidgetActionConfig（Per-Widget 动作配置）
 

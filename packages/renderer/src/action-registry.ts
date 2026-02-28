@@ -1,8 +1,16 @@
-import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { RendererEventHooks } from './event-hooks'
-import { CommandType } from '@dragcraft/core'
+import { CommandType, resolveBehavior } from '@dragcraft/core'
 import { fireAfterHook, resolveBeforeHook } from './event-hooks'
+
+/**
+ * Builds an InstanceBehaviorContext from a NodeActionContext.
+ * Schema is already read reactively by the calling computed (in useNodeActions).
+ */
+function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
+  return { node: ctx.node, schema: ctx.engine.store.getRawSchema() }
+}
 
 // ──────────────────────────────────────────
 // Node action context
@@ -126,7 +134,7 @@ export function createDefaultActions(): NodeActionDefinition[] {
       icon: '\u2630',
       type: 'drag-handle',
       order: 100,
-      visible: ctx => ctx.meta?.draggable !== false,
+      visible: ctx => resolveBehavior(ctx.meta?.draggable, toInstanceCtx(ctx)),
     },
     {
       key: ActionKey.MOVE_UP,
@@ -134,7 +142,7 @@ export function createDefaultActions(): NodeActionDefinition[] {
       icon: '\u2191',
       type: 'button',
       order: 200,
-      visible: ctx => ctx.meta?.draggable !== false,
+      visible: ctx => resolveBehavior(ctx.meta?.draggable, toInstanceCtx(ctx)),
       disabled: ctx => ctx.index === 0,
       handler: (ctx, e) => {
         e.stopPropagation()
@@ -152,7 +160,7 @@ export function createDefaultActions(): NodeActionDefinition[] {
       icon: '\u2193',
       type: 'button',
       order: 300,
-      visible: ctx => ctx.meta?.draggable !== false,
+      visible: ctx => resolveBehavior(ctx.meta?.draggable, toInstanceCtx(ctx)),
       disabled: ctx => ctx.index >= ctx.siblingCount - 1,
       handler: (ctx, e) => {
         e.stopPropagation()
@@ -171,7 +179,7 @@ export function createDefaultActions(): NodeActionDefinition[] {
       type: 'button',
       order: 400,
       className: 'dc-node__toolbar-btn--delete',
-      visible: ctx => ctx.meta?.deletable !== false,
+      visible: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
       handler: (ctx, e) => {
         e.stopPropagation()
         ctx.engine.execute({
