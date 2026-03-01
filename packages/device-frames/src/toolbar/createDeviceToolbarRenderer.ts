@@ -21,6 +21,7 @@ interface MinimalToolbarAPI {
  * Must be called during setup() so the context ref is captured in the closure.
  *
  * @param ctx - The DeviceFrameContext (from createDeviceFrameContext)
+ * @param options - Configuration options
  * @param options.includeUndoRedo - Include undo/redo buttons. Defaults to true.
  *
  * @example
