@@ -147,6 +147,7 @@ importers:
       '@dragcraft/form-generator':
         specifier: workspace:*
         version: link:../form-generator
+    devDependencies:
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
@@ -159,6 +160,7 @@ importers:
       '@dragcraft/widgets':
         specifier: workspace:*
         version: link:../widgets
+    devDependencies:
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
@@ -168,6 +170,7 @@ importers:
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
+    devDependencies:
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
@@ -186,15 +189,12 @@ importers:
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
+    devDependencies:
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
 
   packages/device-frames:
-    dependencies:
-      vue:
-        specifier: catalog:shared
-        version: 3.5.28(typescript@5.9.3)
     devDependencies:
       postcss:
         specifier: catalog:cli
@@ -205,9 +205,12 @@ importers:
       postcss-import:
         specifier: catalog:cli
         version: 16.1.1(postcss@8.5.6)
+      vue:
+        specifier: catalog:shared
+        version: 3.5.28(typescript@5.9.3)
 
   packages/form-generator:
-    dependencies:
+    devDependencies:
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
@@ -217,6 +220,7 @@ importers:
       '@dragcraft/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)
@@ -248,6 +252,7 @@ importers:
       '@dragcraft/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
       vue:
         specifier: catalog:shared
         version: 3.5.28(typescript@5.9.3)

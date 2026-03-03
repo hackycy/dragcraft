@@ -33,9 +33,14 @@
     "test": "vitest",
     "typecheck": "tsc"
   },
+  "peerDependencies": {
+    "vue": ">=3.0.0"
+  },
   "dependencies": {
     "@dragcraft/core": "workspace:*",
-    "@dragcraft/widgets": "workspace:*",
+    "@dragcraft/widgets": "workspace:*"
+  },
+  "devDependencies": {
     "vue": "catalog:shared"
   }
 }

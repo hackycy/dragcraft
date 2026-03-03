@@ -36,12 +36,13 @@
     "test": "vitest",
     "typecheck": "tsc"
   },
-  "dependencies": {
-    "vue": "catalog:shared"
+  "peerDependencies": {
+    "vue": ">=3.0.0"
   },
   "devDependencies": {
     "postcss": "catalog:cli",
     "postcss-cli": "catalog:cli",
-    "postcss-import": "catalog:cli"
+    "postcss-import": "catalog:cli",
+    "vue": "catalog:shared"
   }
 }

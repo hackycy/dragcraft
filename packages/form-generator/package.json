@@ -33,7 +33,10 @@
     "test": "vitest",
     "typecheck": "tsc"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "vue": ">=3.0.0"
+  },
+  "devDependencies": {
     "vue": "catalog:shared"
   }
 }
