@@ -1,0 +1,262 @@
+/* ── Widget: Text ─────────────────────────── */
+
+.dc-widget-text {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* ── Widget: Button ───────────────────────── */
+
+.dc-widget-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-primary);
+  border-radius: var(--dc-radius);
+  background: var(--dc-primary);
+  color: var(--dc-on-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.dc-widget-button:hover:not(:disabled) {
+  background: var(--dc-primary-dark);
+  border-color: var(--dc-primary-dark);
+}
+
+.dc-widget-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dc-widget-button--small {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
+.dc-widget-button--medium {
+  height: 32px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.dc-widget-button--large {
+  height: 40px;
+  padding: 0 24px;
+  font-size: 16px;
+}
+
+/* ── Widget: Image ────────────────────────── */
+
+.dc-widget-image {
+  display: block;
+  overflow: hidden;
+}
+
+.dc-widget-image img {
+  display: block;
+  max-width: 100%;
+}
+
+.dc-widget-image svg {
+  display: block;
+}
+
+/* ── Widget: Link ─────────────────────────── */
+
+.dc-widget-link {
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.dc-widget-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* ── Widget: Divider ──────────────────────── */
+
+.dc-widget-divider {
+  border: none;
+  margin: 0;
+}
+
+.dc-widget-divider--horizontal {
+  width: 100%;
+}
+
+.dc-widget-divider--vertical {
+  height: 100%;
+}
+
+/* ── Widget: Form Input ───────────────────── */
+
+.dc-widget-form-input {
+  width: 100%;
+}
+
+.dc-widget-form-input label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--dc-font-size-sm);
+  color: var(--dc-text-secondary);
+  font-weight: 500;
+}
+
+.dc-widget-form-input input {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  font-size: var(--dc-font-size);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.dc-widget-form-input input:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-widget-form-input input:disabled {
+  background: var(--dc-bg-dark);
+}
+
+/* ── Widget: Form Textarea ────────────────── */
+
+.dc-widget-form-textarea {
+  width: 100%;
+}
+
+.dc-widget-form-textarea label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--dc-font-size-sm);
+  color: var(--dc-text-secondary);
+  font-weight: 500;
+}
+
+.dc-widget-form-textarea textarea {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: var(--dc-font-size);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.dc-widget-form-textarea textarea:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-widget-form-textarea textarea:disabled {
+  background: var(--dc-bg-dark);
+}
+
+/* ── Widget: Form Select ──────────────────── */
+
+.dc-widget-form-select {
+  width: 100%;
+}
+
+.dc-widget-form-select label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--dc-font-size-sm);
+  color: var(--dc-text-secondary);
+  font-weight: 500;
+}
+
+.dc-widget-form-select select {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  font-size: var(--dc-font-size);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--dc-bg);
+}
+
+.dc-widget-form-select select:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-widget-form-select select:disabled {
+  background: var(--dc-bg-dark);
+}
+
+/* ── Widget: Form Checkbox ────────────────── */
+
+.dc-widget-form-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dc-widget-form-checkbox input[type="checkbox"] {
+  accent-color: var(--dc-primary);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.dc-widget-form-checkbox span {
+  font-size: var(--dc-font-size);
+  color: var(--dc-text);
+}
+
+/* ── Widget: Form Radio ───────────────────── */
+
+.dc-widget-form-radio {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dc-widget-form-radio label:first-child {
+  font-size: var(--dc-font-size-sm);
+  color: var(--dc-text-secondary);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.dc-widget-form-radio label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dc-widget-form-radio input[type="radio"] {
+  accent-color: var(--dc-primary);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* ── Widget: Flex Row ─────────────────────── */
+
+.dc-widget-flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+/* ── Widget: Flex Column ──────────────────── */
+
+.dc-widget-flex-column {
+  display: flex;
+  flex-direction: column;
+}

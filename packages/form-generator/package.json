@@ -32,5 +32,11 @@
     "start": "tsx src/index.ts",
     "test": "vitest",
     "typecheck": "tsc"
+  },
+  "peerDependencies": {
+    "vue": ">=3.0.0"
+  },
+  "devDependencies": {
+    "vue": "catalog:shared"
   }
 }

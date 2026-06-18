@@ -1,0 +1,35 @@
+/* ── Device Frame Tokens ─────────────────── */
+
+:root {
+  /* ── Frame Chrome ─────────────────────── */
+  --dc-device-frame-border-color: #1a1a1a;
+  --dc-device-frame-border-width: 3px;
+  --dc-device-frame-bg: #ffffff;
+  --dc-device-frame-shadow:
+    0 0 0 2px #333,
+    0 12px 40px rgba(0, 0, 0, 0.25),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+
+  /* ── Status Bar ───────────────────────── */
+  --dc-device-frame-status-height: 44px;
+  --dc-device-frame-status-bg: #ffffff;
+  --dc-device-frame-status-color: #1a1a1a;
+  --dc-device-frame-status-font-size: 14px;
+  --dc-device-frame-status-border: 1px solid #f0f0f0;
+
+  /* ── Desktop Chrome ───────────────────── */
+  --dc-device-frame-titlebar-height: 36px;
+  --dc-device-frame-titlebar-bg: #e8e8e8;
+  --dc-device-frame-urlbar-bg: #ffffff;
+
+  /* ── Android Nav ──────────────────────── */
+  --dc-device-frame-nav-height: 40px;
+  --dc-device-frame-nav-bg: #fafafa;
+
+  /* ── Device Picker ────────────────────── */
+  --dc-device-picker-gap: 2px;
+  --dc-device-picker-btn-bg: transparent;
+  --dc-device-picker-btn-color: var(--dc-text-secondary, #8c8c8c);
+  --dc-device-picker-btn-active-bg: var(--dc-primary, #1890ff);
+  --dc-device-picker-btn-active-color: #ffffff;
+}

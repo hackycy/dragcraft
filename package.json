@@ -7,6 +7,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "play": "pnpm -F ./playground dev",
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
     "release": "bumpp -r",

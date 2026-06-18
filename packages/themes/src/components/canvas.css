@@ -1,0 +1,236 @@
+/* ── Canvas ───────────────────────────────── */
+
+.dc-canvas {
+  height: 100%;
+  overflow: auto;
+  background: var(--dc-canvas-bg);
+}
+
+.dc-canvas__content {
+  padding: 24px;
+}
+
+.dc-root-renderer {
+  min-height: 100%;
+  background: var(--dc-bg);
+  border-radius: var(--dc-radius-lg);
+  box-shadow: var(--dc-shadow);
+}
+
+.dc-container-shell {
+  min-height: 200px;
+  padding: 16px;
+}
+
+/* ── Empty Canvas Placeholder ────────────── */
+
+.dc-container-shell--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.dc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  color: var(--dc-text-placeholder);
+  font-size: var(--dc-font-size-sm);
+  gap: 8px;
+  pointer-events: none;
+}
+
+.dc-empty-state__icon {
+  font-size: 32px;
+  opacity: 0.5;
+}
+
+.dc-empty-state__text {
+  pointer-events: none;
+}
+
+/* ── Canvas Empty (legacy fallback) ──────── */
+
+.dc-canvas-empty {
+  color: var(--dc-text-placeholder);
+  font-size: var(--dc-font-size-sm);
+  pointer-events: none;
+}
+
+/* ── Node Base ────────────────────────────── */
+
+.dc-node {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: var(--dc-radius);
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+  cursor: default;
+}
+
+/* ── Widget Node ─────────────────────────── */
+
+.dc-node--widget {
+  margin: 4px 0;
+  padding: 2px;
+}
+
+/* ── Mask Overlay (mask=true, default) ───── */
+
+.dc-node--masked {
+  position: relative;
+}
+
+.dc-node__mask {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  cursor: pointer;
+}
+
+/* ── Selection Handle (mask=false) ────────── */
+
+.dc-node--unmasked {
+  position: relative;
+}
+
+.dc-node__handle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--dc-primary);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--dc-on-primary);
+}
+
+.dc-node--hovered .dc-node__handle {
+  opacity: 0.8;
+}
+
+.dc-node__handle:hover {
+  opacity: 1;
+}
+
+/* ── Floating Toolbar (when selected) ────── */
+
+.dc-node__toolbar {
+  position: absolute;
+  top: 0;
+  right: -36px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.dc-node__toolbar-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  background: var(--dc-bg);
+  color: var(--dc-text-secondary);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.dc-node__toolbar-btn:hover {
+  color: var(--dc-primary);
+  border-color: var(--dc-primary);
+  background: var(--dc-primary-bg-hover);
+}
+
+.dc-node__toolbar-btn--delete:hover {
+  color: var(--dc-danger);
+  border-color: var(--dc-danger);
+  background: var(--dc-danger-bg-hover);
+}
+
+.dc-node__toolbar-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dc-node__toolbar-btn--drag {
+  cursor: grab;
+}
+
+.dc-node__toolbar-btn--drag:active {
+  cursor: grabbing;
+}
+
+/* ── Floating Toolbar (fixed positioning variant) ── */
+
+.dc-node__toolbar--floating {
+  right: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border-radius: var(--dc-radius);
+  background: var(--dc-bg);
+  padding: 2px;
+  pointer-events: auto;
+}
+
+/* ── Interaction States ──────────────────── */
+
+.dc-node--hovered:not(.dc-node--selected) {
+  border-color: var(--dc-primary);
+  border-style: dashed;
+}
+
+.dc-node--selected {
+  border-color: var(--dc-primary);
+  border-width: 2px;
+  border-style: solid;
+  box-shadow: 0 0 0 3px var(--dc-primary-shadow);
+}
+
+.dc-node--drag-over {
+  background-color: var(--dc-primary-bg-hover);
+  border-color: var(--dc-primary);
+  border-style: dashed;
+}
+
+/* ── Drop Indicator ──────────────────────── */
+
+.dc-drop-indicator {
+  padding: 4px 0;
+  pointer-events: none;
+}
+
+.dc-drop-indicator__line {
+  height: 2px;
+  background: var(--dc-primary);
+  border-radius: 1px;
+}
+
+/* ── Widget Fallback ─────────────────────── */
+
+.dc-widget-fallback {
+  padding: 8px 12px;
+  color: var(--dc-danger);
+  font-size: var(--dc-font-size-sm);
+  border: 1px dashed var(--dc-danger);
+  border-radius: var(--dc-radius);
+  text-align: center;
+}

@@ -1,0 +1,314 @@
+/* ── Playground App Reset ─────────────────── */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--dc-font-family);
+  font-size: var(--dc-font-size);
+  color: var(--dc-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+}
+
+/* ── WeChat Mini-Program Theme Override ──── */
+
+:root {
+  --dc-primary: #07C160;
+  --dc-primary-light: #e8f8ef;
+  --dc-primary-dark: #06ad56;
+  --dc-primary-bg-hover: rgba(7, 193, 96, 0.08);
+  --dc-primary-shadow: rgba(7, 193, 96, 0.2);
+}
+
+.dc-root-renderer {
+  background: transparent;
+  box-shadow: none;
+  border-radius: none;
+}
+
+/* Override the canvas center panel to use neutral background for device frames */
+.dc-designer__panel--center {
+  background: #f0f2f5 !important;
+}
+
+/* ── Mini-Program Empty State ─────────────── */
+
+.mp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  color: #bfbfbf;
+  transition: all 0.3s ease;
+}
+
+.mp-empty-state--drag-over {
+  color: var(--dc-primary);
+  background: var(--dc-primary-bg-hover);
+}
+
+.mp-empty-state__icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.mp-empty-state--drag-over .mp-empty-state__icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.mp-empty-state__text {
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Widget Visual Enhancement (Mini-Program Style) ── */
+
+/* Button — WeChat pill style */
+.dc-node--widget [data-widget-type="button"] button,
+.dc-container-shell button[class*="widget"] {
+  border-radius: 20px !important;
+  height: 40px;
+  min-width: 120px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border: none;
+  background: var(--dc-primary);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Text — Better typography */
+.dc-node--widget [data-widget-type="text"] {
+  line-height: 1.8;
+  letter-spacing: 0.3px;
+}
+
+/* Image — Rounded corners */
+.dc-node--widget img {
+  border-radius: 8px;
+}
+
+/* Form inputs — Larger, more rounded */
+.dc-node--widget input[type="text"],
+.dc-node--widget input[type="email"],
+.dc-node--widget input[type="tel"],
+.dc-node--widget input[type="number"],
+.dc-node--widget input[type="password"],
+.dc-node--widget textarea,
+.dc-node--widget select {
+  height: 40px;
+  border-radius: 8px !important;
+  font-size: 14px;
+  padding: 0 12px;
+  border: 1px solid #e8e8e8;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.dc-node--widget input:focus,
+.dc-node--widget textarea:focus,
+.dc-node--widget select:focus {
+  border-color: var(--dc-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 2px var(--dc-primary-shadow);
+}
+
+/* Divider — Thinner, lighter */
+.dc-node--widget hr {
+  border: none;
+  height: 1px;
+  background: #f0f0f0;
+  margin: 4px 0;
+}
+
+/* ── Playground Action Bar ───────────────── */
+
+.playground-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--dc-bg);
+  border-top: 1px solid var(--dc-border-light);
+  flex-shrink: 0;
+}
+
+.playground-actions__label {
+  font-size: 12px;
+  color: #999;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.playground-actions__spacer {
+  flex: 1;
+}
+
+.playground-actions__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: 6px;
+  background: var(--dc-bg);
+  color: var(--dc-text);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.playground-actions__btn:hover {
+  border-color: var(--dc-primary);
+  color: var(--dc-primary);
+}
+
+.playground-actions__btn--primary {
+  background: var(--dc-primary);
+  border-color: var(--dc-primary);
+  color: #ffffff;
+}
+
+.playground-actions__btn--primary:hover {
+  background: var(--dc-primary-dark);
+  border-color: var(--dc-primary-dark);
+  color: #ffffff;
+}
+
+/* ── Toolbar Buttons (Canvas Top Bar) ──── */
+
+.dc-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: 4px;
+  background: var(--dc-bg);
+  color: var(--dc-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dc-toolbar__btn:hover:not(:disabled) {
+  border-color: var(--dc-primary);
+  color: var(--dc-primary);
+}
+
+.dc-toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dc-toolbar__btn--icon {
+  width: 28px;
+  padding: 0;
+  font-size: 14px;
+}
+
+/* ── JSON Modal ───────────────────────────── */
+
+.playground-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.playground-modal {
+  background: var(--dc-bg);
+  border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+  width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.playground-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--dc-border-light);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.playground-modal__close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--dc-text-secondary);
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.playground-modal__close:hover {
+  background: var(--dc-bg-dark);
+}
+
+.playground-modal__body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.playground-modal__textarea {
+  width: 100%;
+  min-height: 300px;
+  padding: 12px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  border: 1px solid var(--dc-border);
+  border-radius: 8px;
+  outline: none;
+  resize: vertical;
+  background: #fafafa;
+  transition: border-color 0.2s;
+}
+
+.playground-modal__textarea:focus {
+  border-color: var(--dc-primary);
+  background: #ffffff;
+}
+
+.playground-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--dc-border-light);
+}

@@ -1,0 +1,254 @@
+/* ── Form Generator ───────────────────────── */
+
+.dc-form-generator {
+  padding: 0 12px;
+}
+
+/* ── Form Section ─────────────────────────── */
+
+.dc-form-section {
+  margin-bottom: 4px;
+}
+
+.dc-form-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dc-form-section__title {
+  font-size: var(--dc-font-size-sm);
+  font-weight: 600;
+  color: var(--dc-text-secondary);
+}
+
+.dc-form-section__toggle {
+  font-size: 14px;
+  color: var(--dc-text-placeholder);
+  width: 16px;
+  text-align: center;
+  line-height: 1;
+}
+
+.dc-form-section__body {
+  padding-bottom: 8px;
+}
+
+/* ── Form Field ───────────────────────────── */
+
+.dc-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.dc-form-field__label {
+  font-size: var(--dc-font-size-sm);
+  color: var(--dc-text-secondary);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.dc-form-field__control {
+  width: 100%;
+}
+
+.dc-form-field__tooltip {
+  font-size: 11px;
+  color: var(--dc-text-placeholder);
+  line-height: 1.4;
+}
+
+.dc-form-field__error {
+  font-size: 11px;
+  color: var(--dc-danger);
+  line-height: 1.4;
+}
+
+.dc-form-field--disabled {
+  opacity: 0.5;
+}
+
+.dc-form-field--error .dc-field-input,
+.dc-form-field--error .dc-field-number,
+.dc-form-field--error .dc-field-textarea,
+.dc-form-field--error .dc-field-select {
+  border-color: var(--dc-danger);
+}
+
+/* ── Field: Input ─────────────────────────── */
+
+.dc-field-input {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  font-size: var(--dc-font-size-sm);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--dc-bg);
+  color: var(--dc-text);
+}
+
+.dc-field-input:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-field-input::placeholder {
+  color: var(--dc-text-placeholder);
+}
+
+.dc-field-input:disabled {
+  background: var(--dc-bg-dark);
+  cursor: not-allowed;
+}
+
+/* ── Field: Number ────────────────────────── */
+
+.dc-field-number {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  font-size: var(--dc-font-size-sm);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--dc-bg);
+  color: var(--dc-text);
+}
+
+.dc-field-number:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-field-number:disabled {
+  background: var(--dc-bg-dark);
+  cursor: not-allowed;
+}
+
+/* ── Field: Textarea ──────────────────────── */
+
+.dc-field-textarea {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: var(--dc-font-size-sm);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s;
+  background: var(--dc-bg);
+  color: var(--dc-text);
+  line-height: 1.5;
+}
+
+.dc-field-textarea:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-field-textarea::placeholder {
+  color: var(--dc-text-placeholder);
+}
+
+.dc-field-textarea:disabled {
+  background: var(--dc-bg-dark);
+  cursor: not-allowed;
+}
+
+/* ── Field: Select ────────────────────────── */
+
+.dc-field-select {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  font-size: var(--dc-font-size-sm);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  outline: none;
+  transition: border-color 0.2s;
+  background: var(--dc-bg);
+  color: var(--dc-text);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+}
+
+.dc-field-select:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-field-select:disabled {
+  background-color: var(--dc-bg-dark);
+  cursor: not-allowed;
+}
+
+/* ── Field: Switch ────────────────────────── */
+
+.dc-field-switch {
+  width: 36px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--dc-primary);
+}
+
+.dc-field-switch:disabled {
+  cursor: not-allowed;
+}
+
+/* ── Field: Color ─────────────────────────── */
+
+.dc-field-color {
+  width: 100%;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  cursor: pointer;
+  background: var(--dc-bg);
+}
+
+.dc-field-color:focus {
+  border-color: var(--dc-primary);
+}
+
+.dc-field-color:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Field: Slider ────────────────────────── */
+
+.dc-field-slider {
+  width: 100%;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--dc-primary);
+}
+
+.dc-field-slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ── Field: Unknown ───────────────────────── */
+
+.dc-field-unknown {
+  padding: 6px 8px;
+  font-size: var(--dc-font-size-sm);
+  color: var(--dc-warning);
+  border: 1px dashed var(--dc-warning);
+  border-radius: var(--dc-radius);
+}

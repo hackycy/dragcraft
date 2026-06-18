@@ -1,0 +1,10 @@
+/* ── Tablet Frame ────────────────────────── */
+
+.dc-device-frame--tablet {
+  width: 768px;
+  border-radius: 24px;
+}
+
+.dc-device-frame--tablet .dc-device-frame__content {
+  height: 1024px;
+}

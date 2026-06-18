@@ -32,5 +32,17 @@
     "start": "tsx src/index.ts",
     "test": "vitest",
     "typecheck": "tsc"
+  },
+  "peerDependencies": {
+    "vue": ">=3.0.0"
+  },
+  "dependencies": {
+    "@dragcraft/core": "workspace:*",
+    "@dragcraft/form-generator": "workspace:*",
+    "@dragcraft/renderer": "workspace:*",
+    "@dragcraft/utils": "workspace:*"
+  },
+  "devDependencies": {
+    "vue": "catalog:shared"
   }
 }

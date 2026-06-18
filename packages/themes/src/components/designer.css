@@ -1,0 +1,95 @@
+/* ── Designer Layout ──────────────────────── */
+
+.dc-designer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--dc-bg-light);
+}
+
+/* ── Toolbar ─────────────────────────────── */
+
+.dc-toolbar {
+  display: flex;
+  align-items: center;
+  height: var(--dc-toolbar-height);
+  padding: 0 12px;
+  gap: 8px;
+  background: var(--dc-bg);
+  border-bottom: 1px solid var(--dc-border-light);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.dc-toolbar__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 12px;
+  font-size: var(--dc-font-size-sm);
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius);
+  background: var(--dc-bg);
+  color: var(--dc-text);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.dc-toolbar__btn:hover:not(:disabled) {
+  border-color: var(--dc-primary);
+  color: var(--dc-primary);
+}
+
+.dc-toolbar__btn:active:not(:disabled) {
+  border-color: var(--dc-primary-dark);
+  color: var(--dc-primary-dark);
+}
+
+.dc-toolbar__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dc-toolbar__spacer {
+  flex: 1;
+}
+
+/* ── Three-Column Body ───────────────────── */
+
+.dc-designer__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.dc-designer__panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dc-designer__panel--left {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--dc-bg);
+  border-right: 1px solid var(--dc-border-light);
+}
+
+.dc-designer__panel--center {
+  flex: 1;
+  overflow: hidden;
+}
+
+.dc-designer__panel--right {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--dc-bg);
+  border-left: 1px solid var(--dc-border-light);
+}

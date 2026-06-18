@@ -1,0 +1,48 @@
+{
+  "name": "@dragcraft/device-frames",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Device frame shells for @dragcraft designer canvas",
+  "author": "hackycy <hackycy@outlook.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/hackycy-collection/dragcraft#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hackycy-collection/dragcraft.git"
+  },
+  "bugs": "https://github.com/hackycy-collection/dragcraft/issues",
+  "keywords": [],
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./styles": "./dist/styles/index.css",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown && postcss src/styles/index.css -o dist/styles/index.css",
+    "dev": "tsdown --watch",
+    "lint": "eslint",
+    "prepublishOnly": "nr build",
+    "release": "bumpp",
+    "start": "tsx src/index.ts",
+    "test": "vitest",
+    "typecheck": "tsc"
+  },
+  "peerDependencies": {
+    "vue": ">=3.0.0"
+  },
+  "devDependencies": {
+    "postcss": "catalog:cli",
+    "postcss-cli": "catalog:cli",
+    "postcss-import": "catalog:cli",
+    "vue": "catalog:shared"
+  }
+}
