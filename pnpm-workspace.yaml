@@ -1,11 +1,19 @@
+allowBuilds:
+  esbuild: set this to true or false
+  simple-git-hooks: set this to true or false
+
+catalogMode: prefer
+
+ignoreWorkspaceRootCheck: true
+
+shellEmulator: true
+
+trustPolicy: no-downgrade
 packages:
   - playground
   - docs
   - packages/*
   - examples/*
-
-catalogMode: prefer
-
 catalogs:
   cli:
     '@antfu/eslint-config': ^6.2.0
@@ -26,7 +34,6 @@ catalogs:
   inlined:
     '@antfu/utils': ^9.3.0
   shared:
-    '@vue/reactivity': ^3.5.27
     lodash-es: ^4.17.23
     vue: ^3.5.27
   testing:
@@ -37,13 +44,6 @@ catalogs:
   types:
     '@types/lodash-es': ^4.17.12
     '@types/node': ^24.10.0
-
-ignoreWorkspaceRootCheck: true
-
 onlyBuiltDependencies:
   - esbuild
   - simple-git-hooks
-
-shellEmulator: true
-
-trustPolicy: no-downgrade

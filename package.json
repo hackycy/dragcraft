@@ -2,7 +2,7 @@
   "type": "module",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@11.6.0",
   "sideEffects": false,
   "scripts": {
     "build": "turbo build",
