@@ -363,4 +363,408 @@ describe('useFormValidation', () => {
       expect(validateField('field')).toBe('Required')
     })
   })
+
+  describe('dynamic required', () => {
+    it('supports required as a function returning true', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'email',
+            label: 'Email',
+            component: 'input',
+            rules: [{ required: ctx => ctx.values.method === 'email' }],
+          }],
+        }],
+      }
+      const values = { method: 'email', email: '' }
+      const { validateField } = useFormValidation(schema, () => values)
+
+      expect(validateField('email')).toBe('This field is required')
+    })
+
+    it('supports required as a function returning false', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'email',
+            label: 'Email',
+            component: 'input',
+            rules: [{ required: ctx => ctx.values.method === 'email' }],
+          }],
+        }],
+      }
+      const values = { method: 'phone', email: '' }
+      const { validateField } = useFormValidation(schema, () => values)
+
+      expect(validateField('email')).toBeUndefined()
+    })
+
+    it('supports custom message with dynamic required', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'email',
+            label: 'Email',
+            component: 'input',
+            rules: [{ required: () => true, message: 'Email is mandatory' }],
+          }],
+        }],
+      }
+      const values = { email: '' }
+      const { validateField } = useFormValidation(schema, () => values)
+
+      expect(validateField('email')).toBe('Email is mandatory')
+    })
+  })
+
+  describe('min / max rules', () => {
+    it('fails when value < min', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'age',
+            label: 'Age',
+            component: 'number',
+            rules: [{ min: 18 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ age: 10 }))
+
+      expect(validateField('age')).toBe('Value must be at least 18')
+    })
+
+    it('passes when value >= min', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'age',
+            label: 'Age',
+            component: 'number',
+            rules: [{ min: 18 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ age: 18 }))
+
+      expect(validateField('age')).toBeUndefined()
+    })
+
+    it('fails when value > max', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'score',
+            label: 'Score',
+            component: 'number',
+            rules: [{ max: 100 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ score: 150 }))
+
+      expect(validateField('score')).toBe('Value must be at most 100')
+    })
+
+    it('passes when value <= max', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'score',
+            label: 'Score',
+            component: 'number',
+            rules: [{ max: 100 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ score: 100 }))
+
+      expect(validateField('score')).toBeUndefined()
+    })
+
+    it('uses custom message for min', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'age',
+            label: 'Age',
+            component: 'number',
+            rules: [{ min: 18, message: 'Too young' }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ age: 5 }))
+
+      expect(validateField('age')).toBe('Too young')
+    })
+
+    it('skips min/max for non-number values', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'name',
+            label: 'Name',
+            component: 'input',
+            rules: [{ min: 5 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ name: 'abc' }))
+
+      expect(validateField('name')).toBeUndefined()
+    })
+  })
+
+  describe('minLength / maxLength rules', () => {
+    it('fails when string length < minLength', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'name',
+            label: 'Name',
+            component: 'input',
+            rules: [{ minLength: 3 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ name: 'ab' }))
+
+      expect(validateField('name')).toBe('Must be at least 3 characters')
+    })
+
+    it('passes when string length >= minLength', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'name',
+            label: 'Name',
+            component: 'input',
+            rules: [{ minLength: 3 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ name: 'abc' }))
+
+      expect(validateField('name')).toBeUndefined()
+    })
+
+    it('fails when string length > maxLength', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'name',
+            label: 'Name',
+            component: 'input',
+            rules: [{ maxLength: 5 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ name: 'toolongvalue' }))
+
+      expect(validateField('name')).toBe('Must be at most 5 characters')
+    })
+
+    it('passes when string length <= maxLength', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'name',
+            label: 'Name',
+            component: 'input',
+            rules: [{ maxLength: 5 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ name: 'hello' }))
+
+      expect(validateField('name')).toBeUndefined()
+    })
+
+    it('uses custom message for minLength', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'pass',
+            label: 'Password',
+            component: 'input',
+            rules: [{ minLength: 8, message: 'Password too short' }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ pass: '123' }))
+
+      expect(validateField('pass')).toBe('Password too short')
+    })
+
+    it('skips minLength/maxLength for non-string values', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'count',
+            label: 'Count',
+            component: 'number',
+            rules: [{ minLength: 3 }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ count: 1 }))
+
+      expect(validateField('count')).toBeUndefined()
+    })
+  })
+
+  describe('pattern rule', () => {
+    it('fails when string does not match pattern', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'code',
+            label: 'Code',
+            component: 'input',
+            rules: [{ pattern: /^[A-Z]{3}$/ }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ code: 'abc' }))
+
+      expect(validateField('code')).toBe('Invalid format')
+    })
+
+    it('passes when string matches pattern', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'code',
+            label: 'Code',
+            component: 'input',
+            rules: [{ pattern: /^[A-Z]{3}$/ }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ code: 'ABC' }))
+
+      expect(validateField('code')).toBeUndefined()
+    })
+
+    it('uses custom message for pattern', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'email',
+            label: 'Email',
+            component: 'input',
+            rules: [{ pattern: /@/, message: 'Invalid email' }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ email: 'nope' }))
+
+      expect(validateField('email')).toBe('Invalid email')
+    })
+
+    it('skips pattern for non-string values', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'count',
+            label: 'Count',
+            component: 'number',
+            rules: [{ pattern: /^\d+$/ }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ count: 42 }))
+
+      expect(validateField('count')).toBeUndefined()
+    })
+  })
+
+  describe('enum rule', () => {
+    it('fails when value is not in enum', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'color',
+            label: 'Color',
+            component: 'select',
+            rules: [{ enum: ['red', 'green', 'blue'] }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ color: 'yellow' }))
+
+      expect(validateField('color')).toBe('Must be one of: red, green, blue')
+    })
+
+    it('passes when value is in enum', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'color',
+            label: 'Color',
+            component: 'select',
+            rules: [{ enum: ['red', 'green', 'blue'] }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ color: 'red' }))
+
+      expect(validateField('color')).toBeUndefined()
+    })
+
+    it('uses custom message for enum', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'size',
+            label: 'Size',
+            component: 'select',
+            rules: [{ enum: ['S', 'M', 'L'], message: 'Pick a valid size' }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ size: 'XL' }))
+
+      expect(validateField('size')).toBe('Pick a valid size')
+    })
+
+    it('works with mixed types in enum', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'val',
+            label: 'Val',
+            component: 'input',
+            rules: [{ enum: [1, 'two', true] }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ val: 'two' }))
+
+      expect(validateField('val')).toBeUndefined()
+    })
+  })
 })

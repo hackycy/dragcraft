@@ -21,12 +21,24 @@ export interface FormContext {
  * Validation rule for a single field.
  */
 export interface ValidationRule {
-  /** If true, the field must have a non-empty/non-null value */
-  required?: boolean
+  /** If true (or predicate returns true), the field must have a non-empty/non-null value */
+  required?: boolean | ((ctx: FormContext) => boolean)
   /** Error message to display when validation fails */
   message?: string
   /** Custom validator returning true (pass) or a string (error message) */
   validator?: (value: unknown, ctx: FormContext) => boolean | string
+  /** Minimum value (number only) */
+  min?: number
+  /** Maximum value (number only) */
+  max?: number
+  /** Minimum string length */
+  minLength?: number
+  /** Maximum string length */
+  maxLength?: number
+  /** Regex pattern the string must match */
+  pattern?: RegExp
+  /** Value must be one of these */
+  enum?: unknown[]
 }
 
 /**
@@ -63,6 +75,8 @@ export interface FieldSchema {
   rules?: ValidationRule[]
   /** Optional tooltip / help text */
   tooltip?: string
+  /** Number of grid columns this field spans (requires section.columns > 1) */
+  span?: number
 }
 
 /**
@@ -73,6 +87,8 @@ export interface SectionSchema {
   /** Whether the section starts collapsed. Defaults to false. */
   collapsed?: boolean
   fields: FieldSchema[]
+  /** Number of grid columns. Defaults to 1 (vertical stack). */
+  columns?: number
 }
 
 /**
@@ -130,6 +146,18 @@ export interface FieldChangePayload {
   key: string
   /** New value */
   value: unknown
+}
+
+/**
+ * Section toggle event payload.
+ */
+export interface SectionTogglePayload {
+  /** Index of the section in the schema */
+  index: number
+  /** Title of the section */
+  title: string
+  /** Whether the section is now collapsed */
+  collapsed: boolean
 }
 
 // ──────────────────────────────────────────

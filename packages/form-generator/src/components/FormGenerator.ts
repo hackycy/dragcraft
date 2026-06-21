@@ -1,5 +1,5 @@
 import type { PropType } from 'vue'
-import type { FieldChangePayload, FieldComponentMap, FormGeneratorContext, FormSchema } from '../types'
+import type { FieldChangePayload, FieldComponentMap, FormGeneratorContext, FormSchema, SectionTogglePayload } from '../types'
 import { computed, defineComponent, h, provide, reactive, watch } from 'vue'
 import { useFormValidation } from '../composables/useFormValidation'
 import { FORM_GENERATOR_CONTEXT_KEY } from '../types'
@@ -28,7 +28,9 @@ export default defineComponent({
   },
 
   emits: {
-    change: (_payload: FieldChangePayload) => true,
+    'change': (_payload: FieldChangePayload) => true,
+    'section:toggle': (_payload: SectionTogglePayload) => true,
+    'submit': (_values: Record<string, unknown>) => true,
   },
 
   setup(props, { emit, expose }) {
@@ -87,8 +89,13 @@ export default defineComponent({
     }
     provide(FORM_GENERATOR_CONTEXT_KEY, ctx)
 
+    // Submit handler
+    const submit = () => {
+      emit('submit', { ...localValues })
+    }
+
     // Expose validation API for parent template ref
-    expose({ validate: validateAll, clearErrors })
+    expose({ validate: validateAll, clearErrors, submit })
 
     return () => {
       const schema = props.schema
@@ -97,7 +104,13 @@ export default defineComponent({
         'div',
         { class: 'dc-form-generator' },
         schema.sections.map((section, i) =>
-          h(FormSection, { key: `${section.title}-${i}`, section }),
+          h(FormSection, {
+            key: `${section.title}-${i}`,
+            section,
+            onToggle: (collapsed: boolean) => {
+              emit('section:toggle', { index: i, title: section.title, collapsed })
+            },
+          }),
         ),
       )
     }

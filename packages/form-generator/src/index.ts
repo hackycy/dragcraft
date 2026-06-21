@@ -20,6 +20,7 @@ export type {
   FormGeneratorProps,
   FormSchema,
   SectionSchema,
+  SectionTogglePayload,
   ValidationError,
   ValidationRule,
 } from './types'

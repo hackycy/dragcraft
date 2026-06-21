@@ -56,17 +56,24 @@ export default defineComponent({
         )
       }
 
+      const span = field.span ?? 1
+      const wrapperClass = [
+        'dc-form-field',
+        {
+          'dc-form-field--disabled': disabled,
+          'dc-form-field--error': !!errorMsg,
+        },
+      ]
+      const wrapperStyle: Record<string, string> = {}
+
+      if (span > 1) {
+        wrapperClass.push(`dc-form-field--span-${span}`)
+        wrapperStyle['--dc-span'] = String(span)
+      }
+
       return h(
         'div',
-        {
-          class: [
-            'dc-form-field',
-            {
-              'dc-form-field--disabled': disabled,
-              'dc-form-field--error': !!errorMsg,
-            },
-          ],
-        },
+        { class: wrapperClass, style: wrapperStyle },
         children,
       )
     }

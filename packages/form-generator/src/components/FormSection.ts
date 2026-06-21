@@ -11,6 +11,10 @@ export default defineComponent({
       type: Object as PropType<SectionSchema>,
       required: true,
     },
+    onToggle: {
+      type: Function as PropType<(collapsed: boolean) => void>,
+      default: undefined,
+    },
   },
 
   setup(props) {
@@ -26,10 +30,12 @@ export default defineComponent({
 
     const toggleCollapse = () => {
       collapsed.value = !collapsed.value
+      props.onToggle?.(collapsed.value)
     }
 
     return () => {
       const section = props.section
+      const columns = section.columns ?? 1
 
       const header = h(
         'div',
@@ -47,15 +53,25 @@ export default defineComponent({
         ],
       )
 
-      const body = collapsed.value
-        ? null
-        : h(
-            'div',
-            { class: 'dc-form-section__body' },
-            section.fields.map(field =>
-              h(FormField, { key: field.key, field }),
-            ),
-          )
+      if (collapsed.value) {
+        return h('div', { class: 'dc-form-section' }, [header])
+      }
+
+      const bodyClass = ['dc-form-section__body']
+      const bodyStyle: Record<string, string> = {}
+
+      if (columns > 1) {
+        bodyClass.push('dc-form-section--grid')
+        bodyStyle['--dc-columns'] = String(columns)
+      }
+
+      const body = h(
+        'div',
+        { class: bodyClass, style: bodyStyle },
+        section.fields.map(field =>
+          h(FormField, { key: field.key, field }),
+        ),
+      )
 
       return h(
         'div',

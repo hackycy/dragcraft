@@ -39,9 +39,42 @@ function runFieldValidation(
     return undefined
 
   for (const rule of field.rules) {
-    // Required check
-    if (rule.required && isEmptyValue(value)) {
+    // Required check (supports static boolean or dynamic predicate)
+    const isRequired = typeof rule.required === 'function'
+      ? rule.required(formCtx)
+      : rule.required
+    if (isRequired && isEmptyValue(value)) {
       return rule.message ?? 'This field is required'
+    }
+
+    // min (number only)
+    if (rule.min !== undefined && typeof value === 'number' && value < rule.min) {
+      return rule.message ?? `Value must be at least ${rule.min}`
+    }
+
+    // max (number only)
+    if (rule.max !== undefined && typeof value === 'number' && value > rule.max) {
+      return rule.message ?? `Value must be at most ${rule.max}`
+    }
+
+    // minLength (string only)
+    if (rule.minLength !== undefined && typeof value === 'string' && value.length < rule.minLength) {
+      return rule.message ?? `Must be at least ${rule.minLength} characters`
+    }
+
+    // maxLength (string only)
+    if (rule.maxLength !== undefined && typeof value === 'string' && value.length > rule.maxLength) {
+      return rule.message ?? `Must be at most ${rule.maxLength} characters`
+    }
+
+    // pattern (string only)
+    if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
+      return rule.message ?? 'Invalid format'
+    }
+
+    // enum
+    if (rule.enum && !rule.enum.includes(value)) {
+      return rule.message ?? `Must be one of: ${rule.enum.join(', ')}`
     }
 
     // Custom validator
