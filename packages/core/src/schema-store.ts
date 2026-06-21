@@ -32,6 +32,14 @@ export function createSchemaStore(
     return cloneDeep(toRaw(schema.value))
   }
 
+  /**
+   * Returns the raw (unwrapped) schema object **without** cloning.
+   *
+   * **Warning:** Mutations on the returned object directly modify internal state
+   * without triggering history snapshots or events. Intended for internal use
+   * by command handlers that need efficient in-place edits. External callers
+   * should prefer `getSchema()` which returns a deep clone.
+   */
   function getRawSchema(): DesignerSchema {
     return toRaw(schema.value)
   }
@@ -56,6 +64,14 @@ export function createSchemaStore(
     return findNode(toRaw(schema.value).root, id)
   }
 
+  /**
+   * Lightweight node mutation that bypasses the command bus.
+   *
+   * **Note:** This method does NOT create a history snapshot and does NOT
+   * emit `NODE_UPDATED` / `SCHEMA_CHANGED` events. Use it for transient
+   * or high-frequency updates where undo/redo tracking is undesirable.
+   * For undoable mutations, go through `commandBus.execute(UPDATE_PROPS)`.
+   */
   function patchNode(
     nodeId: string,
     partial: Partial<Pick<SchemaNode, 'props' | 'style'>>,

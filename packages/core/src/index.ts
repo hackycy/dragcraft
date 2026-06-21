@@ -23,7 +23,7 @@ export type { DesignerEngine } from './engine'
 export { createEventHub, EventHub } from './event-hub'
 export type { EventListener } from './event-hub'
 // ── Helpers (tree utilities) ──────────────
-export { findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkTree } from './helpers'
+export { findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkFlatChildren } from './helpers'
 export { createHistoryManager } from './history-manager'
 export type { HistoryManagerInstance } from './history-manager'
 

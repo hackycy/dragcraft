@@ -44,8 +44,8 @@ export function createHistoryManager(
 
     undoStack.push({ label, snapshot: before })
 
-    while (undoStack.length > maxSize) {
-      undoStack.shift()
+    if (undoStack.length > maxSize) {
+      undoStack.splice(0, undoStack.length - maxSize)
     }
 
     redoStack.length = 0
@@ -106,8 +106,8 @@ export function createHistoryManager(
 
     if (transactionSnapshot) {
       undoStack.push({ label: transactionLabel, snapshot: transactionSnapshot })
-      while (undoStack.length > maxSize) {
-        undoStack.shift()
+      if (undoStack.length > maxSize) {
+        undoStack.splice(0, undoStack.length - maxSize)
       }
       redoStack.length = 0
     }

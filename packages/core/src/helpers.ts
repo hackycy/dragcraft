@@ -72,10 +72,13 @@ export function insertNodeIntoTree(
 }
 
 /**
- * Walk the flat widget list, calling visitor for each node.
+ * Walk root and its direct children (one level), calling visitor for each node.
  * If visitor returns false, stop traversal.
+ *
+ * Note: This does NOT recurse into grandchildren — the schema is a flat
+ * two-level structure (root → widgets).
  */
-export function walkTree(
+export function walkFlatChildren(
   root: SchemaNode,
   visitor: (node: SchemaNode) => boolean | void,
 ): void {

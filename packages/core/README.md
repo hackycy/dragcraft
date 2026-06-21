@@ -422,7 +422,7 @@ CommandBus
 - `findParentNode(root, targetId)` — 查找父节点及索引（parent 始终为 root）
 - `removeNodeFromTree(root, nodeId)` — 从 root.children 中移除节点
 - `insertNodeIntoTree(parent, node, index?)` — 插入节点到 children 列表
-- `walkTree(root, visitor)` — 遍历 root + root.children
+- `walkFlatChildren(root, visitor)` — 遍历 root + root.children（一级扁平结构）
 
 导出供外部使用（位置锁定约束）：
 

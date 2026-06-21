@@ -18,7 +18,7 @@ import {
   setGlobalConfigHandler,
   updatePropsHandler,
 } from './commands'
-import { CommandType, DEFAULT_MAX_HISTORY_SIZE } from './constants'
+import { CommandType, DEFAULT_MAX_HISTORY_SIZE, EventName } from './constants'
 import { createEventHub } from './event-hub'
 import { createHistoryManager } from './history-manager'
 import { createRegistry } from './registry'
@@ -71,13 +71,21 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   }
 
   function importSchema(schema: DesignerSchema): void {
+    if (!schema?.root || !schema.version) {
+      console.warn('[dragcraft/core] importSchema: invalid schema, missing root or version')
+      return
+    }
     store.setSchema(schema)
     history.clear()
+    eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
   }
 
   function dispose(): void {
     eventHub.clear()
     history.clear()
+    store.selectNode(null)
+    store.hoverNode(null)
+    store.setDragTarget(null)
   }
 
   return {

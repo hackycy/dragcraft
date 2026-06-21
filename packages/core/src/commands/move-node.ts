@@ -16,19 +16,19 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
   }
 
   // ── Sortable constraint ──
+  // payload.index is a post-removal insertion index.
+  // Convert to the index that will actually be used after splice.
+  const targetIndex = Math.min(payload.index, children.length - 1)
   const lockedIndices = getLockedIndices(children, registry, rawSchema)
-  if (lockedIndices.size > 0 && !isMoveAllowed(currentIndex, payload.index, lockedIndices)) {
+  if (lockedIndices.size > 0 && !isMoveAllowed(currentIndex, targetIndex, lockedIndices)) {
     console.warn(
       `[dragcraft/core] MOVE_NODE: blocked by sortable constraint`
-      + ` (src=${currentIndex}, target=${payload.index})`,
+      + ` (src=${currentIndex}, target=${targetIndex})`,
     )
     return
   }
 
-  // Remove from current position
+  // Remove from current position, then insert at target
   const [node] = children.splice(currentIndex, 1)
-
-  // Insert at target position (adjust for removal)
-  const targetIndex = Math.min(payload.index, children.length)
   children.splice(targetIndex, 0, node)
 }
