@@ -13,11 +13,10 @@
     "@dragcraft/designer": "workspace:*",
     "@dragcraft/device-frames": "workspace:*",
     "@dragcraft/themes": "workspace:*",
-    "vue": "catalog:shared",
-    "vue-router": "^4"
+    "vue": "catalog:shared"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.4",
+    "@vitejs/plugin-vue": "catalog:",
     "vite": "catalog:cli"
   }
 }

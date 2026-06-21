@@ -14,6 +14,8 @@ packages:
   - docs
   - packages/*
   - examples/*
+catalog:
+  '@vitejs/plugin-vue': ^6.0.4
 catalogs:
   cli:
     '@antfu/eslint-config': ^6.2.0
