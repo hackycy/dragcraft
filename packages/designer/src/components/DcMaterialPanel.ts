@@ -43,7 +43,7 @@ export default defineComponent({
           h('input', {
             type: 'text',
             class: 'dc-material-panel__search-input',
-            placeholder: '搜索组件...',
+            placeholder: 'Search widgets...',
             value: searchQuery.value,
             onInput: handleSearchInput,
           }),

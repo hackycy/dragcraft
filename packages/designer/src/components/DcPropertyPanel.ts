@@ -76,6 +76,7 @@ export default defineComponent({
 
       if (effectiveTab === 'global' && globalConfigSchema) {
         tabContent = h(FormGenerator, {
+          key: '__global__',
           schema: globalConfigSchema,
           values: globalConfigValues.value,
           fieldComponentMap,
@@ -100,8 +101,8 @@ export default defineComponent({
           'div',
           { class: 'dc-property-panel__empty' },
           effectiveTab === 'global'
-            ? '暂无全局配置'
-            : '请选择一个组件',
+            ? 'No global config'
+            : 'Select a widget',
         )
       }
 

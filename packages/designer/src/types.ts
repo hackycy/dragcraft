@@ -142,6 +142,10 @@ export interface DesignerContext {
   eventHooks: RendererEventHooks
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
+  dragOverIndex: Ref<number | null>
+  handleCanvasDragOver: (e: DragEvent) => void
+  handleCanvasDragLeave: (e: DragEvent) => void
+  handleCanvasDrop: (e: DragEvent) => void
   searchQuery: Ref<string>
   activeTab: Ref<PropertyTabKey>
 }

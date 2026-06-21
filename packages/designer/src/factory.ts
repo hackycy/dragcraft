@@ -42,23 +42,23 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
   // 5. Resolve extensions
   const extensions = options.extensions ?? {}
 
-  // 5. Store field component map
+  // 6. Store field component map
   const fieldComponentMap = options.fieldComponentMap
 
-  // 6. Store global config schema
+  // 7. Store global config schema
   const globalConfigSchema = options.globalConfigSchema ?? null
 
-  // 7. Register global config schema in registry if provided
+  // 8. Register global config schema in registry if provided
   if (globalConfigSchema) {
     engine.registry.registerGlobalConfigSchema(
       globalConfigSchema as unknown as Record<string, unknown>,
     )
   }
 
-  // 8. Resolve event hooks
+  // 9. Resolve event hooks
   const eventHooks = options.eventHooks ?? {}
 
-  // 9. Create action registry with defaults + custom actions
+  // 10. Create action registry with defaults + custom actions
   const actionRegistry = createNodeActionRegistry(createDefaultActions())
   if (options.customActions) {
     for (const action of options.customActions) {

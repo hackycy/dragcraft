@@ -36,6 +36,10 @@ export default defineComponent({
       eventHooks,
       actionRegistry,
       dragOverNodeId: dragDrop.dragOverNodeId,
+      dragOverIndex: dragDrop.dragOverIndex,
+      handleCanvasDragOver: dragDrop.handleCanvasDragOver,
+      handleCanvasDragLeave: dragDrop.handleCanvasDragLeave,
+      handleCanvasDrop: dragDrop.handleCanvasDrop,
       searchQuery,
       activeTab,
     }
