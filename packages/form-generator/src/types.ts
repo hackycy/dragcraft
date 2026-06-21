@@ -148,6 +148,8 @@ export interface FormGeneratorContext {
   getFieldValue: (key: string) => unknown
   /** Get all current values as a snapshot */
   getFormValues: () => Record<string, unknown>
+  /** Reactive values — use for fine-grained dependency tracking in computed/watch */
+  values: Record<string, unknown>
   /** Global disabled ref */
   disabled: Ref<boolean>
   /** Map of field key -> validation error messages (reactive) */

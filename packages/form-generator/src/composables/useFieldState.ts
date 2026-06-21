@@ -21,7 +21,7 @@ export function useFieldState(
   const isVisible = computed(() => {
     if (!field.visible)
       return true
-    return field.visible({ values: ctx.getFormValues() })
+    return field.visible({ values: ctx.values })
   })
 
   const isDisabled = computed(() => {
@@ -29,7 +29,7 @@ export function useFieldState(
       return true
     if (!field.disabled)
       return false
-    return field.disabled({ values: ctx.getFormValues() })
+    return field.disabled({ values: ctx.values })
   })
 
   return { isVisible, isDisabled }

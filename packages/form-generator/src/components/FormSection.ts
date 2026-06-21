@@ -1,6 +1,6 @@
 import type { PropType } from 'vue'
 import type { SectionSchema } from '../types'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, ref, watch } from 'vue'
 import FormField from './FormField'
 
 export default defineComponent({
@@ -15,6 +15,14 @@ export default defineComponent({
 
   setup(props) {
     const collapsed = ref(props.section.collapsed ?? false)
+
+    watch(
+      () => props.section.collapsed,
+      (val) => {
+        if (val !== undefined)
+          collapsed.value = val
+      },
+    )
 
     const toggleCollapse = () => {
       collapsed.value = !collapsed.value

@@ -52,12 +52,12 @@ export default defineComponent({
       { deep: false },
     )
 
-    // Use user-provided field component map
-    const mergedFieldComponentMap = computed(() => ({
-      ...(props.fieldComponentMap ?? {}),
-    }))
+    const fieldComponentMapRef = computed(() => props.fieldComponentMap ?? {})
 
-    // Validation
+    // Expose localValues directly for fine-grained reactivity in useFieldState
+    const getFormValues = () => ({ ...localValues })
+
+    // Validation (imperative, no reactive tracking needed)
     const { fieldErrors, validateField, validateAll, clearErrors } = useFormValidation(
       props.schema,
       () => ({ ...localValues }),
@@ -76,11 +76,12 @@ export default defineComponent({
     // Create and provide context
     const ctx: FormGeneratorContext = {
       get fieldComponentMap() {
-        return mergedFieldComponentMap.value
+        return fieldComponentMapRef.value
       },
       onFieldChange,
       getFieldValue: (key: string) => localValues[key],
-      getFormValues: () => ({ ...localValues }),
+      getFormValues,
+      values: localValues,
       disabled: disabledRef,
       fieldErrors,
     }
@@ -95,8 +96,8 @@ export default defineComponent({
       return h(
         'div',
         { class: 'dc-form-generator' },
-        schema.sections.map(section =>
-          h(FormSection, { key: section.title, section }),
+        schema.sections.map((section, i) =>
+          h(FormSection, { key: `${section.title}-${i}`, section }),
         ),
       )
     }
