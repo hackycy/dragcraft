@@ -48,32 +48,31 @@ export function useWidgetNode(
   const meta = computed(() => engine.registry.getWidget(getNode().type))
   const resolvedComponent = computed(() => componentMap[getNode().type])
 
+  function readInstanceCtx(): InstanceBehaviorContext {
+    // Read schema.value to establish reactive dependency, then return raw for predicate evaluation
+    void engine.store.schema.value
+    return { node: getNode(), schema: engine.store.getRawSchema() }
+  }
+
   const useMask = computed(() => {
     const field = meta.value?.mask
     if (typeof field !== 'function')
       return field !== false
-    // Dynamic: read schema.value to establish reactive dependency
-    void engine.store.schema.value
-    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
-    return field(ctx)
+    return field(readInstanceCtx())
   })
 
   const selectable = computed(() => {
     const field = meta.value?.selectable
     if (typeof field !== 'function')
       return field !== false
-    void engine.store.schema.value
-    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
-    return field(ctx)
+    return field(readInstanceCtx())
   })
 
   const sortable = computed(() => {
     const field = meta.value?.sortable
     if (typeof field !== 'function')
       return field !== false
-    void engine.store.schema.value
-    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
-    return field(ctx)
+    return field(readInstanceCtx())
   })
 
   const draggable = computed(() => {
@@ -83,9 +82,7 @@ export function useWidgetNode(
     const field = meta.value?.draggable
     if (typeof field !== 'function')
       return field !== false
-    void engine.store.schema.value
-    const ctx: InstanceBehaviorContext = { node: getNode(), schema: engine.store.getRawSchema() }
-    return field(ctx)
+    return field(readInstanceCtx())
   })
 
   const wrapperClasses = computed<Array<string | Record<string, boolean>>>(() => [

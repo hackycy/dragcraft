@@ -5,6 +5,10 @@ export default defineComponent({
   name: 'DcDefaultWidgetFallback',
 
   props: {
+    nodeId: {
+      type: String as PropType<string>,
+      required: true,
+    },
     nodeType: {
       type: String as PropType<string>,
       default: 'unknown',

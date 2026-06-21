@@ -174,6 +174,11 @@ export interface RendererExtensions {
 
 /**
  * Options accepted by RootRenderer as props.
+ *
+ * **Immutability constraint:** These options are captured once when RootRenderer
+ * mounts and provided to all descendants via provide/inject. Changing them after
+ * the initial render has no effect on the running renderer. If you need to swap
+ * extensions or hooks, remount RootRenderer with a different `key`.
  */
 export interface RendererOptions {
   /** The core engine instance (read-only consumption) */

@@ -1,6 +1,6 @@
 import type { DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
-import type { RendererEventHooks } from './event-hooks'
+import type { MaybePromise, RendererEventHooks } from './event-hooks'
 import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { fireAfterHook, resolveBeforeHook } from './event-hooks'
 
@@ -10,6 +10,50 @@ import { fireAfterHook, resolveBeforeHook } from './event-hooks'
  */
 function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
   return { node: ctx.node, schema: ctx.engine.store.getRawSchema() }
+}
+
+/**
+ * Runs an action through a before/after hook pair.
+ * Handles sync (boolean/void) and async (Promise) hook results uniformly.
+ * If the before hook is absent, the action executes unconditionally.
+ * When pendingGuard is provided, it is set to true while an async hook
+ * is in-flight and reset to false on resolution.
+ */
+function runWithHook<T>(
+  hook: ((payload: T) => MaybePromise<boolean | void>) | undefined,
+  payload: T,
+  execute: () => void,
+  afterHook?: (payload: T) => MaybePromise<void>,
+  pendingGuard?: { value: boolean },
+): void | Promise<void> {
+  if (!hook) {
+    execute()
+    fireAfterHook(afterHook, payload)
+    return
+  }
+
+  const result = hook(payload)
+
+  // Fast path: sync hook returned a non-promise value
+  if (typeof result === 'boolean' || result === undefined) {
+    if (result === false)
+      return
+    execute()
+    fireAfterHook(afterHook, payload)
+    return
+  }
+
+  // Async path: hook returned a Promise
+  if (pendingGuard)
+    pendingGuard.value = true
+  return resolveBeforeHook(result).then((allowed) => {
+    if (pendingGuard)
+      pendingGuard.value = false
+    if (!allowed)
+      return
+    execute()
+    fireAfterHook(afterHook, payload)
+  })
 }
 
 // ──────────────────────────────────────────
@@ -286,7 +330,7 @@ export function createNodeActionRegistry(
           const disabled = def.disabled ? def.disabled(ctx) : false
 
           // Per-action guard against concurrent async invocations
-          let pending = false
+          const pending = { value: false }
 
           return {
             key: def.key,
@@ -297,83 +341,40 @@ export function createNodeActionRegistry(
             visible: true,
             disabled,
             handler: (event: MouseEvent): void | Promise<void> => {
-              if (pending)
+              if (pending.value)
                 return
+
+              const execute = () => def.handler?.(ctx, event)
 
               // ── DELETE action ──
               if (def.key === ActionKey.DELETE) {
-                const beforeHook = eventHooks.onBeforeDelete
-                if (beforeHook) {
-                  const hookResult = beforeHook({ nodeId: ctx.node.id, event })
-
-                  // Fast path: sync hook returned a non-promise value
-                  if (typeof hookResult === 'boolean' || hookResult === undefined) {
-                    if (hookResult === false)
-                      return
-                    def.handler?.(ctx, event)
-                    fireAfterHook(eventHooks.onAfterDelete, { nodeId: ctx.node.id, event })
-                    return
-                  }
-
-                  // Async path: hook returned a Promise
-                  pending = true
-                  return resolveBeforeHook(hookResult).then((allowed) => {
-                    pending = false
-                    if (!allowed)
-                      return
-                    def.handler?.(ctx, event)
-                    fireAfterHook(eventHooks.onAfterDelete, { nodeId: ctx.node.id, event })
-                  })
+                const payload = { nodeId: ctx.node.id, event }
+                if (eventHooks.onBeforeDelete || eventHooks.onAfterDelete) {
+                  return runWithHook(eventHooks.onBeforeDelete, payload, execute, eventHooks.onAfterDelete, pending)
                 }
-
-                def.handler?.(ctx, event)
-                fireAfterHook(eventHooks.onAfterDelete, { nodeId: ctx.node.id, event })
+                execute()
                 return
               }
 
               // ── MOVE UP / MOVE DOWN actions ──
               if (def.key === ActionKey.MOVE_UP || def.key === ActionKey.MOVE_DOWN) {
                 const direction = def.key === ActionKey.MOVE_UP ? 'up' as const : 'down' as const
-                const toIndex = direction === 'up' ? ctx.index - 1 : ctx.index + 1
-                const movePayload = {
+                const payload = {
                   nodeId: ctx.node.id,
                   direction,
                   fromIndex: ctx.index,
-                  toIndex,
+                  toIndex: direction === 'up' ? ctx.index - 1 : ctx.index + 1,
                   event,
                 }
-
-                const beforeHook = eventHooks.onBeforeMove
-                if (beforeHook) {
-                  const hookResult = beforeHook(movePayload)
-
-                  // Fast path: sync
-                  if (typeof hookResult === 'boolean' || hookResult === undefined) {
-                    if (hookResult === false)
-                      return
-                    def.handler?.(ctx, event)
-                    fireAfterHook(eventHooks.onAfterMove, movePayload)
-                    return
-                  }
-
-                  // Async path
-                  pending = true
-                  return resolveBeforeHook(hookResult).then((allowed) => {
-                    pending = false
-                    if (!allowed)
-                      return
-                    def.handler?.(ctx, event)
-                    fireAfterHook(eventHooks.onAfterMove, movePayload)
-                  })
+                if (eventHooks.onBeforeMove || eventHooks.onAfterMove) {
+                  return runWithHook(eventHooks.onBeforeMove, payload, execute, eventHooks.onAfterMove, pending)
                 }
-
-                def.handler?.(ctx, event)
-                fireAfterHook(eventHooks.onAfterMove, movePayload)
+                execute()
                 return
               }
 
               // ── Custom / other actions: just call the handler ──
-              def.handler?.(ctx, event)
+              execute()
             },
             className: def.className,
           }
