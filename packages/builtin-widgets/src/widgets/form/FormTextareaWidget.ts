@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const formTextareaWidgetMeta: WidgetMeta = {
   type: 'form-textarea',
   title: '多行文本',
+  titleKey: 'widget.form-textarea.title',
   group: 'form',
   icon: 'textarea',
   defaultProps: {
@@ -22,13 +23,14 @@ export const formTextareaWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.form-textarea.form.basic.title',
         fields: [
-          { key: 'label', label: '标签', component: 'input', defaultValue: '标签' },
-          { key: 'placeholder', label: '占位文本', component: 'input', defaultValue: '请输入' },
-          { key: 'value', label: '默认值', component: 'textarea', defaultValue: '', props: { rows: 2 } },
-          { key: 'rows', label: '行数', component: 'number', defaultValue: 3, props: { min: 1, max: 20 } },
-          { key: 'required', label: '必填', component: 'switch', defaultValue: false },
-          { key: 'disabled', label: '禁用', component: 'switch', defaultValue: false },
+          { key: 'label', label: '标签', labelKey: 'widget.form-textarea.field.label.label', component: 'input', defaultValue: '标签' },
+          { key: 'placeholder', label: '占位文本', labelKey: 'widget.form-textarea.field.placeholder.label', component: 'input', defaultValue: '请输入' },
+          { key: 'value', label: '默认值', labelKey: 'widget.form-textarea.field.value.label', component: 'textarea', defaultValue: '', props: { rows: 2 } },
+          { key: 'rows', label: '行数', labelKey: 'widget.form-textarea.field.rows.label', component: 'number', defaultValue: 3, props: { min: 1, max: 20 } },
+          { key: 'required', label: '必填', labelKey: 'widget.form-textarea.field.required.label', component: 'switch', defaultValue: false },
+          { key: 'disabled', label: '禁用', labelKey: 'widget.form-textarea.field.disabled.label', component: 'switch', defaultValue: false },
         ],
       },
     ],

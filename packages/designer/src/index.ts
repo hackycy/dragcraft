@@ -19,6 +19,8 @@ export { useDesignerContext } from './context'
 // ── Factory ─────────────────────────────
 export { createDesigner } from './factory'
 
+// ── Messages ────────────────────────────
+export { designerMessages } from './messages'
 // ── Types ───────────────────────────────
 export type {
   DesignerContext,
@@ -30,8 +32,8 @@ export type {
   UseDesignerReturn,
   WidgetGroupConfig,
 } from './types'
-export { DESIGNER_CONTEXT_KEY } from './types'
 
+export { DESIGNER_CONTEXT_KEY } from './types'
 // ── Re-exports: @dragcraft/core ─────────
 export {
   CommandType,
@@ -39,6 +41,7 @@ export {
   EventName,
   resolveBehavior,
 } from '@dragcraft/core'
+
 export type {
   AddNodePayload,
   BehaviorPredicate,
@@ -60,11 +63,11 @@ export type {
   WidgetActionConfig,
   WidgetMeta,
 } from '@dragcraft/core'
-
 // ── Re-exports: @dragcraft/form-generator ─
 export {
   FormGenerator,
 } from '@dragcraft/form-generator'
+
 export type {
   FieldChangePayload,
   FieldComponentMap,
@@ -104,3 +107,7 @@ export type {
   ResolvedNodeAction,
   WidgetFallbackProps,
 } from '@dragcraft/renderer'
+
+// ── Re-exports: @dragcraft/utils ────────
+export { createI18n, I18N_KEY, useI18n } from '@dragcraft/utils'
+export type { FlatMessages, I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/utils'

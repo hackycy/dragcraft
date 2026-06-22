@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const imageWidgetMeta: WidgetMeta = {
   type: 'image',
   title: '图片',
+  titleKey: 'widget.image.title',
   group: 'basic',
   icon: 'image',
   defaultProps: {
@@ -20,10 +21,13 @@ export const imageWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.image.form.basic.title',
         fields: [
           {
             key: 'src',
             label: '图片地址',
+            labelKey: 'widget.image.field.src.label',
+            placeholderKey: 'widget.image.field.src.placeholder',
             component: 'input',
             defaultValue: '',
             props: { placeholder: '请输入图片 URL' },
@@ -31,6 +35,8 @@ export const imageWidgetMeta: WidgetMeta = {
           {
             key: 'alt',
             label: '替代文本',
+            labelKey: 'widget.image.field.alt.label',
+            placeholderKey: 'widget.image.field.alt.placeholder',
             component: 'input',
             defaultValue: '',
             props: { placeholder: '图片无法显示时的替代文本' },
@@ -38,6 +44,8 @@ export const imageWidgetMeta: WidgetMeta = {
           {
             key: 'objectFit',
             label: '填充方式',
+            labelKey: 'widget.image.field.objectFit.label',
+            optionKeyPrefix: 'widget.image.field.objectFit.option',
             component: 'select',
             defaultValue: 'contain',
             props: {

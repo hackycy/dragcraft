@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const formSelectWidgetMeta: WidgetMeta = {
   type: 'form-select',
   title: '下拉选择',
+  titleKey: 'widget.form-select.title',
   group: 'form',
   icon: 'select',
   defaultProps: {
@@ -25,11 +26,12 @@ export const formSelectWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.form-select.form.basic.title',
         fields: [
-          { key: 'label', label: '标签', component: 'input', defaultValue: '标签' },
-          { key: 'placeholder', label: '占位文本', component: 'input', defaultValue: '请选择' },
-          { key: 'required', label: '必填', component: 'switch', defaultValue: false },
-          { key: 'disabled', label: '禁用', component: 'switch', defaultValue: false },
+          { key: 'label', label: '标签', labelKey: 'widget.form-select.field.label.label', component: 'input', defaultValue: '标签' },
+          { key: 'placeholder', label: '占位文本', labelKey: 'widget.form-select.field.placeholder.label', component: 'input', defaultValue: '请选择' },
+          { key: 'required', label: '必填', labelKey: 'widget.form-select.field.required.label', component: 'switch', defaultValue: false },
+          { key: 'disabled', label: '禁用', labelKey: 'widget.form-select.field.disabled.label', component: 'switch', defaultValue: false },
         ],
       },
     ],

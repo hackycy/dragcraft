@@ -1,6 +1,7 @@
 import type { DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance, WidgetMeta } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions } from '@dragcraft/renderer'
+import type { I18nInstance, LocaleMessages } from '@dragcraft/utils'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
 // ──────────────────────────────────────────
@@ -16,6 +17,8 @@ export interface WidgetGroupConfig {
   name: string
   /** Display title shown in the material panel */
   title: string
+  /** i18n message key for title; overrides `title` when i18n is active */
+  titleKey?: string
 }
 
 // ──────────────────────────────────────────
@@ -47,6 +50,12 @@ export interface DesignerOptions {
   eventHooks?: RendererEventHooks
   /** Custom node action definitions to add or override default actions */
   customActions?: NodeActionDefinition[]
+  /** Current locale (default: 'zh-CN') */
+  locale?: string
+  /** Additional/override messages merged on top of built-in defaults */
+  messages?: LocaleMessages
+  /** Built-in widget messages (from @dragcraft/builtin-widgets) to merge into i18n */
+  builtinMessages?: LocaleMessages
 }
 
 // ──────────────────────────────────────────
@@ -121,6 +130,8 @@ export interface DesignerInstance {
   eventHooks: RendererEventHooks
   /** Node action registry */
   actionRegistry: NodeActionRegistry
+  /** i18n instance for locale management */
+  i18n: I18nInstance
   /** Dispose all resources */
   dispose: () => void
 }

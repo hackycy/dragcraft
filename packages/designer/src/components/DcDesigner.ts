@@ -1,5 +1,6 @@
 import type { PropType } from 'vue'
 import type { DesignerContext, DesignerInstance } from '../types'
+import { I18N_KEY } from '@dragcraft/utils'
 import { defineComponent, h, provide, ref } from 'vue'
 import { useDragDrop } from '../composables/useDragDrop'
 import { DESIGNER_CONTEXT_KEY } from '../types'
@@ -18,7 +19,7 @@ export default defineComponent({
   },
 
   setup(props) {
-    const { engine, componentMap, widgetGroups, extensions, fieldComponentMap, globalConfigSchema, eventHooks, actionRegistry } = props.instance
+    const { engine, componentMap, widgetGroups, extensions, fieldComponentMap, globalConfigSchema, eventHooks, actionRegistry, i18n } = props.instance
     const searchQuery = ref('')
     const activeTab = ref<'global' | 'widget'>('widget')
 
@@ -44,6 +45,7 @@ export default defineComponent({
       activeTab,
     }
     provide(DESIGNER_CONTEXT_KEY, ctx)
+    provide(I18N_KEY, i18n)
 
     return () => {
       // Resolve panel components (support extension overrides)

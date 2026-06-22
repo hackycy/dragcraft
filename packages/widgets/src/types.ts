@@ -32,4 +32,6 @@ export type WidgetGroup = string
 export interface WidgetGroupConfig {
   name: string
   title: string
+  /** i18n message key for title; overrides `title` when i18n is active */
+  titleKey?: string
 }

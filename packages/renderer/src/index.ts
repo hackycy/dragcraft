@@ -1,12 +1,12 @@
 // ── Action Registry ─────────────────────
 export { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
+
 export type {
   NodeActionContext,
   NodeActionDefinition,
   NodeActionRegistry,
   ResolvedNodeAction,
 } from './action-registry'
-
 // ── Components ───────────────────────────
 export {
   DefaultContainerShell,
@@ -22,16 +22,17 @@ export {
 
 // ── Composables ──────────────────────────
 export { useNodeActions, useNodeDrag, useNodeState, useToolbarPosition, useWidgetNode } from './composables'
+
 export type { UseNodeActionsReturn } from './composables'
 export type { UseNodeDragReturn } from './composables'
 export type { UseToolbarPositionReturn } from './composables'
 export type { UseWidgetNodeReturn } from './composables'
-
 // ── Context ──────────────────────────────
 export { createRendererContext, useRendererContext } from './context'
 
 // ── Event Hooks ─────────────────────────
 export { createDefaultEventHooks, fireAfterHook, resolveBeforeHook } from './event-hooks'
+
 export type {
   DeleteHookPayload,
   DragHookPayload,
@@ -41,6 +42,8 @@ export type {
   RendererEventHooks,
   SelectHookPayload,
 } from './event-hooks'
+// ── Messages ────────────────────────────
+export { rendererMessages } from './messages'
 
 // ── Types ────────────────────────────────
 export type {

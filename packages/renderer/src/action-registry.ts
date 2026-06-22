@@ -170,11 +170,12 @@ export const ActionKey = {
 // Built-in default actions
 // ──────────────────────────────────────────
 
-export function createDefaultActions(): NodeActionDefinition[] {
+export function createDefaultActions(t?: (key: string, fallback?: string) => string): NodeActionDefinition[] {
+  const _t = t ?? ((_, f) => f ?? '')
   return [
     {
       key: ActionKey.DRAG,
-      label: '拖拽排序',
+      label: _t('action.drag', '拖拽排序'),
       icon: '\u2630',
       type: 'drag-handle',
       order: 100,
@@ -186,7 +187,7 @@ export function createDefaultActions(): NodeActionDefinition[] {
     },
     {
       key: ActionKey.MOVE_UP,
-      label: '上移',
+      label: _t('action.move-up', '上移'),
       icon: '\u2191',
       type: 'button',
       order: 200,
@@ -216,7 +217,7 @@ export function createDefaultActions(): NodeActionDefinition[] {
     },
     {
       key: ActionKey.MOVE_DOWN,
-      label: '下移',
+      label: _t('action.move-down', '下移'),
       icon: '\u2193',
       type: 'button',
       order: 300,
@@ -246,7 +247,7 @@ export function createDefaultActions(): NodeActionDefinition[] {
     },
     {
       key: ActionKey.DELETE,
-      label: '删除',
+      label: _t('action.delete', '删除'),
       icon: '\u2715',
       type: 'button',
       order: 400,

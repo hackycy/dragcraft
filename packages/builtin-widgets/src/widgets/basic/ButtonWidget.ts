@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const buttonWidgetMeta: WidgetMeta = {
   type: 'button',
   title: '按钮',
+  titleKey: 'widget.button.title',
   group: 'basic',
   icon: 'button',
   defaultProps: {
@@ -20,10 +21,13 @@ export const buttonWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.button.form.basic.title',
         fields: [
           {
             key: 'text',
             label: '按钮文字',
+            labelKey: 'widget.button.field.text.label',
+            placeholderKey: 'widget.button.field.text.placeholder',
             component: 'input',
             defaultValue: '按钮',
             props: { placeholder: '请输入按钮文字' },
@@ -31,6 +35,8 @@ export const buttonWidgetMeta: WidgetMeta = {
           {
             key: 'type',
             label: '按钮类型',
+            labelKey: 'widget.button.field.type.label',
+            optionKeyPrefix: 'widget.button.field.type.option',
             component: 'select',
             defaultValue: 'button',
             props: {
@@ -44,6 +50,8 @@ export const buttonWidgetMeta: WidgetMeta = {
           {
             key: 'size',
             label: '按钮尺寸',
+            labelKey: 'widget.button.field.size.label',
+            optionKeyPrefix: 'widget.button.field.size.option',
             component: 'select',
             defaultValue: 'medium',
             props: {
@@ -57,6 +65,7 @@ export const buttonWidgetMeta: WidgetMeta = {
           {
             key: 'disabled',
             label: '禁用状态',
+            labelKey: 'widget.button.field.disabled.label',
             component: 'switch',
             defaultValue: false,
           },

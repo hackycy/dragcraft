@@ -1,3 +1,4 @@
+import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import DcMaterialGroup from './DcMaterialGroup'
@@ -7,6 +8,7 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
+    const { t } = useI18n()
     const { engine, searchQuery, widgetGroups } = ctx
 
     // Filter widgets by search query, grouped by widget group
@@ -16,7 +18,7 @@ export default defineComponent({
 
       // Use provided widget groups, or derive from registered widgets
       const groups = widgetGroups
-        ?? [...new Set(allWidgets.map(w => w.group))].map(name => ({ name, title: name }))
+        ?? [...new Set(allWidgets.map(w => w.group))].map(name => ({ name, title: name, titleKey: undefined }))
 
       return groups
         .map((group) => {
@@ -43,7 +45,7 @@ export default defineComponent({
           h('input', {
             type: 'text',
             class: 'dc-material-panel__search-input',
-            placeholder: 'Search widgets...',
+            placeholder: t('panel.search.placeholder', '搜索组件...'),
             value: searchQuery.value,
             onInput: handleSearchInput,
           }),
@@ -55,7 +57,7 @@ export default defineComponent({
           filteredGroups.value.map(group =>
             h(DcMaterialGroup, {
               key: group.name,
-              title: group.title,
+              title: group.titleKey ? t(group.titleKey, group.title) : group.title,
               widgets: group.widgets,
             }),
           ),

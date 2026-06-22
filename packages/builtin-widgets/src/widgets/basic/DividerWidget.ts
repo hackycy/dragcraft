@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const dividerWidgetMeta: WidgetMeta = {
   type: 'divider',
   title: '分割线',
+  titleKey: 'widget.divider.title',
   group: 'basic',
   icon: 'divider',
   defaultProps: {
@@ -20,10 +21,13 @@ export const dividerWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.divider.form.basic.title',
         fields: [
           {
             key: 'direction',
             label: '方向',
+            labelKey: 'widget.divider.field.direction.label',
+            optionKeyPrefix: 'widget.divider.field.direction.option',
             component: 'select',
             defaultValue: 'horizontal',
             props: {
@@ -36,12 +40,14 @@ export const dividerWidgetMeta: WidgetMeta = {
           {
             key: 'color',
             label: '颜色',
+            labelKey: 'widget.divider.field.color.label',
             component: 'color',
             defaultValue: '#e8e8e8',
           },
           {
             key: 'thickness',
             label: '粗细',
+            labelKey: 'widget.divider.field.thickness.label',
             component: 'number',
             defaultValue: 1,
             props: { min: 1, max: 10 },

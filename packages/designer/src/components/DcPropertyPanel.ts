@@ -1,5 +1,6 @@
 import type { FieldChangePayload } from '@dragcraft/form-generator'
 import { FormGenerator } from '@dragcraft/form-generator'
+import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h, watch } from 'vue'
 import { usePropertyBinding } from '../composables/usePropertyBinding'
 import { useDesignerContext } from '../context'
@@ -9,6 +10,7 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
+    const { t } = useI18n()
     const { engine, fieldComponentMap, globalConfigSchema, activeTab } = ctx
     const {
       selectedNode,
@@ -27,10 +29,10 @@ export default defineComponent({
     // Available tabs (Widget tab only when a node is selected)
     const tabs = computed(() => {
       const items: Array<{ key: 'global' | 'widget', label: string }> = [
-        { key: 'global', label: 'Global' },
+        { key: 'global', label: t('panel.tab.global', '全局配置') },
       ]
       if (selectedNode.value) {
-        items.push({ key: 'widget', label: 'Widget' })
+        items.push({ key: 'widget', label: t('panel.tab.widget', '组件配置') })
       }
       return items
     })
@@ -101,8 +103,8 @@ export default defineComponent({
           'div',
           { class: 'dc-property-panel__empty' },
           effectiveTab === 'global'
-            ? 'No global config'
-            : 'Select a widget',
+            ? t('panel.empty.no-global-config', '暂无全局配置')
+            : t('panel.empty.select-widget', '请选择组件'),
         )
       }
 

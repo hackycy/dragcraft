@@ -1,5 +1,6 @@
 import type { FieldSchema } from '@dragcraft/form-generator'
 import type { PropType } from 'vue'
+import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 
 export default defineComponent({
@@ -23,18 +24,26 @@ export default defineComponent({
   emits: ['update:modelValue'],
 
   setup(props, { emit }) {
+    const { t } = useI18n()
+
     const handleInput = (e: Event) => {
       emit('update:modelValue', (e.target as HTMLTextAreaElement).value)
     }
 
-    return () =>
-      h('textarea', {
+    return () => {
+      const rawPlaceholder = (props.field.props?.placeholder as string) ?? ''
+      const placeholder = props.field.placeholderKey
+        ? t(props.field.placeholderKey, rawPlaceholder)
+        : rawPlaceholder
+
+      return h('textarea', {
         class: 'dc-field-textarea',
         value: props.modelValue ?? '',
         disabled: props.disabled,
         rows: (props.field.props?.rows as number) ?? 3,
-        placeholder: (props.field.props?.placeholder as string) ?? '',
+        placeholder,
         onInput: handleInput,
       })
+    }
   },
 })

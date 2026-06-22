@@ -26,6 +26,8 @@ import {
   formTextareaWidgetMeta,
 } from './widgets/form'
 
+export { builtinWidgetsMessages } from './messages'
+
 // ──────────────────────────────────────────
 // Widget definitions collection
 // ──────────────────────────────────────────
@@ -57,8 +59,8 @@ export const allWidgetDefinitions: WidgetDefinition[] = [
  * Used by the designer's material panel to organize widgets.
  */
 export const widgetGroups: readonly WidgetGroupConfig[] = [
-  { name: 'basic', title: '基础展示' },
-  { name: 'form', title: '表单交互' },
+  { name: 'basic', title: '基础展示', titleKey: 'group.basic' },
+  { name: 'form', title: '表单交互', titleKey: 'group.form' },
 ]
 
 // ──────────────────────────────────────────

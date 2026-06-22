@@ -1,5 +1,6 @@
 import type { FieldSchema } from '@dragcraft/form-generator'
 import type { PropType } from 'vue'
+import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 
 interface SelectOption {
@@ -28,6 +29,8 @@ export default defineComponent({
   emits: ['update:modelValue'],
 
   setup(props, { emit }) {
+    const { t } = useI18n()
+
     const handleChange = (e: Event) => {
       const selectEl = e.target as HTMLSelectElement
       const raw = selectEl.value
@@ -39,7 +42,11 @@ export default defineComponent({
 
     return () => {
       const options = (props.field.props?.options as SelectOption[]) ?? []
-      const placeholder = (props.field.props?.placeholder as string) ?? ''
+      const rawPlaceholder = (props.field.props?.placeholder as string) ?? ''
+      const placeholder = props.field.placeholderKey
+        ? t(props.field.placeholderKey, rawPlaceholder)
+        : rawPlaceholder
+      const optionPrefix = props.field.optionKeyPrefix
 
       const children = []
 
@@ -50,8 +57,11 @@ export default defineComponent({
       }
 
       for (const opt of options) {
+        const label = optionPrefix
+          ? t(`${optionPrefix}.${opt.value}`, opt.label)
+          : opt.label
         children.push(
-          h('option', { value: String(opt.value) }, opt.label),
+          h('option', { value: String(opt.value) }, label),
         )
       }
 

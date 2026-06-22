@@ -33,10 +33,14 @@
     "test": "vitest",
     "typecheck": "tsc"
   },
+  "peerDependencies": {
+    "vue": ">=3.0.0"
+  },
   "dependencies": {
     "lodash-es": "catalog:shared"
   },
   "devDependencies": {
-    "@types/lodash-es": "catalog:types"
+    "@types/lodash-es": "catalog:types",
+    "vue": "catalog:shared"
   }
 }

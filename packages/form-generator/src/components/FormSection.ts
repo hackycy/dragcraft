@@ -1,5 +1,6 @@
 import type { PropType } from 'vue'
 import type { SectionSchema } from '../types'
+import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h, ref, watch } from 'vue'
 import FormField from './FormField'
 
@@ -18,6 +19,7 @@ export default defineComponent({
   },
 
   setup(props) {
+    const { t } = useI18n()
     const collapsed = ref(props.section.collapsed ?? false)
 
     watch(
@@ -44,7 +46,7 @@ export default defineComponent({
           onClick: toggleCollapse,
         },
         [
-          h('span', { class: 'dc-form-section__title' }, section.title),
+          h('span', { class: 'dc-form-section__title' }, section.titleKey ? t(section.titleKey, section.title) : section.title),
           h(
             'span',
             { class: 'dc-form-section__toggle' },

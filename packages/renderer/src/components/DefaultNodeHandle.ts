@@ -1,4 +1,5 @@
 import type { PropType } from 'vue'
+import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 
 /**
@@ -24,11 +25,12 @@ export default defineComponent({
   },
 
   setup(props) {
+    const { t } = useI18n()
     return () =>
       h('div', {
         class: 'dc-node__handle',
         onClick: props.onSelect,
-        title: '选中组件',
+        title: t('canvas.node-handle', '选中组件'),
       })
   },
 })

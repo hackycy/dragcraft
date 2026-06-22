@@ -1,5 +1,6 @@
 import type { PropType } from 'vue'
 import type { FieldSchema } from '../types'
+import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 import { useFieldState } from '../composables/useFieldState'
 import { useFormGeneratorContext } from '../context'
@@ -16,6 +17,7 @@ export default defineComponent({
 
   setup(props) {
     const ctx = useFormGeneratorContext()
+    const { t } = useI18n()
     const { isVisible, isDisabled } = useFieldState(props.field, ctx)
 
     return () => {
@@ -40,7 +42,7 @@ export default defineComponent({
         : h('div', { class: 'dc-field-unknown' }, `Unknown field: ${field.component}`)
 
       const children = [
-        h('label', { class: 'dc-form-field__label' }, field.label),
+        h('label', { class: 'dc-form-field__label' }, field.labelKey ? t(field.labelKey, field.label) : field.label),
         h('div', { class: 'dc-form-field__control' }, [fieldContent]),
       ]
 

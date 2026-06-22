@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const linkWidgetMeta: WidgetMeta = {
   type: 'link',
   title: '链接',
+  titleKey: 'widget.link.title',
   group: 'basic',
   icon: 'link',
   defaultProps: {
@@ -18,10 +19,13 @@ export const linkWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.link.form.basic.title',
         fields: [
           {
             key: 'text',
             label: '链接文字',
+            labelKey: 'widget.link.field.text.label',
+            placeholderKey: 'widget.link.field.text.placeholder',
             component: 'input',
             defaultValue: '链接',
             props: { placeholder: '请输入链接文字' },
@@ -29,6 +33,7 @@ export const linkWidgetMeta: WidgetMeta = {
           {
             key: 'href',
             label: '链接地址',
+            labelKey: 'widget.link.field.href.label',
             component: 'input',
             defaultValue: '#',
             props: { placeholder: 'https://example.com' },
@@ -36,6 +41,8 @@ export const linkWidgetMeta: WidgetMeta = {
           {
             key: 'target',
             label: '打开方式',
+            labelKey: 'widget.link.field.target.label',
+            optionKeyPrefix: 'widget.link.field.target.option',
             component: 'select',
             defaultValue: '_self',
             props: {
@@ -48,6 +55,7 @@ export const linkWidgetMeta: WidgetMeta = {
           {
             key: 'color',
             label: '链接颜色',
+            labelKey: 'widget.link.field.color.label',
             component: 'color',
             defaultValue: '#1890ff',
           },

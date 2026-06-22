@@ -37,7 +37,8 @@
     "vue": ">=3.0.0"
   },
   "dependencies": {
-    "@dragcraft/form-generator": "workspace:*"
+    "@dragcraft/form-generator": "workspace:*",
+    "@dragcraft/utils": "workspace:*"
   },
   "devDependencies": {
     "vue": "catalog:shared"

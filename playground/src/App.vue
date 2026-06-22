@@ -2,7 +2,7 @@
 import { CommandType, createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
 import type { NodeActionContext } from '@dragcraft/designer'
 import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
-import { getAllWidgetMetas, getDefaultComponentMap, widgetGroups } from '@dragcraft/builtin-widgets'
+import { builtinWidgetsMessages, getAllWidgetMetas, getDefaultComponentMap, widgetGroups } from '@dragcraft/builtin-widgets'
 import {
   createDeviceFrameContext,
   createDeviceToolbarRenderer,
@@ -54,6 +54,7 @@ const designer = createDesigner({
   fieldComponentMap: buildDefaultFieldComponentMap(),
   widgetGroups: [...widgetGroups],
   globalConfigSchema,
+  builtinMessages: builtinWidgetsMessages,
   eventHooks: {
     onBeforeDelete: () => {
       return new Promise<boolean>((resolve) => {
@@ -97,6 +98,11 @@ const designer = createDesigner({
 const { exportSchema, importSchema } = useDesigner(designer)
 
 const io = useSchemaIO(exportSchema, importSchema)
+
+function toggleLocale() {
+  const next = designer.i18n.locale.value === 'zh-CN' ? 'en' : 'zh-CN'
+  designer.i18n.setLocale(next)
+}
 </script>
 
 <template>
@@ -107,6 +113,9 @@ const io = useSchemaIO(exportSchema, importSchema)
     <div class="playground-actions">
       <span class="playground-actions__label">Dragcraft Playground</span>
       <div class="playground-actions__spacer" />
+      <button class="playground-actions__btn" @click="toggleLocale">
+        {{ designer.i18n.locale.value === 'zh-CN' ? 'English' : '中文' }}
+      </button>
       <button class="playground-actions__btn" @click="io.handleImportOpen()">
         Import
       </button>

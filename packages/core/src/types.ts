@@ -112,6 +112,8 @@ export interface WidgetMeta {
   type: string
   /** Human-readable title for material panel */
   title: string
+  /** i18n message key for title; overrides `title` when i18n is active */
+  titleKey?: string
   /** Group for categorization in material panel */
   group: string
   /** Icon identifier */

@@ -61,6 +61,16 @@ export interface FieldSchema {
   key: string
   /** Human-readable label */
   label: string
+  /** i18n message key for label; overrides `label` when i18n is active */
+  labelKey?: string
+  /** i18n message key for placeholder; overrides field.props.placeholder when i18n is active */
+  placeholderKey?: string
+  /**
+   * i18n key prefix for select/radio option labels.
+   * Each option label is resolved as `${optionKeyPrefix}.${option.value}`.
+   * Falls back to the static `option.label` when the key is missing.
+   */
+  optionKeyPrefix?: string
   /** Registered field component name (e.g., 'input', 'select', 'color') */
   component: string
   /** Extra props forwarded to the field component */
@@ -84,6 +94,8 @@ export interface FieldSchema {
  */
 export interface SectionSchema {
   title: string
+  /** i18n message key for title; overrides `title` when i18n is active */
+  titleKey?: string
   /** Whether the section starts collapsed. Defaults to false. */
   collapsed?: boolean
   fields: FieldSchema[]

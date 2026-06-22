@@ -1,6 +1,8 @@
 import type { DesignerInstance, DesignerOptions } from './types'
 import { createEngine } from '@dragcraft/core'
-import { createDefaultActions, createNodeActionRegistry } from '@dragcraft/renderer'
+import { createDefaultActions, createNodeActionRegistry, rendererMessages } from '@dragcraft/renderer'
+import { createI18n } from '@dragcraft/utils'
+import { designerMessages } from './messages'
 
 /**
  * Creates a designer instance by initializing the core engine,
@@ -58,8 +60,34 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
   // 9. Resolve event hooks
   const eventHooks = options.eventHooks ?? {}
 
-  // 10. Create action registry with defaults + custom actions
-  const actionRegistry = createNodeActionRegistry(createDefaultActions())
+  // 10. Create i18n instance with built-in + user messages
+  const defaultLocale = options.locale ?? 'zh-CN'
+  const builtinMsgs = options.builtinMessages ?? {}
+  const mergedDefaults: Record<string, import('@dragcraft/utils').MessageTree> = {}
+
+  for (const locale of new Set([
+    ...Object.keys(builtinMsgs),
+    ...Object.keys(rendererMessages),
+    ...Object.keys(designerMessages),
+  ])) {
+    mergedDefaults[locale] = {
+      ...(builtinMsgs[locale] ?? {}),
+      ...(rendererMessages[locale] ?? {}),
+      ...(designerMessages[locale] ?? {}),
+    }
+  }
+
+  const i18n = createI18n(defaultLocale, mergedDefaults)
+
+  // Merge user-provided messages
+  if (options.messages) {
+    for (const [locale, msgs] of Object.entries(options.messages)) {
+      i18n.mergeMessages(locale, msgs)
+    }
+  }
+
+  // 11. Create action registry with i18n-aware defaults + custom actions
+  const actionRegistry = createNodeActionRegistry(createDefaultActions(i18n.t))
   if (options.customActions) {
     for (const action of options.customActions) {
       actionRegistry.register(action)
@@ -79,6 +107,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     globalConfigSchema,
     eventHooks,
     actionRegistry,
+    i18n,
     dispose,
   }
 }

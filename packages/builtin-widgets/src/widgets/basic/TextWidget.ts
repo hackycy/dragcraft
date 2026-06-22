@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const textWidgetMeta: WidgetMeta = {
   type: 'text',
   title: '文本',
+  titleKey: 'widget.text.title',
   group: 'basic',
   icon: 'text',
   defaultProps: {
@@ -21,10 +22,13 @@ export const textWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.text.form.basic.title',
         fields: [
           {
             key: 'content',
             label: '文本内容',
+            labelKey: 'widget.text.field.content.label',
+            placeholderKey: 'widget.text.field.content.placeholder',
             component: 'textarea',
             defaultValue: '文本内容',
             props: { rows: 3, placeholder: '请输入文本' },
@@ -33,10 +37,12 @@ export const textWidgetMeta: WidgetMeta = {
       },
       {
         title: '样式设置',
+        titleKey: 'widget.text.form.style.title',
         fields: [
           {
             key: 'fontSize',
             label: '字体大小',
+            labelKey: 'widget.text.field.fontSize.label',
             component: 'number',
             defaultValue: 14,
             props: { min: 10, max: 72 },
@@ -44,6 +50,8 @@ export const textWidgetMeta: WidgetMeta = {
           {
             key: 'fontWeight',
             label: '字体粗细',
+            labelKey: 'widget.text.field.fontWeight.label',
+            optionKeyPrefix: 'widget.text.field.fontWeight.option',
             component: 'select',
             defaultValue: 'normal',
             props: {
@@ -58,12 +66,15 @@ export const textWidgetMeta: WidgetMeta = {
           {
             key: 'color',
             label: '文字颜色',
+            labelKey: 'widget.text.field.color.label',
             component: 'color',
             defaultValue: '#333333',
           },
           {
             key: 'textAlign',
             label: '对齐方式',
+            labelKey: 'widget.text.field.textAlign.label',
+            optionKeyPrefix: 'widget.text.field.textAlign.option',
             component: 'select',
             defaultValue: 'left',
             props: {

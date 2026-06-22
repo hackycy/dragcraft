@@ -1,6 +1,7 @@
 // ── Helper Functions ─────────────────────
 export {
   allWidgetDefinitions,
+  builtinWidgetsMessages,
   getAllWidgetMetas,
   getDefaultComponentMap,
   getWidgetsByGroup,

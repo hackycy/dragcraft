@@ -1,4 +1,5 @@
 import type { PropType } from 'vue'
+import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 
 /**
@@ -16,6 +17,7 @@ export default defineComponent({
   },
 
   setup(props) {
+    const { t } = useI18n()
     return () =>
       h('div', {
         class: [
@@ -23,8 +25,8 @@ export default defineComponent({
           { 'dc-empty-state--drag-over': props.isDragOver },
         ],
       }, [
-        h('div', { class: 'dc-empty-state__icon' }, '\u271A'),
-        h('div', { class: 'dc-empty-state__text' }, '拖拽组件到这里'),
+        h('div', { class: 'dc-empty-state__icon' }, '✚'),
+        h('div', { class: 'dc-empty-state__text' }, t('canvas.empty', '拖拽组件到这里')),
       ])
   },
 })

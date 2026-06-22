@@ -1,5 +1,6 @@
 import type { TypeBehaviorContext, WidgetMeta } from '@dragcraft/core'
 import type { PropType } from 'vue'
+import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 
@@ -15,6 +16,7 @@ export default defineComponent({
 
   setup(props) {
     const ctx = useDesignerContext()
+    const { t } = useI18n()
     const { engine, extensions } = ctx
 
     const isCreatable = computed(() => {
@@ -79,7 +81,7 @@ export default defineComponent({
           meta.icon
             ? h('span', { class: 'dc-material-item__icon' }, meta.icon)
             : null,
-          h('span', { class: 'dc-material-item__title' }, meta.title),
+          h('span', { class: 'dc-material-item__title' }, meta.titleKey ? t(meta.titleKey, meta.title) : meta.title),
         ],
       )
     }

@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const formInputWidgetMeta: WidgetMeta = {
   type: 'form-input',
   title: '输入框',
+  titleKey: 'widget.form-input.title',
   group: 'form',
   icon: 'input',
   defaultProps: {
@@ -21,12 +22,13 @@ export const formInputWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.form-input.form.basic.title',
         fields: [
-          { key: 'label', label: '标签', component: 'input', defaultValue: '标签' },
-          { key: 'placeholder', label: '占位文本', component: 'input', defaultValue: '请输入' },
-          { key: 'value', label: '默认值', component: 'input', defaultValue: '' },
-          { key: 'required', label: '必填', component: 'switch', defaultValue: false },
-          { key: 'disabled', label: '禁用', component: 'switch', defaultValue: false },
+          { key: 'label', label: '标签', labelKey: 'widget.form-input.field.label.label', component: 'input', defaultValue: '标签' },
+          { key: 'placeholder', label: '占位文本', labelKey: 'widget.form-input.field.placeholder.label', component: 'input', defaultValue: '请输入' },
+          { key: 'value', label: '默认值', labelKey: 'widget.form-input.field.value.label', component: 'input', defaultValue: '' },
+          { key: 'required', label: '必填', labelKey: 'widget.form-input.field.required.label', component: 'switch', defaultValue: false },
+          { key: 'disabled', label: '禁用', labelKey: 'widget.form-input.field.disabled.label', component: 'switch', defaultValue: false },
         ],
       },
     ],

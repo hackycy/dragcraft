@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 export const formRadioWidgetMeta: WidgetMeta = {
   type: 'form-radio',
   title: '单选组',
+  titleKey: 'widget.form-radio.title',
   group: 'form',
   icon: 'radio',
   defaultProps: {
@@ -22,11 +23,14 @@ export const formRadioWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '基础设置',
+        titleKey: 'widget.form-radio.form.basic.title',
         fields: [
-          { key: 'label', label: '标签', component: 'input', defaultValue: '单选组' },
+          { key: 'label', label: '标签', labelKey: 'widget.form-radio.field.label.label', component: 'input', defaultValue: '单选组' },
           {
             key: 'direction',
             label: '排列方向',
+            labelKey: 'widget.form-radio.field.direction.label',
+            optionKeyPrefix: 'widget.form-radio.field.direction.option',
             component: 'select',
             defaultValue: 'horizontal',
             props: {
@@ -36,7 +40,7 @@ export const formRadioWidgetMeta: WidgetMeta = {
               ],
             },
           },
-          { key: 'disabled', label: '禁用', component: 'switch', defaultValue: false },
+          { key: 'disabled', label: '禁用', labelKey: 'widget.form-radio.field.disabled.label', component: 'switch', defaultValue: false },
         ],
       },
     ],

@@ -37,7 +37,8 @@
     "vue": ">=3.0.0"
   },
   "dependencies": {
-    "@dragcraft/core": "workspace:*"
+    "@dragcraft/core": "workspace:*",
+    "@dragcraft/utils": "workspace:*"
   },
   "devDependencies": {
     "happy-dom": "catalog:",
