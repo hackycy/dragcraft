@@ -1,6 +1,6 @@
 # dragcraft
 
-采用 `Core Engine + UI Shell + Headless Themes` 架构，构建核心与 UI 分离的低代码 / 无代码设计引擎。
+面向小程序装修场景的可视化页面搭建引擎。采用 `Core Engine + UI Shell + Headless Themes` 架构，构建核心与 UI 分离的页面设计引擎。
 
 ## 一、产品目标
 
