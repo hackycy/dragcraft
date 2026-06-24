@@ -41,6 +41,9 @@ export default defineComponent({
       handleCanvasDragOver: dragDrop.handleCanvasDragOver,
       handleCanvasDragLeave: dragDrop.handleCanvasDragLeave,
       handleCanvasDrop: dragDrop.handleCanvasDrop,
+      createDragPreview: dragDrop.createDragPreview,
+      updateDragPreviewPosition: dragDrop.updateDragPreviewPosition,
+      destroyDragPreview: dragDrop.destroyDragPreview,
       searchQuery,
       activeTab,
     }

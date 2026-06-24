@@ -33,10 +33,18 @@ export default defineComponent({
       }
     }
 
+    // Compute right boundary for toolbar: property panel's left edge
+    const toolbarMaxRight = computed(() => {
+      const canvas = document.querySelector('.dc-designer__panel--right') as HTMLElement | null
+      return canvas?.getBoundingClientRect().left
+    })
+
+    const isDragging = computed(() => engine.store.dragTarget.value !== null)
+
     return () => h(
       'div',
       {
-        class: 'dc-canvas',
+        class: ['dc-canvas', { 'dc-canvas--dragging': isDragging.value }],
         onDragover: handleCanvasDragOver,
         onDragleave: handleCanvasDragLeave,
         onDrop: handleCanvasDrop,
@@ -53,6 +61,7 @@ export default defineComponent({
             actionRegistry,
             dragOverNodeId,
             dragOverIndex,
+            toolbarMaxRight,
           }),
         ]),
       ],

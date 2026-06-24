@@ -46,4 +46,11 @@
   /* ── Layout ────────────────────────────── */
   --dc-panel-header-height: 48px;
   --dc-toolbar-height: 48px;
+
+  /* ── Z-index ────────────────────────────── */
+  --dc-z-node: 1;
+  --dc-z-mask: 2;
+  --dc-z-toolbar: 10;
+  --dc-z-toolbar-float: 1000;
+  --dc-z-drag-preview: 9999;
 }

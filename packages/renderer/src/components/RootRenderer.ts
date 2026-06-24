@@ -43,6 +43,10 @@ export default defineComponent({
       type: Object as PropType<Ref<number | null>>,
       default: undefined,
     },
+    toolbarMaxRight: {
+      type: Object as PropType<Ref<number | undefined>>,
+      default: undefined,
+    },
   },
 
   setup(props) {
@@ -54,6 +58,7 @@ export default defineComponent({
       eventHooks: props.eventHooks,
       actionRegistry: props.actionRegistry,
       dragOverNodeId: props.dragOverNodeId,
+      toolbarMaxRight: props.toolbarMaxRight,
     })
     provide(RENDERER_CONTEXT_KEY, ctx)
 

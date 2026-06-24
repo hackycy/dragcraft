@@ -42,6 +42,11 @@ export function useNodeDrag(
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move'
       e.dataTransfer.setData('text/plain', nodeId)
+      // Hide browser's default drag ghost (replaced by floating preview in useDragDrop)
+      const canvas = document.createElement('canvas')
+      canvas.width = 1
+      canvas.height = 1
+      e.dataTransfer.setDragImage(canvas, 0, 0)
     }
   }
 

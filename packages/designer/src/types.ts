@@ -157,6 +157,9 @@ export interface DesignerContext {
   handleCanvasDragOver: (e: DragEvent) => void
   handleCanvasDragLeave: (e: DragEvent) => void
   handleCanvasDrop: (e: DragEvent) => void
+  createDragPreview: (meta: WidgetMeta, isMove: boolean) => void
+  updateDragPreviewPosition: (e: DragEvent) => void
+  destroyDragPreview: () => void
   searchQuery: Ref<string>
   activeTab: Ref<PropertyTabKey>
 }

@@ -39,7 +39,9 @@ export default defineComponent({
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
-    const { position: toolbarPosition } = useToolbarPosition(nodeElRef, widget.state.isSelected)
+    const { position: toolbarPosition } = useToolbarPosition(nodeElRef, widget.state.isSelected, {
+      maxRight: ctx.toolbarMaxRight,
+    })
 
     return () => {
       // Read schema.value to establish reactive dependency
@@ -91,7 +93,9 @@ export default defineComponent({
 
       // TOOLBAR (when selected): action-driven floating toolbar
       // Teleported to <body> to escape all ancestor overflow clipping.
-      if (widget.state.isSelected.value && toolbarPosition.value.visible) {
+      // Hide toolbar when this node is being dragged.
+      const isBeingDragged = ctx.engine.store.dragTarget.value?.sourceNodeId === node.id
+      if (widget.state.isSelected.value && toolbarPosition.value.visible && !isBeingDragged) {
         const toolbarVNode = h(NodeToolbar, {
           nodeId: node.id,
           nodeType: node.type,

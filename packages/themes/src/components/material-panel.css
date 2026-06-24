@@ -137,3 +137,9 @@
   cursor: not-allowed;
   pointer-events: none;
 }
+
+/* ── Material Item Dragging State ───────── */
+
+.dc-material-item--dragging {
+  opacity: 0.5;
+}

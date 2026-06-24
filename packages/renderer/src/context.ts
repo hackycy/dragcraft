@@ -16,6 +16,7 @@ export function createRendererContext(options: RendererOptions): RendererContext
     eventHooks: options.eventHooks ?? createDefaultEventHooks(),
     actionRegistry: options.actionRegistry ?? createNodeActionRegistry(),
     dragOverNodeId: options.dragOverNodeId ?? ref(null),
+    toolbarMaxRight: options.toolbarMaxRight,
   }
 }
 

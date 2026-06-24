@@ -73,6 +73,38 @@ describe('useToolbarPosition', () => {
     expect(position.value.left).toBe(860)
   })
 
+  it('flips to left side when maxRight is exceeded', async () => {
+    const el = mockElement({ top: 100, left: 600, right: 700, bottom: 200 })
+    const elRef = ref<HTMLElement | null>(el)
+    const active = ref(true)
+
+    // maxRight constrains the toolbar to stay within 650px from left
+    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32, maxRight: ref(650) })
+
+    await nextTick()
+    update()
+
+    expect(position.value.visible).toBe(true)
+    // left(700) + gap(8) + toolbarWidth(32) = 740 > maxRight(650), so flip
+    // flipped: rect.left(600) - gap(8) - toolbarWidth(32) = 560
+    expect(position.value.left).toBe(560)
+  })
+
+  it('does not flip when maxRight is not exceeded', async () => {
+    const el = mockElement({ top: 100, left: 100, right: 200, bottom: 200 })
+    const elRef = ref<HTMLElement | null>(el)
+    const active = ref(true)
+
+    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32, maxRight: ref(900) })
+
+    await nextTick()
+    update()
+
+    expect(position.value.visible).toBe(true)
+    // left(200) + gap(8) + toolbarWidth(32) = 240 < maxRight(900), no flip
+    expect(position.value.left).toBe(208)
+  })
+
   it('clamps top to clip bounds', async () => {
     // Element partially above viewport
     const el = mockElement({ top: -20, left: 100, right: 200, bottom: 80 })

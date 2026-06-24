@@ -1,7 +1,7 @@
 import type { TypeBehaviorContext, WidgetMeta } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import { useI18n } from '@dragcraft/utils'
-import { computed, defineComponent, h } from 'vue'
+import { computed, defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
 
 export default defineComponent({
@@ -17,7 +17,9 @@ export default defineComponent({
   setup(props) {
     const ctx = useDesignerContext()
     const { t } = useI18n()
-    const { engine, extensions } = ctx
+    const { engine, extensions, createDragPreview } = ctx
+
+    const isDragging = ref(false)
 
     const isCreatable = computed(() => {
       const field = props.meta.creatable
@@ -44,10 +46,18 @@ export default defineComponent({
       if (e.dataTransfer) {
         e.dataTransfer.effectAllowed = 'copy'
         e.dataTransfer.setData('text/plain', props.meta.type)
+        // Hide browser's default drag ghost (replaced by floating preview)
+        const canvas = document.createElement('canvas')
+        canvas.width = 1
+        canvas.height = 1
+        e.dataTransfer.setDragImage(canvas, 0, 0)
       }
+      createDragPreview(props.meta, false)
+      isDragging.value = true
     }
 
     const handleDragEnd = () => {
+      isDragging.value = false
       engine.store.setDragTarget(null)
     }
 
@@ -71,7 +81,10 @@ export default defineComponent({
         {
           class: [
             'dc-material-item',
-            { 'dc-material-item--disabled': !creatable },
+            {
+              'dc-material-item--disabled': !creatable,
+              'dc-material-item--dragging': isDragging.value,
+            },
           ],
           draggable: creatable,
           onDragstart: handleDragStart,

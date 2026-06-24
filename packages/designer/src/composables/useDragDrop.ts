@@ -29,6 +29,12 @@ export interface UseDragDropReturn {
   handleCanvasDrop: (e: DragEvent) => void
   /** Handle drag end (cleanup) */
   handleDragEnd: (e: DragEvent) => void
+  /** Create a floating preview element at the mouse position */
+  createDragPreview: (meta: WidgetMeta, isMove: boolean) => void
+  /** Update the floating preview position to follow the mouse */
+  updateDragPreviewPosition: (e: DragEvent) => void
+  /** Remove the floating preview element */
+  destroyDragPreview: () => void
 }
 
 // ──────────────────────────────────────────
@@ -92,6 +98,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       e.dataTransfer.effectAllowed = 'copy'
       e.dataTransfer.setData('text/plain', meta.type)
     }
+    createDragPreview(meta, false)
   }
 
   function handleNodeDragStart(e: DragEvent, nodeId: string): void {
@@ -102,6 +109,15 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move'
       e.dataTransfer.setData('text/plain', nodeId)
+    }
+    // Create preview for the moved node
+    const children = engine.store.getRawSchema().root.children ?? []
+    const node = children.find(c => c.id === nodeId)
+    if (node) {
+      const meta = engine.registry.getWidget(node.type)
+      if (meta) {
+        createDragPreview(meta, true)
+      }
     }
   }
 
@@ -130,6 +146,8 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     else {
       dragOverIndex.value = rawIndex
     }
+
+    updateDragPreviewPosition(e)
   }
 
   function handleCanvasDragLeave(e: DragEvent): void {
@@ -143,6 +161,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function handleCanvasDrop(e: DragEvent): void {
+    destroyDragPreview()
     e.preventDefault()
     dragOverNodeId.value = null
     const visualIndex = dragOverIndex.value
@@ -209,9 +228,48 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function handleDragEnd(_e: DragEvent): void {
+    destroyDragPreview()
     dragOverNodeId.value = null
     dragOverIndex.value = null
     engine.store.setDragTarget(null)
+  }
+
+  // ── Drag preview management ──
+
+  let dragPreviewEl: HTMLElement | null = null
+
+  function createDragPreview(meta: WidgetMeta, isMove: boolean): void {
+    destroyDragPreview()
+    const el = document.createElement('div')
+    el.className = `dc-drag-preview${isMove ? ' dc-drag-preview--move' : ''}`
+    if (meta.icon) {
+      const iconSpan = document.createElement('span')
+      iconSpan.className = 'dc-drag-preview__icon'
+      if (typeof meta.icon === 'string') {
+        iconSpan.textContent = meta.icon
+      }
+      el.appendChild(iconSpan)
+    }
+    const nameSpan = document.createElement('span')
+    nameSpan.className = 'dc-drag-preview__name'
+    nameSpan.textContent = meta.title
+    el.appendChild(nameSpan)
+    document.body.appendChild(el)
+    dragPreviewEl = el
+  }
+
+  function updateDragPreviewPosition(e: DragEvent): void {
+    if (dragPreviewEl) {
+      dragPreviewEl.style.left = `${e.clientX + 12}px`
+      dragPreviewEl.style.top = `${e.clientY + 12}px`
+    }
+  }
+
+  function destroyDragPreview(): void {
+    if (dragPreviewEl) {
+      dragPreviewEl.remove()
+      dragPreviewEl = null
+    }
   }
 
   return {
@@ -225,5 +283,8 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     handleCanvasDragLeave,
     handleCanvasDrop,
     handleDragEnd,
+    createDragPreview,
+    updateDragPreviewPosition,
+    destroyDragPreview,
   }
 }

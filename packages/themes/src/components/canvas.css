@@ -133,7 +133,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  z-index: 10;
+  z-index: var(--dc-z-toolbar);
 }
 
 .dc-node__toolbar-btn {
@@ -183,7 +183,7 @@
 
 .dc-node__toolbar--floating {
   right: auto;
-  z-index: 1000;
+  z-index: var(--dc-z-toolbar-float);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   border-radius: var(--dc-radius);
   background: var(--dc-bg);
@@ -211,17 +211,21 @@
   border-style: dashed;
 }
 
-/* ── Drop Indicator ──────────────────────── */
+/* ── Drop Indicator (slot placeholder) ──── */
 
 .dc-drop-indicator {
-  padding: 4px 0;
+  min-height: 48px;
+  background: var(--dc-primary-bg-hover);
+  border: 2px dashed var(--dc-primary);
+  border-radius: var(--dc-radius-lg);
+  margin: 4px 0;
   pointer-events: none;
+  animation: dc-fade-in 0.15s ease;
 }
 
-.dc-drop-indicator__line {
-  height: 2px;
-  background: var(--dc-primary);
-  border-radius: 1px;
+@keyframes dc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ── Widget Fallback ─────────────────────── */
@@ -233,4 +237,46 @@
   border: 1px dashed var(--dc-danger);
   border-radius: var(--dc-radius);
   text-align: center;
+}
+
+/* ── Canvas Dragging State ──────────────── */
+
+.dc-canvas--dragging {
+  /* Reserved for future drag-in-progress visual hooks */
+}
+
+/* ── Drag Preview (floating) ────────────── */
+
+.dc-drag-preview {
+  position: fixed;
+  z-index: var(--dc-z-drag-preview);
+  width: 120px;
+  padding: 8px 12px;
+  background: var(--dc-bg);
+  border: 1px solid var(--dc-border);
+  border-radius: var(--dc-radius-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  opacity: 0.9;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--dc-text-secondary);
+}
+
+.dc-drag-preview--move {
+  border-color: var(--dc-primary);
+}
+
+.dc-drag-preview__icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.dc-drag-preview__name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

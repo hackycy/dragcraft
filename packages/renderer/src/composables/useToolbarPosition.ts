@@ -47,6 +47,8 @@ export interface UseToolbarPositionOptions {
   gap?: number
   /** Approximate toolbar width (px), used for viewport edge clamping. Default: 32 */
   toolbarWidth?: number
+  /** Reactive max right boundary (px, viewport-relative). When set, toolbar flips to left if it would exceed this. */
+  maxRight?: Ref<number | undefined>
 }
 
 export interface UseToolbarPositionReturn {
@@ -73,7 +75,7 @@ export function useToolbarPosition(
   isActive: Ref<boolean>,
   options: UseToolbarPositionOptions = {},
 ): UseToolbarPositionReturn {
-  const { gap = 8, toolbarWidth = 32 } = options
+  const { gap = 8, toolbarWidth = 32, maxRight } = options
 
   const position = ref<ToolbarPositionData>({
     top: 0,
@@ -111,8 +113,10 @@ export function useToolbarPosition(
     let top = rect.top
     let left = rect.right + gap
 
-    // If toolbar would go off the right edge of clip area, flip to left side
-    if (left + toolbarWidth > clip.right) {
+    // If toolbar would go off the right edge of clip area or exceed maxRight, flip to left side
+    const boundary = maxRight?.value
+    const effectiveRight = boundary != null ? Math.min(clip.right, boundary) : clip.right
+    if (left + toolbarWidth > effectiveRight) {
       left = rect.left - gap - toolbarWidth
     }
 

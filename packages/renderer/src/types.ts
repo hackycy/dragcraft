@@ -203,6 +203,11 @@ export interface RendererOptions {
    * Managed externally by the designer package.
    */
   dragOverIndex?: Ref<number | null>
+  /**
+   * Optional max right boundary for toolbar positioning (viewport px).
+   * Prevents toolbar from overlapping with the property panel.
+   */
+  toolbarMaxRight?: Ref<number | undefined>
 }
 
 /**
@@ -215,6 +220,8 @@ export interface RendererContext {
   eventHooks: RendererEventHooks
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
+  /** Optional max right boundary for toolbar positioning (viewport px). */
+  toolbarMaxRight?: Ref<number | undefined>
 }
 
 /**
