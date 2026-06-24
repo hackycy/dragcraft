@@ -121,14 +121,52 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
   }
 
+  // ── Drag preview management ──
+
+  let dragPreviewEl: HTMLElement | null = null
+
+  function createDragPreview(meta: WidgetMeta, isMove: boolean): void {
+    destroyDragPreview()
+    const el = document.createElement('div')
+    el.className = `dc-drag-preview${isMove ? ' dc-drag-preview--move' : ''}`
+    if (meta.icon) {
+      const iconSpan = document.createElement('span')
+      iconSpan.className = 'dc-drag-preview__icon'
+      if (typeof meta.icon === 'string') {
+        iconSpan.textContent = meta.icon
+      }
+      el.appendChild(iconSpan)
+    }
+    const nameSpan = document.createElement('span')
+    nameSpan.className = 'dc-drag-preview__name'
+    nameSpan.textContent = meta.title
+    el.appendChild(nameSpan)
+    document.body.appendChild(el)
+    dragPreviewEl = el
+  }
+
+  function updateDragPreviewPosition(e: DragEvent): void {
+    if (dragPreviewEl) {
+      dragPreviewEl.style.left = `${e.clientX + 12}px`
+      dragPreviewEl.style.top = `${e.clientY + 12}px`
+    }
+  }
+
+  function destroyDragPreview(): void {
+    if (dragPreviewEl) {
+      dragPreviewEl.remove()
+      dragPreviewEl = null
+    }
+  }
+
   // ── Canvas drag event handlers (event delegation) ──
 
   function handleCanvasDragOver(e: DragEvent): void {
     e.preventDefault()
     // Flat model: always drop into root
     dragOverNodeId.value = 'root'
+    const dragTarget = engine.store.dragTarget.value
     if (e.dataTransfer) {
-      const dragTarget = engine.store.dragTarget.value
       e.dataTransfer.dropEffect = dragTarget?.sourceNodeId ? 'move' : 'copy'
     }
 
@@ -145,6 +183,19 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
     else {
       dragOverIndex.value = rawIndex
+    }
+
+    // Create preview for node drags from the toolbar handle (which doesn't
+    // call createDragPreview directly). Only creates once per drag operation.
+    if (dragTarget?.sourceNodeId && !dragPreviewEl) {
+      const children = engine.store.getRawSchema().root.children ?? []
+      const node = children.find(c => c.id === dragTarget.sourceNodeId)
+      if (node) {
+        const meta = engine.registry.getWidget(node.type)
+        if (meta) {
+          createDragPreview(meta, true)
+        }
+      }
     }
 
     updateDragPreviewPosition(e)
@@ -232,44 +283,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     dragOverNodeId.value = null
     dragOverIndex.value = null
     engine.store.setDragTarget(null)
-  }
-
-  // ── Drag preview management ──
-
-  let dragPreviewEl: HTMLElement | null = null
-
-  function createDragPreview(meta: WidgetMeta, isMove: boolean): void {
-    destroyDragPreview()
-    const el = document.createElement('div')
-    el.className = `dc-drag-preview${isMove ? ' dc-drag-preview--move' : ''}`
-    if (meta.icon) {
-      const iconSpan = document.createElement('span')
-      iconSpan.className = 'dc-drag-preview__icon'
-      if (typeof meta.icon === 'string') {
-        iconSpan.textContent = meta.icon
-      }
-      el.appendChild(iconSpan)
-    }
-    const nameSpan = document.createElement('span')
-    nameSpan.className = 'dc-drag-preview__name'
-    nameSpan.textContent = meta.title
-    el.appendChild(nameSpan)
-    document.body.appendChild(el)
-    dragPreviewEl = el
-  }
-
-  function updateDragPreviewPosition(e: DragEvent): void {
-    if (dragPreviewEl) {
-      dragPreviewEl.style.left = `${e.clientX + 12}px`
-      dragPreviewEl.style.top = `${e.clientY + 12}px`
-    }
-  }
-
-  function destroyDragPreview(): void {
-    if (dragPreviewEl) {
-      dragPreviewEl.remove()
-      dragPreviewEl = null
-    }
   }
 
   return {

@@ -93,19 +93,16 @@ export default defineComponent({
 
       // TOOLBAR (when selected): action-driven floating toolbar
       // Teleported to <body> to escape all ancestor overflow clipping.
-      // When this node is being dragged, keep the toolbar in the DOM (to preserve
-      // the drag source element for the HTML5 DnD lifecycle) but hide it visually.
-      const isBeingDragged = ctx.engine.store.dragTarget.value?.sourceNodeId === node.id
+      // Note: the toolbar must remain visible during drag — hiding it (display:none
+      // or removing from DOM) breaks the HTML5 DnD lifecycle because the browser
+      // cancels the drag when the source element becomes invisible.
       if (widget.state.isSelected.value && toolbarPosition.value.visible) {
         const toolbarVNode = h(NodeToolbar, {
           nodeId: node.id,
           nodeType: node.type,
           actions: actions.value,
           state: widget.state,
-          toolbarPosition: {
-            ...toolbarPosition.value,
-            visible: toolbarPosition.value.visible && !isBeingDragged,
-          },
+          toolbarPosition: toolbarPosition.value,
           onDragStart: drag.handleDragStart,
           onDragEnd: drag.handleDragEnd,
         })
