@@ -37,6 +37,25 @@
 
 .dc-device-frame__content {
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+}
+
+.dc-device-frame__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dc-device-frame__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dc-device-frame__content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 3px;
+}
+
+.dc-device-frame__content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* ── Device Picker ──────────────────────── */
