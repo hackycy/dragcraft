@@ -4,6 +4,11 @@ import type { NodeActionContext } from '@dragcraft/designer'
 import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
 import { builtinWidgetsMessages, getAllWidgetMetas, getDefaultComponentMap, widgetGroups } from '@dragcraft/builtin-widgets'
 import {
+  playgroundWidgetMetas,
+  playgroundComponentMap,
+  playgroundWidgetGroups,
+} from './widgets'
+import {
   createDeviceFrameContext,
   createDeviceToolbarRenderer,
   DEVICE_FRAME_CONTEXT_KEY,
@@ -46,19 +51,39 @@ const MiniProgramEmptyState = defineComponent({
 
 // ── Create designer instance ─────────────────
 
+// Merge builtin + playground widgets
+const allMetas = [...getAllWidgetMetas(), ...playgroundWidgetMetas]
+const allComponentMap = { ...getDefaultComponentMap(), ...playgroundComponentMap }
+const allGroups = [...widgetGroups, ...playgroundWidgetGroups]
+
+// Pre-compute locked widget types for delete interception
+const lockedWidgetTypes = new Set(
+  playgroundWidgetMetas
+    .filter(m => m.deletable === false)
+    .map(m => m.type),
+)
+
+// Assigned after createDesigner returns; callback only fires on user interaction
+let resolveNodeType: ((nodeId: string) => string | undefined) | undefined
+
 const designer = createDesigner({
   engineOptions: {
     initialSchema: templateRegistry[0].schema,
     maxHistorySize: 50,
   },
-  widgetMetas: getAllWidgetMetas(),
-  componentMap: getDefaultComponentMap(),
+  widgetMetas: allMetas,
+  componentMap: allComponentMap,
   fieldComponentMap: buildDefaultFieldComponentMap(),
-  widgetGroups: [...widgetGroups],
+  widgetGroups: allGroups,
   globalConfigSchema,
   builtinMessages: builtinWidgetsMessages,
   eventHooks: {
-    onBeforeDelete: () => {
+    onBeforeDelete: ({ nodeId }) => {
+      const type = resolveNodeType?.(nodeId)
+      if (type && lockedWidgetTypes.has(type)) {
+        alert('该组件已锁定，无法删除')
+        return Promise.resolve(false)
+      }
       return new Promise<boolean>((resolve) => {
         resolve(confirm('确认删除该组件？'))
       })
@@ -96,6 +121,8 @@ const designer = createDesigner({
     toolbarRenderer: createDeviceToolbarRenderer(deviceCtx),
   },
 })
+
+resolveNodeType = (id: string) => designer.engine.store.getNodeById(id)?.type
 
 const { exportSchema, importSchema, undo, redo, canUndo, canRedo } = useDesigner(designer)
 
