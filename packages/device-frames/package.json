@@ -39,6 +39,9 @@
   "peerDependencies": {
     "vue": ">=3.0.0"
   },
+  "dependencies": {
+    "@dragcraft/icons": "workspace:*"
+  },
   "devDependencies": {
     "postcss": "catalog:cli",
     "postcss-cli": "catalog:cli",

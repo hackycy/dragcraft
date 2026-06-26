@@ -1,3 +1,4 @@
+import { IconNavBack, IconNavHome, IconNavRecent, IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
 
 /**
@@ -14,17 +15,17 @@ export default defineComponent({
         h('div', { class: 'dc-device-frame__status-bar' }, [
           h('span', { class: 'dc-device-frame__status-time' }, '12:00'),
           h('span', { class: 'dc-device-frame__status-icons' }, [
-            h('span', null, '\u25D0'),
-            h('span', null, '\u25AC'),
+            h('span', null, h(IconSignal, { size: 10 })),
+            h('span', null, h(IconSignalBar, { size: 10 })),
           ]),
         ]),
         // Content area
         h('div', { class: 'dc-device-frame__content dc-container-shell' }, slots.default?.()),
         // Android navigation bar (back / home / recent)
         h('div', { class: 'dc-device-frame__nav-bar' }, [
-          h('span', { class: 'dc-device-frame__nav-btn' }, '\u25C1'),
-          h('span', { class: 'dc-device-frame__nav-btn dc-device-frame__nav-btn--home' }, '\u25CB'),
-          h('span', { class: 'dc-device-frame__nav-btn' }, '\u25A1'),
+          h('span', { class: 'dc-device-frame__nav-btn' }, h(IconNavBack, { size: 12 })),
+          h('span', { class: 'dc-device-frame__nav-btn dc-device-frame__nav-btn--home' }, h(IconNavHome, { size: 12 })),
+          h('span', { class: 'dc-device-frame__nav-btn' }, h(IconNavRecent, { size: 12 })),
         ]),
       ])
   },

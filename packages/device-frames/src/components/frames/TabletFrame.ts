@@ -1,3 +1,4 @@
+import { IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
 
 /**
@@ -14,8 +15,8 @@ export default defineComponent({
         h('div', { class: 'dc-device-frame__status-bar' }, [
           h('span', { class: 'dc-device-frame__status-time' }, '9:41'),
           h('span', { class: 'dc-device-frame__status-icons' }, [
-            h('span', null, '\u25D0'),
-            h('span', null, '\u25AC'),
+            h('span', null, h(IconSignal, { size: 10 })),
+            h('span', null, h(IconSignalBar, { size: 10 })),
           ]),
         ]),
         // Content area

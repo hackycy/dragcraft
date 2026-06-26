@@ -1,5 +1,6 @@
 import type { VNodeChild } from 'vue'
 import type { DeviceFrameContext } from '../types'
+import { IconRedo, IconUndo } from '@dragcraft/icons'
 import { h } from 'vue'
 
 /**
@@ -53,13 +54,13 @@ export function createDeviceToolbarRenderer(
           onClick: () => api.undo(),
           disabled: !api.canUndo(),
           title: 'Undo',
-        }, '\u21A9'),
+        }, h(IconUndo, { size: 14 })),
         h('button', {
           class: 'dc-toolbar__btn dc-toolbar__btn--icon',
           onClick: () => api.redo(),
           disabled: !api.canRedo(),
           title: 'Redo',
-        }, '\u21AA'),
+        }, h(IconRedo, { size: 14 })),
       )
     }
 
@@ -76,7 +77,10 @@ export function createDeviceToolbarRenderer(
           },
           onClick: () => ctx.setDevice(preset.type),
           title: preset.label,
-        }, `${preset.icon} ${preset.label}`),
+        }, [
+          typeof preset.icon === 'string' ? preset.icon : h(preset.icon, { size: 14 }),
+          ` ${preset.label}`,
+        ]),
       )),
     )
 
