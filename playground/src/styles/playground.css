@@ -360,3 +360,45 @@ body {
   border-color: var(--dc-primary-dark);
   color: #ffffff;
 }
+
+/* ── Navbar Widget ──────────────────────────── */
+
+.dc-widget-navbar {
+  position: relative;
+}
+
+.dc-widget-navbar::after {
+  content: '\1F512';
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ── TabBar Widget ──────────────────────────── */
+
+.dc-widget-tabbar {
+  position: relative;
+}
+
+.dc-widget-tabbar::after {
+  content: '\1F512';
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 10px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* ── Swiper Widget ──────────────────────────── */
+
+.dc-widget-swiper {
+  background: #f5f5f5;
+}
+
+.dc-widget-swiper img {
+  border-radius: 0;
+}
