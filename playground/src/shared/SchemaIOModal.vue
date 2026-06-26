@@ -34,10 +34,10 @@ const emit = defineEmits<{
         />
       </div>
       <div class="playground-modal__footer">
-        <button class="playground-actions__btn" @click="emit('copy')">
+        <button class="playground-header__btn" @click="emit('copy')">
           Copy
         </button>
-        <button class="playground-actions__btn" @click="emit('update:showExportModal', false)">
+        <button class="playground-header__btn" @click="emit('update:showExportModal', false)">
           Close
         </button>
       </div>
@@ -65,10 +65,10 @@ const emit = defineEmits<{
         </div>
       </div>
       <div class="playground-modal__footer">
-        <button class="playground-actions__btn" @click="emit('update:showImportModal', false)">
+        <button class="playground-header__btn" @click="emit('update:showImportModal', false)">
           Cancel
         </button>
-        <button class="playground-actions__btn playground-actions__btn--primary" @click="emit('importConfirm')">
+        <button class="playground-header__btn playground-header__btn--primary" @click="emit('importConfirm')">
           Import
         </button>
       </div>
