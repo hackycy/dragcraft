@@ -1,3 +1,5 @@
+export { useFieldDependencies } from './useFieldDependencies'
+export type { FieldDependenciesResult } from './useFieldDependencies'
 export { useFieldState } from './useFieldState'
 export type { FieldState } from './useFieldState'
 export { useFormValidation } from './useFormValidation'
