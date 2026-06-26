@@ -11,6 +11,7 @@ export function IconDrag(props: IconProps = {}) {
     'stroke': color,
     'stroke-width': 1.5,
     'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
     'class': cls,
   }, [
     h('line', { x1: 3, y1: 4, x2: 13, y2: 4 }),

@@ -11,6 +11,7 @@ export function IconPlus(props: IconProps = {}) {
     'stroke': color,
     'stroke-width': 1.5,
     'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
     'class': cls,
   }, [
     h('line', { x1: 8, y1: 3, x2: 8, y2: 13 }),
