@@ -312,3 +312,109 @@ body {
   padding: 16px 20px;
   border-top: 1px solid var(--dc-border-light);
 }
+
+/* ── Playground Header ───────────────────── */
+
+.playground-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--dc-bg);
+  border-bottom: 1px solid var(--dc-border-light);
+  flex-shrink: 0;
+}
+
+.playground-header__brand {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dc-text);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.playground-header__select {
+  height: 32px;
+  padding: 0 28px 0 12px;
+  font-size: 13px;
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: 6px;
+  background: var(--dc-bg);
+  color: var(--dc-text);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.2s;
+}
+
+.playground-header__select:hover {
+  border-color: var(--dc-primary);
+}
+
+.playground-header__select:focus {
+  border-color: var(--dc-primary);
+  box-shadow: 0 0 0 2px var(--dc-primary-shadow);
+}
+
+.playground-header__spacer {
+  flex: 1;
+}
+
+.playground-header__divider {
+  width: 1px;
+  height: 20px;
+  background: var(--dc-border-light);
+  flex-shrink: 0;
+}
+
+.playground-header__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-family: var(--dc-font-family);
+  border: 1px solid var(--dc-border);
+  border-radius: 6px;
+  background: var(--dc-bg);
+  color: var(--dc-text);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.playground-header__btn:hover:not(:disabled) {
+  border-color: var(--dc-primary);
+  color: var(--dc-primary);
+}
+
+.playground-header__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.playground-header__btn--icon {
+  width: 32px;
+  padding: 0;
+  font-size: 16px;
+}
+
+.playground-header__btn--primary {
+  background: var(--dc-primary);
+  border-color: var(--dc-primary);
+  color: #ffffff;
+}
+
+.playground-header__btn--primary:hover {
+  background: var(--dc-primary-dark);
+  border-color: var(--dc-primary-dark);
+  color: #ffffff;
+}
