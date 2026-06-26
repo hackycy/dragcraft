@@ -13,7 +13,6 @@ export const navbarWidgetMeta: PlaygroundWidgetMeta = {
   zIndex: 100,
   draggable: false,
   sortable: false,
-  mask: false,
   defaultProps: {
     title: '页面标题',
     showBack: false,

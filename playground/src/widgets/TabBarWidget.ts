@@ -33,7 +33,6 @@ export const tabBarWidgetMeta: PlaygroundWidgetMeta = {
   zIndex: 100,
   draggable: false,
   sortable: false,
-  mask: false,
   defaultProps: {
     tabs: DEFAULT_TABS,
     activeIndex: 0,
