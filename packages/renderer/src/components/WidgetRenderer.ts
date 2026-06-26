@@ -62,8 +62,14 @@ export default defineComponent({
       const widgetProps = { ...node.props }
       const widgetStyle = node.style ? { ...node.style } : undefined
 
+      // When mask is active, disable pointer events on widget content
+      // so clicks always reach the mask overlay regardless of widget z-index
+      const contentStyle = widget.useMask.value
+        ? { ...widgetStyle, pointerEvents: 'none' as const }
+        : widgetStyle
+
       const innerContent = widget.resolvedComponent.value
-        ? h(widget.resolvedComponent.value, widgetProps)
+        ? h(widget.resolvedComponent.value, { ...widgetProps, style: contentStyle })
         : h(WidgetFallback, { nodeId: node.id, nodeType: node.type })
 
       // Assemble children

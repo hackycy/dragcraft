@@ -85,8 +85,9 @@
 .dc-node__mask {
   position: absolute;
   inset: 0;
-  z-index: 999;
+  z-index: 1;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 /* ── Selection Handle (mask=false) ────────── */
