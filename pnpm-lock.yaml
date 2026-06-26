@@ -208,6 +208,10 @@ importers:
         version: 3.5.38(typescript@5.9.3)
 
   packages/device-frames:
+    dependencies:
+      '@dragcraft/icons':
+        specifier: workspace:*
+        version: link:../icons
     devDependencies:
       postcss:
         specifier: catalog:cli
@@ -235,11 +239,20 @@ importers:
         specifier: catalog:shared
         version: 3.5.38(typescript@5.9.3)
 
+  packages/icons:
+    devDependencies:
+      vue:
+        specifier: catalog:shared
+        version: 3.5.38(typescript@5.9.3)
+
   packages/renderer:
     dependencies:
       '@dragcraft/core':
         specifier: workspace:*
         version: link:../core
+      '@dragcraft/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
