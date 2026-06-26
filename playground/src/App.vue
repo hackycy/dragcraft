@@ -10,8 +10,10 @@ import {
   DeviceFrameShell,
 } from '@dragcraft/device-frames'
 import { defineComponent, h, provide } from 'vue'
+import PlaygroundHeader from './components/PlaygroundHeader.vue'
 import { globalConfigSchema } from './config/global-config-schema'
-import { initialSchema } from './config/initial-schema'
+import { templateRegistry } from './config/templates'
+import { useTemplateSwitch } from './composables/useTemplateSwitch'
 import SchemaIOModal from './shared/SchemaIOModal.vue'
 import { useSchemaIO } from './shared/use-schema-io'
 
@@ -46,7 +48,7 @@ const MiniProgramEmptyState = defineComponent({
 
 const designer = createDesigner({
   engineOptions: {
-    initialSchema,
+    initialSchema: templateRegistry[0].schema,
     maxHistorySize: 50,
   },
   widgetMetas: getAllWidgetMetas(),
@@ -95,7 +97,9 @@ const designer = createDesigner({
   },
 })
 
-const { exportSchema, importSchema } = useDesigner(designer)
+const { exportSchema, importSchema, undo, redo, canUndo, canRedo } = useDesigner(designer)
+
+const templateSwitch = useTemplateSwitch({ importSchema, exportSchema, confirmSwitch: () => confirm('当前修改将丢失，是否切换？') })
 
 const io = useSchemaIO(exportSchema, importSchema)
 
@@ -107,22 +111,21 @@ function toggleLocale() {
 
 <template>
   <div class="playground-root">
-    <DcDesigner :instance="designer" />
+    <PlaygroundHeader
+      :active-template-id="templateSwitch.activeTemplateId.value"
+      :templates="templateSwitch.templates"
+      :can-undo="canUndo()"
+      :can-redo="canRedo()"
+      :locale="designer.i18n.locale.value"
+      @template-switch="templateSwitch.switchTemplate"
+      @undo="undo()"
+      @redo="redo()"
+      @import-open="io.handleImportOpen()"
+      @export-open="io.handleExport()"
+      @toggle-locale="toggleLocale"
+    />
 
-    <!-- Action Bar -->
-    <div class="playground-actions">
-      <span class="playground-actions__label">Dragcraft Playground</span>
-      <div class="playground-actions__spacer" />
-      <button class="playground-actions__btn" @click="toggleLocale">
-        {{ designer.i18n.locale.value === 'zh-CN' ? 'English' : '中文' }}
-      </button>
-      <button class="playground-actions__btn" @click="io.handleImportOpen()">
-        Import
-      </button>
-      <button class="playground-actions__btn playground-actions__btn--primary" @click="io.handleExport()">
-        Export
-      </button>
-    </div>
+    <DcDesigner :instance="designer" />
 
     <!-- Import / Export Modals -->
     <SchemaIOModal
