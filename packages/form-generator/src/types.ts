@@ -73,8 +73,18 @@ export interface FieldSchema {
   optionKeyPrefix?: string
   /** Registered field component name (e.g., 'input', 'select', 'color') */
   component: string
-  /** Extra props forwarded to the field component */
-  props?: Record<string, unknown>
+  /** Extra props forwarded to the field component. Static or dynamic. */
+  props?: Record<string, unknown> | ((ctx: FormContext) => Record<string, unknown>)
+  /** Declares which other fields this field depends on, and how to react. */
+  dependencies?: FieldDependencies
+  /** If false (or predicate returns false), field is hidden via CSS (preserves DOM state). */
+  show?: boolean | ((ctx: FormContext) => boolean)
+  /** If false (or predicate returns false), field is removed from DOM entirely. */
+  ifShow?: boolean | ((ctx: FormContext) => boolean)
+  /** Transform value before writing to form model (input -> model). */
+  parseValue?: (value: unknown, ctx: FormContext) => unknown
+  /** Transform value before passing to component (model -> component). */
+  valueFormat?: (value: unknown, ctx: FormContext) => unknown
   /** Default value used when the actual value is undefined */
   defaultValue?: unknown
   /** Dynamic visibility predicate */
@@ -87,6 +97,24 @@ export interface FieldSchema {
   tooltip?: string
   /** Number of grid columns this field spans (requires section.columns > 1) */
   span?: number
+}
+
+/**
+ * Declares dependencies on other fields and how to react when they change.
+ */
+export interface FieldDependencies {
+  /** Field keys this field depends on. */
+  fields: string[]
+
+  /**
+   * Called when any dependency field changes.
+   * Returns partial FieldSchema overrides.
+   * Cannot override key, component, or dependencies (to prevent cycles).
+   */
+  handler: (
+    form: Record<string, unknown>,
+    fieldValue: unknown,
+  ) => Partial<Omit<FieldSchema, 'key' | 'component' | 'dependencies'>>
 }
 
 /**

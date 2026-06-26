@@ -14,6 +14,7 @@ export type {
   FieldChangePayload,
   FieldComponentMap,
   FieldComponentProps,
+  FieldDependencies,
   FieldSchema,
   FormContext,
   FormGeneratorContext,
