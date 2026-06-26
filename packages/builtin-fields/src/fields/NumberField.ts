@@ -29,17 +29,19 @@ export default defineComponent({
       emit('update:modelValue', Number.isNaN(num) ? 0 : num)
     }
 
-    return () =>
-      h('input', {
+    return () => {
+      const extra = props.field.props as Record<string, unknown> | undefined
+      return h('input', {
         type: 'number',
         class: 'dc-field-number',
         value: props.modelValue ?? 0,
         disabled: props.disabled,
-        min: props.field.props?.min as number | undefined,
-        max: props.field.props?.max as number | undefined,
-        step: props.field.props?.step as number | undefined,
-        placeholder: (props.field.props?.placeholder as string) ?? '',
+        min: extra?.min as number | undefined,
+        max: extra?.max as number | undefined,
+        step: extra?.step as number | undefined,
+        placeholder: (extra?.placeholder as string) ?? '',
         onInput: handleInput,
       })
+    }
   },
 })

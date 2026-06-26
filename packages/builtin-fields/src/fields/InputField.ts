@@ -31,7 +31,8 @@ export default defineComponent({
     }
 
     return () => {
-      const rawPlaceholder = (props.field.props?.placeholder as string) ?? ''
+      const extra = props.field.props as Record<string, unknown> | undefined
+      const rawPlaceholder = (extra?.placeholder as string) ?? ''
       const placeholder = props.field.placeholderKey
         ? t(props.field.placeholderKey, rawPlaceholder)
         : rawPlaceholder

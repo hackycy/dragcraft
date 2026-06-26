@@ -27,16 +27,18 @@ export default defineComponent({
       emit('update:modelValue', Number.parseFloat((e.target as HTMLInputElement).value))
     }
 
-    return () =>
-      h('input', {
+    return () => {
+      const extra = props.field.props as Record<string, unknown> | undefined
+      return h('input', {
         type: 'range',
         class: 'dc-field-slider',
         value: props.modelValue ?? 0,
         disabled: props.disabled,
-        min: (props.field.props?.min as number) ?? 0,
-        max: (props.field.props?.max as number) ?? 100,
-        step: (props.field.props?.step as number) ?? 1,
+        min: (extra?.min as number) ?? 0,
+        max: (extra?.max as number) ?? 100,
+        step: (extra?.step as number) ?? 1,
         onInput: handleInput,
       })
+    }
   },
 })

@@ -35,14 +35,16 @@ export default defineComponent({
       const selectEl = e.target as HTMLSelectElement
       const raw = selectEl.value
       // Try to find the original option value (may be non-string)
-      const options = (props.field.props?.options as SelectOption[]) ?? []
+      const extra = props.field.props as Record<string, unknown> | undefined
+      const options = (extra?.options as SelectOption[]) ?? []
       const matched = options.find(opt => String(opt.value) === raw)
       emit('update:modelValue', matched ? matched.value : raw)
     }
 
     return () => {
-      const options = (props.field.props?.options as SelectOption[]) ?? []
-      const rawPlaceholder = (props.field.props?.placeholder as string) ?? ''
+      const extra = props.field.props as Record<string, unknown> | undefined
+      const options = (extra?.options as SelectOption[]) ?? []
+      const rawPlaceholder = (extra?.placeholder as string) ?? ''
       const placeholder = props.field.placeholderKey
         ? t(props.field.placeholderKey, rawPlaceholder)
         : rawPlaceholder

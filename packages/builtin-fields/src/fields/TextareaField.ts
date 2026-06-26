@@ -31,7 +31,8 @@ export default defineComponent({
     }
 
     return () => {
-      const rawPlaceholder = (props.field.props?.placeholder as string) ?? ''
+      const extra = props.field.props as Record<string, unknown> | undefined
+      const rawPlaceholder = (extra?.placeholder as string) ?? ''
       const placeholder = props.field.placeholderKey
         ? t(props.field.placeholderKey, rawPlaceholder)
         : rawPlaceholder
@@ -40,7 +41,7 @@ export default defineComponent({
         class: 'dc-field-textarea',
         value: props.modelValue ?? '',
         disabled: props.disabled,
-        rows: (props.field.props?.rows as number) ?? 3,
+        rows: (extra?.rows as number) ?? 3,
         placeholder,
         onInput: handleInput,
       })
