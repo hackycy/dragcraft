@@ -2,6 +2,7 @@ import type { DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } 
 import type { Component } from 'vue'
 import type { MaybePromise, RendererEventHooks } from './event-hooks'
 import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
+import { IconArrowDown, IconArrowUp, IconDelete, IconDrag } from '@dragcraft/icons'
 import { fireAfterHook, resolveBeforeHook } from './event-hooks'
 
 /**
@@ -176,7 +177,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
     {
       key: ActionKey.DRAG,
       label: _t('action.drag', '拖拽排序'),
-      icon: '\u2630',
+      icon: IconDrag,
       type: 'drag-handle',
       order: 100,
       visible: (ctx) => {
@@ -188,7 +189,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
     {
       key: ActionKey.MOVE_UP,
       label: _t('action.move-up', '上移'),
-      icon: '\u2191',
+      icon: IconArrowUp,
       type: 'button',
       order: 200,
       visible: (ctx) => {
@@ -218,7 +219,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
     {
       key: ActionKey.MOVE_DOWN,
       label: _t('action.move-down', '下移'),
-      icon: '\u2193',
+      icon: IconArrowDown,
       type: 'button',
       order: 300,
       visible: (ctx) => {
@@ -248,7 +249,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
     {
       key: ActionKey.DELETE,
       label: _t('action.delete', '删除'),
-      icon: '\u2715',
+      icon: IconDelete,
       type: 'button',
       order: 400,
       className: 'dc-node__toolbar-btn--delete',

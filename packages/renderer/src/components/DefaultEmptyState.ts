@@ -1,4 +1,5 @@
 import type { PropType } from 'vue'
+import { IconPlus } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 
@@ -25,7 +26,7 @@ export default defineComponent({
           { 'dc-empty-state--drag-over': props.isDragOver },
         ],
       }, [
-        h('div', { class: 'dc-empty-state__icon' }, '✚'),
+        h('div', { class: 'dc-empty-state__icon' }, h(IconPlus, { size: 32 })),
         h('div', { class: 'dc-empty-state__text' }, t('canvas.empty', '拖拽组件到这里')),
       ])
   },

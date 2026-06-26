@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@dragcraft/core": "workspace:*",
+    "@dragcraft/icons": "workspace:*",
     "@dragcraft/utils": "workspace:*"
   },
   "devDependencies": {
