@@ -21,7 +21,7 @@ export default defineComponent({
     const { t } = useI18n()
 
     const { resolvedField } = useFieldDependencies(props.field, ctx)
-    const { isVisible, isShown, isDisabled } = useFieldState(resolvedField.value, ctx)
+    const { isVisible, isShown, isDisabled } = useFieldState(() => resolvedField.value, ctx)
 
     return () => {
       if (!isVisible.value)

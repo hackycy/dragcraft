@@ -19,11 +19,12 @@ export interface FieldState {
  * Evaluates the field's predicates against the current form values.
  */
 export function useFieldState(
-  field: FieldSchema,
+  getField: () => FieldSchema,
   ctx: FormGeneratorContext,
 ): FieldState {
   // ifShow takes precedence over visible (backward compat alias)
   const isVisible = computed(() => {
+    const field = getField()
     if (field.ifShow !== undefined) {
       if (typeof field.ifShow === 'function')
         return field.ifShow({ values: ctx.values })
@@ -38,6 +39,7 @@ export function useFieldState(
   })
 
   const isShown = computed(() => {
+    const field = getField()
     if (field.show === undefined)
       return true
     if (typeof field.show === 'function')
@@ -46,6 +48,7 @@ export function useFieldState(
   })
 
   const isDisabled = computed(() => {
+    const field = getField()
     if (ctx.disabled.value)
       return true
     if (!field.disabled)
