@@ -4,6 +4,9 @@
     "lib": ["ESNext", "DOM"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "@dragcraft/*": ["./packages/*/src"]
+    },
     "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
