@@ -18,19 +18,37 @@ export const ecommerceSchema: DesignerSchema = {
     type: 'root',
     props: {},
     children: [
-      // ── Banner ────────────────────────────
+      // ── Navbar ─────────────────────────────
       {
-        id: 'banner-img',
-        type: 'image',
+        id: 'nav-ecommerce',
+        type: 'navbar',
         props: {
-          src: 'https://picsum.photos/seed/store-banner/750/300',
-          alt: '店铺 Banner',
-          objectFit: 'cover',
+          title: '好物精选',
+          showBack: false,
+          backgroundColor: '#ffffff',
+          textColor: '#1a1a1a',
+          transparent: false,
         },
-        style: {
-          width: '100%',
-          height: '180px',
+        style: { width: '100%' },
+      },
+
+      // ── Swiper Banner ─────────────────────
+      {
+        id: 'swiper-banner',
+        type: 'swiper',
+        props: {
+          images: [
+            'https://picsum.photos/seed/store-banner/750/300',
+            'https://picsum.photos/seed/store-banner2/750/300',
+            'https://picsum.photos/seed/store-banner3/750/300',
+          ],
+          autoplay: true,
+          interval: 3000,
+          showIndicator: true,
+          height: 180,
+          borderRadius: 0,
         },
+        style: { width: '100%' },
       },
 
       // ── Shop Title ────────────────────────
@@ -268,6 +286,25 @@ export const ecommerceSchema: DesignerSchema = {
           padding: '8px 16px 24px',
           width: '100%',
         },
+      },
+
+      // ── TabBar ────────────────────────────
+      {
+        id: 'tabbar-main',
+        type: 'tab-bar',
+        props: {
+          tabs: [
+            { label: '首页', icon: 'home' },
+            { label: '分类', icon: 'category' },
+            { label: '购物车', icon: 'cart' },
+            { label: '我的', icon: 'user' },
+          ],
+          activeIndex: 0,
+          backgroundColor: '#ffffff',
+          activeColor: '#07C160',
+          inactiveColor: '#999999',
+        },
+        style: { width: '100%' },
       },
     ],
   },

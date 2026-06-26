@@ -18,6 +18,19 @@ export const contentDetailSchema: DesignerSchema = {
     type: 'root',
     props: {},
     children: [
+      // Navbar
+      {
+        id: 'nav-content',
+        type: 'navbar',
+        props: {
+          title: '精选文章',
+          showBack: true,
+          backgroundColor: '#ffffff',
+          textColor: '#1a1a1a',
+          transparent: false,
+        },
+        style: { width: '100%' },
+      },
       // Cover image
       {
         id: 'cover-img',

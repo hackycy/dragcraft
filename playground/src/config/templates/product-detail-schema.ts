@@ -18,6 +18,19 @@ export const productDetailSchema: DesignerSchema = {
     type: 'root',
     props: {},
     children: [
+      // Navbar
+      {
+        id: 'nav-product',
+        type: 'navbar',
+        props: {
+          title: '商品详情',
+          showBack: true,
+          backgroundColor: '#ffffff',
+          textColor: '#1a1a1a',
+          transparent: false,
+        },
+        style: { width: '100%' },
+      },
       // Product hero image
       {
         id: 'product-hero',
