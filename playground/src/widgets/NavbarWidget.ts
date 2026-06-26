@@ -11,7 +11,6 @@ export const navbarWidgetMeta: PlaygroundWidgetMeta = {
   icon: 'navbar',
   sticky: 'top',
   zIndex: 100,
-  deletable: false,
   draggable: false,
   sortable: false,
   mask: false,

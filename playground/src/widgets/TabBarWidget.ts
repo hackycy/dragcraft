@@ -31,7 +31,6 @@ export const tabBarWidgetMeta: PlaygroundWidgetMeta = {
   icon: 'tabbar',
   sticky: 'bottom',
   zIndex: 100,
-  deletable: false,
   draggable: false,
   sortable: false,
   mask: false,
