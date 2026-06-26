@@ -124,7 +124,6 @@ export default defineComponent({
         style: {
           position: 'sticky',
           bottom: '0',
-          zIndex: '100',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',
