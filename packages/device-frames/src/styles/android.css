@@ -22,11 +22,13 @@
 }
 
 .dc-device-frame__nav-btn {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: #999;
   cursor: default;
 }
 
-.dc-device-frame__nav-btn--home {
-  font-size: 20px;
+.dc-device-frame__nav-btn svg {
+  display: block;
 }
