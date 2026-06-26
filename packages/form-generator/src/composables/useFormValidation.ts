@@ -8,8 +8,8 @@ import { ref } from 'vue'
 export interface FormValidation {
   /** Reactive map of field key -> error message (undefined = no error) */
   fieldErrors: Ref<Record<string, string | undefined>>
-  /** Validate a single field by key. Returns error message or undefined. */
-  validateField: (key: string) => string | undefined
+  /** Validate a single field by key. Optionally pass a resolved field for dependency-driven rules. */
+  validateField: (key: string, resolvedField?: FieldSchema) => string | undefined
   /** Validate all fields. Returns array of errors (empty = all valid). */
   validateAll: () => ValidationError[]
   /** Clear all validation errors */
@@ -100,8 +100,8 @@ export function useFormValidation(
 ): FormValidation {
   const fieldErrors = ref<Record<string, string | undefined>>({})
 
-  const validateField = (key: string): string | undefined => {
-    const field = findFieldSchema(schema, key)
+  const validateField = (key: string, resolvedField?: FieldSchema): string | undefined => {
+    const field = resolvedField ?? findFieldSchema(schema, key)
     if (!field)
       return undefined
 
