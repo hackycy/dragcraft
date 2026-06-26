@@ -52,6 +52,7 @@ export default defineComponent({
               // Value transform: input -> model
               const transformed = field.parseValue?.(value, formCtx) ?? value
               ctx.onFieldChange(field.key, transformed)
+              ctx.validateField(field.key, field)
             },
           })
         : h('div', { class: 'dc-field-unknown' }, `Unknown field: ${field.component}`)

@@ -2,9 +2,8 @@
 export { FormGenerator } from './components'
 
 // ── Composables ──────────────────────────
-export { useFieldState, useFormValidation } from './composables'
-export type { FieldState } from './composables'
-export type { FormValidation } from './composables'
+export { findFieldSchema, useFieldDependencies, useFieldState, useFormValidation } from './composables'
+export type { FieldDependenciesResult, FieldState, FormValidation } from './composables'
 
 // ── Context ──────────────────────────────
 export { useFormGeneratorContext } from './context'

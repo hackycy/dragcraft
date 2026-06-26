@@ -16,7 +16,7 @@ export interface FormValidation {
   clearErrors: () => void
 }
 
-function findFieldSchema(schema: FormSchema, key: string): FieldSchema | undefined {
+export function findFieldSchema(schema: FormSchema, key: string): FieldSchema | undefined {
   for (const section of schema.sections) {
     for (const field of section.fields) {
       if (field.key === key)
@@ -97,6 +97,7 @@ function runFieldValidation(
 export function useFormValidation(
   schema: FormSchema,
   getValues: () => Record<string, unknown>,
+  resolveField?: (key: string) => FieldSchema | undefined,
 ): FormValidation {
   const fieldErrors = ref<Record<string, string | undefined>>({})
 
@@ -122,11 +123,12 @@ export function useFormValidation(
 
     for (const section of schema.sections) {
       for (const field of section.fields) {
-        const value = values[field.key]
-        const error = runFieldValidation(field, value, formCtx)
-        newFieldErrors[field.key] = error
+        const resolved = resolveField?.(field.key) ?? field
+        const value = values[resolved.key]
+        const error = runFieldValidation(resolved, value, formCtx)
+        newFieldErrors[resolved.key] = error
         if (error) {
-          errors.push({ key: field.key, message: error })
+          errors.push({ key: resolved.key, message: error })
         }
       }
     }

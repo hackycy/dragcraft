@@ -222,6 +222,8 @@ export interface FormGeneratorContext {
   disabled: Ref<boolean>
   /** Map of field key -> validation error messages (reactive) */
   fieldErrors: Ref<Record<string, string | undefined>>
+  /** Validate a specific field, optionally with a resolved field for dependency-driven rules */
+  validateField: (key: string, resolvedField?: FieldSchema) => string | undefined
 }
 
 /**

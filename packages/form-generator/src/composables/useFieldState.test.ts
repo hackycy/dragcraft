@@ -13,6 +13,7 @@ function makeCtx(values: Record<string, unknown> = {}): FormGeneratorContext {
     values: localValues,
     disabled: ref(false),
     fieldErrors: ref({}),
+    validateField: vi.fn(),
   }
 }
 
