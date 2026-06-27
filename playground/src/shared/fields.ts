@@ -1,4 +1,6 @@
+import { ArrayField } from '@dragcraft/builtin-fields'
 import { defineComponent, h } from 'vue'
+import NavbarTitleField from '../fields/NavbarTitleField'
 
 export const InputField = defineComponent({
   name: 'InputField',
@@ -109,4 +111,6 @@ export const playgroundFieldMap = {
   'slider': SliderField,
   'switch': SwitchField,
   'icon-picker': IconPickerField,
+  'array': ArrayField,
+  'navbar-title': NavbarTitleField,
 }
