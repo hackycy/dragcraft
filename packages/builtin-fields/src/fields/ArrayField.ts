@@ -1,6 +1,7 @@
-import type { FieldSchema } from '@dragcraft/form-generator'
+import type { FieldComponentMap, FieldSchema } from '@dragcraft/form-generator'
 import type { PropType } from 'vue'
-import { computed, defineComponent, h, ref } from 'vue'
+import { FORM_GENERATOR_CONTEXT_KEY } from '@dragcraft/form-generator'
+import { computed, defineComponent, h, inject, ref } from 'vue'
 
 interface ArrayFieldConfig {
   itemFields: FieldSchema[]
@@ -31,7 +32,9 @@ export default defineComponent({
   emits: ['update:modelValue'],
 
   setup(props, { emit }) {
-    const config = computed(() => props.field.props as unknown as ArrayFieldConfig)
+    const ctx = inject(FORM_GENERATOR_CONTEXT_KEY, null)
+    const fieldComponentMap = computed<FieldComponentMap>(() => ctx?.fieldComponentMap ?? {})
+    const config = computed(() => (props.field.props || {}) as unknown as ArrayFieldConfig)
     const items = computed(() => props.modelValue || [])
     const expandedItems = ref<Set<number>>(new Set([0]))
 
@@ -93,73 +96,86 @@ export default defineComponent({
 
         return h('div', {
           key: index,
-          class: 'dc-array-field__item',
+          class: 'dc-field-array__item',
         }, [
           // Header
           h('div', {
-            class: 'dc-array-field__item-header',
+            class: 'dc-field-array__item-header',
             onClick: () => toggleExpand(index),
           }, [
-            h('span', { class: 'dc-array-field__item-toggle' }, isExpanded ? '▼' : '▶'),
-            h('span', { class: 'dc-array-field__item-title' }, `${title}`),
-            h('div', { class: 'dc-array-field__item-actions' }, [
+            h('span', { class: 'dc-field-array__item-toggle' }, isExpanded ? '[v]' : '[>]'),
+            h('span', { class: 'dc-field-array__item-title' }, `${title}`),
+            h('div', { class: 'dc-field-array__item-actions' }, [
               sortable && index > 0
                 ? h('button', {
-                    class: 'dc-array-field__sort',
+                    class: 'dc-field-array__sort',
                     disabled: props.disabled,
                     onClick: (e: Event) => {
                       e.stopPropagation()
                       moveItem(index, 'up')
                     },
-                  }, '↑')
+                  }, 'Up')
                 : null,
               sortable && index < items.value.length - 1
                 ? h('button', {
-                    class: 'dc-array-field__sort',
+                    class: 'dc-field-array__sort',
                     disabled: props.disabled,
                     onClick: (e: Event) => {
                       e.stopPropagation()
                       moveItem(index, 'down')
                     },
-                  }, '↓')
+                  }, 'Down')
                 : null,
               h('button', {
-                class: 'dc-array-field__remove',
+                class: 'dc-field-array__remove',
                 disabled: props.disabled || !canRemove.value,
                 onClick: (e: Event) => {
                   e.stopPropagation()
                   removeItem(index)
                 },
-              }, '×'),
+              }, 'Remove'),
             ]),
           ]),
           // Body (fields)
           isExpanded
-            ? h('div', { class: 'dc-array-field__item-body' }, (itemFields || []).map(field =>
-                h('div', { class: 'dc-array-field__field', key: field.key }, [
-                  h('label', { class: 'dc-array-field__field-label' }, field.label),
-                  h('input', {
-                    class: 'dc-array-field__field-input',
-                    type: 'text',
-                    value: item[field.key] ?? '',
-                    disabled: props.disabled,
-                    onInput: (e: Event) => updateItem(index, field.key, (e.target as HTMLInputElement).value),
-                  }),
-                ]),
-              ))
+            ? h('div', { class: 'dc-field-array__item-body' }, (itemFields || []).map((field) => {
+                const FieldComponent = fieldComponentMap.value[field.component]
+                const fieldProps = field.props as Record<string, unknown> | undefined
+                const childField = { ...field, props: fieldProps || {} }
+
+                const fieldControl = FieldComponent
+                  ? h(FieldComponent, {
+                      'modelValue': item[field.key] ?? '',
+                      'disabled': props.disabled,
+                      'field': childField,
+                      'onUpdate:modelValue': (value: unknown) => updateItem(index, field.key, value),
+                    })
+                  : h('input', {
+                      class: 'dc-field-array__field-input',
+                      type: 'text',
+                      value: item[field.key] ?? '',
+                      disabled: props.disabled,
+                      onInput: (e: Event) => updateItem(index, field.key, (e.target as HTMLInputElement).value),
+                    })
+
+                return h('div', { class: 'dc-field-array__field', key: field.key }, [
+                  h('label', { class: 'dc-field-array__field-label' }, field.label),
+                  h('div', { class: 'dc-field-array__field-control' }, [fieldControl]),
+                ])
+              }))
             : null,
         ])
       }
 
-      return h('div', { class: 'dc-array-field' }, [
+      return h('div', { class: 'dc-field-array' }, [
         items.value.length > 0
-          ? h('div', { class: 'dc-array-field__list' }, items.value.map((item, i) => renderItem(item, i)))
-          : h('div', { class: 'dc-array-field__empty' }, '暂无数据'),
+          ? h('div', { class: 'dc-field-array__list' }, items.value.map((item, i) => renderItem(item, i)))
+          : h('div', { class: 'dc-field-array__empty' }, 'No data'),
         h('button', {
-          class: 'dc-array-field__add',
+          class: 'dc-field-array__add',
           disabled: props.disabled || !canAdd.value,
           onClick: addItem,
-        }, '+ 添加'),
+        }, '+ Add'),
       ])
     }
   },

@@ -29,7 +29,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    expect(wrapper.find('.dc-array-field__empty').exists()).toBe(true)
+    expect(wrapper.find('.dc-field-array__empty').exists()).toBe(true)
   })
 
   it('should render items', () => {
@@ -40,7 +40,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    expect(wrapper.findAll('.dc-array-field__item')).toHaveLength(2)
+    expect(wrapper.findAll('.dc-field-array__item')).toHaveLength(2)
   })
 
   it('should add item when clicking add button', async () => {
@@ -51,7 +51,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    await wrapper.find('.dc-array-field__add').trigger('click')
+    await wrapper.find('.dc-field-array__add').trigger('click')
     expect(wrapper.emitted('update:modelValue')?.[0]?.[0]).toHaveLength(2)
   })
 
@@ -63,7 +63,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    const addBtn = wrapper.find('.dc-array-field__add')
+    const addBtn = wrapper.find('.dc-field-array__add')
     expect(addBtn.attributes('disabled')).toBeDefined()
   })
 
@@ -75,7 +75,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    await wrapper.find('.dc-array-field__remove').trigger('click')
+    await wrapper.find('.dc-field-array__remove').trigger('click')
     expect(wrapper.emitted('update:modelValue')?.[0]?.[0]).toHaveLength(1)
   })
 
@@ -87,7 +87,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    const removeBtn = wrapper.find('.dc-array-field__remove')
+    const removeBtn = wrapper.find('.dc-field-array__remove')
     expect(removeBtn.attributes('disabled')).toBeDefined()
   })
 
@@ -100,13 +100,13 @@ describe('arrayField', () => {
       },
     })
     // First item is expanded by default
-    expect(wrapper.find('.dc-array-field__item-body').exists()).toBe(true)
+    expect(wrapper.find('.dc-field-array__item-body').exists()).toBe(true)
     // Click header to collapse
-    await wrapper.find('.dc-array-field__item-header').trigger('click')
-    expect(wrapper.find('.dc-array-field__item-body').exists()).toBe(false)
+    await wrapper.find('.dc-field-array__item-header').trigger('click')
+    expect(wrapper.find('.dc-field-array__item-body').exists()).toBe(false)
     // Click header again to expand
-    await wrapper.find('.dc-array-field__item-header').trigger('click')
-    expect(wrapper.find('.dc-array-field__item-body').exists()).toBe(true)
+    await wrapper.find('.dc-field-array__item-header').trigger('click')
+    expect(wrapper.find('.dc-field-array__item-body').exists()).toBe(true)
   })
 
   it('should move item up when clicking up sort button', async () => {
@@ -117,7 +117,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    const sortButtons = wrapper.findAll('.dc-array-field__sort')
+    const sortButtons = wrapper.findAll('.dc-field-array__sort')
     // Second item has an "up" button
     await sortButtons[1].trigger('click')
     const emitted = wrapper.emitted('update:modelValue')?.[0]?.[0] as Array<Record<string, unknown>>
@@ -133,7 +133,7 @@ describe('arrayField', () => {
         disabled: false,
       },
     })
-    const sortButtons = wrapper.findAll('.dc-array-field__sort')
+    const sortButtons = wrapper.findAll('.dc-field-array__sort')
     // First item has a "down" button
     await sortButtons[0].trigger('click')
     const emitted = wrapper.emitted('update:modelValue')?.[0]?.[0] as Array<Record<string, unknown>>
@@ -144,12 +144,16 @@ describe('arrayField', () => {
   it('should disable all controls when disabled prop is true', () => {
     const wrapper = mount(ArrayField, {
       props: {
-        modelValue: [{ name: 'Item 1' }],
+        modelValue: [{ name: 'Item 1' }, { name: 'Item 2' }],
         field: createField(),
         disabled: true,
       },
     })
-    expect(wrapper.find('.dc-array-field__add').attributes('disabled')).toBeDefined()
-    expect(wrapper.find('.dc-array-field__remove').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('.dc-field-array__add').attributes('disabled')).toBeDefined()
+    expect(wrapper.find('.dc-field-array__remove').attributes('disabled')).toBeDefined()
+    const sortButtons = wrapper.findAll('.dc-field-array__sort')
+    for (const btn of sortButtons) {
+      expect(btn.attributes('disabled')).toBeDefined()
+    }
   })
 })
