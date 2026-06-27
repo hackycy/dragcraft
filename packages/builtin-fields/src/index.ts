@@ -1,5 +1,6 @@
 // ── Field Components ─────────────────────
 export {
+  ArrayField,
   buildDefaultFieldComponentMap,
   ColorField,
   InputField,

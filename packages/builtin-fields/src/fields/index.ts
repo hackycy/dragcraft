@@ -1,4 +1,5 @@
 import type { FieldComponentMap } from '@dragcraft/form-generator'
+import ArrayField from './ArrayField'
 import ColorField from './ColorField'
 import InputField from './InputField'
 import NumberField from './NumberField'
@@ -8,6 +9,7 @@ import SwitchField from './SwitchField'
 import TextareaField from './TextareaField'
 
 export {
+  ArrayField,
   ColorField,
   InputField,
   NumberField,
@@ -39,5 +41,6 @@ export function buildDefaultFieldComponentMap(): FieldComponentMap {
     switch: SwitchField,
     color: ColorField,
     slider: SliderField,
+    array: ArrayField,
   }
 }
