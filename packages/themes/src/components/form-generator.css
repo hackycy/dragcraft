@@ -478,23 +478,14 @@
 
 .dc-field-navbar-title__slider {
   width: 100%;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--dc-border-light);
-  border-radius: 2px;
-  outline: none;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--dc-primary);
 }
 
-.dc-field-navbar-title__slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  background: var(--dc-primary);
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+.dc-field-navbar-title__slider:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .dc-field-navbar-title__select {
