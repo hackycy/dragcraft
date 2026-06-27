@@ -14,9 +14,7 @@ export const buttonWidgetMeta: WidgetMeta = {
     disabled: false,
     size: 'medium',
   },
-  defaultStyle: {
-    display: 'inline-block',
-  },
+  defaultStyle: {},
   formSchema: {
     sections: [
       {

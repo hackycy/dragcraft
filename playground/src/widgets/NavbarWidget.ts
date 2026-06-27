@@ -105,6 +105,7 @@ export default defineComponent({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          boxSizing: 'border-box',
           height: '44px',
           paddingTop: '20px',
           paddingBottom: '4px',
@@ -119,6 +120,8 @@ export default defineComponent({
               style: {
                 position: 'absolute',
                 left: '12px',
+                top: '50%',
+                transform: 'translateY(-50%)',
                 fontSize: '18px',
                 cursor: 'pointer',
               },

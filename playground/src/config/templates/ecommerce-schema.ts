@@ -42,8 +42,6 @@ export const ecommerceSchema: DesignerSchema = {
             'https://picsum.photos/seed/store-banner2/750/300',
             'https://picsum.photos/seed/store-banner3/750/300',
           ],
-          autoplay: true,
-          interval: 3000,
           showIndicator: true,
           height: 180,
           borderRadius: 0,

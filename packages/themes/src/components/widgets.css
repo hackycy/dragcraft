@@ -8,9 +8,10 @@
 /* ── Widget: Button ───────────────────────── */
 
 .dc-widget-button {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   font-family: var(--dc-font-family);
   border: 1px solid var(--dc-primary);
   border-radius: var(--dc-radius);
@@ -53,6 +54,8 @@
 
 .dc-widget-image {
   display: block;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 

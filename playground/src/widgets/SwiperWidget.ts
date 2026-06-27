@@ -16,8 +16,6 @@ export const swiperWidgetMeta: WidgetMeta = {
   icon: 'swiper',
   defaultProps: {
     images: DEFAULT_IMAGES,
-    autoplay: true,
-    interval: 3000,
     showIndicator: true,
     height: 180,
     borderRadius: 0,
@@ -36,19 +34,6 @@ export const swiperWidgetMeta: WidgetMeta = {
             component: 'textarea',
             defaultValue: DEFAULT_IMAGES,
             props: { rows: 4, placeholder: '每行一个图片 URL' },
-          },
-          {
-            key: 'autoplay',
-            label: '自动播放',
-            component: 'switch',
-            defaultValue: true,
-          },
-          {
-            key: 'interval',
-            label: '播放间隔 (ms)',
-            component: 'number',
-            defaultValue: 3000,
-            props: { min: 1000, max: 10000 },
           },
         ],
       },
@@ -89,14 +74,6 @@ export default defineComponent({
       type: Array as PropType<string[]>,
       default: () => DEFAULT_IMAGES,
     },
-    autoplay: {
-      type: Boolean as PropType<boolean>,
-      default: true,
-    },
-    interval: {
-      type: Number as PropType<number>,
-      default: 3000,
-    },
     showIndicator: {
       type: Boolean as PropType<boolean>,
       default: true,
@@ -122,6 +99,7 @@ export default defineComponent({
         style: {
           position: 'relative',
           width: '100%',
+          boxSizing: 'border-box',
           height: `${props.height}px`,
           overflow: 'hidden',
           borderRadius: `${props.borderRadius}px`,
@@ -135,6 +113,7 @@ export default defineComponent({
             height: '100%',
             objectFit: 'cover',
             display: 'block',
+            borderRadius: `${props.borderRadius}px`,
           },
         }),
         props.showIndicator && props.images.length > 1

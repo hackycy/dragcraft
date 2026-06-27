@@ -16,7 +16,7 @@ export const textWidgetMeta: WidgetMeta = {
     textAlign: 'left',
   },
   defaultStyle: {
-    display: 'inline-block',
+    display: 'block',
   },
   formSchema: {
     sections: [

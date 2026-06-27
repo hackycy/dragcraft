@@ -74,10 +74,9 @@ body {
 /* ── Widget Visual Enhancement (Mini-Program Style) ── */
 
 /* Button — WeChat pill style */
-.dc-node--widget [data-widget-type="button"] button,
-.dc-container-shell button[class*="widget"] {
+.dc-widget-button {
   border-radius: 20px !important;
-  height: 40px;
+  min-height: 40px;
   min-width: 120px;
   font-size: 15px;
   font-weight: 500;
@@ -90,7 +89,7 @@ body {
 }
 
 /* Text — Better typography */
-.dc-node--widget [data-widget-type="text"] {
+.dc-widget-text {
   line-height: 1.8;
   letter-spacing: 0.3px;
 }
@@ -106,12 +105,20 @@ body {
 .dc-node--widget input[type="tel"],
 .dc-node--widget input[type="number"],
 .dc-node--widget input[type="password"],
-.dc-node--widget textarea,
 .dc-node--widget select {
   height: 40px;
   border-radius: 8px !important;
   font-size: 14px;
   padding: 0 12px;
+  border: 1px solid #e8e8e8;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.dc-node--widget textarea {
+  border-radius: 8px !important;
+  font-size: 14px;
+  padding: 8px 12px;
   border: 1px solid #e8e8e8;
   background: #fafafa;
   transition: all 0.2s ease;

@@ -60,13 +60,37 @@ export default defineComponent({
 
       // Render widget content
       const widgetProps = { ...node.props }
-      const widgetStyle = node.style ? { ...node.style } : undefined
+      const rawStyle = node.style ? { ...node.style } : undefined
+
+      // Split node.style into layout properties (→ wrapper) and content
+      // properties (→ widget component).  Layout properties like padding
+      // and margin control the widget's position in the page flow and
+      // belong on the structural wrapper div.  Content properties like
+      // font-size, color, text-align are rendering concerns that belong
+      // on the widget component itself.
+      const LAYOUT_KEYS = new Set(['padding', 'margin'])
+      let wrapperStyle: Record<string, unknown> | undefined
+      let contentStyle: Record<string, unknown> | undefined
+
+      if (rawStyle) {
+        for (const [key, value] of Object.entries(rawStyle)) {
+          if (LAYOUT_KEYS.has(key)) {
+            wrapperStyle = wrapperStyle ?? {}
+            wrapperStyle[key] = value
+          }
+          else {
+            contentStyle = contentStyle ?? {}
+            contentStyle[key] = value
+          }
+        }
+      }
 
       // When mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index
-      const contentStyle = widget.useMask.value
-        ? { ...widgetStyle, pointerEvents: 'none' as const }
-        : widgetStyle
+      if (widget.useMask.value) {
+        contentStyle = contentStyle ?? {}
+        contentStyle.pointerEvents = 'none'
+      }
 
       const innerContent = widget.resolvedComponent.value
         ? h(widget.resolvedComponent.value, { ...widgetProps, style: contentStyle })
@@ -116,15 +140,15 @@ export default defineComponent({
       }
 
       // Build the core wrapper vnode.
-      // NOTE: widgetStyle is intentionally NOT applied here — it is already
-      // passed to the widget component above. The wrapper is a structural
-      // chrome element (border, shadow for selection/hover) and must not
-      // duplicate the widget's own padding / width / alignment.
+      // Layout properties (padding, margin) from node.style are applied here
+      // so the wrapper controls the widget's position in the page flow.
+      // Content properties (font-size, color, etc.) remain on the widget component.
       const coreWrapper = h(
         'div',
         {
           'ref': nodeElRef,
           'class': widget.wrapperClasses.value,
+          'style': wrapperStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
           'onMouseenter': widget.handleMouseEnter,
