@@ -44,14 +44,32 @@ export const tabBarWidgetMeta: WidgetMeta = {
   formSchema: {
     sections: [
       {
-        title: '基础设置',
+        title: 'Tab 配置',
         fields: [
           {
             key: 'tabs',
-            label: 'Tab 配置 (JSON)',
-            component: 'textarea',
-            defaultValue: DEFAULT_TABS,
-            props: { rows: 4, placeholder: 'JSON 数组，每项包含 label 和 icon' },
+            label: 'Tab 列表',
+            component: 'array',
+            props: {
+              itemFields: [
+                {
+                  key: 'label',
+                  label: '标签文字',
+                  component: 'input',
+                  props: { placeholder: '请输入标签文字' },
+                },
+                {
+                  key: 'icon',
+                  label: '图标',
+                  component: 'input',
+                  props: { placeholder: '请输入图标名称' },
+                },
+              ],
+              defaultItem: { label: '新标签', icon: 'home' },
+              sortable: true,
+              minItems: 2,
+              maxItems: 5,
+            },
           },
           {
             key: 'activeIndex',
