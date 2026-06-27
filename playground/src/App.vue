@@ -7,6 +7,7 @@ import {
   playgroundWidgetMetas,
   playgroundComponentMap,
   playgroundWidgetGroups,
+  playgroundFieldComponents,
 } from './widgets'
 import {
   createDeviceFrameContext,
@@ -63,7 +64,7 @@ const designer = createDesigner({
   },
   widgetMetas: allMetas,
   componentMap: allComponentMap,
-  fieldComponentMap: buildDefaultFieldComponentMap(),
+  fieldComponentMap: { ...buildDefaultFieldComponentMap(), ...playgroundFieldComponents },
   widgetGroups: allGroups,
   globalConfigSchema,
   builtinMessages: builtinWidgetsMessages,
