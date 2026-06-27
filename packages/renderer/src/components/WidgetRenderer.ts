@@ -115,13 +115,16 @@ export default defineComponent({
         wrapperChildren.push(h(Teleport, { to: 'body' }, [toolbarVNode]))
       }
 
-      // Build the core wrapper vnode
+      // Build the core wrapper vnode.
+      // NOTE: widgetStyle is intentionally NOT applied here — it is already
+      // passed to the widget component above. The wrapper is a structural
+      // chrome element (border, shadow for selection/hover) and must not
+      // duplicate the widget's own padding / width / alignment.
       const coreWrapper = h(
         'div',
         {
           'ref': nodeElRef,
           'class': widget.wrapperClasses.value,
-          'style': widgetStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
           'onMouseenter': widget.handleMouseEnter,
