@@ -1,6 +1,6 @@
+import type { WidgetMeta } from '@dragcraft/core'
 import type { PropType } from 'vue'
 // playground/src/widgets/SwiperWidget.ts
-import type { PlaygroundWidgetMeta } from './types'
 import { defineComponent, h } from 'vue'
 
 const DEFAULT_IMAGES = [
@@ -9,7 +9,7 @@ const DEFAULT_IMAGES = [
   'https://picsum.photos/seed/swiper3/750/300',
 ]
 
-export const swiperWidgetMeta: PlaygroundWidgetMeta = {
+export const swiperWidgetMeta: WidgetMeta = {
   type: 'swiper',
   title: '轮播',
   group: 'basic',

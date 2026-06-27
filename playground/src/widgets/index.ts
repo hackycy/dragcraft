@@ -1,15 +1,13 @@
+import type { WidgetMeta } from '@dragcraft/core'
 import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { Component } from 'vue'
-import type { PlaygroundWidgetMeta } from './types'
 import NavbarWidget, { navbarWidgetMeta } from './NavbarWidget'
 import SwiperWidget, { swiperWidgetMeta } from './SwiperWidget'
 import TabBarWidget, { tabBarWidgetMeta } from './TabBarWidget'
 
-export type { PlaygroundWidgetMeta } from './types'
-
 // ── Widget metas ────────────────────────────
 
-export const playgroundWidgetMetas: PlaygroundWidgetMeta[] = [
+export const playgroundWidgetMetas: WidgetMeta[] = [
   navbarWidgetMeta,
   tabBarWidgetMeta,
   swiperWidgetMeta,

@@ -1,6 +1,6 @@
+import type { WidgetMeta } from '@dragcraft/core'
 import type { PropType } from 'vue'
 // playground/src/widgets/TabBarWidget.ts
-import type { PlaygroundWidgetMeta } from './types'
 import { defineComponent, h } from 'vue'
 
 interface TabItem {
@@ -24,13 +24,11 @@ const ICON_MAP: Record<string, string> = {
   settings: '⚙',
 }
 
-export const tabBarWidgetMeta: PlaygroundWidgetMeta = {
+export const tabBarWidgetMeta: WidgetMeta = {
   type: 'tab-bar',
   title: 'Tab 栏',
   group: 'navigation',
   icon: 'tabbar',
-  sticky: 'bottom',
-  zIndex: 100,
   draggable: false,
   sortable: false,
   defaultProps: {

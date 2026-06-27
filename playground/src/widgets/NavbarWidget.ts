@@ -1,16 +1,14 @@
 // playground/src/widgets/NavbarWidget.ts
+import type { WidgetMeta } from '@dragcraft/core'
 import type { PropType } from 'vue'
-import type { PlaygroundWidgetMeta } from './types'
 
 import { defineComponent, h } from 'vue'
 
-export const navbarWidgetMeta: PlaygroundWidgetMeta = {
+export const navbarWidgetMeta: WidgetMeta = {
   type: 'navbar',
   title: '导航栏',
   group: 'navigation',
   icon: 'navbar',
-  sticky: 'top',
-  zIndex: 100,
   draggable: false,
   sortable: false,
   defaultProps: {
