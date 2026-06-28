@@ -359,6 +359,77 @@ describe('resolve', () => {
     expect(engine.execute).not.toHaveBeenCalled()
   })
 
+  it('available: false renders action as disabled, not hidden', () => {
+    const registry = createNodeActionRegistry()
+    registry.register({
+      key: 'test-action',
+      label: 'Test',
+      type: 'button',
+      order: 500,
+      available: () => false,
+    })
+    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+
+    const resolved = registry.resolve(ctx, emptyHooks)
+    const action = resolved.find(a => a.key === 'test-action')
+
+    expect(action).toBeDefined()
+    expect(action!.disabled).toBe(true)
+    expect(action!.visible).toBe(true)
+  })
+
+  it('available: false takes precedence over disabled: false', () => {
+    const registry = createNodeActionRegistry()
+    registry.register({
+      key: 'test-action',
+      label: 'Test',
+      type: 'button',
+      order: 500,
+      available: () => false,
+      disabled: () => false,
+    })
+    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+
+    const resolved = registry.resolve(ctx, emptyHooks)
+    const action = resolved.find(a => a.key === 'test-action')
+
+    expect(action).toBeDefined()
+    expect(action!.disabled).toBe(true)
+  })
+
+  it('visible: false still hides action entirely', () => {
+    const registry = createNodeActionRegistry()
+    registry.register({
+      key: 'test-action',
+      label: 'Test',
+      type: 'button',
+      order: 500,
+      visible: () => false,
+    })
+    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+
+    const resolved = registry.resolve(ctx, emptyHooks)
+    expect(resolved.find(a => a.key === 'test-action')).toBeUndefined()
+  })
+
+  it('actions without available predicate behave as before (default true)', () => {
+    const registry = createNodeActionRegistry()
+    registry.register({
+      key: 'test-action',
+      label: 'Test',
+      type: 'button',
+      order: 500,
+      disabled: () => true,
+    })
+    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+
+    const resolved = registry.resolve(ctx, emptyHooks)
+    const action = resolved.find(a => a.key === 'test-action')
+
+    expect(action).toBeDefined()
+    expect(action!.disabled).toBe(true)
+  })
+
   it('custom actions bypass event hooks', () => {
     const hooks: RendererEventHooks = {
       onBeforeDelete: vi.fn(() => false),

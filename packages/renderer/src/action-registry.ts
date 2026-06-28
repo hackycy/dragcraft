@@ -101,6 +101,12 @@ export interface NodeActionDefinition {
    */
   visible?: (ctx: NodeActionContext) => boolean
   /**
+   * Whether this action is available (usable) for this node.
+   * Return false to render the action in disabled state.
+   * Distinct from `visible` — an action can be visible but unavailable.
+   */
+  available?: (ctx: NodeActionContext) => boolean
+  /**
    * Whether this action is disabled.
    * Return true to render the button in disabled state.
    */
@@ -329,7 +335,8 @@ export function createNodeActionRegistry(
           if (!visible)
             return null
 
-          const disabled = def.disabled ? def.disabled(ctx) : false
+          const available = def.available ? def.available(ctx) : true
+          const disabled = !available || (def.disabled ? def.disabled(ctx) : false)
 
           // Per-action guard against concurrent async invocations
           const pending = { value: false }
