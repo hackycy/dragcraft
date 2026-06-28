@@ -1,6 +1,7 @@
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { RendererEventHooks } from './event-hooks'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { resolveBehavior } from '@dragcraft/core'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
 
 // Minimal MouseEvent stub for Node environment
@@ -55,6 +56,10 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
 }
 
 describe('createDefaultActions', () => {
+  afterEach(() => {
+    vi.mocked(resolveBehavior).mockReturnValue(true)
+  })
+
   it('returns 4 built-in actions sorted by order', () => {
     const actions = createDefaultActions()
     expect(actions).toHaveLength(4)
@@ -65,6 +70,27 @@ describe('createDefaultActions', () => {
       ActionKey.DELETE,
     ])
     expect(actions.map(a => a.order)).toEqual([100, 200, 300, 400])
+  })
+
+  it('built-in actions have available predicate instead of visible for capability checks', async () => {
+    const { resolveBehavior } = await import('@dragcraft/core')
+    vi.mocked(resolveBehavior).mockReturnValue(false)
+
+    const actions = createDefaultActions()
+    const dragAction = actions.find(a => a.key === ActionKey.DRAG)!
+    const moveUpAction = actions.find(a => a.key === ActionKey.MOVE_UP)!
+    const deleteAction = actions.find(a => a.key === ActionKey.DELETE)!
+
+    // visible should always be true (or undefined) — actions conceptually apply
+    expect(dragAction.visible).toBeUndefined()
+    expect(moveUpAction.visible).toBeUndefined()
+    expect(deleteAction.visible).toBeUndefined()
+
+    // available should check capability
+    const ctx = { node: { id: 'n', type: 't', props: {} }, index: 0, siblingCount: 1, meta: makeMeta(), engine: makeEngine() }
+    expect(dragAction.available!(ctx as any)).toBe(false)
+    expect(moveUpAction.available!(ctx as any)).toBe(false)
+    expect(deleteAction.available!(ctx as any)).toBe(false)
   })
 })
 
@@ -110,6 +136,10 @@ describe('resolve', () => {
     emptyHooks = {}
   })
 
+  afterEach(() => {
+    vi.mocked(resolveBehavior).mockReturnValue(true)
+  })
+
   it('returns visible actions for a basic node', () => {
     const registry = createNodeActionRegistry()
     const ctx = {
@@ -126,9 +156,8 @@ describe('resolve', () => {
     expect(resolved.every(a => a.visible)).toBe(true)
   })
 
-  it('filters out invisible actions', async () => {
-    const { resolveBehavior } = await import('@dragcraft/core')
-    vi.mocked(resolveBehavior).mockReturnValueOnce(false) // drag not visible
+  it('renders actions as disabled when available returns false', async () => {
+    vi.mocked(resolveBehavior).mockReturnValue(false) // all capabilities unavailable
 
     const registry = createNodeActionRegistry()
     const ctx = {
@@ -140,7 +169,9 @@ describe('resolve', () => {
     }
 
     const resolved = registry.resolve(ctx, emptyHooks)
-    expect(resolved.find(a => a.key === ActionKey.DRAG)).toBeUndefined()
+    const drag = resolved.find(a => a.key === ActionKey.DRAG)
+    expect(drag).toBeDefined()
+    expect(drag!.disabled).toBe(true)
   })
 
   it('applies widgetActions.only filter', () => {

@@ -186,7 +186,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconDrag,
       type: 'drag-handle',
       order: 100,
-      visible: (ctx) => {
+      available: (ctx) => {
         const instanceCtx = toInstanceCtx(ctx)
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
@@ -198,7 +198,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowUp,
       type: 'button',
       order: 200,
-      visible: (ctx) => {
+      available: (ctx) => {
         const instanceCtx = toInstanceCtx(ctx)
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
@@ -228,7 +228,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowDown,
       type: 'button',
       order: 300,
-      visible: (ctx) => {
+      available: (ctx) => {
         const instanceCtx = toInstanceCtx(ctx)
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
@@ -259,7 +259,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       type: 'button',
       order: 400,
       className: 'dc-node__toolbar-btn--delete',
-      visible: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
+      available: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
       disabled: (ctx) => {
         const children = ctx.engine.store.getRawSchema().root.children ?? []
         const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema())
