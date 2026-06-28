@@ -99,6 +99,7 @@ export interface WidgetActionConfig {
     order: number
     visible?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
     disabled?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
+    available?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
     handler?: (ctx: { node: SchemaNode, index: number, siblingCount: number }, e: MouseEvent) => void
     className?: string
   }>
