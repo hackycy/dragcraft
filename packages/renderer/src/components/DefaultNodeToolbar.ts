@@ -57,12 +57,13 @@ export default defineComponent({
             class: [
               'dc-node__toolbar-btn',
               'dc-node__toolbar-btn--drag',
+              { 'dc-node__toolbar-btn--disabled': action.disabled },
               action.className,
             ],
             title: action.label,
-            draggable: true,
-            onDragstart: props.onDragStart,
-            onDragend: props.onDragEnd,
+            draggable: !action.disabled,
+            onDragstart: action.disabled ? undefined : props.onDragStart,
+            onDragend: action.disabled ? undefined : props.onDragEnd,
           }, typeof action.icon === 'string' ? action.icon : (action.icon ? h(action.icon) : undefined))
         }
 

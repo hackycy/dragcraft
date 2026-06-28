@@ -171,6 +171,12 @@
   pointer-events: none;
 }
 
+.dc-node__toolbar-btn--disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .dc-node__toolbar-btn--drag {
   cursor: grab;
 }
