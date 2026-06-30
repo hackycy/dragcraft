@@ -14,6 +14,7 @@ export default defineComponent({
       extensions,
       dragOverNodeId,
       dragOverIndex,
+      isForbidden,
       handleCanvasDragOver,
       handleCanvasDragLeave,
       handleCanvasDrop,
@@ -44,7 +45,10 @@ export default defineComponent({
     return () => h(
       'div',
       {
-        class: ['dc-canvas', { 'dc-canvas--dragging': isDragging.value }],
+        class: ['dc-canvas', {
+          'dc-canvas--dragging': isDragging.value,
+          'dc-canvas--forbidden': isForbidden.value && isDragging.value,
+        }],
         onDragover: handleCanvasDragOver,
         onDragleave: handleCanvasDragLeave,
         onDrop: handleCanvasDrop,
@@ -61,6 +65,7 @@ export default defineComponent({
             actionRegistry,
             dragOverNodeId,
             dragOverIndex,
+            isForbidden,
             toolbarMaxRight,
           }),
         ]),
