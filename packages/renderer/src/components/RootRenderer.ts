@@ -9,6 +9,7 @@ import { RENDERER_CONTEXT_KEY } from '../types'
 import DefaultContainerShell from './DefaultContainerShell'
 import DefaultDropIndicator from './DefaultDropIndicator'
 import DefaultEmptyState from './DefaultEmptyState'
+import DefaultForbiddenOverlay from './DefaultForbiddenOverlay'
 import WidgetRenderer from './WidgetRenderer'
 
 export default defineComponent({
@@ -47,6 +48,10 @@ export default defineComponent({
       type: Object as PropType<Ref<number | undefined>>,
       default: undefined,
     },
+    isForbidden: {
+      type: Object as PropType<Ref<boolean>>,
+      default: undefined,
+    },
   },
 
   setup(props) {
@@ -67,6 +72,10 @@ export default defineComponent({
       () => props.extensions?.containerShell ?? DefaultContainerShell,
     )
 
+    const ForbiddenOverlay = computed(
+      () => props.extensions?.forbiddenOverlay ?? DefaultForbiddenOverlay,
+    )
+
     return () => {
       // Read schema.value to establish reactive dependency
       const schema = props.engine.store.schema.value
@@ -81,8 +90,16 @@ export default defineComponent({
         h(WidgetRenderer, { key: child.id, node: child }),
       )
 
-      // Show drop indicator at the computed insertion index
-      if (isDragOver) {
+      // Show forbidden overlay or drop indicator at the computed insertion index
+      const isForbidden = props.isForbidden?.value ?? false
+
+      if (isDragOver && isForbidden) {
+        childVNodes.push(h(ForbiddenOverlay.value, {
+          key: '__forbidden__',
+          widgetType: props.engine.store.dragTarget.value?.widgetType ?? '',
+        }))
+      }
+      else if (isDragOver) {
         const idx = props.dragOverIndex?.value
         if (idx != null && idx >= 0 && idx <= childVNodes.length) {
           childVNodes.splice(idx, 0, h(DropIndicator, { key: '__drop-indicator__' }))
