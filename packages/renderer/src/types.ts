@@ -103,6 +103,14 @@ export interface EmptyStateProps {
 }
 
 /**
+ * Props received by a custom forbiddenOverlay component.
+ */
+export interface ForbiddenOverlayProps {
+  /** The widget type that was blocked */
+  widgetType: string
+}
+
+/**
  * Props received by a custom widgetFallback component.
  */
 export interface WidgetFallbackProps {
@@ -166,6 +174,13 @@ export interface RendererExtensions {
    * Receives WidgetFallbackProps.
    */
   widgetFallback?: Component
+
+  /**
+   * Replaces the default forbidden overlay shown when a widget type
+   * cannot be dropped (e.g., singleton already exists).
+   * Receives ForbiddenOverlayProps.
+   */
+  forbiddenOverlay?: Component
 }
 
 // ──────────────────────────────────────────
@@ -208,6 +223,13 @@ export interface RendererOptions {
    * Prevents toolbar from overlapping with the property panel.
    */
   toolbarMaxRight?: Ref<number | undefined>
+  /**
+   * Optional reactive ref indicating the current drag-over is forbidden.
+   * When true and dragOverNodeId is 'root', the forbidden overlay is shown
+   * instead of the drop indicator.
+   * Managed externally by the designer package.
+   */
+  isForbidden?: Ref<boolean>
 }
 
 /**
