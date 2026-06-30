@@ -72,6 +72,19 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     return getValidDropIndices(children, lockedIndices.value, dragTarget.sourceNodeId)
   })
 
+  const isDropAllowed = computed(() => {
+    const target = engine.store.dragTarget.value
+    if (!target?.widgetType)
+      return true // node move, not material drop
+    const meta = engine.registry.getWidget(target.widgetType)
+    if (!meta)
+      return true
+    return resolveBehavior(meta.creatable, {
+      widgetType: target.widgetType,
+      schema: engine.store.schema.value,
+    }, true)
+  })
+
   // ── Visual drop index computation ──
 
   function computeDropIndex(e: DragEvent): number {
@@ -173,6 +186,15 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       e.dataTransfer.dropEffect = dragTarget?.sourceNodeId ? 'move' : 'copy'
     }
 
+    // Check if drop is allowed by creatable predicate
+    if (!isDropAllowed.value) {
+      isForbidden.value = true
+      dragOverIndex.value = null
+      updateDragPreviewPosition(e)
+      return
+    }
+    isForbidden.value = false
+
     const rawIndex = computeDropIndex(e)
     const valid = validDropIndices.value
 
@@ -211,6 +233,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (!relatedTarget || !canvasEl.contains(relatedTarget)) {
       dragOverNodeId.value = null
       dragOverIndex.value = null
+      isForbidden.value = false
     }
   }
 
@@ -220,10 +243,17 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     dragOverNodeId.value = null
     const visualIndex = dragOverIndex.value
     dragOverIndex.value = null
+    isForbidden.value = false
 
     const dragTarget = engine.store.dragTarget.value
     if (!dragTarget)
       return
+
+    // Forbidden drop (creatable predicate returned false)
+    if (!isDropAllowed.value) {
+      engine.store.setDragTarget(null)
+      return
+    }
 
     // No valid drop position (sortable constraints block all positions)
     if (visualIndex === null) {
@@ -285,6 +315,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     destroyDragPreview()
     dragOverNodeId.value = null
     dragOverIndex.value = null
+    isForbidden.value = false
     engine.store.setDragTarget(null)
   }
 
