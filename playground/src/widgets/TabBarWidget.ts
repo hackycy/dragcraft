@@ -31,6 +31,10 @@ export const tabBarWidgetMeta: WidgetMeta = {
   icon: 'tabbar',
   draggable: false,
   sortable: false,
+  creatable: (ctx) => {
+    const children = ctx.schema.root.children ?? []
+    return !children.some(c => c.type === 'tab-bar')
+  },
   defaultProps: {
     tabs: DEFAULT_TABS,
     activeIndex: 0,

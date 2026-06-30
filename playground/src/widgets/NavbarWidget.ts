@@ -11,6 +11,10 @@ export const navbarWidgetMeta: WidgetMeta = {
   icon: 'navbar',
   draggable: false,
   sortable: false,
+  creatable: (ctx) => {
+    const children = ctx.schema.root.children ?? []
+    return !children.some(c => c.type === 'navbar')
+  },
   defaultProps: {
     title: '页面标题',
     subtitle: '',
