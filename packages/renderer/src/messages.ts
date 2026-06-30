@@ -12,6 +12,9 @@ export const rendererMessages: Record<string, MessageTree> = {
       'empty': '拖拽组件到这里',
       'node-handle': '选中组件',
     },
+    forbidden: {
+      alreadyExists: '无法添加 — 该类型已存在',
+    },
   },
   'en': {
     action: {
@@ -23,6 +26,9 @@ export const rendererMessages: Record<string, MessageTree> = {
     canvas: {
       'empty': 'Drag components here',
       'node-handle': 'Select component',
+    },
+    forbidden: {
+      alreadyExists: 'Cannot add — this type already exists',
     },
   },
 }
