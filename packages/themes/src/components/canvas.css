@@ -19,6 +19,7 @@
 
 .dc-container-shell {
   min-height: 200px;
+  position: relative;
 }
 
 /* ── Empty Canvas Placeholder ────────────── */
@@ -285,4 +286,44 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ── Canvas Forbidden State ─────────────── */
+
+.dc-canvas--forbidden {
+  cursor: not-allowed !important;
+}
+
+/* ── Forbidden Overlay ──────────────────── */
+
+.dc-forbidden-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(239, 68, 68, 0.08);
+  border: 2px dashed var(--dc-color-danger, #ef4444);
+  border-radius: var(--dc-radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--dc-color-danger, #ef4444);
+  font-size: var(--dc-font-size-sm, 14px);
+  pointer-events: none;
+  z-index: 10;
+  animation: dc-forbidden-pulse 1.5s ease-in-out infinite;
+}
+
+.dc-forbidden-overlay__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dc-forbidden-overlay__text {
+  white-space: nowrap;
+}
+
+@keyframes dc-forbidden-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
 }
