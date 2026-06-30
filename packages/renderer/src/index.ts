@@ -12,6 +12,7 @@ export {
   DefaultContainerShell,
   DefaultDropIndicator,
   DefaultEmptyState,
+  DefaultForbiddenOverlay,
   DefaultNodeHandle,
   DefaultNodeMask,
   DefaultNodeToolbar,
@@ -49,6 +50,7 @@ export { rendererMessages } from './messages'
 export type {
   ComponentMap,
   EmptyStateProps,
+  ForbiddenOverlayProps,
   NodeHandleProps,
   NodeInteractionState,
   NodeMaskProps,

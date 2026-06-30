@@ -1,6 +1,7 @@
 export { default as DefaultContainerShell } from './DefaultContainerShell'
 export { default as DefaultDropIndicator } from './DefaultDropIndicator'
 export { default as DefaultEmptyState } from './DefaultEmptyState'
+export { default as DefaultForbiddenOverlay } from './DefaultForbiddenOverlay'
 export { default as DefaultNodeHandle } from './DefaultNodeHandle'
 export { default as DefaultNodeMask } from './DefaultNodeMask'
 export { default as DefaultNodeToolbar } from './DefaultNodeToolbar'
