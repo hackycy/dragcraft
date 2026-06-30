@@ -17,7 +17,7 @@ export default defineComponent({
     },
   },
 
-  setup(_props) {
+  setup(props) {
     const { t } = useI18n()
     return () =>
       h('div', { class: 'dc-forbidden-overlay' }, [
@@ -37,7 +37,7 @@ export default defineComponent({
             h('line', { x1: '4.93', y1: '4.93', x2: '19.07', y2: '19.07' }),
           ]),
         ]),
-        h('span', { class: 'dc-forbidden-overlay__text' }, t('forbidden.alreadyExists', 'Cannot add — this type already exists')),
+        h('span', { class: 'dc-forbidden-overlay__text' }, t('forbidden.alreadyExists', `Cannot add ${props.widgetType} — this type already exists`)),
       ])
   },
 })
