@@ -160,6 +160,8 @@ export interface DesignerContext {
   createDragPreview: (meta: WidgetMeta, isMove: boolean) => void
   updateDragPreviewPosition: (e: DragEvent) => void
   destroyDragPreview: () => void
+  /** Whether the current drag-over is forbidden (widget type blocked by creatable predicate) */
+  isForbidden: Ref<boolean>
   searchQuery: Ref<string>
   activeTab: Ref<PropertyTabKey>
 }

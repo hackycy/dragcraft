@@ -44,6 +44,7 @@ export default defineComponent({
       createDragPreview: dragDrop.createDragPreview,
       updateDragPreviewPosition: dragDrop.updateDragPreviewPosition,
       destroyDragPreview: dragDrop.destroyDragPreview,
+      isForbidden: dragDrop.isForbidden,
       searchQuery,
       activeTab,
     }

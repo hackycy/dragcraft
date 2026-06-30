@@ -33,6 +33,8 @@ export interface UseDragDropReturn {
   createDragPreview: (meta: WidgetMeta, isMove: boolean) => void
   /** Update the floating preview position to follow the mouse */
   updateDragPreviewPosition: (e: DragEvent) => void
+  /** Whether the current drag-over is forbidden (widget type already exists) */
+  isForbidden: Ref<boolean>
   /** Remove the floating preview element */
   destroyDragPreview: () => void
 }
@@ -51,6 +53,7 @@ export interface UseDragDropReturn {
 export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   const dragOverNodeId = ref<string | null>(null)
   const dragOverIndex = ref<number | null>(null)
+  const isForbidden = ref(false)
 
   // ── Sortable constraint computeds ──
 
@@ -298,6 +301,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     handleDragEnd,
     createDragPreview,
     updateDragPreviewPosition,
+    isForbidden,
     destroyDragPreview,
   }
 }
