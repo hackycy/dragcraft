@@ -2,7 +2,7 @@ import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
 import { CommandType, findNearestValidIndex, getLockedIndices, getValidDropIndices, resolveBehavior } from '@dragcraft/core'
 import { generateShortId } from '@dragcraft/utils'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 // ──────────────────────────────────────────
 // Return type
@@ -174,6 +174,12 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       dragPreviewEl = null
     }
   }
+
+  watch(isForbidden, (forbidden) => {
+    if (dragPreviewEl) {
+      dragPreviewEl.classList.toggle('dc-drag-preview--forbidden', forbidden)
+    }
+  })
 
   // ── Canvas drag event handlers (event delegation) ──
 
