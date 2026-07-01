@@ -172,6 +172,12 @@ export interface WidgetMeta {
   sortable?: BehaviorPredicate<InstanceBehaviorContext>
   /** Whether this widget can be deleted via toolbar action (default: true). Accepts boolean or predicate. */
   deletable?: BehaviorPredicate<InstanceBehaviorContext>
+  /**
+   * Whether this widget participates in the root container's vertical flow layout (default: true).
+   * When false, the node is excluded from sortable constraints, is not draggable,
+   * and renders in a separate overlay layer independent of the content flow.
+   */
+  flow?: boolean
 
   // ── Material panel controls ──
 
