@@ -101,7 +101,7 @@ src/
 | `hoverNode(id \| null)` | 设置 hover 节点 |
 | `setDragTarget(target \| null)` | 设置拖拽目标 |
 | `getNodeById(id)` | 按 ID 查找节点（在 root.children 中线性查找） |
-| `patchNode(nodeId, partial)` | 局部更新节点 props/style |
+| `applyTransientPatch(nodeId, partial)` | 局部更新节点 props/style（不触发历史快照和事件） |
 | `triggerUpdate()` | 手动触发响应式通知 |
 
 ### 2) CommandBus

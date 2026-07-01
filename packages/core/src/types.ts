@@ -294,7 +294,7 @@ export interface SchemaStoreInstance {
   hoverNode: (id: string | null) => void
   setDragTarget: (target: DragTarget | null) => void
   getNodeById: (id: string) => SchemaNode | null
-  patchNode: (nodeId: string, partial: Partial<Pick<SchemaNode, 'props' | 'style'>>) => void
+  applyTransientPatch: (nodeId: string, partial: Partial<Pick<SchemaNode, 'props' | 'style'>>) => void
   triggerUpdate: () => void
 }
 

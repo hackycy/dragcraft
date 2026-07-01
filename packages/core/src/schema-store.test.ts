@@ -101,21 +101,21 @@ describe('createSchemaStore', () => {
     expect(store.getNodeById('missing')).toBeNull()
   })
 
-  it('patchNode updates props', () => {
+  it('applyTransientPatch updates props', () => {
     const store = createSchemaStore(makeSchema([{ id: 'a', type: 'text', props: { label: 'old' } }]))
-    store.patchNode('a', { props: { label: 'new' } })
+    store.applyTransientPatch('a', { props: { label: 'new' } })
     expect(store.getNodeById('a')!.props.label).toBe('new')
   })
 
-  it('patchNode updates style', () => {
+  it('applyTransientPatch updates style', () => {
     const store = createSchemaStore(makeSchema([{ id: 'a', type: 'text', props: {} }]))
-    store.patchNode('a', { style: { color: 'red' } })
+    store.applyTransientPatch('a', { style: { color: 'red' } })
     expect(store.getNodeById('a')!.style).toEqual({ color: 'red' })
   })
 
-  it('patchNode does nothing for missing node', () => {
+  it('applyTransientPatch does nothing for missing node', () => {
     const store = createSchemaStore(makeSchema())
-    store.patchNode('missing', { props: { x: 1 } })
+    store.applyTransientPatch('missing', { props: { x: 1 } })
     // Should not throw
   })
 

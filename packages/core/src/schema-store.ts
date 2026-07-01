@@ -74,7 +74,7 @@ export function createSchemaStore(
    * or high-frequency updates where undo/redo tracking is undesirable.
    * For undoable mutations, go through `commandBus.execute(UPDATE_PROPS)`.
    */
-  function patchNode(
+  function applyTransientPatch(
     nodeId: string,
     partial: Partial<Pick<SchemaNode, 'props' | 'style'>>,
   ): void {
@@ -108,7 +108,7 @@ export function createSchemaStore(
     hoverNode,
     setDragTarget,
     getNodeById,
-    patchNode,
+    applyTransientPatch,
     triggerUpdate,
   }
 }
