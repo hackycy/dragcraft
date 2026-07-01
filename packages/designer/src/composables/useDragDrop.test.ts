@@ -2,7 +2,7 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { flowIndexToArrayIndex, useDragDrop } from './useDragDrop'
+import { arrayIndexToFlowIndex, flowIndexToArrayIndex, useDragDrop } from './useDragDrop'
 
 function makeNode(id: string, type = 'text'): SchemaNode {
   return { id, type, props: {} }
@@ -294,5 +294,29 @@ describe('flowIndexToArrayIndex', () => {
     const registry = { getWidget: (type: string) => type === 'tabbar' ? tabbarMeta : undefined }
     // 'a' is the only flow node at index 0, so "after a" = index 1
     expect(flowIndexToArrayIndex(1, children, registry)).toBe(1)
+  })
+})
+
+describe('arrayIndexToFlowIndex', () => {
+  it('returns flow index for array index with no non-flow nodes', () => {
+    const children = [makeNode('a'), makeNode('b')]
+    const registry = { getWidget: () => undefined }
+    expect(arrayIndexToFlowIndex(0, children, registry)).toBe(0)
+    expect(arrayIndexToFlowIndex(1, children, registry)).toBe(1)
+    expect(arrayIndexToFlowIndex(2, children, registry)).toBe(2)
+  })
+
+  it('skips non-flow nodes when counting', () => {
+    const children = [makeNode('a'), makeNode('t', 'tabbar'), makeNode('b')]
+    const tabbarMeta = makeMeta('tabbar', { flow: false })
+    const registry = { getWidget: (type: string) => type === 'tabbar' ? tabbarMeta : undefined }
+    // array 0 = 'a' -> flow 0
+    expect(arrayIndexToFlowIndex(0, children, registry)).toBe(0)
+    // array 1 = 'tabbar' (non-flow, skipped) -> flow 1
+    expect(arrayIndexToFlowIndex(1, children, registry)).toBe(1)
+    // array 2 = 'b' -> flow 1
+    expect(arrayIndexToFlowIndex(2, children, registry)).toBe(1)
+    // array 3 = end -> flow 2
+    expect(arrayIndexToFlowIndex(3, children, registry)).toBe(2)
   })
 })

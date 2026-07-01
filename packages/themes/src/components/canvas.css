@@ -29,6 +29,17 @@
   position: relative;
 }
 
+.dc-canvas__overlay {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.dc-node--out-of-flow {
+  cursor: default;
+}
+
 /* ── Empty Canvas Placeholder ────────────── */
 
 .dc-container-shell--empty {

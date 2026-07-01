@@ -64,6 +64,25 @@ export function flowIndexToArrayIndex(
   return lastFlowEnd
 }
 
+/**
+ * Convert an absolute array index in root.children to a flow-relative visual
+ * index. This is the inverse of `flowIndexToArrayIndex` — non-flow nodes in
+ * the array are skipped when counting flow positions.
+ */
+export function arrayIndexToFlowIndex(
+  arrayIndex: number,
+  rootChildren: SchemaNode[],
+  registry: { getWidget: (type: string) => WidgetMeta | undefined },
+): number {
+  let flowCount = 0
+  for (let i = 0; i < arrayIndex && i < rootChildren.length; i++) {
+    const meta = registry.getWidget(rootChildren[i].type)
+    if (!meta || meta.flow !== false)
+      flowCount++
+  }
+  return flowCount
+}
+
 // ──────────────────────────────────────────
 // Composable
 // ──────────────────────────────────────────
@@ -145,14 +164,12 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   function handleNodeDragStart(e: DragEvent, nodeId: string): void {
     // Non-flow nodes are not draggable
-    {
-      const guardChildren = engine.store.getRawSchema().root.children ?? []
-      const guardNode = guardChildren.find(c => c.id === nodeId)
-      if (guardNode) {
-        const meta = engine.registry.getWidget(guardNode.type)
-        if (meta && meta.flow === false)
-          return
-      }
+    const allChildren = engine.store.getRawSchema().root.children ?? []
+    const targetNode = allChildren.find(c => c.id === nodeId)
+    if (targetNode) {
+      const meta = engine.registry.getWidget(targetNode.type)
+      if (meta && meta.flow === false)
+        return
     }
 
     engine.store.setDragTarget({
@@ -242,9 +259,16 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const valid = validDropIndices.value
 
     if (valid && valid.size > 0) {
-      dragOverIndex.value = valid.has(rawIndex)
-        ? rawIndex
-        : findNearestValidIndex(rawIndex, valid)
+      // Convert flow-relative rawIndex to array space for comparison with validDropIndices
+      const children = engine.store.getRawSchema().root.children ?? []
+      const rawArrayIndex = flowIndexToArrayIndex(rawIndex, children, engine.registry)
+      const validArrayIndex = valid.has(rawArrayIndex)
+        ? rawArrayIndex
+        : findNearestValidIndex(rawArrayIndex, valid)
+      // Convert back to flow space for dragOverIndex (used by RootRenderer for drop indicator)
+      dragOverIndex.value = validArrayIndex != null
+        ? arrayIndexToFlowIndex(validArrayIndex, children, engine.registry)
+        : null
     }
     else if (valid && valid.size === 0) {
       dragOverIndex.value = null
