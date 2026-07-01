@@ -37,6 +37,28 @@ describe('createRegistry', () => {
     warn.mockRestore()
   })
 
+  it('warns and skips when type is empty', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const reg = createRegistry()
+    reg.registerWidget(makeMeta(''))
+    expect(reg.getWidget('')).toBeUndefined()
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('must have a non-empty "type"'),
+    )
+    warn.mockRestore()
+  })
+
+  it('warns and skips when title is empty', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const reg = createRegistry()
+    reg.registerWidget(makeMeta('button', { title: '' }))
+    expect(reg.getWidget('button')).toBeUndefined()
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('must have a non-empty "title"'),
+    )
+    warn.mockRestore()
+  })
+
   it('getAllWidgets returns all registered', () => {
     const reg = createRegistry()
     reg.registerWidget(makeMeta('a'))

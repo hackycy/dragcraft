@@ -5,6 +5,14 @@ export function createRegistry(): RegistryInstance {
   let globalConfigSchema: Record<string, unknown> | undefined
 
   function registerWidget(meta: WidgetMeta): void {
+    if (!meta.type || typeof meta.type !== 'string') {
+      console.warn('[dragcraft/core] registerWidget: widget meta must have a non-empty "type" string')
+      return
+    }
+    if (!meta.title || typeof meta.title !== 'string') {
+      console.warn(`[dragcraft/core] registerWidget: widget "${meta.type}" must have a non-empty "title" string`)
+      return
+    }
     if (widgets.has(meta.type)) {
       console.warn(`[dragcraft/core] Widget type "${meta.type}" is already registered, overwriting.`)
     }
