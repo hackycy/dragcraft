@@ -52,8 +52,10 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
 
   // 8. Register global config schema in registry if provided
   if (globalConfigSchema) {
-    engine.registry.registerGlobalConfigSchema(
-      globalConfigSchema as unknown as Record<string, unknown>,
+    // double cast needed: FormSchema and FormSchemaShape are structurally compatible
+    // but FieldSchema lacks FieldSchemaShape's index signature, so direct assignment fails
+    engine.registry.registerGlobalConfigFormSchema(
+      globalConfigSchema as unknown as import('@dragcraft/core').FormSchemaShape,
     )
   }
 

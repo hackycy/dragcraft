@@ -53,7 +53,7 @@ export function usePropertyBinding(engine: DesignerEngine): UsePropertyBindingRe
     if (!meta)
       return null
     // WidgetMeta.formSchema is Record<string, unknown> but structured as FormSchema
-    return meta.formSchema as unknown as FormSchema
+    return meta.formSchema as FormSchema
   })
 
   const selectedNodeProps = computed<Record<string, unknown>>(() => {

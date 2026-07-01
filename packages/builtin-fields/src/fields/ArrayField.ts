@@ -34,6 +34,8 @@ export default defineComponent({
   setup(props, { emit }) {
     const ctx = inject(FORM_GENERATOR_CONTEXT_KEY, null)
     const fieldComponentMap = computed<FieldComponentMap>(() => ctx?.fieldComponentMap ?? {})
+    // double cast needed: FieldSchema.props union includes a function branch
+    // that is structurally incompatible with ArrayFieldConfig
     const config = computed(() => (props.field.props || {}) as unknown as ArrayFieldConfig)
     const items = computed(() => props.modelValue || [])
     const expandedItems = ref<Set<number>>(new Set([0]))
