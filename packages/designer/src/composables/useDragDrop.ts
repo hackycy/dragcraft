@@ -1,6 +1,17 @@
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
-import { CommandType, findNearestValidIndex, getLockedIndices, getValidDropIndices, resolveBehavior } from '@dragcraft/core'
+import {
+  CommandType,
+  createLayoutPlan,
+  DEFAULT_LAYOUT_SLOT,
+  DEFAULT_SORT_SCOPE,
+  findNearestValidIndex,
+  getLockedIndices,
+  getSortScopeEntries,
+  getValidDropIndices,
+  resolveBehavior,
+  resolveNodeLayout,
+} from '@dragcraft/core'
 import { generateShortId } from '@dragcraft/utils'
 import { computed, ref, watch } from 'vue'
 
@@ -60,7 +71,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   const lockedIndices = computed(() => {
     void engine.store.schema.value
     const children = engine.store.getRawSchema().root.children ?? []
-    return getLockedIndices(children, engine.registry, engine.store.getRawSchema())
+    const sortScope = getActiveSortScope()
+    if (sortScope === false)
+      return new Set<number>()
+    return getLockedIndices(children, engine.registry, engine.store.getRawSchema(), sortScope)
   })
 
   const validDropIndices = computed(() => {
@@ -68,8 +82,14 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (!dragTarget)
       return null
     void engine.store.schema.value
-    const children = engine.store.getRawSchema().root.children ?? []
-    return getValidDropIndices(children, lockedIndices.value, dragTarget.sourceNodeId)
+    const sortScope = getActiveSortScope()
+    if (sortScope === false)
+      return null
+    const scopeEntries = getSortScopeEntries(
+      createLayoutPlan(engine.store.getRawSchema(), engine.registry),
+      sortScope,
+    )
+    return getValidDropIndices(scopeEntries, lockedIndices.value, dragTarget.sourceNodeId)
   })
 
   const isDropAllowed = computed(() => {
@@ -87,10 +107,33 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   // ── Visual drop index computation ──
 
-  function computeDropIndex(e: DragEvent): number {
+  function resolveMetaSortScope(meta: WidgetMeta): string | false {
+    const layout = meta.defaultLayout
+    const slot = layout?.slot ?? DEFAULT_LAYOUT_SLOT
+    return layout?.sortScope === undefined
+      ? (slot === DEFAULT_LAYOUT_SLOT ? DEFAULT_SORT_SCOPE : false)
+      : layout.sortScope
+  }
+
+  function getActiveSortScope(): string | false {
+    const target = engine.store.dragTarget.value
+    if (!target)
+      return DEFAULT_SORT_SCOPE
+    if (target.sourceNodeId) {
+      const node = engine.store.getNodeById(target.sourceNodeId)
+      return node ? resolveNodeLayout(node, engine.registry).sortScope : false
+    }
+    if (target.widgetType) {
+      const meta = engine.registry.getWidget(target.widgetType)
+      return meta ? resolveMetaSortScope(meta) : DEFAULT_SORT_SCOPE
+    }
+    return DEFAULT_SORT_SCOPE
+  }
+
+  function computeDropIndex(e: DragEvent, sortScope: string): number {
     const canvasEl = e.currentTarget as HTMLElement
     const widgetEls = canvasEl.querySelectorAll<HTMLElement>(
-      '[data-node-id]:not([data-node-id="root"])',
+      `[data-dc-sort-scope="${sortScope}"]`,
     )
     const mouseY = e.clientY
     for (let i = 0; i < widgetEls.length; i++) {
@@ -201,7 +244,14 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
     isForbidden.value = false
 
-    const rawIndex = computeDropIndex(e)
+    const sortScope = getActiveSortScope()
+    if (sortScope === false) {
+      dragOverIndex.value = null
+      updateDragPreviewPosition(e)
+      return
+    }
+
+    const rawIndex = computeDropIndex(e, sortScope)
     const valid = validDropIndices.value
 
     if (valid && valid.size > 0) {
@@ -261,15 +311,21 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       return
     }
 
-    // No valid drop position (sortable constraints block all positions)
-    if (visualIndex === null) {
-      engine.store.setDragTarget(null)
-      return
-    }
-
     if (dragTarget.sourceNodeId) {
-      const children = engine.store.getRawSchema().root.children ?? []
-      const srcIdx = children.findIndex(c => c.id === dragTarget.sourceNodeId)
+      if (visualIndex === null) {
+        engine.store.setDragTarget(null)
+        return
+      }
+      const sortScope = getActiveSortScope()
+      if (sortScope === false) {
+        engine.store.setDragTarget(null)
+        return
+      }
+      const scopeEntries = getSortScopeEntries(
+        createLayoutPlan(engine.store.getRawSchema(), engine.registry),
+        sortScope,
+      )
+      const srcIdx = scopeEntries.findIndex(entry => entry.node.id === dragTarget.sourceNodeId)
 
       let targetIdx = visualIndex
       if (srcIdx !== -1 && targetIdx > srcIdx) {
@@ -281,6 +337,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
         payload: {
           nodeId: dragTarget.sourceNodeId,
           index: targetIdx,
+          sortScope,
         },
       })
     }
@@ -297,13 +354,20 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
         type: meta.type,
         props: { ...meta.defaultProps },
         style: meta.defaultStyle ? { ...meta.defaultStyle } : undefined,
+        layout: meta.defaultLayout ? { ...meta.defaultLayout } : undefined,
       }
 
+      const sortScope = resolveMetaSortScope(meta)
+      if (sortScope !== false && visualIndex === null) {
+        engine.store.setDragTarget(null)
+        return
+      }
       engine.execute({
         type: CommandType.ADD_NODE,
         payload: {
           node: newNode,
-          index: visualIndex,
+          index: sortScope === false ? undefined : visualIndex,
+          sortScope: sortScope === false ? undefined : sortScope,
         },
       })
 

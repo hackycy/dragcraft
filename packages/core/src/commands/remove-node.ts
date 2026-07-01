@@ -1,5 +1,6 @@
 import type { CommandContext, RemoveNodePayload } from '../types'
 import { removeNodeFromTree } from '../helpers'
+import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout } from '../layout'
 import { getLockedIndices, isRemoveAllowed } from '../sortable'
 
 export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayload): void {
@@ -14,15 +15,20 @@ export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayloa
   // ── Sortable constraint ──
   const children = rawSchema.root.children
   if (children) {
-    const removeIndex = children.findIndex(c => c.id === payload.nodeId)
-    if (removeIndex !== -1) {
-      const lockedIndices = getLockedIndices(children, registry, rawSchema)
-      if (lockedIndices.size > 0 && !isRemoveAllowed(removeIndex, lockedIndices)) {
-        console.warn(
-          `[dragcraft/core] REMOVE_NODE: blocked by sortable constraint`
-          + ` (removing index ${removeIndex} would shift locked widgets)`,
-        )
-        return
+    const node = children.find(c => c.id === payload.nodeId)
+    const layout = node ? resolveNodeLayout(node, registry) : null
+    if (node && layout && layout.sortScope !== false) {
+      const scopeEntries = getSortScopeEntries(createLayoutPlan(rawSchema, registry), layout.sortScope)
+      const removeIndex = scopeEntries.findIndex(entry => entry.node.id === payload.nodeId)
+      if (removeIndex !== -1) {
+        const lockedIndices = getLockedIndices(children, registry, rawSchema, layout.sortScope)
+        if (lockedIndices.size > 0 && !isRemoveAllowed(removeIndex, lockedIndices)) {
+          console.warn(
+            `[dragcraft/core] REMOVE_NODE: blocked by sortable constraint`
+            + ` (removing index ${removeIndex} would shift locked widgets)`,
+          )
+          return
+        }
       }
     }
   }

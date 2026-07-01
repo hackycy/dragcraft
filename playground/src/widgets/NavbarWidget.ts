@@ -11,6 +11,20 @@ export const navbarWidgetMeta: WidgetMeta = {
   icon: 'navbar',
   draggable: false,
   sortable: false,
+  defaultLayout: {
+    slot: 'navbar.surface',
+    sortScope: false,
+  },
+  layoutManifest: {
+    slots: {
+      'navbar.surface': {
+        allocation: 'reserve',
+        axis: 'block',
+        edge: 'start',
+        order: 10,
+      },
+    },
+  },
   creatable: (ctx) => {
     const children = ctx.schema.root.children ?? []
     return !children.some(c => c.type === 'navbar')
@@ -142,9 +156,6 @@ export default defineComponent({
       return h('div', {
         class: 'dc-widget-navbar',
         style: {
-          position: 'sticky',
-          top: '0',
-          zIndex: '100',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

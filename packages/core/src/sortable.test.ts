@@ -2,15 +2,15 @@ import type { DesignerSchema, RegistryInstance, SchemaNode, WidgetMeta } from '.
 import { describe, expect, it } from 'vitest'
 import { findNearestValidIndex, getLockedIndices, getValidDropIndices, isInsertAllowed, isMoveAllowed, isRemoveAllowed } from './sortable'
 
-function makeNode(id: string, type = 'text'): SchemaNode {
-  return { id, type, props: {} }
+function makeNode(id: string, type = 'text', layout?: SchemaNode['layout']): SchemaNode {
+  return { id, type, props: {}, layout }
 }
 
 function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
 }
 
-function makeRegistry(metaMap: Record<string, { sortable?: boolean, flow?: boolean }> = {}): RegistryInstance {
+function makeRegistry(metaMap: Record<string, Partial<WidgetMeta>> = {}): RegistryInstance {
   const map = new Map<string, WidgetMeta>()
   for (const [type, meta] of Object.entries(metaMap)) {
     map.set(type, { type, title: type, group: 'g', defaultProps: {}, formSchema: { sections: [] }, ...meta } as WidgetMeta)
@@ -47,16 +47,16 @@ describe('getLockedIndices', () => {
     expect(locked.size).toBe(0)
   })
 
-  it('skips flow:false nodes from locked indices', () => {
-    const children = [makeNode('a'), makeNode('b', 'tabbar'), makeNode('c')]
-    const reg = makeRegistry({ text: { sortable: true }, tabbar: { flow: false } })
+  it('skips nodes outside the current sort scope from locked indices', () => {
+    const children = [makeNode('a'), makeNode('b', 'tabbar', { slot: 'tab-bar.surface' }), makeNode('c')]
+    const reg = makeRegistry({ text: { sortable: true } })
     const locked = getLockedIndices(children, reg, makeSchema(children))
     expect(locked.size).toBe(0)
   })
 
-  it('flow:false nodes do not block locked flow nodes', () => {
-    const children = [makeNode('a', 'header'), makeNode('b', 'tabbar'), makeNode('c')]
-    const reg = makeRegistry({ header: { sortable: false }, tabbar: { flow: false }, text: { sortable: true } })
+  it('external slots do not alter locked indices in the content sort scope', () => {
+    const children = [makeNode('a', 'header'), makeNode('b', 'tabbar', { slot: 'tab-bar.surface' }), makeNode('c')]
+    const reg = makeRegistry({ header: { sortable: false }, text: { sortable: true } })
     const locked = getLockedIndices(children, reg, makeSchema(children))
     expect(locked).toEqual(new Set([0]))
   })

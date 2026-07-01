@@ -74,6 +74,12 @@ interface SchemaNode {
   type: string
   props: Record<string, unknown>
   style?: Record<string, unknown>
+  layout?: {
+    slot?: string
+    sortScope?: string | false
+    order?: number
+    data?: Record<string, unknown>
+  }
   children?: SchemaNode[] // 仅 root 节点使用
 }
 ```
@@ -81,19 +87,32 @@ interface SchemaNode {
 - `root.children` 是扁平的 widget 数组。
 - 不存在 `nodeType`、不区分容器和 widget。
 - 不支持嵌套子节点（`children` 仅 root 保留）。
+- `layout.slot` 是开放挂载点，框架不内置位置枚举；业务、设备框或插件解释自己的 slot。
+- `layout.sortScope` 是开放排序域；`false` 表示节点不参与画布拖拽排序。
 
-### 4.2 Mask 概念
+### 4.2 Layout 投影
+
+Core 基于 `root.children` 和物料默认布局生成 `LayoutPlan`：
+
+- `slots`：按开放 `slot` 分组，用于 renderer 分槽渲染。
+- `sortScopes`：按开放 `sortScope` 分组，用于拖拽、上移、下移等排序命令。
+- `slotManifests`：聚合物料声明的 slot 布局行为，用于容器 shell 执行空间分配。
+- 默认规则：未声明 layout 的节点进入 `content` slot，并参与 `content` sort scope；非 `content` slot 默认不参与排序。
+
+物料可以通过 `WidgetMeta.layoutManifest` 声明自身 slot 的布局诉求，例如 `allocation: reserve` 表示占用容器空间，`allocation: overlay` 表示悬浮覆盖。slot 名称仍是不透明字符串，框架不从名称推断布局语义。Renderer 只负责把 slot 分组和 `LayoutPlan` 交给 `containerShell`；具体 shell 读取物料 manifest，执行 reserve/overlay 等布局行为。
+
+### 4.3 Mask 概念
 
 每个 widget 可通过 `WidgetMeta.mask` 字段控制画布中的交互行为：
 
 - `mask: true`（默认）：widget 上方覆盖透明遮罩层，阻止直接交互，点击遮罩选中 widget。
 - `mask: false`：widget 可直接交互，hover 时右上角显示选中 handle。
 
-### 4.3 选中态与工具栏
+### 4.4 选中态与工具栏
 
 - 选中的 widget 显示明显的蓝色实线边框 + 阴影（`dc-node--selected`）。
 - 选中时在 widget 右侧浮动显示工具栏（拖拽排序 / 上移 / 下移 / 删除）。
-- 拖拽排序按钮支持 HTML5 原生拖拽，拖住该按钮可将 widget 拖拽到画布中的目标位置进行排序，通过 `MOVE_NODE` 命令完成重排。
+- 拖拽排序按钮支持 HTML5 原生拖拽，拖住该按钮可将 widget 拖拽到同一 `sortScope` 中的目标位置，通过 `MOVE_NODE` 命令完成重排。
 - hover 状态显示蓝色虚线边框（`dc-node--hovered`）。
 
 ## 五、对外使用模式（唯一入口）
@@ -116,8 +135,8 @@ interface SchemaNode {
 
 ### 6.2 中间画布区
 
-- 画布为 root 节点，所有 widget 平铺在 root.children 中。
-- 拖拽 widget 支持任意位置插入，通过鼠标 Y 坐标与各 widget 垂直中点比较实时计算插入索引。
+- 画布为 root 节点，所有 widget 存储在 `root.children` 扁平列表中，渲染时通过 `LayoutPlan` 投影到开放 slot。
+- 拖拽 widget 支持在同一排序域中任意位置插入，通过鼠标 Y 坐标与该排序域内各 widget 垂直中点比较实时计算插入索引。
 - 支持 mask 覆盖层（默认开启）控制 widget 在画布中的可交互性。
 - 选中 widget 后右侧浮动工具栏提供拖拽排序、上移、下移、删除操作。
 - 拖拽悬停时 DropIndicator 在精确插入位置渲染（由 `dragOverIndex` 驱动）。
@@ -136,7 +155,7 @@ interface SchemaNode {
 - 运行时一致性：所有写操作必须通过命令系统进入 core。
 - 可扩展性：所有可替换能力通过显式扩展点，不破坏默认行为。
 - 可测试性：core 可独立单元测试；UI 层以集成测试验证交互。
-- 向后兼容：schema 需包含版本号并提供迁移钩子。
+- Schema 版本化：schema 必须携带版本号，便于后续演进时显式识别结构语义。
 
 ## 八、包职责总览
 

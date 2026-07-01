@@ -30,6 +30,27 @@ export const ecommerceSchema: DesignerSchema = {
           transparent: false,
         },
         style: { width: '100%' },
+        layout: { slot: 'navbar.surface', sortScope: false },
+      },
+
+      // ── TabBar (schema order independent) ─────
+      {
+        id: 'tabbar-main',
+        type: 'tab-bar',
+        props: {
+          tabs: [
+            { label: '首页', icon: 'home' },
+            { label: '分类', icon: 'category' },
+            { label: '购物车', icon: 'cart' },
+            { label: '我的', icon: 'user' },
+          ],
+          activeIndex: 0,
+          backgroundColor: '#ffffff',
+          activeColor: '#07C160',
+          inactiveColor: '#999999',
+        },
+        style: { width: '100%' },
+        layout: { slot: 'tab-bar.surface', sortScope: false },
       },
 
       // ── Swiper Banner ─────────────────────
@@ -284,25 +305,6 @@ export const ecommerceSchema: DesignerSchema = {
           padding: '8px 16px 24px',
           width: '100%',
         },
-      },
-
-      // ── TabBar ────────────────────────────
-      {
-        id: 'tabbar-main',
-        type: 'tab-bar',
-        props: {
-          tabs: [
-            { label: '首页', icon: 'home' },
-            { label: '分类', icon: 'category' },
-            { label: '购物车', icon: 'cart' },
-            { label: '我的', icon: 'user' },
-          ],
-          activeIndex: 0,
-          backgroundColor: '#ffffff',
-          activeColor: '#07C160',
-          inactiveColor: '#999999',
-        },
-        style: { width: '100%' },
       },
     ],
   },

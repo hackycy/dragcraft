@@ -1,5 +1,6 @@
-import type { DesignerSchema, RegistryInstance, SchemaNode } from './types'
+import type { DesignerSchema, LayoutNodeEntry, RegistryInstance, SchemaNode } from './types'
 import { resolveBehavior } from './behavior'
+import { createLayoutPlan, DEFAULT_SORT_SCOPE, getSortScopeEntries } from './layout'
 
 /**
  * Collect the indices of all widgets whose `sortable` behavior resolves to false.
@@ -13,17 +14,19 @@ export function getLockedIndices(
   children: SchemaNode[],
   registry: RegistryInstance,
   schema: DesignerSchema,
+  sortScope = DEFAULT_SORT_SCOPE,
 ): Set<number> {
   const locked = new Set<number>()
-  for (let i = 0; i < children.length; i++) {
-    const meta = registry.getWidget(children[i].type)
+  const scopeEntries = getSortScopeEntries(createLayoutPlan(schema, registry), sortScope)
+
+  for (let i = 0; i < scopeEntries.length; i++) {
+    const node = scopeEntries[i].node
+    const meta = registry.getWidget(node.type)
     if (!meta)
-      continue
-    if (meta.flow === false)
       continue
     const isSortable = resolveBehavior(
       meta.sortable,
-      { node: children[i], schema },
+      { node, schema },
     )
     if (!isSortable) {
       locked.add(i)
@@ -111,7 +114,7 @@ export function isRemoveAllowed(
  * @param sourceNodeId  - ID of the dragged widget (null if dragging from material panel)
  */
 export function getValidDropIndices(
-  children: SchemaNode[],
+  children: SchemaNode[] | LayoutNodeEntry[],
   lockedIndices: Set<number>,
   sourceNodeId: string | null,
 ): Set<number> {
@@ -133,7 +136,9 @@ export function getValidDropIndices(
     }
   }
   else {
-    const srcIdx = children.findIndex(c => c.id === sourceNodeId)
+    const srcIdx = children.findIndex(c =>
+      'node' in c ? c.node.id === sourceNodeId : c.id === sourceNodeId,
+    )
     if (srcIdx === -1)
       return valid
 

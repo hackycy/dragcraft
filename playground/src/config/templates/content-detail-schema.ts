@@ -30,6 +30,7 @@ export const contentDetailSchema: DesignerSchema = {
           transparent: false,
         },
         style: { width: '100%' },
+        layout: { slot: 'navbar.surface', sortScope: false },
       },
       // Cover image
       {

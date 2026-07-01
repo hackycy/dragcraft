@@ -104,11 +104,8 @@
   position: relative;
 }
 
-.dc-node--out-of-flow {
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-  cursor: grab;
+.dc-node--unsorted {
+  cursor: default;
 }
 
 .dc-node__handle {

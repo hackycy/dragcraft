@@ -1,5 +1,8 @@
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType } from 'vue'
 import { IconNavBack, IconNavHome, IconNavRecent, IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
+import { renderFrameViewport } from '../frame-slots'
 
 /**
  * Android phone frame with status bar and bottom navigation bar.
@@ -8,7 +11,14 @@ import { defineComponent, h } from 'vue'
 export default defineComponent({
   name: 'DcAndroidFrame',
 
-  setup(_, { slots }) {
+  props: {
+    layoutPlan: {
+      type: Object as PropType<LayoutPlan>,
+      default: undefined,
+    },
+  },
+
+  setup(props, { slots }) {
     return () =>
       h('div', { class: 'dc-device-frame dc-device-frame--android' }, [
         // Status bar
@@ -19,8 +29,7 @@ export default defineComponent({
             h('span', null, h(IconSignalBar, { size: 10 })),
           ]),
         ]),
-        // Content area
-        h('div', { class: 'dc-device-frame__content dc-container-shell' }, slots.default?.()),
+        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan)),
         // Android navigation bar (back / home / recent)
         h('div', { class: 'dc-device-frame__nav-bar' }, [
           h('span', { class: 'dc-device-frame__nav-btn' }, h(IconNavBack, { size: 12 })),

@@ -71,6 +71,8 @@ export interface NodeActionContext {
   index: number
   /** Total sibling count */
   siblingCount: number
+  /** Sort scope this action context belongs to, or false when unsorted */
+  sortScope: string | false
   /** The widget meta, if registered */
   meta: WidgetMeta | undefined
   /** The engine instance for executing commands */
@@ -188,8 +190,8 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       order: 100,
       available: (ctx) => {
         const instanceCtx = toInstanceCtx(ctx)
-        if (ctx.meta?.flow === false)
-          return resolveBehavior(ctx.meta?.draggable, instanceCtx, true)
+        if (ctx.sortScope === false)
+          return false
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
       },
@@ -202,8 +204,8 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       order: 200,
       available: (ctx) => {
         const instanceCtx = toInstanceCtx(ctx)
-        if (ctx.meta?.flow === false)
-          return resolveBehavior(ctx.meta?.draggable, instanceCtx, true)
+        if (ctx.sortScope === false)
+          return false
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
       },
@@ -211,7 +213,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
         if (ctx.index === 0)
           return true
         const children = ctx.engine.store.getRawSchema().root.children ?? []
-        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema())
+        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema(), ctx.sortScope || undefined)
         if (lockedIndices.size === 0)
           return false
         return !isMoveAllowed(ctx.index, ctx.index - 1, lockedIndices)
@@ -221,7 +223,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
         if (ctx.index > 0) {
           ctx.engine.execute({
             type: CommandType.MOVE_NODE,
-            payload: { nodeId: ctx.node.id, index: ctx.index - 1 },
+            payload: { nodeId: ctx.node.id, index: ctx.index - 1, sortScope: ctx.sortScope || undefined },
           })
         }
       },
@@ -234,8 +236,8 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       order: 300,
       available: (ctx) => {
         const instanceCtx = toInstanceCtx(ctx)
-        if (ctx.meta?.flow === false)
-          return resolveBehavior(ctx.meta?.draggable, instanceCtx, true)
+        if (ctx.sortScope === false)
+          return false
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
       },
@@ -243,7 +245,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
         if (ctx.index >= ctx.siblingCount - 1)
           return true
         const children = ctx.engine.store.getRawSchema().root.children ?? []
-        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema())
+        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema(), ctx.sortScope || undefined)
         if (lockedIndices.size === 0)
           return false
         return !isMoveAllowed(ctx.index, ctx.index + 1, lockedIndices)
@@ -253,7 +255,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
         if (ctx.index < ctx.siblingCount - 1) {
           ctx.engine.execute({
             type: CommandType.MOVE_NODE,
-            payload: { nodeId: ctx.node.id, index: ctx.index + 1 },
+            payload: { nodeId: ctx.node.id, index: ctx.index + 1, sortScope: ctx.sortScope || undefined },
           })
         }
       },
@@ -268,7 +270,9 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       available: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
       disabled: (ctx) => {
         const children = ctx.engine.store.getRawSchema().root.children ?? []
-        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema())
+        if (ctx.sortScope === false)
+          return false
+        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema(), ctx.sortScope)
         if (lockedIndices.size === 0)
           return false
         return !isRemoveAllowed(ctx.index, lockedIndices)

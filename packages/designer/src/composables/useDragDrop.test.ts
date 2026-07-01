@@ -4,8 +4,8 @@ import { CommandType, createEngine } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useDragDrop } from './useDragDrop'
 
-function makeNode(id: string, type = 'text'): SchemaNode {
-  return { id, type, props: {} }
+function makeNode(id: string, type = 'text', layout?: SchemaNode['layout']): SchemaNode {
+  return { id, type, props: {}, layout }
 }
 
 function makeMeta(type: string, overrides?: Partial<WidgetMeta>): WidgetMeta {
@@ -222,25 +222,31 @@ describe('useDragDrop', () => {
     expect(dd.lockedIndices.value.has(2)).toBe(true)
   })
 
-  it('handleNodeDragStart works for flow:false nodes', () => {
-    engine.registerWidget(makeMeta('tabbar', { flow: false }))
-    engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('t', 'tabbar') } })
-
+  it('fixed-slot material drops create outside the content sort scope', () => {
     const dd = useDragDrop(engine)
-    const e = mockDragEvent()
-    dd.handleNodeDragStart(e, 't')
-
-    // dragTarget should be set (drag is allowed)
-    expect(engine.store.dragTarget.value).toEqual({
-      sourceNodeId: 't',
-      widgetType: null,
+    const meta = makeMeta('tabbar', {
+      defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
     })
-    dd.destroyDragPreview()
+    engine.registerWidget(meta)
+    const e = mockDragEvent()
+
+    dd.handleMaterialDragStart(e, meta)
+    dd.dragOverIndex.value = null
+    dd.handleCanvasDrop(e)
+
+    const children = engine.store.schema.value.root.children!
+    expect(children).toHaveLength(3)
+    expect(children[2]).toMatchObject({
+      type: 'tabbar',
+      layout: { slot: 'tab-bar.surface', sortScope: false },
+    })
   })
 
-  it('handleCanvasDrop inserts at direct array index when non-flow nodes exist', () => {
-    engine.registerWidget(makeMeta('tabbar', { flow: false }))
-    engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('t', 'tabbar') } })
+  it('handleCanvasDrop inserts by content sort-scope index when fixed-slot nodes exist', () => {
+    engine.execute({
+      type: CommandType.ADD_NODE,
+      payload: { node: makeNode('t', 'tabbar', { slot: 'tab-bar.surface', sortScope: false }) },
+    })
     // children: [a, b, t(tabbar)]
 
     const dd = useDragDrop(engine)
@@ -249,13 +255,12 @@ describe('useDragDrop', () => {
     const e = mockDragEvent()
 
     dd.handleMaterialDragStart(e, meta)
-    // Array index 2 = before tabbar in unified list
+    // Content scope index 2 = after a and b; tabbar remains outside sorting.
     dd.dragOverIndex.value = 2
     dd.handleCanvasDrop(e)
 
     const children = engine.store.schema.value.root.children!
     expect(children).toHaveLength(4)
-    expect(children[2].type).toBe('image')
-    expect(children[3].type).toBe('tabbar')
+    expect(children.map(c => c.type)).toEqual(['text', 'button', 'image', 'tabbar'])
   })
 })

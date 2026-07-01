@@ -2,6 +2,7 @@ import type { DesignerEngine, SchemaNode } from '@dragcraft/core'
 import type { ComputedRef } from 'vue'
 import type { NodeActionContext, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
+import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
 
 export interface UseNodeActionsReturn {
@@ -35,14 +36,19 @@ export function useNodeActions(
 
   const actionContext = computed<NodeActionContext>(() => {
     const node = getNode()
-    const children = readRawSchema(engine).root.children ?? []
-    const index = children.findIndex(c => c.id === node.id)
+    const schema = readRawSchema(engine)
+    const layout = resolveNodeLayout(node, engine.registry)
+    const scopeEntries = layout.sortScope === false
+      ? []
+      : getSortScopeEntries(createLayoutPlan(schema, engine.registry), layout.sortScope)
+    const index = scopeEntries.findIndex(entry => entry.node.id === node.id)
     const meta = engine.registry.getWidget(node.type)
 
     return {
       node,
       index,
-      siblingCount: children.length,
+      siblingCount: scopeEntries.length,
+      sortScope: layout.sortScope,
       meta,
       engine,
     }

@@ -1,6 +1,7 @@
-import type { InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext } from '../types'
+import { resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
 import { fireAfterHook, resolveBeforeHook } from '../event-hooks'
 import { useNodeState } from './useNodeState'
@@ -20,6 +21,10 @@ export interface UseWidgetNodeReturn {
   draggable: ComputedRef<boolean>
   /** Whether this node is sortable / position-locked (from meta.sortable, default true) */
   sortable: ComputedRef<boolean>
+  /** Whether this node belongs to a sortable scope */
+  inSortScope: ComputedRef<boolean>
+  /** Resolved open layout metadata */
+  layout: ComputedRef<ResolvedNodeLayout>
   /** CSS classes for the node wrapper */
   wrapperClasses: ComputedRef<Array<string | Record<string, boolean>>>
   /** Handle select event */
@@ -47,6 +52,8 @@ export function useWidgetNode(
 
   const meta = computed(() => engine.registry.getWidget(getNode().type))
   const resolvedComponent = computed(() => componentMap[getNode().type])
+  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry))
+  const inSortScope = computed(() => layout.value.sortScope !== false)
 
   function readInstanceCtx(): InstanceBehaviorContext {
     // Read schema.value to establish reactive dependency, then return raw for predicate evaluation
@@ -76,8 +83,7 @@ export function useWidgetNode(
   })
 
   const draggable = computed(() => {
-    // sortable: false implies not draggable (only for flow nodes)
-    if (meta.value?.flow !== false && !sortable.value)
+    if (!inSortScope.value || !sortable.value)
       return false
     const field = meta.value?.draggable
     if (typeof field !== 'function')
@@ -92,8 +98,8 @@ export function useWidgetNode(
       'dc-node--masked': useMask.value,
       'dc-node--unmasked': !useMask.value,
       'dc-node--non-selectable': !selectable.value,
-      'dc-node--locked': meta.value?.flow !== false && !sortable.value,
-      'dc-node--out-of-flow': meta.value?.flow === false,
+      'dc-node--locked': inSortScope.value && !sortable.value,
+      'dc-node--unsorted': !inSortScope.value,
     },
     state.interactionClasses.value,
   ])
@@ -157,6 +163,8 @@ export function useWidgetNode(
     selectable,
     draggable,
     sortable,
+    inSortScope,
+    layout,
     wrapperClasses,
     handleSelect,
     handleMouseEnter,

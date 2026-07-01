@@ -27,6 +27,18 @@ export { findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, w
 export { createHistoryManager } from './history-manager'
 export type { HistoryManagerInstance } from './history-manager'
 
+// ── Layout protocol ───────────────────────
+export {
+  createLayoutPlan,
+  DEFAULT_LAYOUT_SLOT,
+  DEFAULT_SORT_SCOPE,
+  getLayoutSlotEntries,
+  getSortableArrayIndexForInsert,
+  getSortScopeEntries,
+  getSortScopeNodes,
+  resolveNodeLayout,
+} from './layout'
+
 export { createRegistry } from './registry'
 
 // ── Subsystem factories ───────────────────
@@ -55,9 +67,19 @@ export type {
   FormSchemaShape,
   HistoryEntry,
   InstanceBehaviorContext,
+  LayoutAllocation,
+  LayoutAnchor,
+  LayoutAxis,
+  LayoutEdge,
+  LayoutNodeEntry,
+  LayoutPlan,
+  LayoutSlotManifest,
   MoveNodePayload,
+  NodeLayout,
   RegistryInstance,
   RemoveNodePayload,
+  ResolvedLayoutSlotManifest,
+  ResolvedNodeLayout,
   SchemaMigration,
   SchemaNode,
   SchemaStoreInstance,
@@ -65,5 +87,6 @@ export type {
   TypeBehaviorContext,
   UpdatePropsPayload,
   WidgetActionConfig,
+  WidgetLayoutManifest,
   WidgetMeta,
 } from './types'

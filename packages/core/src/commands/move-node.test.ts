@@ -4,8 +4,8 @@ import { createRegistry } from '../registry'
 import { createSchemaStore } from '../schema-store'
 import { moveNodeHandler } from './move-node'
 
-function makeNode(id: string): SchemaNode {
-  return { id, type: 'text', props: {} }
+function makeNode(id: string, layout?: SchemaNode['layout']): SchemaNode {
+  return { id, type: 'text', props: {}, layout }
 }
 
 function makeSchema(children: SchemaNode[] = []): DesignerSchema {
@@ -58,6 +58,34 @@ describe('moveNodeHandler', () => {
     moveNodeHandler(ctx, { nodeId: 'a', index: 1 })
     const ids = store.getRawSchema().root.children!.map(c => c.id)
     expect(ids).toEqual(['a', 'b']) // unchanged
+    warn.mockRestore()
+  })
+
+  it('moves nodes by sort-scope index while preserving fixed-slot nodes', () => {
+    const { ctx, store } = setup([
+      makeNode('a'),
+      makeNode('tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('b'),
+      makeNode('c'),
+    ])
+
+    moveNodeHandler(ctx, { nodeId: 'a', index: 2 })
+
+    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    expect(ids).toEqual(['tabbar', 'b', 'c', 'a'])
+  })
+
+  it('blocks moving nodes outside sortable scopes', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { ctx, store } = setup([
+      makeNode('a'),
+      makeNode('tabbar', { slot: 'tab-bar.surface' }),
+    ])
+
+    moveNodeHandler(ctx, { nodeId: 'tabbar', index: 0 })
+
+    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    expect(ids).toEqual(['a', 'tabbar'])
     warn.mockRestore()
   })
 })

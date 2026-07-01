@@ -63,6 +63,7 @@ src/
 ├── types.ts                  # 所有接口与类型定义
 ├── constants.ts              # 事件名、命令类型常量
 ├── helpers.ts                # 扁平列表操作工具函数
+├── layout.ts                 # 开放 slot 与 sortScope 的布局投影
 ├── sortable.ts               # 位置锁定约束验证工具函数
 ├── schema-store.ts           # SchemaStore - 响应式状态管理
 ├── event-hub.ts              # EventHub - 类型安全的事件总线
@@ -117,13 +118,25 @@ src/
 
 内置命令类型（`CommandType`）：
 
-- `ADD_NODE` — 添加 widget 到 root.children 扁平列表
-- `MOVE_NODE` — 在 root.children 中重排序
+- `ADD_NODE` — 添加 widget 到 root.children 扁平列表；`index` 表示目标排序域中的插入点
+- `MOVE_NODE` — 在节点所属 `sortScope` 中重排序
 - `REMOVE_NODE` — 删除节点
 - `UPDATE_PROPS` — 更新节点 props/style
 - `SET_GLOBAL_CONFIG` — 更新全局配置
 
-### 3) HistoryManager
+### 3) LayoutPlan
+
+Core 不定义固定位置枚举。节点可通过 `layout.slot` 声明开放挂载点，通过 `layout.sortScope` 声明开放排序域：
+
+- 未声明 layout 的节点进入 `content` slot，并参与 `content` sort scope。
+- 非 `content` slot 默认不参与排序，除非显式声明自己的 `sortScope`。
+- `sortScope: false` 表示节点完全退出拖拽排序。
+- `WidgetMeta.defaultLayout` 为物料提供默认布局，节点实例上的 `layout` 可覆盖它。
+- `WidgetMeta.layoutManifest` 由物料声明 slot 的布局行为，容器 shell 可据此执行 reserve/overlay 等空间策略。
+
+`createLayoutPlan(schema, registry)` 会把扁平 `root.children` 投影为 `slots`、`sortScopes` 和 `slotManifests`。核心只维护分组、顺序、manifest 聚合和命令约束，不从 slot 名称解释业务含义。
+
+### 4) HistoryManager
 
 基于快照的 undo/redo，支持事务批处理。
 
@@ -141,7 +154,7 @@ src/
 | `isInTransaction()` | 是否在事务中 |
 | `clear()` | 清空历史 |
 
-### 4) Registry
+### 5) Registry
 
 物料与配置 schema 的注册中心。
 
@@ -449,7 +462,7 @@ CommandBus
 
 ## 里程碑
 
-1. ~~完成核心类型与 schema 读写。~~ ✅
-2. ~~完成命令系统与历史回放。~~ ✅
-3. ~~完成注册中心与事件协议。~~ ✅
-4. 补齐单元测试（命令、历史、迁移）。
+1. 完成核心类型与 schema 读写。
+2. 完成命令系统与历史回放。
+3. 完成注册中心与事件协议。
+4. 持续补齐命令、历史、布局投影等核心单元测试。

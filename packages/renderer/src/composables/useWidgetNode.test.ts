@@ -129,15 +129,19 @@ describe('useWidgetNode', () => {
       expect(node.draggable.value).toBe(false)
     })
 
-    it('flow:false nodes are draggable', () => {
-      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', { flow: false }))
+    it('nodes outside sort scopes are not draggable', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', {
+        defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
+      }))
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
-      expect(node.draggable.value).toBe(true)
+      expect(node.inSortScope.value).toBe(false)
+      expect(node.draggable.value).toBe(false)
     })
 
-    it('flow:true does not affect draggable', () => {
-      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text', { flow: true }))
+    it('content nodes remain draggable by default', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
       const node = useWidgetNode(() => makeNode('a'), ctx)
+      expect(node.inSortScope.value).toBe(true)
       expect(node.draggable.value).toBe(true)
     })
   })
@@ -166,22 +170,26 @@ describe('useWidgetNode', () => {
       expect(classObj['dc-node--locked']).toBe(true)
     })
 
-    it('includes out-of-flow class when flow is false', () => {
-      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', { flow: false }))
+    it('includes unsorted class when node is outside sort scopes', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', {
+        defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
+      }))
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
-      expect(classObj['dc-node--out-of-flow']).toBe(true)
+      expect(classObj['dc-node--unsorted']).toBe(true)
     })
 
-    it('does not include out-of-flow class when flow is true', () => {
-      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text', { flow: true }))
+    it('does not include unsorted class for content nodes', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
       const node = useWidgetNode(() => makeNode('a'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
-      expect(classObj['dc-node--out-of-flow']).toBe(false)
+      expect(classObj['dc-node--unsorted']).toBe(false)
     })
 
-    it('does not include locked class when flow is false even if sortable is effectively skipped', () => {
-      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', { flow: false }))
+    it('does not include locked class when node is outside sort scopes', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', {
+        defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
+      }))
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
       expect(classObj['dc-node--locked']).toBe(false)

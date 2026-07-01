@@ -43,6 +43,8 @@
     "@dragcraft/icons": "workspace:*"
   },
   "devDependencies": {
+    "@vue/test-utils": "catalog:",
+    "happy-dom": "catalog:",
     "postcss": "catalog:cli",
     "postcss-cli": "catalog:cli",
     "postcss-import": "catalog:cli",

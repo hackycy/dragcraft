@@ -1,5 +1,8 @@
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType } from 'vue'
 import { IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
+import { renderFrameViewport } from '../frame-slots'
 
 /**
  * Tablet / iPad frame with minimal chrome and thin bezels.
@@ -8,7 +11,14 @@ import { defineComponent, h } from 'vue'
 export default defineComponent({
   name: 'DcTabletFrame',
 
-  setup(_, { slots }) {
+  props: {
+    layoutPlan: {
+      type: Object as PropType<LayoutPlan>,
+      default: undefined,
+    },
+  },
+
+  setup(props, { slots }) {
     return () =>
       h('div', { class: 'dc-device-frame dc-device-frame--tablet' }, [
         // Status bar (iPad-style)
@@ -19,8 +29,7 @@ export default defineComponent({
             h('span', null, h(IconSignalBar, { size: 10 })),
           ]),
         ]),
-        // Content area
-        h('div', { class: 'dc-device-frame__content dc-container-shell' }, slots.default?.()),
+        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan)),
       ])
   },
 })

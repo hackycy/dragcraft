@@ -9,6 +9,7 @@ export interface SchemaNode {
   type: string
   props: Record<string, unknown>
   style?: Record<string, unknown>
+  layout?: NodeLayout
   /** Only used on the root node to hold the flat widget list */
   children?: SchemaNode[]
 }
@@ -21,6 +22,83 @@ export interface DesignerSchema {
   version: string
   globalConfig: Record<string, unknown>
   root: SchemaNode
+}
+
+// ──────────────────────────────────────────
+// Layout protocol
+// ──────────────────────────────────────────
+
+/**
+ * Open layout metadata attached to a node.
+ *
+ * `slot` is an application-defined mount point. The framework does not assign
+ * meaning to values like "content", "tab-bar.surface", or "fab.surface".
+ *
+ * `sortScope` controls which reorderable sequence the node belongs to:
+ * - string: participates in that named sorting domain
+ * - false: excluded from drag sorting
+ */
+export interface NodeLayout {
+  slot?: string
+  sortScope?: string | false
+  order?: number
+  data?: Record<string, unknown>
+}
+
+export interface ResolvedNodeLayout {
+  slot: string
+  sortScope: string | false
+  order?: number
+  data?: Record<string, unknown>
+}
+
+export interface LayoutNodeEntry {
+  node: SchemaNode
+  arrayIndex: number
+  layout: ResolvedNodeLayout
+}
+
+export interface LayoutPlan {
+  entries: LayoutNodeEntry[]
+  slots: Map<string, LayoutNodeEntry[]>
+  sortScopes: Map<string, LayoutNodeEntry[]>
+  slotManifests: Map<string, ResolvedLayoutSlotManifest>
+}
+
+export type LayoutAllocation = 'reserve' | 'overlay'
+export type LayoutAxis = 'block' | 'inline'
+export type LayoutEdge = 'start' | 'end'
+export type LayoutAnchor = 'start' | 'center' | 'end'
+
+/**
+ * Material-declared layout behavior for one open slot.
+ *
+ * The slot name itself remains opaque. The shell executes these primitive
+ * behaviors without knowing whether the material is a navbar, tabbar,
+ * survey submit bar, or any other business concept.
+ */
+export interface LayoutSlotManifest {
+  allocation: LayoutAllocation
+  axis?: LayoutAxis
+  edge?: LayoutEdge
+  anchor?: {
+    block?: LayoutAnchor
+    inline?: LayoutAnchor
+  }
+  order?: number
+  className?: string
+  data?: Record<string, unknown>
+}
+
+export interface ResolvedLayoutSlotManifest extends LayoutSlotManifest {
+  slot: string
+  axis: LayoutAxis
+  edge: LayoutEdge
+  order: number
+}
+
+export interface WidgetLayoutManifest {
+  slots?: Record<string, LayoutSlotManifest>
 }
 
 // ──────────────────────────────────────────
@@ -172,12 +250,10 @@ export interface WidgetMeta {
   sortable?: BehaviorPredicate<InstanceBehaviorContext>
   /** Whether this widget can be deleted via toolbar action (default: true). Accepts boolean or predicate. */
   deletable?: BehaviorPredicate<InstanceBehaviorContext>
-  /**
-   * Whether this widget participates in the root container's vertical flow layout (default: true).
-   * When false, the node is excluded from sortable constraints, is not draggable,
-   * and renders in a separate overlay layer independent of the content flow.
-   */
-  flow?: boolean
+  /** Default open layout metadata for new and existing instances of this widget type. */
+  defaultLayout?: NodeLayout
+  /** Material-declared layout behavior consumed by container shells. */
+  layoutManifest?: WidgetLayoutManifest
 
   // ── Material panel controls ──
 
@@ -228,12 +304,16 @@ export type CommandHandler<T = unknown> = (
 
 export interface AddNodePayload {
   node: SchemaNode
+  /** Sort-scope insertion index. Defaults to the node's resolved sort scope. */
   index?: number
+  sortScope?: string
 }
 
 export interface MoveNodePayload {
   nodeId: string
+  /** Post-removal insertion index inside the node's sort scope. */
   index: number
+  sortScope?: string
 }
 
 export interface RemoveNodePayload {

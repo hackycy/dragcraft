@@ -4,8 +4,8 @@ import { createRegistry } from '../registry'
 import { createSchemaStore } from '../schema-store'
 import { removeNodeHandler } from './remove-node'
 
-function makeNode(id: string): SchemaNode {
-  return { id, type: 'text', props: {} }
+function makeNode(id: string, layout?: SchemaNode['layout']): SchemaNode {
+  return { id, type: 'text', props: {}, layout }
 }
 
 function makeSchema(children: SchemaNode[] = []): DesignerSchema {
@@ -68,5 +68,19 @@ describe('removeNodeHandler', () => {
     removeNodeHandler(ctx, { nodeId: 'a' })
     expect(store.getRawSchema().root.children).toHaveLength(2)
     warn.mockRestore()
+  })
+
+  it('does not let fixed-slot nodes affect content removal constraints', () => {
+    const { ctx, registry, store } = setup([
+      makeNode('tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('locked'),
+      makeNode('free'),
+    ])
+    registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] }, sortable: false })
+
+    removeNodeHandler(ctx, { nodeId: 'tabbar' })
+
+    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    expect(ids).toEqual(['locked', 'free'])
   })
 })

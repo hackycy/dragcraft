@@ -151,6 +151,8 @@ export default defineComponent({
           'style': wrapperStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
+          'data-dc-layout-slot': widget.layout.value.slot,
+          'data-dc-sort-scope': widget.layout.value.sortScope === false ? undefined : widget.layout.value.sortScope,
           'onMouseenter': widget.handleMouseEnter,
           'onMouseleave': widget.handleMouseLeave,
         },

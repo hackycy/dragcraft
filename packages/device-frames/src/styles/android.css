@@ -5,7 +5,7 @@
   border-radius: 20px;
 }
 
-.dc-device-frame--android .dc-device-frame__content {
+.dc-device-frame--android .dc-device-frame__viewport {
   height: 800px;
 }
 

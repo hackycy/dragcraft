@@ -1,3 +1,5 @@
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType } from 'vue'
 import { computed, defineComponent, h, inject } from 'vue'
 import { getDefaultPresets } from '../presets'
 import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
@@ -15,7 +17,14 @@ import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
 export default defineComponent({
   name: 'DcDeviceFrameShell',
 
-  setup(_, { slots }) {
+  props: {
+    layoutPlan: {
+      type: Object as PropType<LayoutPlan>,
+      default: undefined,
+    },
+  },
+
+  setup(props, { slots }) {
     const ctx = inject(DEVICE_FRAME_CONTEXT_KEY, null)
 
     const fallbackFrame = getDefaultPresets()[0].frameComponent
@@ -28,8 +37,6 @@ export default defineComponent({
     })
 
     return () =>
-      h(activeFrame.value, null, {
-        default: () => slots.default?.(),
-      })
+      h(activeFrame.value, { layoutPlan: props.layoutPlan }, slots)
   },
 })

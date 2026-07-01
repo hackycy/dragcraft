@@ -29,7 +29,20 @@ export const tabBarWidgetMeta: WidgetMeta = {
   title: 'Tab 栏',
   group: 'navigation',
   icon: 'tabbar',
-  flow: false,
+  defaultLayout: {
+    slot: 'tab-bar.surface',
+    sortScope: false,
+  },
+  layoutManifest: {
+    slots: {
+      'tab-bar.surface': {
+        allocation: 'reserve',
+        axis: 'block',
+        edge: 'end',
+        order: 10,
+      },
+    },
+  },
   creatable: (ctx) => {
     const children = ctx.schema.root.children ?? []
     return !children.some(c => c.type === 'tab-bar')
@@ -141,9 +154,6 @@ export default defineComponent({
       h('div', {
         class: 'dc-widget-tabbar',
         style: {
-          position: 'sticky',
-          bottom: '0',
-          zIndex: '100',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-around',

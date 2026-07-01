@@ -1,5 +1,5 @@
-import type { DesignerEngine, WidgetMeta } from '@dragcraft/core'
-import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
+import type { DesignerEngine, LayoutPlan, WidgetMeta } from '@dragcraft/core'
+import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { RendererEventHooks } from './event-hooks'
 
@@ -120,6 +120,16 @@ export interface WidgetFallbackProps {
   nodeType: string
 }
 
+/**
+ * Props received by a custom container shell component.
+ * `slotVNodes` is keyed by open layout slot names defined by the application.
+ */
+export interface ContainerShellProps {
+  isEmpty: boolean
+  slotVNodes: Record<string, VNode[]>
+  layoutPlan: LayoutPlan
+}
+
 // ──────────────────────────────────────────
 // Extension points
 // ──────────────────────────────────────────
@@ -128,7 +138,7 @@ export interface RendererExtensions {
   /**
    * Replaces the default root canvas wrapper.
    * E.g., a phone frame, tablet frame, or custom viewport shell.
-   * Must provide a default slot for children.
+   * Receives ContainerShellProps and slot functions for open layout slots.
    */
   containerShell?: Component
 

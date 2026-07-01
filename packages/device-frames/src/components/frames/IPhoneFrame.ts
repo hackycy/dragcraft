@@ -1,4 +1,7 @@
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
+import { renderFrameViewport } from '../frame-slots'
 
 /**
  * iPhone frame with Dynamic Island notch, status bar, and home indicator.
@@ -9,7 +12,14 @@ import { defineComponent, h } from 'vue'
 export default defineComponent({
   name: 'DcIPhoneFrame',
 
-  setup(_, { slots }) {
+  props: {
+    layoutPlan: {
+      type: Object as PropType<LayoutPlan>,
+      default: undefined,
+    },
+  },
+
+  setup(props, { slots }) {
     return () =>
       h('div', { class: 'dc-device-frame dc-device-frame--iphone' }, [
         // Status bar: time | Dynamic Island | icons
@@ -57,8 +67,7 @@ export default defineComponent({
             ]),
           ]),
         ]),
-        // Content area (receives schema widgets via slot)
-        h('div', { class: 'dc-device-frame__content dc-container-shell' }, slots.default?.()),
+        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan)),
         // Home indicator bar
         h('div', { class: 'dc-device-frame__home-indicator' }),
       ])

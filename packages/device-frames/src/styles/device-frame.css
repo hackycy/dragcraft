@@ -36,9 +36,102 @@
 }
 
 .dc-device-frame__content {
+  position: relative;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.35) transparent;
+}
+
+.dc-device-frame__viewport {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.dc-device-frame__dock {
+  position: relative;
+  z-index: 20;
+  min-width: 0;
+}
+
+.dc-device-frame__dock--block-start {
+  grid-row: 1;
+  grid-column: 1 / -1;
+}
+
+.dc-device-frame__dock--block-end {
+  grid-row: 3;
+  grid-column: 1 / -1;
+}
+
+.dc-device-frame__dock--inline-start {
+  grid-row: 2;
+  grid-column: 1;
+}
+
+.dc-device-frame__dock--inline-end {
+  grid-row: 2;
+  grid-column: 3;
+}
+
+.dc-device-frame__content {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+.dc-device-frame__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.dc-device-frame__overlay-item {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.dc-device-frame__overlay-item--block-start {
+  top: 16px;
+}
+
+.dc-device-frame__overlay-item--block-center {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dc-device-frame__overlay-item--block-end {
+  bottom: 16px;
+}
+
+.dc-device-frame__overlay-item--inline-start {
+  left: 16px;
+}
+
+.dc-device-frame__overlay-item--inline-center {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.dc-device-frame__overlay-item--inline-end {
+  right: 16px;
+}
+
+.dc-device-frame__overlay-item--block-center.dc-device-frame__overlay-item--inline-center {
+  transform: translate(-50%, -50%);
+}
+
+.dc-device-frame__overlay-item--block-center.dc-device-frame__overlay-item--inline-start,
+.dc-device-frame__overlay-item--block-center.dc-device-frame__overlay-item--inline-end {
+  transform: translateY(-50%);
+}
+
+.dc-device-frame__overlay-item--block-start.dc-device-frame__overlay-item--inline-center,
+.dc-device-frame__overlay-item--block-end.dc-device-frame__overlay-item--inline-center {
+  transform: translateX(-50%);
 }
 
 .dc-device-frame__content::-webkit-scrollbar {

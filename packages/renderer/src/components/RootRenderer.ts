@@ -3,6 +3,7 @@ import type { PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
 import type { RendererEventHooks } from '../event-hooks'
 import type { ComponentMap, RendererExtensions } from '../types'
+import { createLayoutPlan, DEFAULT_LAYOUT_SLOT, DEFAULT_SORT_SCOPE } from '@dragcraft/core'
 import { computed, defineComponent, h, provide } from 'vue'
 import { createRendererContext } from '../context'
 import { RENDERER_CONTEXT_KEY } from '../types'
@@ -79,38 +80,48 @@ export default defineComponent({
     return () => {
       // Read schema.value to establish reactive dependency
       const schema = props.engine.store.schema.value
-      const rootChildren = schema.root.children ?? []
       const isDragOver = props.dragOverNodeId?.value === 'root'
+      const plan = createLayoutPlan(schema, props.engine.registry)
 
       // Resolve drop indicator and empty state components
       const DropIndicator = props.extensions?.dropIndicator ?? DefaultDropIndicator
       const EmptyState = props.extensions?.emptyState ?? DefaultEmptyState
 
-      const childVNodes: VNode[] = rootChildren.map(child =>
-        h(WidgetRenderer, { key: child.id, node: child }),
-      )
+      const slotVNodes: Record<string, VNode[]> = {}
+      for (const [slot, entries] of plan.slots) {
+        slotVNodes[slot] = entries.map(entry =>
+          h(WidgetRenderer, {
+            'key': entry.node.id,
+            'node': entry.node,
+            'data-dc-layout-slot': entry.layout.slot,
+          }),
+        )
+      }
+
+      const contentVNodes = slotVNodes[DEFAULT_LAYOUT_SLOT] ?? []
 
       // Show forbidden overlay or drop indicator at the computed insertion index
       const isForbidden = props.isForbidden?.value ?? false
 
       if (isDragOver && isForbidden) {
-        childVNodes.push(h(ForbiddenOverlay.value, {
+        contentVNodes.push(h(ForbiddenOverlay.value, {
           key: '__forbidden__',
           widgetType: props.engine.store.dragTarget.value?.widgetType ?? '',
         }))
       }
       else if (isDragOver) {
         const idx = props.dragOverIndex?.value
-        if (idx != null && idx >= 0 && idx <= childVNodes.length) {
-          childVNodes.splice(idx, 0, h(DropIndicator, { key: '__drop-indicator__' }))
+        const scopeLength = plan.sortScopes.get(DEFAULT_SORT_SCOPE)?.length ?? contentVNodes.length
+        if (idx != null && idx >= 0 && idx <= scopeLength) {
+          contentVNodes.splice(idx, 0, h(DropIndicator, { key: '__drop-indicator__' }))
         }
         else {
-          childVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
+          contentVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
         }
       }
 
       // Empty state placeholder (only when no children and not dragging)
-      const isEmpty = rootChildren.length === 0 && !isDragOver
+      const isEmpty = (plan.sortScopes.get(DEFAULT_SORT_SCOPE)?.length ?? 0) === 0 && !isDragOver
 
       return h(
         'div',
@@ -122,13 +133,21 @@ export default defineComponent({
         [
           h(
             ContainerShell.value,
-            { class: { 'dc-container-shell--empty': isEmpty } },
+            {
+              class: { 'dc-container-shell--empty': isEmpty },
+              isEmpty,
+              slotVNodes,
+              layoutPlan: plan,
+            },
             {
               default: () => {
                 if (isEmpty)
                   return [h(EmptyState, { isDragOver: false })]
-                return childVNodes
+                return contentVNodes
               },
+              ...Object.fromEntries(
+                Object.entries(slotVNodes).map(([slot, vnodes]) => [slot, () => vnodes]),
+              ),
             },
           ),
         ],

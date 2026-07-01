@@ -5,6 +5,6 @@
   border-radius: 24px;
 }
 
-.dc-device-frame--tablet .dc-device-frame__content {
+.dc-device-frame--tablet .dc-device-frame__viewport {
   height: 1024px;
 }

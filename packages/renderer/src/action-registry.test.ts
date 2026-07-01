@@ -1,4 +1,5 @@
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { NodeActionContext } from './action-registry'
 import type { RendererEventHooks } from './event-hooks'
 import { resolveBehavior } from '@dragcraft/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -10,16 +11,16 @@ function mockEvent(): MouseEvent {
 }
 
 // Mock @dragcraft/core
-vi.mock('@dragcraft/core', () => ({
-  CommandType: {
-    MOVE_NODE: 'MOVE_NODE',
-    REMOVE_NODE: 'REMOVE_NODE',
-  },
-  resolveBehavior: vi.fn((_field: unknown, _ctx: unknown) => true),
-  getLockedIndices: vi.fn(() => new Set<number>()),
-  isMoveAllowed: vi.fn(() => true),
-  isRemoveAllowed: vi.fn(() => true),
-}))
+vi.mock('@dragcraft/core', async () => {
+  const actual = await vi.importActual<typeof import('@dragcraft/core')>('@dragcraft/core')
+  return {
+    ...actual,
+    resolveBehavior: vi.fn((_field: unknown, _ctx: unknown) => true),
+    getLockedIndices: vi.fn(() => new Set<number>()),
+    isMoveAllowed: vi.fn(() => true),
+    isRemoveAllowed: vi.fn(() => true),
+  }
+})
 
 function makeNode(overrides?: Partial<SchemaNode>): SchemaNode {
   return {
@@ -55,6 +56,18 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
   } as WidgetMeta
 }
 
+function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>): NodeActionContext {
+  return {
+    node: makeNode(),
+    index: 0,
+    siblingCount: 3,
+    sortScope: 'content',
+    meta: makeMeta(),
+    engine,
+    ...overrides,
+  }
+}
+
 describe('createDefaultActions', () => {
   afterEach(() => {
     vi.mocked(resolveBehavior).mockReturnValue(true)
@@ -87,7 +100,7 @@ describe('createDefaultActions', () => {
     expect(deleteAction.visible).toBeUndefined()
 
     // available should check capability
-    const ctx = { node: { id: 'n', type: 't', props: {} }, index: 0, siblingCount: 1, meta: makeMeta(), engine: makeEngine() }
+    const ctx = makeCtx(makeEngine(), { node: { id: 'n', type: 't', props: {} }, siblingCount: 1 })
     expect(dragAction.available!(ctx as any)).toBe(false)
     expect(moveUpAction.available!(ctx as any)).toBe(false)
     expect(deleteAction.available!(ctx as any)).toBe(false)
@@ -142,13 +155,7 @@ describe('resolve', () => {
 
   it('returns visible actions for a basic node', () => {
     const registry = createNodeActionRegistry()
-    const ctx = {
-      node: makeNode(),
-      index: 0,
-      siblingCount: 3,
-      meta: makeMeta(),
-      engine,
-    }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyHooks)
     // All 4 default actions visible by default (resolveBehavior mocked to return true)
@@ -160,13 +167,7 @@ describe('resolve', () => {
     vi.mocked(resolveBehavior).mockReturnValue(false) // all capabilities unavailable
 
     const registry = createNodeActionRegistry()
-    const ctx = {
-      node: makeNode(),
-      index: 0,
-      siblingCount: 3,
-      meta: makeMeta(),
-      engine,
-    }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyHooks)
     const drag = resolved.find(a => a.key === ActionKey.DRAG)
@@ -177,7 +178,7 @@ describe('resolve', () => {
   it('applies widgetActions.only filter', () => {
     const registry = createNodeActionRegistry()
     const meta = makeMeta({ actions: { only: [ActionKey.DELETE] } })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta, engine }
+    const ctx = makeCtx(engine, { meta })
 
     const resolved = registry.resolve(ctx, emptyHooks)
     expect(resolved).toHaveLength(1)
@@ -187,7 +188,7 @@ describe('resolve', () => {
   it('applies widgetActions.exclude filter', () => {
     const registry = createNodeActionRegistry()
     const meta = makeMeta({ actions: { exclude: [ActionKey.DRAG, ActionKey.MOVE_UP, ActionKey.MOVE_DOWN] } })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta, engine }
+    const ctx = makeCtx(engine, { meta })
 
     const resolved = registry.resolve(ctx, emptyHooks)
     expect(resolved).toHaveLength(1)
@@ -203,7 +204,7 @@ describe('resolve', () => {
       order: 50,
     }
     const meta = makeMeta({ actions: { extra: [extraAction] } })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta, engine }
+    const ctx = makeCtx(engine, { meta })
 
     const resolved = registry.resolve(ctx, emptyHooks)
     expect(resolved).toHaveLength(5)
@@ -212,7 +213,7 @@ describe('resolve', () => {
 
   it('move-up handler calls engine.execute with correct payload', () => {
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 1, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine, { index: 1 })
 
     const resolved = registry.resolve(ctx, emptyHooks)
     const moveUp = resolved.find(a => a.key === ActionKey.MOVE_UP)!
@@ -220,13 +221,13 @@ describe('resolve', () => {
 
     expect(engine.execute).toHaveBeenCalledWith({
       type: 'MOVE_NODE',
-      payload: { nodeId: 'node-1', index: 0 },
+      payload: { nodeId: 'node-1', index: 0, sortScope: 'content' },
     })
   })
 
   it('move-down handler calls engine.execute with correct payload', () => {
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 1, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine, { index: 1 })
 
     const resolved = registry.resolve(ctx, emptyHooks)
     const moveDown = resolved.find(a => a.key === ActionKey.MOVE_DOWN)!
@@ -234,13 +235,13 @@ describe('resolve', () => {
 
     expect(engine.execute).toHaveBeenCalledWith({
       type: 'MOVE_NODE',
-      payload: { nodeId: 'node-1', index: 2 },
+      payload: { nodeId: 'node-1', index: 2, sortScope: 'content' },
     })
   })
 
   it('delete handler calls engine.execute with correct payload', () => {
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyHooks)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
@@ -257,7 +258,7 @@ describe('resolve', () => {
       onBeforeDelete: vi.fn(() => false),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, hooks)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
@@ -272,7 +273,7 @@ describe('resolve', () => {
       onBeforeDelete: vi.fn(() => true),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, hooks)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
@@ -286,7 +287,7 @@ describe('resolve', () => {
       onBeforeDelete: vi.fn(() => Promise.resolve(false)),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, hooks)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
@@ -302,7 +303,7 @@ describe('resolve', () => {
       onBeforeDelete: vi.fn(() => Promise.resolve(true)),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, hooks)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
@@ -319,7 +320,7 @@ describe('resolve', () => {
       onBeforeDelete: vi.fn(() => new Promise<boolean>((r) => { resolveFirst = r })),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, hooks)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
@@ -344,7 +345,7 @@ describe('resolve', () => {
       onAfterDelete: vi.fn(),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, hooks)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
@@ -361,7 +362,7 @@ describe('resolve', () => {
       onAfterMove: vi.fn(),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 1, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine, { index: 1 })
 
     const resolved = registry.resolve(ctx, hooks)
     const moveUp = resolved.find(a => a.key === ActionKey.MOVE_UP)!
@@ -381,7 +382,7 @@ describe('resolve', () => {
       onBeforeMove: vi.fn(() => false),
     }
     const registry = createNodeActionRegistry()
-    const ctx = { node: makeNode(), index: 1, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine, { index: 1 })
 
     const resolved = registry.resolve(ctx, hooks)
     const moveUp = resolved.find(a => a.key === ActionKey.MOVE_UP)!
@@ -399,7 +400,7 @@ describe('resolve', () => {
       order: 500,
       available: () => false,
     })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyHooks)
     const action = resolved.find(a => a.key === 'test-action')
@@ -419,7 +420,7 @@ describe('resolve', () => {
       available: () => false,
       disabled: () => false,
     })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyHooks)
     const action = resolved.find(a => a.key === 'test-action')
@@ -437,7 +438,7 @@ describe('resolve', () => {
       order: 500,
       visible: () => false,
     })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyHooks)
     expect(resolved.find(a => a.key === 'test-action')).toBeUndefined()
@@ -452,7 +453,7 @@ describe('resolve', () => {
       order: 500,
       disabled: () => true,
     })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 3, meta: makeMeta(), engine }
+    const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyHooks)
     const action = resolved.find(a => a.key === 'test-action')
@@ -476,7 +477,7 @@ describe('resolve', () => {
     })
 
     const meta = makeMeta({ actions: { only: ['custom'] } })
-    const ctx = { node: makeNode(), index: 0, siblingCount: 1, meta, engine }
+    const ctx = makeCtx(engine, { siblingCount: 1, meta })
 
     const resolved = registry.resolve(ctx, hooks)
     resolved[0].handler(mockEvent())

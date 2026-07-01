@@ -1,4 +1,7 @@
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
+import { renderFrameViewport } from '../frame-slots'
 
 /**
  * Desktop browser chrome frame with title bar, traffic lights, and URL bar.
@@ -7,7 +10,14 @@ import { defineComponent, h } from 'vue'
 export default defineComponent({
   name: 'DcDesktopFrame',
 
-  setup(_, { slots }) {
+  props: {
+    layoutPlan: {
+      type: Object as PropType<LayoutPlan>,
+      default: undefined,
+    },
+  },
+
+  setup(props, { slots }) {
     return () =>
       h('div', { class: 'dc-device-frame dc-device-frame--desktop' }, [
         // Browser title bar
@@ -21,8 +31,7 @@ export default defineComponent({
           // URL bar
           h('div', { class: 'dc-device-frame__url-bar' }, 'localhost:5173'),
         ]),
-        // Content area
-        h('div', { class: 'dc-device-frame__content dc-container-shell' }, slots.default?.()),
+        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan)),
       ])
   },
 })

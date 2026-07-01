@@ -8,8 +8,8 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
 }
 
-function makeNode(id: string): SchemaNode {
-  return { id, type: 'text', props: {} }
+function makeNode(id: string, layout?: SchemaNode['layout']): SchemaNode {
+  return { id, type: 'text', props: {}, layout }
 }
 
 function setup(initial?: DesignerSchema) {
@@ -59,18 +59,18 @@ describe('addNodeHandler', () => {
     warn.mockRestore()
   })
 
-  it('allows insert when non-flow node is at the end', () => {
+  it('inserts by sort-scope index when fixed-slot nodes exist', () => {
     const { ctx, registry, store } = setup(makeSchema([
       makeNode('a'),
-      makeNode('tabbar'),
+      makeNode('tabbar', { slot: 'tab-bar.surface' }),
     ]))
     registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] } })
-    registry.registerWidget({ type: 'tabbar', title: 'TabBar', group: 'nav', defaultProps: {}, formSchema: { sections: [] }, flow: false })
 
     addNodeHandler(ctx, { node: makeNode('new'), index: 1 })
     const children = store.getRawSchema().root.children!
     expect(children).toHaveLength(3)
     expect(children[1].id).toBe('new')
+    expect(children[2].id).toBe('tabbar')
   })
 
   it('allows insert after all locked widgets', () => {
