@@ -39,50 +39,6 @@ export interface UseDragDropReturn {
   destroyDragPreview: () => void
 }
 
-/**
- * Convert a flow-relative visual index (from computeDropIndex) to an absolute
- * array index in root.children. Non-flow nodes in the array are skipped when
- * counting flow positions.
- */
-export function flowIndexToArrayIndex(
-  flowVisualIndex: number,
-  rootChildren: SchemaNode[],
-  registry: { getWidget: (type: string) => WidgetMeta | undefined },
-): number {
-  let flowCount = 0
-  let lastFlowEnd = 0
-  for (let i = 0; i < rootChildren.length; i++) {
-    const meta = registry.getWidget(rootChildren[i].type)
-    const isFlow = !meta || meta.flow !== false
-    if (isFlow) {
-      if (flowCount === flowVisualIndex)
-        return i
-      flowCount++
-      lastFlowEnd = i + 1
-    }
-  }
-  return lastFlowEnd
-}
-
-/**
- * Convert an absolute array index in root.children to a flow-relative visual
- * index. This is the inverse of `flowIndexToArrayIndex` — non-flow nodes in
- * the array are skipped when counting flow positions.
- */
-export function arrayIndexToFlowIndex(
-  arrayIndex: number,
-  rootChildren: SchemaNode[],
-  registry: { getWidget: (type: string) => WidgetMeta | undefined },
-): number {
-  let flowCount = 0
-  for (let i = 0; i < arrayIndex && i < rootChildren.length; i++) {
-    const meta = registry.getWidget(rootChildren[i].type)
-    if (!meta || meta.flow !== false)
-      flowCount++
-  }
-  return flowCount
-}
-
 // ──────────────────────────────────────────
 // Composable
 // ──────────────────────────────────────────
@@ -133,8 +89,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   function computeDropIndex(e: DragEvent): number {
     const canvasEl = e.currentTarget as HTMLElement
-    const flowEl = canvasEl.querySelector('.dc-canvas__flow') ?? canvasEl
-    const widgetEls = flowEl.querySelectorAll<HTMLElement>(
+    const widgetEls = canvasEl.querySelectorAll<HTMLElement>(
       '[data-node-id]:not([data-node-id="root"])',
     )
     const mouseY = e.clientY
@@ -163,15 +118,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function handleNodeDragStart(e: DragEvent, nodeId: string): void {
-    // Non-flow nodes are not draggable
-    const allChildren = engine.store.getRawSchema().root.children ?? []
-    const targetNode = allChildren.find(c => c.id === nodeId)
-    if (targetNode) {
-      const meta = engine.registry.getWidget(targetNode.type)
-      if (meta && meta.flow === false)
-        return
-    }
-
     engine.store.setDragTarget({
       sourceNodeId: nodeId,
       widgetType: null,
@@ -259,16 +205,9 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const valid = validDropIndices.value
 
     if (valid && valid.size > 0) {
-      // Convert flow-relative rawIndex to array space for comparison with validDropIndices
-      const children = engine.store.getRawSchema().root.children ?? []
-      const rawArrayIndex = flowIndexToArrayIndex(rawIndex, children, engine.registry)
-      const validArrayIndex = valid.has(rawArrayIndex)
-        ? rawArrayIndex
-        : findNearestValidIndex(rawArrayIndex, valid)
-      // Convert back to flow space for dragOverIndex (used by RootRenderer for drop indicator)
-      dragOverIndex.value = validArrayIndex != null
-        ? arrayIndexToFlowIndex(validArrayIndex, children, engine.registry)
-        : null
+      dragOverIndex.value = valid.has(rawIndex)
+        ? rawIndex
+        : findNearestValidIndex(rawIndex, valid)
     }
     else if (valid && valid.size === 0) {
       dragOverIndex.value = null
@@ -329,14 +268,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
 
     if (dragTarget.sourceNodeId) {
-      // Moving existing node to the computed position
       const children = engine.store.getRawSchema().root.children ?? []
       const srcIdx = children.findIndex(c => c.id === dragTarget.sourceNodeId)
 
-      // Convert flow-relative visual index to absolute array index
-      let targetIdx = flowIndexToArrayIndex(visualIndex, children, engine.registry)
-
-      // After the source is removed, items after it shift left by 1
+      let targetIdx = visualIndex
       if (srcIdx !== -1 && targetIdx > srcIdx) {
         targetIdx = targetIdx - 1
       }
@@ -350,16 +285,12 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       })
     }
     else if (dragTarget.widgetType) {
-      // Adding new widget from material panel
       const meta = engine.registry.getWidget(dragTarget.widgetType)
       if (!meta)
         return
 
       if (!resolveBehavior(meta.creatable, { widgetType: meta.type, schema: engine.store.getRawSchema() }))
         return
-
-      const children = engine.store.getRawSchema().root.children ?? []
-      const arrayIndex = flowIndexToArrayIndex(visualIndex, children, engine.registry)
 
       const newNode: SchemaNode = {
         id: generateShortId(),
@@ -372,7 +303,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
         type: CommandType.ADD_NODE,
         payload: {
           node: newNode,
-          index: arrayIndex,
+          index: visualIndex,
         },
       })
 

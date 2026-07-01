@@ -2,7 +2,7 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { arrayIndexToFlowIndex, flowIndexToArrayIndex, useDragDrop } from './useDragDrop'
+import { useDragDrop } from './useDragDrop'
 
 function makeNode(id: string, type = 'text'): SchemaNode {
   return { id, type, props: {} }
@@ -220,103 +220,5 @@ describe('useDragDrop', () => {
     const dd = useDragDrop(engine)
     expect(dd.lockedIndices.value.size).toBe(1)
     expect(dd.lockedIndices.value.has(2)).toBe(true)
-  })
-})
-
-describe('flow:false nodes', () => {
-  let engine: DesignerEngine
-
-  beforeEach(() => {
-    engine = createEngine({
-      initialSchema: makeSchema([makeNode('a', 'text'), makeNode('b', 'button')]),
-    })
-    engine.registerWidget(makeMeta('text'))
-    engine.registerWidget(makeMeta('button'))
-  })
-
-  it('handleNodeDragStart does nothing for flow:false nodes', () => {
-    engine.registerWidget(makeMeta('tabbar', { flow: false }))
-    engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('t', 'tabbar') } })
-
-    const dd = useDragDrop(engine)
-    const e = mockDragEvent()
-    dd.handleNodeDragStart(e, 't')
-
-    // dragTarget should remain null (drag was blocked)
-    expect(engine.store.dragTarget.value).toBeNull()
-  })
-
-  it('handleCanvasDrop inserts at correct array index when non-flow nodes exist', () => {
-    engine.registerWidget(makeMeta('tabbar', { flow: false }))
-    engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('t', 'tabbar') } })
-    // children: [a, b, t(tabbar)]
-
-    const dd = useDragDrop(engine)
-    const meta = makeMeta('image')
-    engine.registerWidget(meta)
-    const e = mockDragEvent()
-
-    dd.handleMaterialDragStart(e, meta)
-    // Visual index 2 = after 'b' in flow layer
-    dd.dragOverIndex.value = 2
-    dd.handleCanvasDrop(e)
-
-    const children = engine.store.schema.value.root.children!
-    expect(children).toHaveLength(4)
-    // 'image' should be inserted at array index 2 (before tabbar)
-    expect(children[2].type).toBe('image')
-    expect(children[3].type).toBe('tabbar')
-  })
-})
-
-describe('flowIndexToArrayIndex', () => {
-  it('returns array index for flow nodes', () => {
-    const children = [makeNode('a'), makeNode('b')]
-    const registry = { getWidget: () => undefined }
-    expect(flowIndexToArrayIndex(0, children, registry)).toBe(0)
-    expect(flowIndexToArrayIndex(1, children, registry)).toBe(1)
-    expect(flowIndexToArrayIndex(2, children, registry)).toBe(2)
-  })
-
-  it('skips non-flow nodes when counting', () => {
-    const children = [makeNode('a'), makeNode('t', 'tabbar'), makeNode('b')]
-    const tabbarMeta = makeMeta('tabbar', { flow: false })
-    const registry = { getWidget: (type: string) => type === 'tabbar' ? tabbarMeta : undefined }
-    // flow nodes: a(0), b(1). tabbar is skipped.
-    expect(flowIndexToArrayIndex(0, children, registry)).toBe(0) // 'a'
-    expect(flowIndexToArrayIndex(1, children, registry)).toBe(2) // 'b'
-    expect(flowIndexToArrayIndex(2, children, registry)).toBe(3) // end
-  })
-
-  it('returns position after last flow node when flow index exceeds flow node count', () => {
-    const children = [makeNode('a'), makeNode('t', 'tabbar')]
-    const tabbarMeta = makeMeta('tabbar', { flow: false })
-    const registry = { getWidget: (type: string) => type === 'tabbar' ? tabbarMeta : undefined }
-    // 'a' is the only flow node at index 0, so "after a" = index 1
-    expect(flowIndexToArrayIndex(1, children, registry)).toBe(1)
-  })
-})
-
-describe('arrayIndexToFlowIndex', () => {
-  it('returns flow index for array index with no non-flow nodes', () => {
-    const children = [makeNode('a'), makeNode('b')]
-    const registry = { getWidget: () => undefined }
-    expect(arrayIndexToFlowIndex(0, children, registry)).toBe(0)
-    expect(arrayIndexToFlowIndex(1, children, registry)).toBe(1)
-    expect(arrayIndexToFlowIndex(2, children, registry)).toBe(2)
-  })
-
-  it('skips non-flow nodes when counting', () => {
-    const children = [makeNode('a'), makeNode('t', 'tabbar'), makeNode('b')]
-    const tabbarMeta = makeMeta('tabbar', { flow: false })
-    const registry = { getWidget: (type: string) => type === 'tabbar' ? tabbarMeta : undefined }
-    // array 0 = 'a' -> flow 0
-    expect(arrayIndexToFlowIndex(0, children, registry)).toBe(0)
-    // array 1 = 'tabbar' (non-flow, skipped) -> flow 1
-    expect(arrayIndexToFlowIndex(1, children, registry)).toBe(1)
-    // array 2 = 'b' -> flow 1
-    expect(arrayIndexToFlowIndex(2, children, registry)).toBe(1)
-    // array 3 = end -> flow 2
-    expect(arrayIndexToFlowIndex(3, children, registry)).toBe(2)
   })
 })
