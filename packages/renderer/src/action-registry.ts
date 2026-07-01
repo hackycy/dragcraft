@@ -187,6 +187,8 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       type: 'drag-handle',
       order: 100,
       available: (ctx) => {
+        if (ctx.meta?.flow === false)
+          return false
         const instanceCtx = toInstanceCtx(ctx)
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
@@ -199,6 +201,8 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       type: 'button',
       order: 200,
       available: (ctx) => {
+        if (ctx.meta?.flow === false)
+          return false
         const instanceCtx = toInstanceCtx(ctx)
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
@@ -229,6 +233,8 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       type: 'button',
       order: 300,
       available: (ctx) => {
+        if (ctx.meta?.flow === false)
+          return false
         const instanceCtx = toInstanceCtx(ctx)
         return resolveBehavior(ctx.meta?.draggable, instanceCtx)
           && resolveBehavior(ctx.meta?.sortable, instanceCtx)
