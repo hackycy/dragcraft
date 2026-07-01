@@ -10,10 +10,10 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
 }
 
-function makeRegistry(sortableMap: Record<string, boolean> = {}): RegistryInstance {
+function makeRegistry(metaMap: Record<string, { sortable?: boolean, flow?: boolean }> = {}): RegistryInstance {
   const map = new Map<string, WidgetMeta>()
-  for (const [type, sortable] of Object.entries(sortableMap)) {
-    map.set(type, { type, title: type, group: 'g', defaultProps: {}, formSchema: { sections: [] }, sortable } as WidgetMeta)
+  for (const [type, meta] of Object.entries(metaMap)) {
+    map.set(type, { type, title: type, group: 'g', defaultProps: {}, formSchema: { sections: [] }, ...meta } as WidgetMeta)
   }
   return {
     registerWidget: () => {},
@@ -28,23 +28,37 @@ function makeRegistry(sortableMap: Record<string, boolean> = {}): RegistryInstan
 describe('getLockedIndices', () => {
   it('returns empty set when all widgets are sortable', () => {
     const children = [makeNode('a'), makeNode('b')]
-    const reg = makeRegistry({ text: true })
+    const reg = makeRegistry({ text: { sortable: true } })
     const locked = getLockedIndices(children, reg, makeSchema(children))
     expect(locked.size).toBe(0)
   })
 
   it('returns indices of non-sortable widgets', () => {
     const children = [makeNode('a'), makeNode('b', 'header'), makeNode('c')]
-    const reg = makeRegistry({ text: true, header: false })
+    const reg = makeRegistry({ text: { sortable: true }, header: { sortable: false } })
     const locked = getLockedIndices(children, reg, makeSchema(children))
     expect(locked).toEqual(new Set([1]))
   })
 
   it('skips widgets with no registered meta', () => {
     const children = [makeNode('a', 'unknown')]
-    const reg = makeRegistry({})
+    const reg = makeRegistry()
     const locked = getLockedIndices(children, reg, makeSchema(children))
     expect(locked.size).toBe(0)
+  })
+
+  it('skips flow:false nodes from locked indices', () => {
+    const children = [makeNode('a'), makeNode('b', 'tabbar'), makeNode('c')]
+    const reg = makeRegistry({ text: { sortable: true }, tabbar: { flow: false } })
+    const locked = getLockedIndices(children, reg, makeSchema(children))
+    expect(locked.size).toBe(0)
+  })
+
+  it('flow:false nodes do not block locked flow nodes', () => {
+    const children = [makeNode('a', 'header'), makeNode('b', 'tabbar'), makeNode('c')]
+    const reg = makeRegistry({ header: { sortable: false }, tabbar: { flow: false }, text: { sortable: true } })
+    const locked = getLockedIndices(children, reg, makeSchema(children))
+    expect(locked).toEqual(new Set([0]))
   })
 })
 

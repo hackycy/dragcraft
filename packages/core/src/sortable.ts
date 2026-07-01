@@ -19,6 +19,8 @@ export function getLockedIndices(
     const meta = registry.getWidget(children[i].type)
     if (!meta)
       continue
+    if (meta.flow === false)
+      continue
     const isSortable = resolveBehavior(
       meta.sortable,
       { node: children[i], schema },
