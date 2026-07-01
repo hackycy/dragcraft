@@ -80,6 +80,8 @@
   flex-shrink: 0;
   background: var(--dc-bg);
   border-right: 1px solid var(--dc-border-light);
+  position: relative;
+  z-index: calc(var(--dc-z-toolbar-float) + 1);
 }
 
 .dc-designer__panel--center {
@@ -92,6 +94,8 @@
   flex-shrink: 0;
   background: var(--dc-bg);
   border-left: 1px solid var(--dc-border-light);
+  position: relative;
+  z-index: calc(var(--dc-z-toolbar-float) + 1);
 }
 
 /* ── Drag Preview Forbidden State ───────── */

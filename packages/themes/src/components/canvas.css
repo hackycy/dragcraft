@@ -8,7 +8,14 @@
 
 .dc-canvas__content {
   padding: 24px;
+  min-width: calc(var(--device-width, 375px) + 4 * var(--dc-node-toolbar-width, 32px));
 }
+
+/* Propagate device frame width to canvas content for min-width calculation */
+.dc-canvas__content:has(.dc-device-frame--iphone) { --device-width: 375px; }
+.dc-canvas__content:has(.dc-device-frame--android) { --device-width: 360px; }
+.dc-canvas__content:has(.dc-device-frame--tablet) { --device-width: 768px; }
+.dc-canvas__content:has(.dc-device-frame--desktop) { --device-width: 1280px; }
 
 .dc-root-renderer {
   min-height: 100%;
