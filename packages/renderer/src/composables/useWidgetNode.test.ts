@@ -128,6 +128,18 @@ describe('useWidgetNode', () => {
       expect(node.sortable.value).toBe(true)
       expect(node.draggable.value).toBe(false)
     })
+
+    it('flow:false implies draggable false', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', { flow: false }))
+      const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
+      expect(node.draggable.value).toBe(false)
+    })
+
+    it('flow:true does not affect draggable', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text', { flow: true }))
+      const node = useWidgetNode(() => makeNode('a'), ctx)
+      expect(node.draggable.value).toBe(true)
+    })
   })
 
   describe('wrapperClasses', () => {
@@ -152,6 +164,20 @@ describe('useWidgetNode', () => {
       const node = useWidgetNode(() => makeNode('a'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
       expect(classObj['dc-node--locked']).toBe(true)
+    })
+
+    it('includes out-of-flow class when flow is false', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', { flow: false }))
+      const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
+      const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
+      expect(classObj['dc-node--out-of-flow']).toBe(true)
+    })
+
+    it('does not include out-of-flow class when flow is true', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text', { flow: true }))
+      const node = useWidgetNode(() => makeNode('a'), ctx)
+      const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
+      expect(classObj['dc-node--out-of-flow']).toBe(false)
     })
   })
 

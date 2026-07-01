@@ -76,6 +76,9 @@ export function useWidgetNode(
   })
 
   const draggable = computed(() => {
+    // Non-flow nodes are never draggable
+    if (meta.value?.flow === false)
+      return false
     // sortable: false implies not draggable
     if (!sortable.value)
       return false
@@ -93,6 +96,7 @@ export function useWidgetNode(
       'dc-node--unmasked': !useMask.value,
       'dc-node--non-selectable': !selectable.value,
       'dc-node--locked': !sortable.value,
+      'dc-node--out-of-flow': meta.value?.flow === false,
     },
     state.interactionClasses.value,
   ])
