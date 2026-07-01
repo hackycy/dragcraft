@@ -96,4 +96,44 @@ describe('createCommandBus', () => {
     expect(a).not.toHaveBeenCalled()
     expect(b).toHaveBeenCalledTimes(1)
   })
+
+  it('execute rolls back schema when handler throws', () => {
+    const { commandBus, store } = setup(
+      makeSchema([{ id: 'a', type: 'text', props: { label: 'original' } }]),
+    )
+    const originalSchema = store.getSchema()
+
+    commandBus.registerHandler('FAILING', () => {
+      // Mutate the schema before throwing
+      store.getRawSchema().root.children![0]!.props.label = 'mutated'
+      throw new Error('handler failed')
+    })
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    commandBus.execute({ type: 'FAILING', payload: null })
+
+    // Schema should be restored to pre-command state
+    expect(store.getSchema()).toEqual(originalSchema)
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('rolling back'),
+      expect.any(Error),
+    )
+    errorSpy.mockRestore()
+  })
+
+  it('execute does not emit events when handler throws', () => {
+    const { commandBus, eventHub } = setup()
+    const schemaChanged = vi.fn()
+    eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    commandBus.registerHandler('FAILING', () => {
+      throw new Error('handler failed')
+    })
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    commandBus.execute({ type: 'FAILING', payload: null })
+
+    expect(schemaChanged).not.toHaveBeenCalled()
+    errorSpy.mockRestore()
+  })
 })

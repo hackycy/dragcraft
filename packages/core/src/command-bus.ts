@@ -51,7 +51,14 @@ export function createCommandBus(
     const beforeSnapshot = cloneDeep(toRaw(store.schema.value))
     history.pushSnapshot(command.type, beforeSnapshot)
 
-    handler(ctx, command.payload)
+    try {
+      handler(ctx, command.payload)
+    }
+    catch (error) {
+      store.setSchema(beforeSnapshot)
+      console.error(`[dragcraft/core] Command "${command.type}" failed, rolling back:`, error)
+      return
+    }
 
     store.triggerUpdate()
 
