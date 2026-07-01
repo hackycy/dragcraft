@@ -20,6 +20,7 @@ export function createDefaultSchema(): DesignerSchema {
 
 export function createSchemaStore(
   initialSchema?: DesignerSchema,
+  onSelectionChange?: (id: string | null) => void,
 ): SchemaStoreInstance {
   const schema: ShallowRef<DesignerSchema> = shallowRef(
     initialSchema ? cloneDeep(initialSchema) : createDefaultSchema(),
@@ -50,6 +51,7 @@ export function createSchemaStore(
 
   function selectNode(id: string | null): void {
     selectedNodeId.value = id
+    onSelectionChange?.(id)
   }
 
   function hoverNode(id: string | null): void {

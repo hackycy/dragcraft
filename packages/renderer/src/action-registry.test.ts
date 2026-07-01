@@ -50,7 +50,7 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
     title: 'Button',
     group: 'basic',
     defaultProps: {},
-    formSchema: {},
+    formSchema: { sections: [] },
     ...overrides,
   } as WidgetMeta
 }

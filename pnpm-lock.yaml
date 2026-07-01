@@ -215,6 +215,9 @@ importers:
         specifier: workspace:*
         version: link:../utils
     devDependencies:
+      happy-dom:
+        specifier: 'catalog:'
+        version: 20.10.6
       vue:
         specifier: catalog:shared
         version: 3.5.38(typescript@5.9.3)

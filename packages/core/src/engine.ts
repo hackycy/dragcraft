@@ -7,6 +7,7 @@ import type {
   DesignerSchema,
   EngineOptions,
   RegistryInstance,
+  SchemaMigration,
   SchemaStoreInstance,
   WidgetMeta,
 } from './types'
@@ -34,6 +35,8 @@ export interface DesignerEngine {
   execute: <T = unknown>(command: Command<T>) => void
   registerHandler: <T = unknown>(type: string, handler: CommandHandler<T>) => void
   registerWidget: (meta: WidgetMeta) => void
+  registerMigration: (migration: SchemaMigration) => void
+  migrateSchema: (schema: DesignerSchema) => DesignerSchema
   exportSchema: () => DesignerSchema
   importSchema: (schema: DesignerSchema) => void
   dispose: () => void
@@ -42,8 +45,10 @@ export interface DesignerEngine {
 export function createEngine(options?: EngineOptions): DesignerEngine {
   const maxHistorySize = options?.maxHistorySize ?? DEFAULT_MAX_HISTORY_SIZE
 
-  const store = createSchemaStore(options?.initialSchema)
   const eventHub = createEventHub()
+  const store = createSchemaStore(options?.initialSchema, (id) => {
+    eventHub.emit(EventName.SELECTION_CHANGED, id)
+  })
   const registry = createRegistry()
   const history = createHistoryManager(store, eventHub, maxHistorySize)
   const commandBus = createCommandBus(store, registry, eventHub, history)
@@ -66,6 +71,31 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
     registry.registerWidget(meta)
   }
 
+  const migrations: SchemaMigration[] = []
+
+  function registerMigration(migration: SchemaMigration): void {
+    migrations.push(migration)
+  }
+
+  function migrateSchema(schema: DesignerSchema): DesignerSchema {
+    let current = schema
+    // Apply migrations sequentially until no more apply
+    const applied = new Set<string>()
+    let changed = true
+    while (changed) {
+      changed = false
+      for (const m of migrations) {
+        const key = `${m.fromVersion}->${m.toVersion}`
+        if (current.version === m.fromVersion && !applied.has(key)) {
+          current = m.migrate(current)
+          applied.add(key)
+          changed = true
+        }
+      }
+    }
+    return current
+  }
+
   function exportSchema(): DesignerSchema {
     return store.getSchema()
   }
@@ -75,7 +105,8 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
       console.warn('[dragcraft/core] importSchema: invalid schema, missing root or version')
       return
     }
-    store.setSchema(schema)
+    const migrated = migrateSchema(schema)
+    store.setSchema(migrated)
     history.clear()
     eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
   }
@@ -97,6 +128,8 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
     execute,
     registerHandler,
     registerWidget,
+    registerMigration,
+    migrateSchema,
     exportSchema,
     importSchema,
     dispose,

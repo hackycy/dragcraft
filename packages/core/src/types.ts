@@ -78,6 +78,35 @@ export interface TypeBehaviorContext {
 export type BehaviorPredicate<Ctx> = boolean | ((ctx: Ctx) => boolean)
 
 // ──────────────────────────────────────────
+// Form schema shape (minimal, for WidgetMeta.formSchema typing)
+// ──────────────────────────────────────────
+
+/**
+ * Minimal form field schema shape.
+ * Matches the structural contract of `@dragcraft/form-generator` FieldSchema
+ * without creating a package dependency.
+ */
+export interface FieldSchemaShape {
+  key: string
+  label: string
+  component: string
+  [key: string]: unknown
+}
+
+/**
+ * Minimal form schema shape for widget property panels.
+ * Matches the structural contract of `@dragcraft/form-generator` FormSchema
+ * without creating a package dependency.
+ */
+export interface FormSchemaShape {
+  sections: Array<{
+    title: string
+    fields: FieldSchemaShape[]
+    [key: string]: unknown
+  }>
+}
+
+// ──────────────────────────────────────────
 // Widget meta protocol
 // ──────────────────────────────────────────
 
@@ -124,7 +153,7 @@ export interface WidgetMeta {
   /** Default inline styles when creating a new instance */
   defaultStyle?: Record<string, unknown>
   /** Form schema for the property panel */
-  formSchema: Record<string, unknown>
+  formSchema: FormSchemaShape
 
   // ── Renderer behavior controls ──
 
@@ -231,6 +260,22 @@ export interface HistoryEntry {
 export interface EngineOptions {
   initialSchema?: DesignerSchema
   maxHistorySize?: number
+}
+
+// ──────────────────────────────────────────
+// Schema migration
+// ──────────────────────────────────────────
+
+/**
+ * A single migration step that transforms a schema from one version to another.
+ */
+export interface SchemaMigration {
+  /** The version this migration upgrades from */
+  fromVersion: string
+  /** The version this migration upgrades to */
+  toVersion: string
+  /** Transform function — receives the old schema, returns the migrated schema */
+  migrate: (schema: DesignerSchema) => DesignerSchema
 }
 
 // ──────────────────────────────────────────

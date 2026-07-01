@@ -26,6 +26,7 @@ root
 │   ├── builtin-widgets  # 内置物料实现（10 个），可选引入
 │   ├── themes           # 皮肤包（Ant Design / Material Design）
 │   ├── device-frames    # 设备容器框架（iPhone / Android / Tablet / Desktop）
+│   ├── icons            # SVG 图标组件库（Vue render function）
 │   └── utils            # 通用工具函数
 ├── playground           # 本地演示与联调
 └── docs                 # 详细设计文档
@@ -148,4 +149,5 @@ interface SchemaNode {
 - `@dragcraft/builtin-widgets`：内置物料实现（10 个：5 基础 + 5 表单），可选引入。
 - `@dragcraft/themes`：独立皮肤包，内置 antd 和 material 两套 Light 皮肤，基于 CSS 变量 + BEM 类名。
 - `@dragcraft/device-frames`：设备容器框架组件包，提供 iPhone（刘海屏）、Android、平板、桌面浏览器四种开箱即用的画布容器 Shell，支持通过 provide/inject 动态切换设备类型；内含 toolbar 工厂函数，可在画布工具栏中集成设备切换按钮。
+- `@dragcraft/icons`：SVG 图标组件库，以 Vue render function 输出，支持 size / color / class 属性；被 device-frames 和 designer 消费。
 - `@dragcraft/utils`：跨包复用的纯函数工具。
