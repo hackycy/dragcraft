@@ -86,18 +86,7 @@ export default defineComponent({
       const DropIndicator = props.extensions?.dropIndicator ?? DefaultDropIndicator
       const EmptyState = props.extensions?.emptyState ?? DefaultEmptyState
 
-      // Split into flow and overlay groups
-      const flowChildren: typeof rootChildren = []
-      const overlayChildren: typeof rootChildren = []
-      for (const child of rootChildren) {
-        const meta = props.engine.registry.getWidget(child.type)
-        if (meta && meta.flow === false)
-          overlayChildren.push(child)
-        else
-          flowChildren.push(child)
-      }
-
-      const flowVNodes: VNode[] = flowChildren.map(child =>
+      const childVNodes: VNode[] = rootChildren.map(child =>
         h(WidgetRenderer, { key: child.id, node: child }),
       )
 
@@ -105,28 +94,23 @@ export default defineComponent({
       const isForbidden = props.isForbidden?.value ?? false
 
       if (isDragOver && isForbidden) {
-        flowVNodes.push(h(ForbiddenOverlay.value, {
+        childVNodes.push(h(ForbiddenOverlay.value, {
           key: '__forbidden__',
           widgetType: props.engine.store.dragTarget.value?.widgetType ?? '',
         }))
       }
       else if (isDragOver) {
         const idx = props.dragOverIndex?.value
-        if (idx != null && idx >= 0 && idx <= flowVNodes.length) {
-          flowVNodes.splice(idx, 0, h(DropIndicator, { key: '__drop-indicator__' }))
+        if (idx != null && idx >= 0 && idx <= childVNodes.length) {
+          childVNodes.splice(idx, 0, h(DropIndicator, { key: '__drop-indicator__' }))
         }
         else {
-          flowVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
+          childVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
         }
       }
 
-      // Overlay layer VNodes
-      const overlayVNodes: VNode[] = overlayChildren.map(child =>
-        h(WidgetRenderer, { key: child.id, node: child }),
-      )
-
-      // Empty state placeholder (only when no flow children and not dragging)
-      const isEmpty = flowChildren.length === 0 && !isDragOver
+      // Empty state placeholder (only when no children and not dragging)
+      const isEmpty = rootChildren.length === 0 && !isDragOver
 
       return h(
         'div',
@@ -143,12 +127,7 @@ export default defineComponent({
               default: () => {
                 if (isEmpty)
                   return [h(EmptyState, { isDragOver: false })]
-                return [
-                  h('div', { class: 'dc-canvas__flow' }, flowVNodes),
-                  ...(overlayVNodes.length > 0
-                    ? [h('div', { class: 'dc-canvas__overlay' }, overlayVNodes)]
-                    : []),
-                ]
+                return childVNodes
               },
             },
           ),
