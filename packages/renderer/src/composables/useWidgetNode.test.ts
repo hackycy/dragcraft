@@ -129,10 +129,10 @@ describe('useWidgetNode', () => {
       expect(node.draggable.value).toBe(false)
     })
 
-    it('flow:false implies draggable false', () => {
+    it('flow:false nodes are draggable', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', { flow: false }))
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
-      expect(node.draggable.value).toBe(false)
+      expect(node.draggable.value).toBe(true)
     })
 
     it('flow:true does not affect draggable', () => {
@@ -178,6 +178,13 @@ describe('useWidgetNode', () => {
       const node = useWidgetNode(() => makeNode('a'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
       expect(classObj['dc-node--out-of-flow']).toBe(false)
+    })
+
+    it('does not include locked class when flow is false even if sortable is effectively skipped', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', { flow: false }))
+      const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
+      const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
+      expect(classObj['dc-node--locked']).toBe(false)
     })
   })
 
