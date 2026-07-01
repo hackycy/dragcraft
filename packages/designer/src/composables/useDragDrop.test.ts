@@ -221,4 +221,41 @@ describe('useDragDrop', () => {
     expect(dd.lockedIndices.value.size).toBe(1)
     expect(dd.lockedIndices.value.has(2)).toBe(true)
   })
+
+  it('handleNodeDragStart works for flow:false nodes', () => {
+    engine.registerWidget(makeMeta('tabbar', { flow: false }))
+    engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('t', 'tabbar') } })
+
+    const dd = useDragDrop(engine)
+    const e = mockDragEvent()
+    dd.handleNodeDragStart(e, 't')
+
+    // dragTarget should be set (drag is allowed)
+    expect(engine.store.dragTarget.value).toEqual({
+      sourceNodeId: 't',
+      widgetType: null,
+    })
+    dd.destroyDragPreview()
+  })
+
+  it('handleCanvasDrop inserts at direct array index when non-flow nodes exist', () => {
+    engine.registerWidget(makeMeta('tabbar', { flow: false }))
+    engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('t', 'tabbar') } })
+    // children: [a, b, t(tabbar)]
+
+    const dd = useDragDrop(engine)
+    const meta = makeMeta('image')
+    engine.registerWidget(meta)
+    const e = mockDragEvent()
+
+    dd.handleMaterialDragStart(e, meta)
+    // Array index 2 = before tabbar in unified list
+    dd.dragOverIndex.value = 2
+    dd.handleCanvasDrop(e)
+
+    const children = engine.store.schema.value.root.children!
+    expect(children).toHaveLength(4)
+    expect(children[2].type).toBe('image')
+    expect(children[3].type).toBe('tabbar')
+  })
 })
