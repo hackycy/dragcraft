@@ -29,8 +29,7 @@ export const tabBarWidgetMeta: WidgetMeta = {
   title: 'Tab 栏',
   group: 'navigation',
   icon: 'tabbar',
-  draggable: false,
-  sortable: false,
+  flow: false,
   creatable: (ctx) => {
     const children = ctx.schema.root.children ?? []
     return !children.some(c => c.type === 'tab-bar')
