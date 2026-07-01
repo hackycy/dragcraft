@@ -29,15 +29,6 @@
   position: relative;
 }
 
-.dc-node--out-of-flow {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  cursor: grab;
-}
-
 /* ── Empty Canvas Placeholder ────────────── */
 
 .dc-container-shell--empty {
@@ -111,6 +102,15 @@
 
 .dc-node--unmasked {
   position: relative;
+}
+
+.dc-node--out-of-flow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  cursor: grab;
 }
 
 .dc-node__handle {
