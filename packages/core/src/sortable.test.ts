@@ -18,6 +18,7 @@ function makeRegistry(sortableMap: Record<string, boolean> = {}): RegistryInstan
   return {
     registerWidget: () => {},
     registerGlobalConfigSchema: () => {},
+    registerGlobalConfigFormSchema: () => {},
     getWidget: (type: string) => map.get(type),
     getGlobalConfigSchema: () => undefined,
     getAllWidgets: () => Array.from(map.values()),

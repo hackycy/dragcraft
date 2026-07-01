@@ -301,6 +301,7 @@ export interface SchemaStoreInstance {
 export interface RegistryInstance {
   registerWidget: (meta: WidgetMeta) => void
   registerGlobalConfigSchema: (schema: Record<string, unknown>) => void
+  registerGlobalConfigFormSchema: (schema: FormSchemaShape) => void
   getWidget: (type: string) => WidgetMeta | undefined
   getGlobalConfigSchema: () => Record<string, unknown> | undefined
   getAllWidgets: () => WidgetMeta[]

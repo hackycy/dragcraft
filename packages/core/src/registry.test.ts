@@ -75,4 +75,12 @@ describe('createRegistry', () => {
     reg.registerGlobalConfigSchema(schema)
     expect(reg.getGlobalConfigSchema()).toBe(schema)
   })
+
+  it('registers and retrieves global config form schema', () => {
+    const reg = createRegistry()
+    expect(reg.getGlobalConfigSchema()).toBeUndefined()
+    const formSchema = { sections: [{ title: 'General', fields: [] }] }
+    reg.registerGlobalConfigFormSchema(formSchema)
+    expect(reg.getGlobalConfigSchema()).toBe(formSchema)
+  })
 })

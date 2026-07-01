@@ -1,4 +1,4 @@
-import type { RegistryInstance, WidgetMeta } from './types'
+import type { FormSchemaShape, RegistryInstance, WidgetMeta } from './types'
 
 export function createRegistry(): RegistryInstance {
   const widgets = new Map<string, WidgetMeta>()
@@ -23,6 +23,10 @@ export function createRegistry(): RegistryInstance {
     globalConfigSchema = schema
   }
 
+  function registerGlobalConfigFormSchema(schema: FormSchemaShape): void {
+    globalConfigSchema = schema as unknown as Record<string, unknown>
+  }
+
   function getWidget(type: string): WidgetMeta | undefined {
     return widgets.get(type)
   }
@@ -38,6 +42,7 @@ export function createRegistry(): RegistryInstance {
   return {
     registerWidget,
     registerGlobalConfigSchema,
+    registerGlobalConfigFormSchema,
     getWidget,
     getGlobalConfigSchema,
     getAllWidgets,
