@@ -59,6 +59,20 @@ describe('addNodeHandler', () => {
     warn.mockRestore()
   })
 
+  it('allows insert when non-flow node is at the end', () => {
+    const { ctx, registry, store } = setup(makeSchema([
+      makeNode('a'),
+      makeNode('tabbar'),
+    ]))
+    registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] } })
+    registry.registerWidget({ type: 'tabbar', title: 'TabBar', group: 'nav', defaultProps: {}, formSchema: { sections: [] }, flow: false })
+
+    addNodeHandler(ctx, { node: makeNode('new'), index: 1 })
+    const children = store.getRawSchema().root.children!
+    expect(children).toHaveLength(3)
+    expect(children[1].id).toBe('new')
+  })
+
   it('allows insert after all locked widgets', () => {
     const { ctx, registry, store } = setup(makeSchema([
       makeNode('locked'),
