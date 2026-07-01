@@ -1,7 +1,7 @@
 import type { EventNameValue } from './constants'
 import { EventEmitter } from '@dragcraft/utils'
 
-export type EventListener = (...args: any[]) => void
+export type EventListener = (...args: unknown[]) => void
 
 export class EventHub {
   private emitter: EventEmitter
@@ -18,7 +18,7 @@ export class EventHub {
     this.emitter.off(event, listener)
   }
 
-  emit(event: EventNameValue | (string & {}), ...args: any[]): void {
+  emit(event: EventNameValue | (string & {}), ...args: unknown[]): void {
     this.emitter.emit(event, ...args)
   }
 
