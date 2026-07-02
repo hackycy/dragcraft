@@ -16,6 +16,10 @@ export default defineComponent({
       type: Object,
       default: undefined,
     },
+    schema: {
+      type: Object,
+      default: undefined,
+    },
   },
 
   setup(_, { slots }) {

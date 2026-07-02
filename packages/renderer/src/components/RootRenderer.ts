@@ -138,6 +138,7 @@ export default defineComponent({
               isEmpty,
               slotVNodes,
               layoutPlan: plan,
+              schema,
             },
             {
               default: () => {
