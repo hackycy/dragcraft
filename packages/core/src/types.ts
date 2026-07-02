@@ -37,19 +37,25 @@ export interface DesignerSchema {
  * `sortScope` controls which reorderable sequence the node belongs to:
  * - string: participates in that named sorting domain
  * - false: excluded from drag sorting
+ *
+ * `visible` controls rendering. Accepts a boolean or a predicate evaluated at runtime.
+ *
+ * `position` declares instance-level positioning (anchor overrides).
  */
 export interface NodeLayout {
   slot?: string
   sortScope?: string | false
   order?: number
-  data?: Record<string, unknown>
+  visible?: boolean | ((ctx: { node: SchemaNode, schema: DesignerSchema }) => boolean)
+  position?: NodePosition
 }
 
 export interface ResolvedNodeLayout {
-  slot: string
+  slot: string | undefined
   sortScope: string | false
   order?: number
-  data?: Record<string, unknown>
+  visible: boolean
+  position?: NodePosition
 }
 
 export interface LayoutNodeEntry {
@@ -70,6 +76,10 @@ export type LayoutAxis = 'block' | 'inline'
 export type LayoutEdge = 'start' | 'end'
 export type LayoutAnchor = 'start' | 'center' | 'end'
 
+export interface NodePosition {
+  anchor: { block?: LayoutAnchor, inline?: LayoutAnchor }
+}
+
 /**
  * Material-declared layout behavior for one open slot.
  *
@@ -81,13 +91,8 @@ export interface LayoutSlotManifest {
   allocation: LayoutAllocation
   axis?: LayoutAxis
   edge?: LayoutEdge
-  anchor?: {
-    block?: LayoutAnchor
-    inline?: LayoutAnchor
-  }
   order?: number
   className?: string
-  data?: Record<string, unknown>
 }
 
 export interface ResolvedLayoutSlotManifest extends LayoutSlotManifest {
