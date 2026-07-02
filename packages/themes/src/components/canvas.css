@@ -141,50 +141,68 @@
 .dc-node__toolbar {
   position: absolute;
   top: 0;
-  right: -36px;
+  right: calc(-1 * (var(--dc-node-toolbar-width, 32px) + 8px));
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   z-index: var(--dc-z-toolbar);
+  padding: 4px;
+  border-radius: var(--dc-radius);
+  background: var(--dc-primary);
+  box-shadow: 0 4px 12px var(--dc-primary-shadow);
 }
 
 .dc-node__toolbar-btn {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius);
-  background: var(--dc-bg);
-  color: var(--dc-text-secondary);
+  border: none;
+  border-radius: calc(var(--dc-radius) - 1px);
+  background: var(--dc-primary);
+  color: var(--dc-on-primary);
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
   padding: 0;
-  transition: color 0.15s, border-color 0.15s, background-color 0.15s;
+  opacity: 0.92;
+  transition: color 0.15s, background-color 0.15s, opacity 0.15s, transform 0.15s;
 }
 
-.dc-node__toolbar-btn:hover {
-  color: var(--dc-primary);
-  border-color: var(--dc-primary);
-  background: var(--dc-primary-bg-hover);
+.dc-node__toolbar-btn:hover:not(:disabled, .dc-node__toolbar-btn--disabled) {
+  background: var(--dc-primary-dark);
+  color: var(--dc-on-primary);
+  opacity: 1;
+  transform: translateY(-1px);
 }
 
-.dc-node__toolbar-btn--delete:hover {
-  color: var(--dc-danger);
-  border-color: var(--dc-danger);
-  background: var(--dc-danger-bg-hover);
+.dc-node__toolbar-btn:active:not(:disabled, .dc-node__toolbar-btn--disabled) {
+  transform: translateY(0);
+}
+
+.dc-node__toolbar-btn:focus-visible {
+  outline: 2px solid var(--dc-on-primary);
+  outline-offset: -2px;
+}
+
+.dc-node__toolbar-btn--delete:hover:not(:disabled, .dc-node__toolbar-btn--disabled) {
+  background: var(--dc-danger);
+  color: var(--dc-on-primary);
 }
 
 .dc-node__toolbar-btn:disabled {
-  opacity: 0.3;
+  background: var(--dc-primary);
+  color: var(--dc-on-primary);
+  opacity: 0.42;
   cursor: not-allowed;
   pointer-events: none;
 }
 
 .dc-node__toolbar-btn--disabled {
-  opacity: 0.3;
+  background: var(--dc-primary);
+  color: var(--dc-on-primary);
+  opacity: 0.42;
   cursor: not-allowed;
   pointer-events: none;
 }
@@ -197,15 +215,15 @@
   cursor: grabbing;
 }
 
+.dc-node__toolbar-btn--drag.dc-node__toolbar-btn--disabled {
+  cursor: not-allowed;
+}
+
 /* ── Floating Toolbar (fixed positioning variant) ── */
 
 .dc-node__toolbar--floating {
   right: auto;
   z-index: var(--dc-z-toolbar-float);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  border-radius: var(--dc-radius);
-  background: var(--dc-bg);
-  padding: 2px;
   pointer-events: auto;
 }
 
