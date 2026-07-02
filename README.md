@@ -29,17 +29,25 @@ import { createDesigner, DcDesigner } from '@dragcraft/designer'
 - 右栏：Schema 表单，Tab 分为全局配置与 widget 配置。
 - 无头模式：不导入 `@dragcraft/themes`，自行编写全部 CSS。
 
+## 文档
+
+[Architecture Map 技术架构文档入口](./.github/architecture/README.md)
+
 ## Packages
 
-| Package | Version |
-| ------- | ------- |
-| [@dragcraft/core](./packages/core) | 🚧 |
-| [@dragcraft/designer](./packages/designer) | 🚧 |
-| [@dragcraft/form-generator](./packages/form-generator) | 🚧 |
-| [@dragcraft/renderer](./packages/renderer) | 🚧 |
-| [@dragcraft/themes](./packages/themes) | 🚧 |
-| [@dragcraft/utils](./packages/utils) | 🚧 |
-| [@dragcraft/widgets](./packages/widgets) | 🚧 |
+| Package | Architecture |
+| ------- | ------------ |
+| `@dragcraft/core` | [Schema 与 Core Engine](./.github/architecture/02-schema-and-core.md) |
+| `@dragcraft/designer` | [Designer 与 Renderer](./.github/architecture/03-designer-and-renderer.md) |
+| `@dragcraft/renderer` | [Designer 与 Renderer](./.github/architecture/03-designer-and-renderer.md) |
+| `@dragcraft/form-generator` | [Form 与配置系统](./.github/architecture/04-form-and-configuration.md) |
+| `@dragcraft/widgets` | [物料、字段与工具包](./.github/architecture/05-widgets-fields-and-utils.md) |
+| `@dragcraft/builtin-widgets` | [物料、字段与工具包](./.github/architecture/05-widgets-fields-and-utils.md) |
+| `@dragcraft/builtin-fields` | [物料、字段与工具包](./.github/architecture/05-widgets-fields-and-utils.md) |
+| `@dragcraft/themes` | [主题与设备容器](./.github/architecture/06-themes-and-device-frames.md) |
+| `@dragcraft/device-frames` | [主题与设备容器](./.github/architecture/06-themes-and-device-frames.md) |
+| `@dragcraft/icons` | [包职责索引](./.github/architecture/07-package-reference.md) |
+| `@dragcraft/utils` | [包职责索引](./.github/architecture/07-package-reference.md) |
 
 ## License
 

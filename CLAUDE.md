@@ -66,7 +66,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Map
 
-[Architecture Document 技术架构文档](ARCHITECTURE.md)
+[Architecture Map 技术架构文档入口](.github/architecture/README.md)
 
 ## Rules
 
