@@ -196,6 +196,52 @@ describe('useWidgetNode', () => {
     })
   })
 
+  describe('visible', () => {
+    it('defaults to true when no visibility layout', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      const node = useWidgetNode(() => makeNode('a'), ctx)
+      expect(node.visible.value).toBe(true)
+    })
+
+    it('is false when node layout has visible: false', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      const schemaNode = { ...makeNode('a'), layout: { visible: false } }
+      const node = useWidgetNode(() => schemaNode, ctx)
+      expect(node.visible.value).toBe(false)
+    })
+
+    it('is true when node layout has visible: true', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      const schemaNode = { ...makeNode('a'), layout: { visible: true } }
+      const node = useWidgetNode(() => schemaNode, ctx)
+      expect(node.visible.value).toBe(true)
+    })
+
+    it('evaluates visible predicate function with schema', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      const predicate = vi.fn(({ schema }: any) => schema.root.id === 'root')
+      const schemaNode = { ...makeNode('a'), layout: { visible: predicate } }
+      const node = useWidgetNode(() => schemaNode, ctx)
+      expect(node.visible.value).toBe(true)
+      expect(predicate).toHaveBeenCalled()
+    })
+
+    it('applies dc-node--hidden class when not visible', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      const schemaNode = { ...makeNode('a'), layout: { visible: false } }
+      const node = useWidgetNode(() => schemaNode, ctx)
+      const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
+      expect(classObj['dc-node--hidden']).toBe(true)
+    })
+
+    it('does not apply dc-node--hidden class when visible', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      const node = useWidgetNode(() => makeNode('a'), ctx)
+      const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
+      expect(classObj['dc-node--hidden']).toBe(false)
+    })
+  })
+
   describe('handleSelect', () => {
     it('selects node when no before hook', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))

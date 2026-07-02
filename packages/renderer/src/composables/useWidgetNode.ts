@@ -23,6 +23,8 @@ export interface UseWidgetNodeReturn {
   sortable: ComputedRef<boolean>
   /** Whether this node belongs to a sortable scope */
   inSortScope: ComputedRef<boolean>
+  /** Whether this node is visible (from layout.visible, default true) */
+  visible: ComputedRef<boolean>
   /** Resolved open layout metadata */
   layout: ComputedRef<ResolvedNodeLayout>
   /** CSS classes for the node wrapper */
@@ -52,8 +54,9 @@ export function useWidgetNode(
 
   const meta = computed(() => engine.registry.getWidget(getNode().type))
   const resolvedComponent = computed(() => componentMap[getNode().type])
-  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry))
+  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, engine.store.getRawSchema()))
   const inSortScope = computed(() => layout.value.sortScope !== false)
+  const visible = computed(() => layout.value.visible)
 
   function readInstanceCtx(): InstanceBehaviorContext {
     // Read schema.value to establish reactive dependency, then return raw for predicate evaluation
@@ -90,6 +93,7 @@ export function useWidgetNode(
       'dc-node--non-selectable': !selectable.value,
       'dc-node--locked': inSortScope.value && !sortable.value,
       'dc-node--unsorted': !inSortScope.value,
+      'dc-node--hidden': !visible.value,
     },
     state.interactionClasses.value,
   ])
@@ -134,6 +138,7 @@ export function useWidgetNode(
     draggable,
     sortable,
     inSortScope,
+    visible,
     layout,
     wrapperClasses,
     handleSelect,
