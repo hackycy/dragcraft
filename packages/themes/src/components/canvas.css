@@ -77,6 +77,14 @@
   cursor: default;
 }
 
+/* ── Hidden Node (flow=false) ────────────── */
+
+.dc-node--hidden {
+  opacity: 0.4;
+  outline: 1px dashed var(--dc-border, #999);
+  outline-offset: -1px;
+}
+
 /* ── Widget Node ─────────────────────────── */
 
 .dc-node--widget {
