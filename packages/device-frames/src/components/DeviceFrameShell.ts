@@ -1,4 +1,4 @@
-import type { LayoutPlan } from '@dragcraft/core'
+import type { DesignerSchema, LayoutPlan } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import { computed, defineComponent, h, inject } from 'vue'
 import { getDefaultPresets } from '../presets'
@@ -22,6 +22,10 @@ export default defineComponent({
       type: Object as PropType<LayoutPlan>,
       default: undefined,
     },
+    schema: {
+      type: Object as PropType<DesignerSchema>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -37,6 +41,6 @@ export default defineComponent({
     })
 
     return () =>
-      h(activeFrame.value, { layoutPlan: props.layoutPlan }, slots)
+      h(activeFrame.value, { layoutPlan: props.layoutPlan, schema: props.schema }, slots)
   },
 })

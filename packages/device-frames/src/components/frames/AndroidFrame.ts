@@ -1,4 +1,4 @@
-import type { LayoutPlan } from '@dragcraft/core'
+import type { DesignerSchema, LayoutPlan } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import { IconNavBack, IconNavHome, IconNavRecent, IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
@@ -16,6 +16,10 @@ export default defineComponent({
       type: Object as PropType<LayoutPlan>,
       default: undefined,
     },
+    schema: {
+      type: Object as PropType<DesignerSchema>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -29,7 +33,7 @@ export default defineComponent({
             h('span', null, h(IconSignalBar, { size: 10 })),
           ]),
         ]),
-        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan)),
+        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan, props.schema)),
         // Android navigation bar (back / home / recent)
         h('div', { class: 'dc-device-frame__nav-bar' }, [
           h('span', { class: 'dc-device-frame__nav-btn' }, h(IconNavBack, { size: 12 })),

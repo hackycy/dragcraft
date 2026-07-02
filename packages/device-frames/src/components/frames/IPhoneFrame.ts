@@ -1,4 +1,4 @@
-import type { LayoutPlan } from '@dragcraft/core'
+import type { DesignerSchema, LayoutPlan } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
 import { renderFrameViewport } from '../frame-slots'
@@ -15,6 +15,10 @@ export default defineComponent({
   props: {
     layoutPlan: {
       type: Object as PropType<LayoutPlan>,
+      default: undefined,
+    },
+    schema: {
+      type: Object as PropType<DesignerSchema>,
       default: undefined,
     },
   },
@@ -67,7 +71,7 @@ export default defineComponent({
             ]),
           ]),
         ]),
-        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan)),
+        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan, props.schema)),
         // Home indicator bar
         h('div', { class: 'dc-device-frame__home-indicator' }),
       ])

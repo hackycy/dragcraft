@@ -224,6 +224,9 @@ importers:
 
   packages/device-frames:
     dependencies:
+      '@dragcraft/core':
+        specifier: workspace:*
+        version: link:../core
       '@dragcraft/icons':
         specifier: workspace:*
         version: link:../icons
