@@ -7,9 +7,8 @@ import type {
   RegistryInstance,
   SchemaStoreInstance,
 } from './types'
-import { cloneDeep } from '@dragcraft/utils'
-import { toRaw } from 'vue'
 import { CommandType, EventName } from './constants'
+import { cloneSchemaRef } from './schema-utils'
 
 const COMMAND_EVENT_MAP: Record<string, string> = {
   [CommandType.ADD_NODE]: EventName.NODE_ADDED,
@@ -48,7 +47,7 @@ export function createCommandBus(
       return
     }
 
-    const beforeSnapshot = cloneDeep(toRaw(store.schema.value))
+    const beforeSnapshot = cloneSchemaRef(store.schema)
     history.pushSnapshot(command.type, beforeSnapshot)
 
     try {

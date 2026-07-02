@@ -2,6 +2,7 @@ import type {
   DesignerSchema,
   LayoutNodeEntry,
   LayoutPlan,
+  LayoutSlotManifest,
   NodeLayout,
   RegistryInstance,
   ResolvedLayoutSlotManifest,
@@ -11,6 +12,9 @@ import type {
 
 export const DEFAULT_LAYOUT_SLOT = 'content'
 export const DEFAULT_SORT_SCOPE = 'content'
+const DEFAULT_LAYOUT_AXIS = 'block'
+const DEFAULT_LAYOUT_EDGE = 'start'
+const DEFAULT_SLOT_ORDER = 0
 
 export function resolveNodeLayout(
   node: SchemaNode,
@@ -34,8 +38,8 @@ export function resolveNodeLayout(
   }
 }
 
-function sortEntries(entries: LayoutNodeEntry[]): LayoutNodeEntry[] {
-  return [...entries].sort((a, b) => {
+function sortEntries(entries: LayoutNodeEntry[]): void {
+  entries.sort((a, b) => {
     const orderA = a.layout.order ?? a.arrayIndex
     const orderB = b.layout.order ?? b.arrayIndex
     if (orderA !== orderB)
@@ -44,55 +48,37 @@ function sortEntries(entries: LayoutNodeEntry[]): LayoutNodeEntry[] {
   })
 }
 
-function createDefaultSlotManifest(slot: string): ResolvedLayoutSlotManifest {
-  return {
-    slot,
-    allocation: 'reserve',
-    axis: 'block',
-    edge: 'start',
-    order: 0,
-  }
+function pushEntry(map: Map<string, LayoutNodeEntry[]>, key: string, entry: LayoutNodeEntry): void {
+  const entries = map.get(key)
+  if (entries)
+    entries.push(entry)
+  else
+    map.set(key, [entry])
 }
 
-function resolveSlotManifests(
-  entries: LayoutNodeEntry[],
-  registry: RegistryInstance,
-): Map<string, ResolvedLayoutSlotManifest> {
-  const manifests = new Map<string, ResolvedLayoutSlotManifest>()
-
-  for (const meta of registry.getAllWidgets()) {
-    for (const [slot, manifest] of Object.entries(meta.layoutManifest?.slots ?? {})) {
-      manifests.set(slot, {
-        ...manifest,
-        slot,
-        axis: manifest.axis ?? 'block',
-        edge: manifest.edge ?? 'start',
-        order: manifest.order ?? 0,
-      })
-    }
+function resolveSlotManifest(
+  slot: string,
+  manifest: LayoutSlotManifest | undefined,
+): ResolvedLayoutSlotManifest | null {
+  if (!manifest) {
+    return slot === DEFAULT_LAYOUT_SLOT
+      ? {
+          slot,
+          allocation: 'reserve',
+          axis: DEFAULT_LAYOUT_AXIS,
+          edge: DEFAULT_LAYOUT_EDGE,
+          order: DEFAULT_SLOT_ORDER,
+        }
+      : null
   }
 
-  for (const entry of entries) {
-    const slot = entry.layout.slot
-    if (manifests.has(slot))
-      continue
-
-    const metaSlotManifest = registry.getWidget(entry.node.type)?.layoutManifest?.slots?.[slot]
-    if (metaSlotManifest) {
-      manifests.set(slot, {
-        ...metaSlotManifest,
-        slot,
-        axis: metaSlotManifest.axis ?? 'block',
-        edge: metaSlotManifest.edge ?? 'start',
-        order: metaSlotManifest.order ?? 0,
-      })
-    }
-    else if (slot === DEFAULT_LAYOUT_SLOT) {
-      manifests.set(slot, createDefaultSlotManifest(slot))
-    }
+  return {
+    ...manifest,
+    slot,
+    axis: manifest.axis ?? DEFAULT_LAYOUT_AXIS,
+    edge: manifest.edge ?? DEFAULT_LAYOUT_EDGE,
+    order: manifest.order ?? DEFAULT_SLOT_ORDER,
   }
-
-  return manifests
 }
 
 export function createLayoutPlan(
@@ -109,25 +95,35 @@ export function createLayoutPlan(
   const slots = new Map<string, LayoutNodeEntry[]>()
   const sortScopes = new Map<string, LayoutNodeEntry[]>()
 
-  for (const entry of entries) {
-    const slotEntries = slots.get(entry.layout.slot) ?? []
-    slotEntries.push(entry)
-    slots.set(entry.layout.slot, slotEntries)
+  const slotManifests = new Map<string, ResolvedLayoutSlotManifest>()
 
-    if (entry.layout.sortScope !== false) {
-      const scopeEntries = sortScopes.get(entry.layout.sortScope) ?? []
-      scopeEntries.push(entry)
-      sortScopes.set(entry.layout.sortScope, scopeEntries)
+  for (const meta of registry.getAllWidgets()) {
+    for (const [slot, manifest] of Object.entries(meta.layoutManifest?.slots ?? {})) {
+      const resolved = resolveSlotManifest(slot, manifest)
+      if (resolved)
+        slotManifests.set(slot, resolved)
     }
   }
 
-  for (const [slot, slotEntries] of slots) {
-    slots.set(slot, sortEntries(slotEntries))
+  for (const entry of entries) {
+    pushEntry(slots, entry.layout.slot, entry)
+
+    const sortScope = entry.layout.sortScope
+    if (sortScope !== false)
+      pushEntry(sortScopes, sortScope, entry)
+
+    if (!slotManifests.has(entry.layout.slot)) {
+      const manifest = registry.getWidget(entry.node.type)?.layoutManifest?.slots?.[entry.layout.slot]
+      const resolved = resolveSlotManifest(entry.layout.slot, manifest)
+      if (resolved)
+        slotManifests.set(entry.layout.slot, resolved)
+    }
   }
-  for (const [scope, scopeEntries] of sortScopes) {
-    sortScopes.set(scope, sortEntries(scopeEntries))
-  }
-  const slotManifests = resolveSlotManifests(entries, registry)
+
+  for (const slotEntries of slots.values())
+    sortEntries(slotEntries)
+  for (const scopeEntries of sortScopes.values())
+    sortEntries(scopeEntries)
 
   return { entries, slots, sortScopes, slotManifests }
 }

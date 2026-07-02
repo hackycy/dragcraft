@@ -1,9 +1,9 @@
 import type { Ref, ShallowRef } from 'vue'
 import type { DesignerSchema, DragTarget, SchemaNode, SchemaStoreInstance } from './types'
-import { cloneDeep } from '@dragcraft/utils'
 import { ref, shallowRef, toRaw, triggerRef } from 'vue'
 import { DEFAULT_SCHEMA_VERSION } from './constants'
 import { findNodeById as findNode } from './helpers'
+import { cloneRawSchema, cloneSchema } from './schema-utils'
 
 export function createDefaultSchema(): DesignerSchema {
   return {
@@ -23,14 +23,14 @@ export function createSchemaStore(
   onSelectionChange?: (id: string | null) => void,
 ): SchemaStoreInstance {
   const schema: ShallowRef<DesignerSchema> = shallowRef(
-    initialSchema ? cloneDeep(initialSchema) : createDefaultSchema(),
+    initialSchema ? cloneSchema(initialSchema) : createDefaultSchema(),
   )
   const selectedNodeId: Ref<string | null> = ref(null)
   const hoveredNodeId: Ref<string | null> = ref(null)
   const dragTarget: Ref<DragTarget | null> = ref(null)
 
   function getSchema(): DesignerSchema {
-    return cloneDeep(toRaw(schema.value))
+    return cloneRawSchema(schema.value)
   }
 
   /**
@@ -46,7 +46,7 @@ export function createSchemaStore(
   }
 
   function setSchema(newSchema: DesignerSchema): void {
-    schema.value = cloneDeep(newSchema)
+    schema.value = cloneSchema(newSchema)
   }
 
   function selectNode(id: string | null): void {

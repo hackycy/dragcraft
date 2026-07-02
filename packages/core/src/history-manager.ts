@@ -1,8 +1,7 @@
 import type { EventHub } from './event-hub'
 import type { DesignerSchema, HistoryEntry, SchemaStoreInstance } from './types'
-import { cloneDeep } from '@dragcraft/utils'
-import { toRaw } from 'vue'
 import { EventName } from './constants'
+import { cloneSchemaRef } from './schema-utils'
 
 export interface HistoryManagerInstance {
   pushSnapshot: (label: string, before: DesignerSchema) => void
@@ -29,6 +28,23 @@ export function createHistoryManager(
   let transactionLabel = ''
   let transactionSnapshot: DesignerSchema | null = null
 
+  function resetTransaction(): void {
+    inTransaction = false
+    transactionLabel = ''
+    transactionSnapshot = null
+  }
+
+  function trimUndoStack(): void {
+    if (undoStack.length > maxSize)
+      undoStack.splice(0, undoStack.length - maxSize)
+  }
+
+  function pushUndo(label: string, snapshot: DesignerSchema): void {
+    undoStack.push({ label, snapshot })
+    trimUndoStack()
+    redoStack.length = 0
+  }
+
   function emitChange(): void {
     eventHub.emit(EventName.HISTORY_CHANGED, {
       canUndo: canUndo(),
@@ -42,13 +58,7 @@ export function createHistoryManager(
     if (inTransaction)
       return
 
-    undoStack.push({ label, snapshot: before })
-
-    if (undoStack.length > maxSize) {
-      undoStack.splice(0, undoStack.length - maxSize)
-    }
-
-    redoStack.length = 0
+    pushUndo(label, before)
     emitChange()
   }
 
@@ -57,7 +67,7 @@ export function createHistoryManager(
       return
 
     const entry = undoStack.pop()!
-    const currentSnapshot = cloneDeep(toRaw(store.schema.value))
+    const currentSnapshot = cloneSchemaRef(store.schema)
     redoStack.push({ label: entry.label, snapshot: currentSnapshot })
 
     store.setSchema(entry.snapshot)
@@ -71,8 +81,9 @@ export function createHistoryManager(
       return
 
     const entry = redoStack.pop()!
-    const currentSnapshot = cloneDeep(toRaw(store.schema.value))
+    const currentSnapshot = cloneSchemaRef(store.schema)
     undoStack.push({ label: entry.label, snapshot: currentSnapshot })
+    trimUndoStack()
 
     store.setSchema(entry.snapshot)
 
@@ -95,7 +106,7 @@ export function createHistoryManager(
     }
     inTransaction = true
     transactionLabel = label ?? 'transaction'
-    transactionSnapshot = cloneDeep(toRaw(store.schema.value))
+    transactionSnapshot = cloneSchemaRef(store.schema)
   }
 
   function commitTransaction(): void {
@@ -105,16 +116,10 @@ export function createHistoryManager(
     }
 
     if (transactionSnapshot) {
-      undoStack.push({ label: transactionLabel, snapshot: transactionSnapshot })
-      if (undoStack.length > maxSize) {
-        undoStack.splice(0, undoStack.length - maxSize)
-      }
-      redoStack.length = 0
+      pushUndo(transactionLabel, transactionSnapshot)
     }
 
-    inTransaction = false
-    transactionLabel = ''
-    transactionSnapshot = null
+    resetTransaction()
     emitChange()
   }
 
@@ -128,9 +133,7 @@ export function createHistoryManager(
       store.setSchema(transactionSnapshot)
     }
 
-    inTransaction = false
-    transactionLabel = ''
-    transactionSnapshot = null
+    resetTransaction()
     emitChange()
   }
 
@@ -141,9 +144,7 @@ export function createHistoryManager(
   function clear(): void {
     undoStack.length = 0
     redoStack.length = 0
-    inTransaction = false
-    transactionLabel = ''
-    transactionSnapshot = null
+    resetTransaction()
     emitChange()
   }
 

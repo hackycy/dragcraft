@@ -1,7 +1,7 @@
 import type { CommandContext, RemoveNodePayload } from '../types'
 import { removeNodeFromTree } from '../helpers'
 import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout } from '../layout'
-import { getLockedIndices, isRemoveAllowed } from '../sortable'
+import { getLockedIndicesFromEntries, isRemoveAllowed } from '../sortable'
 
 export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayload): void {
   const { store, registry } = ctx
@@ -21,7 +21,7 @@ export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayloa
       const scopeEntries = getSortScopeEntries(createLayoutPlan(rawSchema, registry), layout.sortScope)
       const removeIndex = scopeEntries.findIndex(entry => entry.node.id === payload.nodeId)
       if (removeIndex !== -1) {
-        const lockedIndices = getLockedIndices(children, registry, rawSchema, layout.sortScope)
+        const lockedIndices = getLockedIndicesFromEntries(scopeEntries, registry, rawSchema)
         if (lockedIndices.size > 0 && !isRemoveAllowed(removeIndex, lockedIndices)) {
           console.warn(
             `[dragcraft/core] REMOVE_NODE: blocked by sortable constraint`

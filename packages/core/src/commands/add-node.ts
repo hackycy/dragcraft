@@ -1,7 +1,7 @@
 import type { AddNodePayload, CommandContext } from '../types'
 import { insertNodeIntoTree } from '../helpers'
 import { createLayoutPlan, DEFAULT_SORT_SCOPE, getSortableArrayIndexForInsert, getSortScopeEntries, resolveNodeLayout } from '../layout'
-import { getLockedIndices, isInsertAllowed } from '../sortable'
+import { getLockedIndicesFromEntries, isInsertAllowed } from '../sortable'
 
 export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): void {
   const { store, registry } = ctx
@@ -16,15 +16,15 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): vo
 
   // ── Sortable constraint ──
   if (arrayIndex !== undefined) {
-    const lockedIndices = getLockedIndices(children, registry, rawSchema, scope)
+    const plan = createLayoutPlan(rawSchema, registry)
+    const scopeEntries = getSortScopeEntries(plan, scope)
+    const lockedIndices = getLockedIndicesFromEntries(scopeEntries, registry, rawSchema)
     if (lockedIndices.size > 0 && !isInsertAllowed(arrayIndex, lockedIndices)) {
       console.warn(
         `[dragcraft/core] ADD_NODE: blocked by sortable constraint at index ${arrayIndex}`,
       )
       return
     }
-    const plan = createLayoutPlan(rawSchema, registry)
-    const scopeEntries = getSortScopeEntries(plan, scope)
     arrayIndex = getSortableArrayIndexForInsert(scopeEntries, children, arrayIndex)
   }
 

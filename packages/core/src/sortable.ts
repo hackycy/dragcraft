@@ -6,18 +6,30 @@ import { createLayoutPlan, DEFAULT_SORT_SCOPE, getSortScopeEntries } from './lay
  * Collect the indices of all widgets whose `sortable` behavior resolves to false.
  * These widgets must stay at their current array index (absolute index locking).
  *
- * @param children - The flat widget list (`root.children`)
+ * @param _children - The flat widget list (`root.children`)
  * @param registry - Widget meta registry for resolving behavior predicates
  * @param schema   - Current designer schema (for predicate evaluation context)
+ * @param sortScope - Sort scope to evaluate
  */
 export function getLockedIndices(
-  children: SchemaNode[],
+  _children: SchemaNode[],
   registry: RegistryInstance,
   schema: DesignerSchema,
   sortScope = DEFAULT_SORT_SCOPE,
 ): Set<number> {
+  return getLockedIndicesFromEntries(
+    getSortScopeEntries(createLayoutPlan(schema, registry), sortScope),
+    registry,
+    schema,
+  )
+}
+
+export function getLockedIndicesFromEntries(
+  scopeEntries: LayoutNodeEntry[],
+  registry: RegistryInstance,
+  schema: DesignerSchema,
+): Set<number> {
   const locked = new Set<number>()
-  const scopeEntries = getSortScopeEntries(createLayoutPlan(schema, registry), sortScope)
 
   for (let i = 0; i < scopeEntries.length; i++) {
     const node = scopeEntries[i].node

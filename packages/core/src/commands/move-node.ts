@@ -1,6 +1,6 @@
 import type { CommandContext, MoveNodePayload } from '../types'
 import { createLayoutPlan, getSortableArrayIndexForInsert, getSortScopeEntries, resolveNodeLayout } from '../layout'
-import { getLockedIndices, isMoveAllowed } from '../sortable'
+import { getLockedIndicesFromEntries, isMoveAllowed } from '../sortable'
 
 export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): void {
   const { store, registry } = ctx
@@ -33,7 +33,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
   }
 
   const targetScopeIndex = Math.min(payload.index, scopeEntries.length - 1)
-  const lockedIndices = getLockedIndices(children, registry, rawSchema, sortScope)
+  const lockedIndices = getLockedIndicesFromEntries(scopeEntries, registry, rawSchema)
   if (lockedIndices.size > 0 && !isMoveAllowed(sourceScopeIndex, targetScopeIndex, lockedIndices)) {
     console.warn(
       `[dragcraft/core] MOVE_NODE: blocked by sortable constraint`
