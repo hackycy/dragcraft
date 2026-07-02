@@ -1,9 +1,9 @@
 import type { DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
-import type { MaybePromise, RendererEventHooks } from './event-hooks'
+import type { RendererEventHooks } from './event-hooks'
 import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconDelete, IconDrag } from '@dragcraft/icons'
-import { fireAfterHook, resolveBeforeHook } from './event-hooks'
+import { runBeforeAfterHook } from './event-hooks'
 
 /**
  * Builds an InstanceBehaviorContext from a NodeActionContext.
@@ -13,48 +13,24 @@ function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
   return { node: ctx.node, schema: ctx.engine.store.getRawSchema() }
 }
 
-/**
- * Runs an action through a before/after hook pair.
- * Handles sync (boolean/void) and async (Promise) hook results uniformly.
- * If the before hook is absent, the action executes unconditionally.
- * When pendingGuard is provided, it is set to true while an async hook
- * is in-flight and reset to false on resolution.
- */
-function runWithHook<T>(
-  hook: ((payload: T) => MaybePromise<boolean | void>) | undefined,
-  payload: T,
-  execute: () => void,
-  afterHook?: (payload: T) => MaybePromise<void>,
-  pendingGuard?: { value: boolean },
-): void | Promise<void> {
-  if (!hook) {
-    execute()
-    fireAfterHook(afterHook, payload)
-    return
-  }
+function canReorder(ctx: NodeActionContext): boolean {
+  if (ctx.sortScope === false)
+    return false
 
-  const result = hook(payload)
+  const instanceCtx = toInstanceCtx(ctx)
+  return resolveBehavior(ctx.meta?.draggable, instanceCtx)
+    && resolveBehavior(ctx.meta?.sortable, instanceCtx)
+}
 
-  // Fast path: sync hook returned a non-promise value
-  if (typeof result === 'boolean' || result === undefined) {
-    if (result === false)
-      return
-    execute()
-    fireAfterHook(afterHook, payload)
-    return
-  }
-
-  // Async path: hook returned a Promise
-  if (pendingGuard)
-    pendingGuard.value = true
-  return resolveBeforeHook(result).then((allowed) => {
-    if (pendingGuard)
-      pendingGuard.value = false
-    if (!allowed)
-      return
-    execute()
-    fireAfterHook(afterHook, payload)
-  })
+function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
+  const schema = ctx.engine.store.getRawSchema()
+  const children = schema.root.children ?? []
+  return getLockedIndices(
+    children,
+    ctx.engine.registry,
+    schema,
+    ctx.sortScope === false ? undefined : ctx.sortScope,
+  )
 }
 
 // ──────────────────────────────────────────
@@ -188,13 +164,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconDrag,
       type: 'drag-handle',
       order: 100,
-      available: (ctx) => {
-        const instanceCtx = toInstanceCtx(ctx)
-        if (ctx.sortScope === false)
-          return false
-        return resolveBehavior(ctx.meta?.draggable, instanceCtx)
-          && resolveBehavior(ctx.meta?.sortable, instanceCtx)
-      },
+      available: canReorder,
     },
     {
       key: ActionKey.MOVE_UP,
@@ -202,18 +172,11 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowUp,
       type: 'button',
       order: 200,
-      available: (ctx) => {
-        const instanceCtx = toInstanceCtx(ctx)
-        if (ctx.sortScope === false)
-          return false
-        return resolveBehavior(ctx.meta?.draggable, instanceCtx)
-          && resolveBehavior(ctx.meta?.sortable, instanceCtx)
-      },
+      available: canReorder,
       disabled: (ctx) => {
         if (ctx.index === 0)
           return true
-        const children = ctx.engine.store.getRawSchema().root.children ?? []
-        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema(), ctx.sortScope || undefined)
+        const lockedIndices = getScopedLockedIndices(ctx)
         if (lockedIndices.size === 0)
           return false
         return !isMoveAllowed(ctx.index, ctx.index - 1, lockedIndices)
@@ -234,18 +197,11 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowDown,
       type: 'button',
       order: 300,
-      available: (ctx) => {
-        const instanceCtx = toInstanceCtx(ctx)
-        if (ctx.sortScope === false)
-          return false
-        return resolveBehavior(ctx.meta?.draggable, instanceCtx)
-          && resolveBehavior(ctx.meta?.sortable, instanceCtx)
-      },
+      available: canReorder,
       disabled: (ctx) => {
         if (ctx.index >= ctx.siblingCount - 1)
           return true
-        const children = ctx.engine.store.getRawSchema().root.children ?? []
-        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema(), ctx.sortScope || undefined)
+        const lockedIndices = getScopedLockedIndices(ctx)
         if (lockedIndices.size === 0)
           return false
         return !isMoveAllowed(ctx.index, ctx.index + 1, lockedIndices)
@@ -269,10 +225,9 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       className: 'dc-node__toolbar-btn--delete',
       available: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
       disabled: (ctx) => {
-        const children = ctx.engine.store.getRawSchema().root.children ?? []
         if (ctx.sortScope === false)
           return false
-        const lockedIndices = getLockedIndices(children, ctx.engine.registry, ctx.engine.store.getRawSchema(), ctx.sortScope)
+        const lockedIndices = getScopedLockedIndices(ctx)
         if (lockedIndices.size === 0)
           return false
         return !isRemoveAllowed(ctx.index, lockedIndices)
@@ -369,7 +324,7 @@ export function createNodeActionRegistry(
               if (def.key === ActionKey.DELETE) {
                 const payload = { nodeId: ctx.node.id, event }
                 if (eventHooks.onBeforeDelete || eventHooks.onAfterDelete) {
-                  return runWithHook(eventHooks.onBeforeDelete, payload, execute, eventHooks.onAfterDelete, pending)
+                  return runBeforeAfterHook(eventHooks.onBeforeDelete, payload, execute, eventHooks.onAfterDelete, pending)
                 }
                 execute()
                 return
@@ -386,7 +341,7 @@ export function createNodeActionRegistry(
                   event,
                 }
                 if (eventHooks.onBeforeMove || eventHooks.onAfterMove) {
-                  return runWithHook(eventHooks.onBeforeMove, payload, execute, eventHooks.onAfterMove, pending)
+                  return runBeforeAfterHook(eventHooks.onBeforeMove, payload, execute, eventHooks.onAfterMove, pending)
                 }
                 execute()
                 return

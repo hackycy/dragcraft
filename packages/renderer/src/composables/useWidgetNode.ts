@@ -1,9 +1,9 @@
-import type { InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext } from '../types'
 import { resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
-import { fireAfterHook, resolveBeforeHook } from '../event-hooks'
+import { runBeforeAfterHook } from '../event-hooks'
 import { useNodeState } from './useNodeState'
 
 export interface UseWidgetNodeReturn {
@@ -61,34 +61,24 @@ export function useWidgetNode(
     return { node: getNode(), schema: engine.store.getRawSchema() }
   }
 
-  const useMask = computed(() => {
-    const field = meta.value?.mask
+  function resolveMetaBehavior(
+    field: BehaviorPredicate<InstanceBehaviorContext> | undefined,
+  ): boolean {
     if (typeof field !== 'function')
       return field !== false
     return field(readInstanceCtx())
-  })
+  }
 
-  const selectable = computed(() => {
-    const field = meta.value?.selectable
-    if (typeof field !== 'function')
-      return field !== false
-    return field(readInstanceCtx())
-  })
+  const useMask = computed(() => resolveMetaBehavior(meta.value?.mask))
 
-  const sortable = computed(() => {
-    const field = meta.value?.sortable
-    if (typeof field !== 'function')
-      return field !== false
-    return field(readInstanceCtx())
-  })
+  const selectable = computed(() => resolveMetaBehavior(meta.value?.selectable))
+
+  const sortable = computed(() => resolveMetaBehavior(meta.value?.sortable))
 
   const draggable = computed(() => {
     if (!inSortScope.value || !sortable.value)
       return false
-    const field = meta.value?.draggable
-    if (typeof field !== 'function')
-      return field !== false
-    return field(readInstanceCtx())
+    return resolveMetaBehavior(meta.value?.draggable)
   })
 
   const wrapperClasses = computed<Array<string | Record<string, boolean>>>(() => [
@@ -105,43 +95,23 @@ export function useWidgetNode(
   ])
 
   // Guard against concurrent async selections
-  let selectPending = false
+  const selectPending = { value: false }
 
   const handleSelect = (e: MouseEvent) => {
-    if (!selectable.value || selectPending)
+    if (!selectable.value || selectPending.value)
       return
     e.stopPropagation()
 
     const nodeId = getNode().id
-    const beforeHook = eventHooks.onBeforeSelect
-
-    if (beforeHook) {
-      const hookResult = beforeHook({ nodeId, event: e })
-
-      // Fast path: sync hook returned a non-promise value
-      if (typeof hookResult === 'boolean' || hookResult === undefined) {
-        if (hookResult === false)
-          return
-        engine.store.selectNode(nodeId)
-        fireAfterHook(eventHooks.onAfterSelect, { nodeId })
-        return
-      }
-
-      // Async path: hook returned a Promise
-      selectPending = true
-      resolveBeforeHook(hookResult).then((allowed) => {
-        selectPending = false
-        if (!allowed)
-          return
-        engine.store.selectNode(nodeId)
-        fireAfterHook(eventHooks.onAfterSelect, { nodeId })
-      })
-      return
-    }
-
-    // No before hook at all
-    engine.store.selectNode(nodeId)
-    fireAfterHook(eventHooks.onAfterSelect, { nodeId })
+    runBeforeAfterHook(
+      eventHooks.onBeforeSelect,
+      { nodeId, event: e },
+      () => engine.store.selectNode(nodeId),
+      eventHooks.onAfterSelect
+        ? () => eventHooks.onAfterSelect?.({ nodeId })
+        : undefined,
+      selectPending,
+    )
   }
 
   const handleMouseEnter = () => {

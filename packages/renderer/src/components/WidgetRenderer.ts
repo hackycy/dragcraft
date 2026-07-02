@@ -11,6 +11,34 @@ import DefaultNodeMask from './DefaultNodeMask'
 import DefaultNodeToolbar from './DefaultNodeToolbar'
 import DefaultWidgetFallback from './DefaultWidgetFallback'
 
+const LAYOUT_STYLE_KEYS = new Set(['padding', 'margin'])
+
+interface SplitNodeStyle {
+  wrapperStyle?: Record<string, unknown>
+  contentStyle?: Record<string, unknown>
+}
+
+function splitNodeStyle(style: SchemaNode['style']): SplitNodeStyle {
+  if (!style)
+    return {}
+
+  let wrapperStyle: Record<string, unknown> | undefined
+  let contentStyle: Record<string, unknown> | undefined
+
+  for (const [key, value] of Object.entries(style)) {
+    if (LAYOUT_STYLE_KEYS.has(key)) {
+      wrapperStyle = wrapperStyle ?? {}
+      wrapperStyle[key] = value
+    }
+    else {
+      contentStyle = contentStyle ?? {}
+      contentStyle[key] = value
+    }
+  }
+
+  return { wrapperStyle, contentStyle }
+}
+
 /**
  * WidgetRenderer — thin orchestration layer.
  *
@@ -60,30 +88,8 @@ export default defineComponent({
 
       // Render widget content
       const widgetProps = { ...node.props }
-      const rawStyle = node.style ? { ...node.style } : undefined
-
-      // Split node.style into layout properties (→ wrapper) and content
-      // properties (→ widget component).  Layout properties like padding
-      // and margin control the widget's position in the page flow and
-      // belong on the structural wrapper div.  Content properties like
-      // font-size, color, text-align are rendering concerns that belong
-      // on the widget component itself.
-      const LAYOUT_KEYS = new Set(['padding', 'margin'])
-      let wrapperStyle: Record<string, unknown> | undefined
-      let contentStyle: Record<string, unknown> | undefined
-
-      if (rawStyle) {
-        for (const [key, value] of Object.entries(rawStyle)) {
-          if (LAYOUT_KEYS.has(key)) {
-            wrapperStyle = wrapperStyle ?? {}
-            wrapperStyle[key] = value
-          }
-          else {
-            contentStyle = contentStyle ?? {}
-            contentStyle[key] = value
-          }
-        }
-      }
+      const { wrapperStyle, contentStyle: rawContentStyle } = splitNodeStyle(node.style)
+      let contentStyle = rawContentStyle
 
       // When mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index

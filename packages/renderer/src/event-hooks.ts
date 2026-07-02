@@ -8,6 +8,10 @@
  */
 export type MaybePromise<T> = T | Promise<T>
 
+export interface PendingGuard {
+  value: boolean
+}
+
 // ──────────────────────────────────────────
 // Event hook payloads
 // ──────────────────────────────────────────
@@ -131,6 +135,54 @@ export async function resolveBeforeHook(
     console.error('[dragcraft] Before-hook error (action cancelled):', err)
     return false
   }
+}
+
+/**
+ * Runs an action through an optional before/after hook pair.
+ * Handles synchronous and asynchronous before-hooks consistently.
+ */
+export function runBeforeAfterHook<P>(
+  beforeHook: ((payload: P) => MaybePromise<boolean | void>) | undefined,
+  payload: P,
+  execute: () => void,
+  afterHook?: (payload: P) => MaybePromise<void>,
+  pendingGuard?: PendingGuard,
+): void | Promise<void> {
+  if (!beforeHook) {
+    execute()
+    fireAfterHook(afterHook, payload)
+    return
+  }
+
+  let result: MaybePromise<boolean | void>
+  try {
+    result = beforeHook(payload)
+  }
+  catch (err) {
+    console.error('[dragcraft] Before-hook error (action cancelled):', err)
+    return
+  }
+
+  if (!isPromiseLike(result)) {
+    if (result === false)
+      return
+    execute()
+    fireAfterHook(afterHook, payload)
+    return
+  }
+
+  if (pendingGuard)
+    pendingGuard.value = true
+
+  return resolveBeforeHook(result).then((allowed) => {
+    if (allowed) {
+      execute()
+      fireAfterHook(afterHook, payload)
+    }
+  }).finally(() => {
+    if (pendingGuard)
+      pendingGuard.value = false
+  })
 }
 
 /**

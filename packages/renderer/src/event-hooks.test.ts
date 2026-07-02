@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createDefaultEventHooks, fireAfterHook, resolveBeforeHook } from './event-hooks'
+import { createDefaultEventHooks, fireAfterHook, resolveBeforeHook, runBeforeAfterHook } from './event-hooks'
 
 describe('createDefaultEventHooks', () => {
   it('returns an empty object', () => {
@@ -25,6 +25,64 @@ describe('resolveBeforeHook', () => {
     const err = new Error('hook failed')
 
     await expect(resolveBeforeHook(Promise.reject(err))).resolves.toBe(false)
+    expect(spy).toHaveBeenCalledWith(
+      '[dragcraft] Before-hook error (action cancelled):',
+      err,
+    )
+
+    spy.mockRestore()
+  })
+})
+
+describe('runBeforeAfterHook', () => {
+  it('executes immediately when no before hook is provided', () => {
+    const execute = vi.fn()
+    const afterHook = vi.fn()
+
+    runBeforeAfterHook(undefined, { nodeId: '1' }, execute, afterHook)
+
+    expect(execute).toHaveBeenCalledTimes(1)
+    expect(afterHook).toHaveBeenCalledWith({ nodeId: '1' })
+  })
+
+  it('cancels execution when sync before hook returns false', () => {
+    const execute = vi.fn()
+    const afterHook = vi.fn()
+
+    runBeforeAfterHook(() => false, { nodeId: '1' }, execute, afterHook)
+
+    expect(execute).not.toHaveBeenCalled()
+    expect(afterHook).not.toHaveBeenCalled()
+  })
+
+  it('sets and clears pending guard for async before hooks', async () => {
+    const pending = { value: false }
+    const execute = vi.fn()
+    const result = runBeforeAfterHook(
+      () => Promise.resolve(true),
+      { nodeId: '1' },
+      execute,
+      undefined,
+      pending,
+    )
+
+    expect(pending.value).toBe(true)
+    await result
+
+    expect(execute).toHaveBeenCalledTimes(1)
+    expect(pending.value).toBe(false)
+  })
+
+  it('logs and cancels when sync before hook throws', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const err = new Error('sync before boom')
+    const execute = vi.fn()
+
+    runBeforeAfterHook(() => {
+      throw err
+    }, { nodeId: '1' }, execute)
+
+    expect(execute).not.toHaveBeenCalled()
     expect(spy).toHaveBeenCalledWith(
       '[dragcraft] Before-hook error (action cancelled):',
       err,
