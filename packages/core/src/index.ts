@@ -76,6 +76,7 @@ export type {
   LayoutSlotManifest,
   MoveNodePayload,
   NodeLayout,
+  NodePosition,
   RegistryInstance,
   RemoveNodePayload,
   ResolvedLayoutSlotManifest,
