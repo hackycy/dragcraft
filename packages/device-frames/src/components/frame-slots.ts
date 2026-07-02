@@ -45,14 +45,6 @@ function overlayLayer(
         class: [
           'dc-device-frame__overlay-item',
           manifest.className,
-          {
-            'dc-device-frame__overlay-item--block-start': manifest.anchor?.block === 'start',
-            'dc-device-frame__overlay-item--block-center': manifest.anchor?.block === 'center',
-            'dc-device-frame__overlay-item--block-end': manifest.anchor?.block === 'end' || !manifest.anchor?.block,
-            'dc-device-frame__overlay-item--inline-start': manifest.anchor?.inline === 'start',
-            'dc-device-frame__overlay-item--inline-center': manifest.anchor?.inline === 'center',
-            'dc-device-frame__overlay-item--inline-end': manifest.anchor?.inline === 'end' || !manifest.anchor?.inline,
-          },
         ],
       }, slotChildren),
     ]

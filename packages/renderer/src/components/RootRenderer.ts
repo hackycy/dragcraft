@@ -139,6 +139,7 @@ export default defineComponent({
               slotVNodes,
               layoutPlan: plan,
               schema,
+              registry: props.engine.registry,
             },
             {
               default: () => {

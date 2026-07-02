@@ -1,4 +1,4 @@
-import type { DesignerEngine, DesignerSchema, LayoutPlan, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, LayoutPlan, RegistryInstance, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { RendererEventHooks } from './event-hooks'
@@ -129,6 +129,7 @@ export interface ContainerShellProps {
   slotVNodes: Record<string, VNode[]>
   layoutPlan: LayoutPlan
   schema: DesignerSchema
+  registry: RegistryInstance
 }
 
 // ──────────────────────────────────────────

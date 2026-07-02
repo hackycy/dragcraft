@@ -1,4 +1,4 @@
-import type { DesignerSchema, LayoutPlan } from '@dragcraft/core'
+import type { DesignerSchema, LayoutPlan, RegistryInstance } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import { IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
@@ -20,6 +20,10 @@ export default defineComponent({
       type: Object as PropType<DesignerSchema>,
       default: undefined,
     },
+    registry: {
+      type: Object as PropType<RegistryInstance>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -33,7 +37,7 @@ export default defineComponent({
             h('span', null, h(IconSignalBar, { size: 10 })),
           ]),
         ]),
-        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan, props.schema)),
+        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan, props.schema, props.registry)),
       ])
   },
 })

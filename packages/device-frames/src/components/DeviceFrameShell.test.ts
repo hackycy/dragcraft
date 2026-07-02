@@ -38,7 +38,6 @@ function makePlan(): LayoutPlan {
         allocation: 'overlay',
         axis: 'block',
         edge: 'start',
-        anchor: { block: 'center', inline: 'end' },
         order: 30,
       }],
     ]),
@@ -64,8 +63,6 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame__dock--block-end [data-test-id="submit"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__dock--inline-start [data-test-id="aside"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__overlay [data-test-id="assistant"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__overlay-item--block-center').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__overlay-item--inline-end').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content [data-test-id="fallback"]').exists()).toBe(true)
   })
 })
