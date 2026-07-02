@@ -19,22 +19,39 @@ const DEFAULT_SLOT_ORDER = 0
 export function resolveNodeLayout(
   node: SchemaNode,
   registry: RegistryInstance,
+  schema?: DesignerSchema,
 ): ResolvedNodeLayout {
   const metaLayout = registry.getWidget(node.type)?.defaultLayout
   const layout: NodeLayout = {
     ...(metaLayout ?? {}),
     ...(node.layout ?? {}),
   }
-  const slot = layout.slot ?? DEFAULT_LAYOUT_SLOT
+
+  // If node has position but no explicit slot, suppress default slot assignment
+  const hasPosition = !!layout.position
+  const hasExplicitSlot = node.layout?.slot !== undefined
+  const slot = layout.slot ?? (hasPosition && !hasExplicitSlot ? undefined : DEFAULT_LAYOUT_SLOT)
+
   const sortScope = layout.sortScope === undefined
-    ? (slot === DEFAULT_LAYOUT_SLOT ? DEFAULT_SORT_SCOPE : false)
+    ? (slot === undefined
+        ? false
+        : slot === DEFAULT_LAYOUT_SLOT
+          ? DEFAULT_SORT_SCOPE
+          : false)
     : layout.sortScope
+
+  // Resolve visible predicate
+  const rawVisible = layout.visible ?? true
+  const visible = typeof rawVisible === 'function'
+    ? schema !== undefined && rawVisible({ node, schema })
+    : rawVisible
 
   return {
     slot,
     sortScope,
     order: layout.order,
-    data: layout.data,
+    visible,
+    position: layout.position,
   }
 }
 
@@ -86,15 +103,21 @@ export function createLayoutPlan(
   registry: RegistryInstance,
 ): LayoutPlan {
   const children = schema.root.children ?? []
-  const entries = children.map((node, arrayIndex): LayoutNodeEntry => ({
-    node,
-    arrayIndex,
-    layout: resolveNodeLayout(node, registry),
-  }))
+  const entries: LayoutNodeEntry[] = []
+
+  for (let arrayIndex = 0; arrayIndex < children.length; arrayIndex++) {
+    const node = children[arrayIndex]
+    const layout = resolveNodeLayout(node, registry, schema)
+
+    // Position-only nodes (no slot) are excluded from the layout plan
+    if (layout.slot === undefined)
+      continue
+
+    entries.push({ node, arrayIndex, layout })
+  }
 
   const slots = new Map<string, LayoutNodeEntry[]>()
   const sortScopes = new Map<string, LayoutNodeEntry[]>()
-
   const slotManifests = new Map<string, ResolvedLayoutSlotManifest>()
 
   for (const meta of registry.getAllWidgets()) {
@@ -106,17 +129,17 @@ export function createLayoutPlan(
   }
 
   for (const entry of entries) {
-    pushEntry(slots, entry.layout.slot, entry)
+    pushEntry(slots, entry.layout.slot!, entry)
 
     const sortScope = entry.layout.sortScope
     if (sortScope !== false)
       pushEntry(sortScopes, sortScope, entry)
 
-    if (!slotManifests.has(entry.layout.slot)) {
-      const manifest = registry.getWidget(entry.node.type)?.layoutManifest?.slots?.[entry.layout.slot]
-      const resolved = resolveSlotManifest(entry.layout.slot, manifest)
+    if (!slotManifests.has(entry.layout.slot!)) {
+      const manifest = registry.getWidget(entry.node.type)?.layoutManifest?.slots?.[entry.layout.slot!]
+      const resolved = resolveSlotManifest(entry.layout.slot!, manifest)
       if (resolved)
-        slotManifests.set(entry.layout.slot, resolved)
+        slotManifests.set(entry.layout.slot!, resolved)
     }
   }
 

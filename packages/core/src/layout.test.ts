@@ -47,12 +47,11 @@ describe('layout protocol', () => {
 
   it('allows widget default layout to be overridden by node layout', () => {
     const reg = makeRegistry({
-      tabbar: { defaultLayout: { slot: 'tab-bar.surface', sortScope: false, data: { anchor: 'bottom' } } },
+      tabbar: { defaultLayout: { slot: 'tab-bar.surface', sortScope: false } },
     })
     const layout = resolveNodeLayout(makeNode('a', 'tabbar', { slot: 'custom.surface' }), reg)
     expect(layout.slot).toBe('custom.surface')
     expect(layout.sortScope).toBe(false)
-    expect(layout.data).toEqual({ anchor: 'bottom' })
   })
 
   it('groups entries by open slots and sort scopes', () => {
@@ -79,7 +78,6 @@ describe('layout protocol', () => {
             'navbar.surface': { allocation: 'reserve', axis: 'block', edge: 'start', order: 10 },
             'help.surface': {
               allocation: 'overlay',
-              anchor: { block: 'end', inline: 'end' },
               order: 20,
             },
           },
@@ -100,9 +98,66 @@ describe('layout protocol', () => {
       allocation: 'overlay',
       axis: 'block',
       edge: 'start',
-      anchor: { block: 'end', inline: 'end' },
       order: 20,
     })
+  })
+
+  it('defaults visible to true', () => {
+    const layout = resolveNodeLayout(makeNode('a'), makeRegistry())
+    expect(layout.visible).toBe(true)
+  })
+
+  it('respects static visible: false', () => {
+    const layout = resolveNodeLayout(makeNode('a', 'text', { visible: false }), makeRegistry())
+    expect(layout.visible).toBe(false)
+  })
+
+  it('evaluates visible predicate with schema context', () => {
+    const schema = makeSchema([makeNode('a')])
+    const layout = resolveNodeLayout(
+      makeNode('a', 'text', { visible: ctx => ctx.node.id === 'a' }),
+      makeRegistry(),
+      schema,
+    )
+    expect(layout.visible).toBe(true)
+  })
+
+  it('returns false for visible predicate when schema is not provided', () => {
+    const layout = resolveNodeLayout(
+      makeNode('a', 'text', { visible: () => true }),
+      makeRegistry(),
+    )
+    expect(layout.visible).toBe(false)
+  })
+
+  it('suppresses default slot for position-only nodes', () => {
+    const layout = resolveNodeLayout(
+      makeNode('a', 'fab', { position: { anchor: { block: 'end', inline: 'end' } } }),
+      makeRegistry(),
+    )
+    expect(layout.slot).toBeUndefined()
+    expect(layout.sortScope).toBe(false)
+    expect(layout.position).toEqual({ anchor: { block: 'end', inline: 'end' } })
+  })
+
+  it('keeps explicit slot even when position is set', () => {
+    const layout = resolveNodeLayout(
+      makeNode('a', 'fab', { slot: 'fab.surface', position: { anchor: { block: 'end', inline: 'end' } } }),
+      makeRegistry(),
+    )
+    expect(layout.slot).toBe('fab.surface')
+  })
+
+  it('excludes position-only nodes from layout plan', () => {
+    const children = [
+      makeNode('a'),
+      makeNode('fab', 'fab', { position: { anchor: { block: 'end', inline: 'end' } } }),
+      makeNode('b'),
+    ]
+    const plan = createLayoutPlan(makeSchema(children), makeRegistry())
+
+    expect(plan.entries.map(e => e.node.id)).toEqual(['a', 'b'])
+    expect(plan.slots.get('content')!.map(e => e.node.id)).toEqual(['a', 'b'])
   })
 
   it('maps sort-scope insertion indices back to array indices', () => {
