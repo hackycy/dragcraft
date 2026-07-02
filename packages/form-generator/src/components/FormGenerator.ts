@@ -3,6 +3,7 @@ import type { FieldChangePayload, FieldComponentMap, FormGeneratorContext, FormS
 import { computed, defineComponent, h, provide, reactive, watch } from 'vue'
 import { findFieldSchema, useFormValidation } from '../composables/useFormValidation'
 import { FORM_GENERATOR_CONTEXT_KEY } from '../types'
+import { copyFormValues, resolveFieldDependencies, syncReactiveRecord } from '../utils'
 import FormSection from './FormSection'
 
 export default defineComponent({
@@ -35,21 +36,13 @@ export default defineComponent({
 
   setup(props, { emit, expose }) {
     // Local reactive copy of values for optimistic updates and field interdependency
-    const localValues = reactive<Record<string, unknown>>({ ...props.values })
+    const localValues = reactive<Record<string, unknown>>(copyFormValues(props.values))
 
     // Sync from parent values prop when it changes
     watch(
       () => props.values,
       (newValues) => {
-        const keys = new Set([...Object.keys(localValues), ...Object.keys(newValues)])
-        for (const key of keys) {
-          if (key in newValues) {
-            localValues[key] = newValues[key]
-          }
-          else {
-            delete localValues[key]
-          }
-        }
+        syncReactiveRecord(localValues, newValues)
       },
       { deep: false },
     )
@@ -57,29 +50,18 @@ export default defineComponent({
     const fieldComponentMapRef = computed(() => props.fieldComponentMap ?? {})
 
     // Expose localValues directly for fine-grained reactivity in useFieldState
-    const getFormValues = () => ({ ...localValues })
+    const getFormValues = () => copyFormValues(localValues)
 
     // Resolve a field with dependency-driven overrides for validation
     const resolveField = (key: string) => {
       const field = findFieldSchema(props.schema, key)
-      if (!field?.dependencies)
-        return field
-      const form = { ...localValues }
-      const fieldValue = localValues[key]
-      const overrides = field.dependencies.handler(form, fieldValue)
-      return {
-        ...field,
-        ...overrides,
-        key: field.key,
-        component: field.component,
-        dependencies: field.dependencies,
-      }
+      return field ? resolveFieldDependencies(field, localValues, localValues[key]) : undefined
     }
 
     // Validation (imperative, no reactive tracking needed)
     const { fieldErrors, validateField, validateAll, clearErrors } = useFormValidation(
-      props.schema,
-      () => ({ ...localValues }),
+      () => props.schema,
+      getFormValues,
       resolveField,
     )
 
@@ -110,7 +92,7 @@ export default defineComponent({
 
     // Submit handler
     const submit = () => {
-      emit('submit', { ...localValues })
+      emit('submit', getFormValues())
     }
 
     // Expose validation API for parent template ref

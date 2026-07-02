@@ -1,6 +1,7 @@
 import type { ComputedRef } from 'vue'
 import type { FieldSchema, FormGeneratorContext } from '../types'
 import { computed } from 'vue'
+import { resolveFieldDependencies } from '../utils'
 
 export interface FieldDependenciesResult {
   resolvedField: ComputedRef<FieldSchema>
@@ -16,20 +17,7 @@ export function useFieldDependencies(
   ctx: FormGeneratorContext,
 ): FieldDependenciesResult {
   const resolvedField = computed<FieldSchema>(() => {
-    if (!field.dependencies)
-      return field
-
-    const form = { ...ctx.values }
-    const fieldValue = ctx.getFieldValue(field.key)
-    const overrides = field.dependencies.handler(form, fieldValue)
-
-    return {
-      ...field,
-      ...overrides,
-      key: field.key,
-      component: field.component,
-      dependencies: field.dependencies,
-    }
+    return resolveFieldDependencies(field, ctx.values, ctx.getFieldValue(field.key))
   })
 
   return { resolvedField }

@@ -1,6 +1,7 @@
 import type { ComputedRef } from 'vue'
 import type { FieldSchema, FormGeneratorContext } from '../types'
 import { computed } from 'vue'
+import { createFormContext, evaluateBoolean } from '../utils'
 
 /**
  * Reactive interaction state computed for a single field.
@@ -22,29 +23,18 @@ export function useFieldState(
   getField: () => FieldSchema,
   ctx: FormGeneratorContext,
 ): FieldState {
+  const getFormContext = () => createFormContext(ctx.values)
+
   // ifShow takes precedence over visible (backward compat alias)
   const isVisible = computed(() => {
     const field = getField()
-    if (field.ifShow !== undefined) {
-      if (typeof field.ifShow === 'function')
-        return field.ifShow({ values: ctx.values })
-      return field.ifShow
-    }
-    if (field.visible !== undefined) {
-      if (typeof field.visible === 'function')
-        return field.visible({ values: ctx.values })
-      return field.visible
-    }
-    return true
+    const visible = field.ifShow !== undefined ? field.ifShow : field.visible
+    return evaluateBoolean(visible, getFormContext(), true)
   })
 
   const isShown = computed(() => {
     const field = getField()
-    if (field.show === undefined)
-      return true
-    if (typeof field.show === 'function')
-      return field.show({ values: ctx.values })
-    return field.show
+    return evaluateBoolean(field.show, getFormContext(), true)
   })
 
   const isDisabled = computed(() => {
@@ -53,7 +43,7 @@ export function useFieldState(
       return true
     if (!field.disabled)
       return false
-    return field.disabled({ values: ctx.values })
+    return evaluateBoolean(field.disabled, getFormContext(), false)
   })
 
   return { isVisible, isShown, isDisabled }

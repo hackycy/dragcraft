@@ -1,6 +1,7 @@
 import type { Ref } from 'vue'
 import type { FieldSchema, FormContext, FormSchema, ValidationError } from '../types'
 import { ref } from 'vue'
+import { createFormContext } from '../utils'
 
 /**
  * Form-level validation interface.
@@ -14,6 +15,24 @@ export interface FormValidation {
   validateAll: () => ValidationError[]
   /** Clear all validation errors */
   clearErrors: () => void
+}
+
+type FormSchemaSource = FormSchema | (() => FormSchema)
+
+function resolveSchema(schema: FormSchemaSource): FormSchema {
+  return typeof schema === 'function' ? schema() : schema
+}
+
+function createFieldIndex(schema: FormSchema): Map<string, FieldSchema> {
+  const index = new Map<string, FieldSchema>()
+
+  for (const section of schema.sections) {
+    for (const field of section.fields) {
+      index.set(field.key, field)
+    }
+  }
+
+  return index
 }
 
 export function findFieldSchema(schema: FormSchema, key: string): FieldSchema | undefined {
@@ -95,20 +114,32 @@ function runFieldValidation(
  * Validates fields against their rules and tracks errors reactively.
  */
 export function useFormValidation(
-  schema: FormSchema,
+  schema: FormSchemaSource,
   getValues: () => Record<string, unknown>,
   resolveField?: (key: string) => FieldSchema | undefined,
 ): FormValidation {
   const fieldErrors = ref<Record<string, string | undefined>>({})
+  const currentSchema = () => resolveSchema(schema)
+  let cachedSchema: FormSchema | undefined
+  let cachedFieldIndex = new Map<string, FieldSchema>()
+
+  const getFieldIndex = () => {
+    const schema = currentSchema()
+    if (schema !== cachedSchema) {
+      cachedSchema = schema
+      cachedFieldIndex = createFieldIndex(schema)
+    }
+    return cachedFieldIndex
+  }
 
   const validateField = (key: string, resolvedField?: FieldSchema): string | undefined => {
-    const field = resolvedField ?? findFieldSchema(schema, key)
+    const field = resolvedField ?? getFieldIndex().get(key)
     if (!field)
       return undefined
 
     const values = getValues()
     const value = values[key]
-    const formCtx: FormContext = { values }
+    const formCtx: FormContext = createFormContext(values)
     const error = runFieldValidation(field, value, formCtx)
 
     fieldErrors.value = { ...fieldErrors.value, [key]: error }
@@ -118,10 +149,10 @@ export function useFormValidation(
   const validateAll = (): ValidationError[] => {
     const errors: ValidationError[] = []
     const values = getValues()
-    const formCtx: FormContext = { values }
+    const formCtx: FormContext = createFormContext(values)
     const newFieldErrors: Record<string, string | undefined> = {}
 
-    for (const section of schema.sections) {
+    for (const section of currentSchema().sections) {
       for (const field of section.fields) {
         const resolved = resolveField?.(field.key) ?? field
         const value = values[resolved.key]

@@ -5,6 +5,7 @@ import { defineComponent, h } from 'vue'
 import { useFieldDependencies } from '../composables/useFieldDependencies'
 import { useFieldState } from '../composables/useFieldState'
 import { useFormGeneratorContext } from '../context'
+import { createFormContext } from '../utils'
 
 export default defineComponent({
   name: 'DcFormField',
@@ -28,7 +29,7 @@ export default defineComponent({
         return null
 
       const field = resolvedField.value
-      const formCtx: FormContext = { values: ctx.values }
+      const formCtx: FormContext = createFormContext(ctx.values)
 
       // Resolve dynamic props
       const extraProps = typeof field.props === 'function'

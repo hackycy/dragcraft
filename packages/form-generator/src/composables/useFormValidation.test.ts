@@ -767,4 +767,37 @@ describe('useFormValidation', () => {
       expect(validateField('val')).toBeUndefined()
     })
   })
+
+  describe('schema source', () => {
+    it('uses latest schema from getter', () => {
+      let schema: FormSchema = {
+        sections: [{
+          title: 'Initial',
+          fields: [{
+            key: 'name',
+            label: 'Name',
+            component: 'input',
+          }],
+        }],
+      }
+      const values = { name: '', email: '' }
+      const { validateField } = useFormValidation(() => schema, () => values)
+
+      expect(validateField('email')).toBeUndefined()
+
+      schema = {
+        sections: [{
+          title: 'Updated',
+          fields: [{
+            key: 'email',
+            label: 'Email',
+            component: 'input',
+            rules: [{ required: true, message: 'Email is required' }],
+          }],
+        }],
+      }
+
+      expect(validateField('email')).toBe('Email is required')
+    })
+  })
 })
