@@ -77,7 +77,7 @@
   cursor: default;
 }
 
-/* ── Hidden Node (flow=false) ────────────── */
+/* ── Hidden Node (visible=false) ────────────── */
 
 .dc-node--hidden {
   opacity: 0.4;
