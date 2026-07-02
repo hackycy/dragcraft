@@ -65,6 +65,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   const dragOverNodeId = ref<string | null>(null)
   const dragOverIndex = ref<number | null>(null)
   const isForbidden = ref(false)
+  let dragPreviewEl: HTMLElement | null = null
 
   // ── Sortable constraint computeds ──
 
@@ -85,10 +86,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const sortScope = getActiveSortScope()
     if (sortScope === false)
       return null
-    const scopeEntries = getSortScopeEntries(
-      createLayoutPlan(engine.store.getRawSchema(), engine.registry),
-      sortScope,
-    )
+    const scopeEntries = getActiveSortScopeEntries(sortScope)
     return getValidDropIndices(scopeEntries, lockedIndices.value, dragTarget.sourceNodeId)
   })
 
@@ -115,6 +113,13 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       : layout.sortScope
   }
 
+  function getActiveSortScopeEntries(sortScope: string) {
+    return getSortScopeEntries(
+      createLayoutPlan(engine.store.getRawSchema(), engine.registry),
+      sortScope,
+    )
+  }
+
   function getActiveSortScope(): string | false {
     const target = engine.store.dragTarget.value
     if (!target)
@@ -128,6 +133,62 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       return meta ? resolveMetaSortScope(meta) : DEFAULT_SORT_SCOPE
     }
     return DEFAULT_SORT_SCOPE
+  }
+
+  function getRootChildren(): SchemaNode[] {
+    return engine.store.getRawSchema().root.children ?? []
+  }
+
+  function getNodeMeta(nodeId: string): WidgetMeta | undefined {
+    const node = getRootChildren().find(c => c.id === nodeId)
+    return node ? engine.registry.getWidget(node.type) : undefined
+  }
+
+  function createPreviewForNode(nodeId: string): void {
+    const meta = getNodeMeta(nodeId)
+    if (meta) {
+      createDragPreview(meta, true)
+    }
+  }
+
+  function clearDragOverState(): void {
+    dragOverNodeId.value = null
+    dragOverIndex.value = null
+    isForbidden.value = false
+  }
+
+  function resetDragState(): void {
+    destroyDragPreview()
+    clearDragOverState()
+    engine.store.setDragTarget(null)
+  }
+
+  function resolveVisualDropIndex(rawIndex: number): number | null {
+    const valid = validDropIndices.value
+    if (!valid)
+      return rawIndex
+    if (valid.size === 0)
+      return null
+    return valid.has(rawIndex)
+      ? rawIndex
+      : findNearestValidIndex(rawIndex, valid)
+  }
+
+  function canCreateWidget(meta: WidgetMeta): boolean {
+    return resolveBehavior(meta.creatable, {
+      widgetType: meta.type,
+      schema: engine.store.getRawSchema(),
+    })
+  }
+
+  function createSchemaNode(meta: WidgetMeta): SchemaNode {
+    return {
+      id: generateShortId(),
+      type: meta.type,
+      props: { ...meta.defaultProps },
+      style: meta.defaultStyle ? { ...meta.defaultStyle } : undefined,
+      layout: meta.defaultLayout ? { ...meta.defaultLayout } : undefined,
+    }
   }
 
   function computeDropIndex(e: DragEvent, sortScope: string): number {
@@ -170,19 +231,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       e.dataTransfer.setData('text/plain', nodeId)
     }
     // Create preview for the moved node
-    const children = engine.store.getRawSchema().root.children ?? []
-    const node = children.find(c => c.id === nodeId)
-    if (node) {
-      const meta = engine.registry.getWidget(node.type)
-      if (meta) {
-        createDragPreview(meta, true)
-      }
-    }
+    createPreviewForNode(nodeId)
   }
 
   // ── Drag preview management ──
-
-  let dragPreviewEl: HTMLElement | null = null
 
   function createDragPreview(meta: WidgetMeta, isMove: boolean): void {
     destroyDragPreview()
@@ -252,31 +304,12 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
 
     const rawIndex = computeDropIndex(e, sortScope)
-    const valid = validDropIndices.value
-
-    if (valid && valid.size > 0) {
-      dragOverIndex.value = valid.has(rawIndex)
-        ? rawIndex
-        : findNearestValidIndex(rawIndex, valid)
-    }
-    else if (valid && valid.size === 0) {
-      dragOverIndex.value = null
-    }
-    else {
-      dragOverIndex.value = rawIndex
-    }
+    dragOverIndex.value = resolveVisualDropIndex(rawIndex)
 
     // Create preview for node drags from the toolbar handle (which doesn't
     // call createDragPreview directly). Only creates once per drag operation.
     if (dragTarget?.sourceNodeId && !dragPreviewEl) {
-      const children = engine.store.getRawSchema().root.children ?? []
-      const node = children.find(c => c.id === dragTarget.sourceNodeId)
-      if (node) {
-        const meta = engine.registry.getWidget(node.type)
-        if (meta) {
-          createDragPreview(meta, true)
-        }
-      }
+      createPreviewForNode(dragTarget.sourceNodeId)
     }
 
     updateDragPreviewPosition(e)
@@ -287,19 +320,63 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const relatedTarget = e.relatedTarget as HTMLElement | null
     const canvasEl = e.currentTarget as HTMLElement
     if (!relatedTarget || !canvasEl.contains(relatedTarget)) {
-      dragOverNodeId.value = null
-      dragOverIndex.value = null
-      isForbidden.value = false
+      clearDragOverState()
     }
+  }
+
+  function dropExistingNode(nodeId: string, visualIndex: number | null): void {
+    if (visualIndex === null)
+      return
+
+    const sortScope = getActiveSortScope()
+    if (sortScope === false)
+      return
+
+    const scopeEntries = getActiveSortScopeEntries(sortScope)
+    const srcIdx = scopeEntries.findIndex(entry => entry.node.id === nodeId)
+
+    let targetIdx = visualIndex
+    if (srcIdx !== -1 && targetIdx > srcIdx) {
+      targetIdx = targetIdx - 1
+    }
+
+    engine.execute({
+      type: CommandType.MOVE_NODE,
+      payload: {
+        nodeId,
+        index: targetIdx,
+        sortScope,
+      },
+    })
+  }
+
+  function dropNewWidget(widgetType: string, visualIndex: number | null): void {
+    const meta = engine.registry.getWidget(widgetType)
+    if (!meta || !canCreateWidget(meta))
+      return
+
+    const sortScope = resolveMetaSortScope(meta)
+    if (sortScope !== false && visualIndex === null)
+      return
+
+    const newNode = createSchemaNode(meta)
+    engine.execute({
+      type: CommandType.ADD_NODE,
+      payload: {
+        node: newNode,
+        index: sortScope === false ? undefined : visualIndex,
+        sortScope: sortScope === false ? undefined : sortScope,
+      },
+    })
+
+    engine.store.selectNode(newNode.id)
   }
 
   function handleCanvasDrop(e: DragEvent): void {
     destroyDragPreview()
     e.preventDefault()
-    dragOverNodeId.value = null
     const visualIndex = dragOverIndex.value
-    dragOverIndex.value = null
-    isForbidden.value = false
+    clearDragOverState()
 
     const dragTarget = engine.store.dragTarget.value
     if (!dragTarget)
@@ -312,77 +389,17 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
 
     if (dragTarget.sourceNodeId) {
-      if (visualIndex === null) {
-        engine.store.setDragTarget(null)
-        return
-      }
-      const sortScope = getActiveSortScope()
-      if (sortScope === false) {
-        engine.store.setDragTarget(null)
-        return
-      }
-      const scopeEntries = getSortScopeEntries(
-        createLayoutPlan(engine.store.getRawSchema(), engine.registry),
-        sortScope,
-      )
-      const srcIdx = scopeEntries.findIndex(entry => entry.node.id === dragTarget.sourceNodeId)
-
-      let targetIdx = visualIndex
-      if (srcIdx !== -1 && targetIdx > srcIdx) {
-        targetIdx = targetIdx - 1
-      }
-
-      engine.execute({
-        type: CommandType.MOVE_NODE,
-        payload: {
-          nodeId: dragTarget.sourceNodeId,
-          index: targetIdx,
-          sortScope,
-        },
-      })
+      dropExistingNode(dragTarget.sourceNodeId, visualIndex)
     }
     else if (dragTarget.widgetType) {
-      const meta = engine.registry.getWidget(dragTarget.widgetType)
-      if (!meta)
-        return
-
-      if (!resolveBehavior(meta.creatable, { widgetType: meta.type, schema: engine.store.getRawSchema() }))
-        return
-
-      const newNode: SchemaNode = {
-        id: generateShortId(),
-        type: meta.type,
-        props: { ...meta.defaultProps },
-        style: meta.defaultStyle ? { ...meta.defaultStyle } : undefined,
-        layout: meta.defaultLayout ? { ...meta.defaultLayout } : undefined,
-      }
-
-      const sortScope = resolveMetaSortScope(meta)
-      if (sortScope !== false && visualIndex === null) {
-        engine.store.setDragTarget(null)
-        return
-      }
-      engine.execute({
-        type: CommandType.ADD_NODE,
-        payload: {
-          node: newNode,
-          index: sortScope === false ? undefined : visualIndex,
-          sortScope: sortScope === false ? undefined : sortScope,
-        },
-      })
-
-      engine.store.selectNode(newNode.id)
+      dropNewWidget(dragTarget.widgetType, visualIndex)
     }
 
     engine.store.setDragTarget(null)
   }
 
   function handleDragEnd(_e: DragEvent): void {
-    destroyDragPreview()
-    dragOverNodeId.value = null
-    dragOverIndex.value = null
-    isForbidden.value = false
-    engine.store.setDragTarget(null)
+    resetDragState()
   }
 
   return {

@@ -3,6 +3,10 @@ import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import DcMaterialGroup from './DcMaterialGroup'
 
+function includesQuery(value: string, query: string): boolean {
+  return value.toLowerCase().includes(query)
+}
+
 export default defineComponent({
   name: 'DcMaterialPanel',
 
@@ -20,17 +24,27 @@ export default defineComponent({
       const groups = widgetGroups
         ?? [...new Set(allWidgets.map(w => w.group))].map(name => ({ name, title: name, titleKey: undefined }))
 
+      const widgetsByGroup = new Map<string, typeof allWidgets>()
+      for (const widget of allWidgets) {
+        if (
+          query
+          && !includesQuery(widget.title, query)
+          && !includesQuery(widget.type, query)
+        ) {
+          continue
+        }
+
+        const widgets = widgetsByGroup.get(widget.group)
+        if (widgets) {
+          widgets.push(widget)
+        }
+        else {
+          widgetsByGroup.set(widget.group, [widget])
+        }
+      }
+
       return groups
-        .map((group) => {
-          const widgets = allWidgets.filter(w => w.group === group.name)
-          const filtered = query
-            ? widgets.filter(w =>
-                w.title.toLowerCase().includes(query)
-                || w.type.toLowerCase().includes(query),
-              )
-            : widgets
-          return { ...group, widgets: filtered }
-        })
+        .map(group => ({ ...group, widgets: widgetsByGroup.get(group.name) ?? [] }))
         .filter(g => g.widgets.length > 0)
     })
 

@@ -1,8 +1,29 @@
+import type { FormSchemaShape } from '@dragcraft/core'
+import type { MessageTree } from '@dragcraft/utils'
 import type { DesignerInstance, DesignerOptions } from './types'
 import { createEngine } from '@dragcraft/core'
 import { createDefaultActions, createNodeActionRegistry, rendererMessages } from '@dragcraft/renderer'
 import { createI18n } from '@dragcraft/utils'
 import { designerMessages } from './messages'
+
+function mergeDefaultMessages(builtinMessages: Record<string, MessageTree>): Record<string, MessageTree> {
+  const merged: Record<string, MessageTree> = {}
+  const locales = new Set([
+    ...Object.keys(builtinMessages),
+    ...Object.keys(rendererMessages),
+    ...Object.keys(designerMessages),
+  ])
+
+  for (const locale of locales) {
+    merged[locale] = {
+      ...(builtinMessages[locale] ?? {}),
+      ...(rendererMessages[locale] ?? {}),
+      ...(designerMessages[locale] ?? {}),
+    }
+  }
+
+  return merged
+}
 
 /**
  * Creates a designer instance by initializing the core engine,
@@ -55,7 +76,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     // double cast needed: FormSchema and FormSchemaShape are structurally compatible
     // but FieldSchema lacks FieldSchemaShape's index signature, so direct assignment fails
     engine.registry.registerGlobalConfigFormSchema(
-      globalConfigSchema as unknown as import('@dragcraft/core').FormSchemaShape,
+      globalConfigSchema as unknown as FormSchemaShape,
     )
   }
 
@@ -65,21 +86,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
   // 10. Create i18n instance with built-in + user messages
   const defaultLocale = options.locale ?? 'zh-CN'
   const builtinMsgs = options.builtinMessages ?? {}
-  const mergedDefaults: Record<string, import('@dragcraft/utils').MessageTree> = {}
-
-  for (const locale of new Set([
-    ...Object.keys(builtinMsgs),
-    ...Object.keys(rendererMessages),
-    ...Object.keys(designerMessages),
-  ])) {
-    mergedDefaults[locale] = {
-      ...(builtinMsgs[locale] ?? {}),
-      ...(rendererMessages[locale] ?? {}),
-      ...(designerMessages[locale] ?? {}),
-    }
-  }
-
-  const i18n = createI18n(defaultLocale, mergedDefaults)
+  const i18n = createI18n(defaultLocale, mergeDefaultMessages(builtinMsgs))
 
   // Merge user-provided messages
   if (options.messages) {
