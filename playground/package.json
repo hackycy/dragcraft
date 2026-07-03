@@ -12,6 +12,7 @@
     "@dragcraft/builtin-widgets": "workspace:*",
     "@dragcraft/designer": "workspace:*",
     "@dragcraft/device-frames": "workspace:*",
+    "@dragcraft/icons": "workspace:*",
     "@dragcraft/themes": "workspace:*",
     "vue": "catalog:shared"
   },

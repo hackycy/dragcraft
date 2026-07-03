@@ -1,5 +1,6 @@
 export { IconArrowDown } from './icons/arrow-down'
 export { IconArrowUp } from './icons/arrow-up'
+export { IconCopy } from './icons/copy'
 export { IconDelete } from './icons/delete'
 export { IconDesktop } from './icons/desktop'
 export { IconDrag } from './icons/drag'

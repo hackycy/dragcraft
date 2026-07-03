@@ -337,6 +337,9 @@ importers:
       '@dragcraft/device-frames':
         specifier: workspace:*
         version: link:../packages/device-frames
+      '@dragcraft/icons':
+        specifier: workspace:*
+        version: link:../packages/icons
       '@dragcraft/themes':
         specifier: workspace:*
         version: link:../packages/themes

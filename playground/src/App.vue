@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CommandType, createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
+import { IconCopy } from '@dragcraft/icons'
 import type { NodeActionContext } from '@dragcraft/designer'
 import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
 import { builtinWidgetsMessages, getAllWidgetMetas, getDefaultComponentMap, widgetGroups } from '@dragcraft/builtin-widgets'
@@ -79,7 +80,7 @@ const designer = createDesigner({
     {
       key: 'duplicate',
       label: '复制',
-      icon: '⧉',
+      icon: IconCopy,
       type: 'button',
       order: 350,
       handler: (ctx: NodeActionContext) => {
