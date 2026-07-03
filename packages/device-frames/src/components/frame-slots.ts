@@ -58,7 +58,6 @@ function overlayLayer(
 function positionedOverlay(
   schema: DesignerSchema | undefined,
   registry: RegistryInstance | undefined,
-  designMode = true,
 ): VNodeChild[] {
   if (!schema || !registry)
     return []
@@ -68,12 +67,8 @@ function positionedOverlay(
 
   for (const node of children) {
     const layout = resolveNodeLayout(node, registry, schema)
-    if (layout.position) {
-      // In preview mode, skip invisible nodes entirely
-      if (!designMode && !layout.visible)
-        continue
+    if (layout.position)
       positioned.push({ node, anchor: layout.position.anchor, visible: layout.visible })
-    }
   }
 
   if (positioned.length === 0)
@@ -113,7 +108,6 @@ export function renderFrameViewport(
   plan?: LayoutPlan,
   schema?: DesignerSchema,
   registry?: RegistryInstance,
-  designMode = true,
 ): VNodeChild[] {
   const top = sortedSlotManifests(
     plan,
@@ -144,7 +138,7 @@ export function renderFrameViewport(
     ...fallbackContent(plan, slots, consumedSlots),
   ]
 
-  const positioned = positionedOverlay(schema, registry, designMode)
+  const positioned = positionedOverlay(schema, registry)
 
   return [
     reserveTrack('dc-device-frame__dock dc-device-frame__dock--block-start', top, slots),
