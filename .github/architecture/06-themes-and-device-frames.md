@@ -99,9 +99,9 @@ import './my-custom-styles.css'
 | --- | --- |
 | `--dc-z-node-mask` | 节点透明遮罩 |
 | `--dc-z-node-handle` | 非遮罩节点的选中 handle |
+| `--dc-z-designer-portal` | 设计器画布交互层 portal，低于画布顶部工具栏 |
 | `--dc-z-canvas-toolbar` | 画布顶部工具栏 |
 | `--dc-z-canvas-forbidden` | 画布禁止拖入提示 |
-| `--dc-z-designer-portal` | 设计器交互层 portal |
 | `--dc-z-node-overlay` | Teleport 后的节点 hover/selected 外框 |
 | `--dc-z-node-toolbar` | Teleport 后的节点浮动工具栏 |
 | `--dc-z-designer-panel` | 左右设计器面板 |
