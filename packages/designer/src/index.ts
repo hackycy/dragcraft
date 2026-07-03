@@ -2,10 +2,12 @@
 export {
   DcCanvas,
   DcDesigner,
+  DcLeftSidebar,
   DcMaterialGroup,
   DcMaterialItem,
   DcMaterialPanel,
   DcPropertyPanel,
+  DcStructurePanel,
   DcToolbar,
 } from './components'
 
@@ -27,6 +29,7 @@ export type {
   DesignerExtensions,
   DesignerInstance,
   DesignerOptions,
+  LeftPanelTabKey,
   PropertyTabKey,
   ToolbarSlotAPI,
   UseDesignerReturn,

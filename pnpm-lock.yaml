@@ -208,6 +208,9 @@ importers:
       '@dragcraft/form-generator':
         specifier: workspace:*
         version: link:../form-generator
+      '@dragcraft/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@dragcraft/renderer':
         specifier: workspace:*
         version: link:../renderer

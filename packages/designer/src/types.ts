@@ -164,6 +164,7 @@ export interface DesignerContext {
   isForbidden: Ref<boolean>
   searchQuery: Ref<string>
   activeTab: Ref<PropertyTabKey>
+  leftPanelActiveTab: Ref<LeftPanelTabKey>
 }
 
 /**
@@ -176,6 +177,12 @@ export const DESIGNER_CONTEXT_KEY: InjectionKey<DesignerContext> = Symbol('dc-de
 // ──────────────────────────────────────────
 
 export type PropertyTabKey = 'global' | 'widget'
+
+// ──────────────────────────────────────────
+// Left panel tab type
+// ──────────────────────────────────────────
+
+export type LeftPanelTabKey = 'materials' | 'structure'
 
 // ──────────────────────────────────────────
 // useDesigner return type

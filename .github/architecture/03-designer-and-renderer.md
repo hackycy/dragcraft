@@ -32,9 +32,11 @@ src/
 │   └── usePropertyBinding.ts
 └── components/
     ├── DcDesigner.ts
+    ├── DcLeftSidebar.ts
     ├── DcMaterialPanel.ts
     ├── DcMaterialGroup.ts
     ├── DcMaterialItem.ts
+    ├── DcStructurePanel.ts
     ├── DcCanvas.ts
     ├── DcPropertyPanel.ts
     └── DcToolbar.ts
@@ -42,9 +44,14 @@ src/
 
 ## UI Shell 三栏结构
 
-### 左栏：物料区
+### 左栏：多 Tab 面板
 
-`DcMaterialPanel` 提供：
+`DcLeftSidebar` 提供竖向 icon tab 容器，当前内置：
+
+- `Materials`：物料区。
+- `Structure`：结构树区。
+
+物料 tab 使用 `DcMaterialPanel`，提供：
 
 - widget 分组展示。
 - 按 `title` 和 `type` 模糊搜索。
@@ -53,6 +60,13 @@ src/
 - `WidgetMeta.creatable` 动态控制物料是否可拖入画布。
 
 当 `creatable` 为 `false` 或谓词函数返回 `false` 时，物料卡片会带 `dc-material-item--disabled` class，`draggable` 设为 `false`，自定义渲染函数会收到 `disabled` prop。
+
+结构树 tab 使用 `DcStructurePanel`，按当前扁平 schema 的 `root.children` 展示节点：
+
+- 名称来自 `WidgetMeta.titleKey/title`，缺失时回退到 `node.type`。
+- 同时展示节点 `id`。
+- 点击节点调用选中 hooks 后选中对应画布节点。
+- 删除按钮复用 renderer 的 node action registry，因此遵守 `deletable`、位置锁定约束和删除 hooks。
 
 ### 中栏：画布区
 
@@ -124,7 +138,7 @@ const {
 
 | 扩展点 | 说明 |
 | --- | --- |
-| `materialPanelRenderer` | 替换左栏整体渲染 |
+| `materialPanelRenderer` | 替换左侧 Materials tab 内容 |
 | `propertyPanelRenderer` | 替换右栏配置区渲染 |
 | `renderWidgetItem` | 自定义单个物料卡片渲染 |
 | `rendererExtensions` | 透传给 renderer 的扩展点 |

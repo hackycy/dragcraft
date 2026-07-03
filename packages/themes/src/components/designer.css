@@ -84,6 +84,66 @@
   z-index: calc(var(--dc-z-toolbar-float) + 1);
 }
 
+/* ── Left Sidebar Tabs ───────────────────── */
+
+.dc-left-sidebar {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dc-left-sidebar__rail {
+  width: 42px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  gap: 4px;
+  background: var(--dc-bg-light);
+  border-right: 1px solid var(--dc-border-light);
+}
+
+.dc-left-sidebar__tab {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--dc-radius);
+  background: transparent;
+  color: var(--dc-text-secondary);
+  cursor: pointer;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
+}
+
+.dc-left-sidebar__tab:hover {
+  background: var(--dc-bg);
+  color: var(--dc-primary);
+}
+
+.dc-left-sidebar__tab:focus-visible {
+  outline: 2px solid var(--dc-primary);
+  outline-offset: 1px;
+}
+
+.dc-left-sidebar__tab--active {
+  background: var(--dc-bg);
+  border-color: var(--dc-border);
+  color: var(--dc-primary);
+  box-shadow: var(--dc-shadow-sm);
+}
+
+.dc-left-sidebar__content {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 .dc-designer__panel--center {
   flex: 1;
   overflow: hidden;

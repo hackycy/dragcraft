@@ -5,7 +5,7 @@ import { defineComponent, h, provide, ref } from 'vue'
 import { useDragDrop } from '../composables/useDragDrop'
 import { DESIGNER_CONTEXT_KEY } from '../types'
 import DcCanvas from './DcCanvas'
-import DcMaterialPanel from './DcMaterialPanel'
+import DcLeftSidebar from './DcLeftSidebar'
 import DcPropertyPanel from './DcPropertyPanel'
 
 export default defineComponent({
@@ -22,6 +22,7 @@ export default defineComponent({
     const { engine, componentMap, widgetGroups, extensions, fieldComponentMap, globalConfigSchema, eventHooks, actionRegistry, i18n } = props.instance
     const searchQuery = ref('')
     const activeTab = ref<'global' | 'widget'>('widget')
+    const leftPanelActiveTab = ref<'materials' | 'structure'>('materials')
 
     // Initialize drag-drop composable
     const dragDrop = useDragDrop(engine)
@@ -47,13 +48,13 @@ export default defineComponent({
       isForbidden: dragDrop.isForbidden,
       searchQuery,
       activeTab,
+      leftPanelActiveTab,
     }
     provide(DESIGNER_CONTEXT_KEY, ctx)
     provide(I18N_KEY, i18n)
 
     return () => {
       // Resolve panel components (support extension overrides)
-      const MaterialPanel = extensions.materialPanelRenderer ?? DcMaterialPanel
       const PropertyPanel = extensions.propertyPanelRenderer ?? DcPropertyPanel
 
       return h(
@@ -64,7 +65,7 @@ export default defineComponent({
           h('div', { class: 'dc-designer__body' }, [
             // Left: Material Panel
             h('div', { class: 'dc-designer__panel dc-designer__panel--left' }, [
-              h(MaterialPanel),
+              h(DcLeftSidebar),
             ]),
             // Center: Canvas
             h('div', { class: 'dc-designer__panel dc-designer__panel--center' }, [
