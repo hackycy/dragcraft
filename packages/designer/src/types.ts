@@ -154,12 +154,11 @@ export interface DesignerContext {
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
   dragOverIndex: Ref<number | null>
+  handleMaterialDragStart: (e: DragEvent, meta: WidgetMeta) => void
+  handleDragEnd: (e: DragEvent) => void
   handleCanvasDragOver: (e: DragEvent) => void
   handleCanvasDragLeave: (e: DragEvent) => void
   handleCanvasDrop: (e: DragEvent) => void
-  createDragPreview: (meta: WidgetMeta, isMove: boolean) => void
-  updateDragPreviewPosition: (e: DragEvent) => void
-  destroyDragPreview: () => void
   /** Whether the current drag-over is forbidden (widget type blocked by creatable predicate) */
   isForbidden: Ref<boolean>
   searchQuery: Ref<string>

@@ -26,6 +26,7 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
         schema: ref({ version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }),
         selectedNodeId: ref(null),
         hoveredNodeId: ref(null),
+        dragTarget: ref(null),
         getRawSchema: () => ({ version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }),
         selectNode: vi.fn(),
         hoverNode: vi.fn(),
@@ -193,6 +194,15 @@ describe('useWidgetNode', () => {
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
       expect(classObj['dc-node--locked']).toBe(false)
+    })
+
+    it('includes dragging class for the active drag source', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      ctx.engine.store.dragTarget.value = { sourceNodeId: 'a', widgetType: null }
+      const node = useWidgetNode(() => makeNode('a'), ctx)
+      const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
+      expect(node.isDragging.value).toBe(true)
+      expect(classObj['dc-node--dragging']).toBe(true)
     })
   })
 

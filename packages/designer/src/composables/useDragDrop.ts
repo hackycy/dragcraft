@@ -12,7 +12,7 @@ import {
   resolveBehavior,
   resolveNodeLayout,
 } from '@dragcraft/core'
-import { generateShortId } from '@dragcraft/utils'
+import { generateShortId, hideNativeDragImage } from '@dragcraft/utils'
 import { computed, ref, watch } from 'vue'
 
 // ──────────────────────────────────────────
@@ -30,8 +30,6 @@ export interface UseDragDropReturn {
   validDropIndices: ComputedRef<ReadonlySet<number> | null>
   /** Start dragging a new widget from the material panel */
   handleMaterialDragStart: (e: DragEvent, meta: WidgetMeta) => void
-  /** Start dragging an existing node within the canvas */
-  handleNodeDragStart: (e: DragEvent, nodeId: string) => void
   /** Handle dragover on the canvas (event delegation) */
   handleCanvasDragOver: (e: DragEvent) => void
   /** Handle dragleave on the canvas (event delegation) */
@@ -40,14 +38,8 @@ export interface UseDragDropReturn {
   handleCanvasDrop: (e: DragEvent) => void
   /** Handle drag end (cleanup) */
   handleDragEnd: (e: DragEvent) => void
-  /** Create a floating preview element at the mouse position */
-  createDragPreview: (meta: WidgetMeta, isMove: boolean) => void
-  /** Update the floating preview position to follow the mouse */
-  updateDragPreviewPosition: (e: DragEvent) => void
   /** Whether the current drag-over is forbidden (widget type already exists) */
   isForbidden: Ref<boolean>
-  /** Remove the floating preview element */
-  destroyDragPreview: () => void
 }
 
 // ──────────────────────────────────────────
@@ -65,7 +57,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   const dragOverNodeId = ref<string | null>(null)
   const dragOverIndex = ref<number | null>(null)
   const isForbidden = ref(false)
-  let dragPreviewEl: HTMLElement | null = null
 
   // ── Sortable constraint computeds ──
 
@@ -138,22 +129,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     return DEFAULT_SORT_SCOPE
   }
 
-  function getRootChildren(): SchemaNode[] {
-    return engine.store.getRawSchema().root.children ?? []
-  }
-
-  function getNodeMeta(nodeId: string): WidgetMeta | undefined {
-    const node = getRootChildren().find(c => c.id === nodeId)
-    return node ? engine.registry.getWidget(node.type) : undefined
-  }
-
-  function createPreviewForNode(nodeId: string): void {
-    const meta = getNodeMeta(nodeId)
-    if (meta) {
-      createDragPreview(meta, true)
-    }
-  }
-
   function clearDragOverState(): void {
     dragOverNodeId.value = null
     dragOverIndex.value = null
@@ -161,10 +136,14 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function resetDragState(): void {
-    destroyDragPreview()
     clearDragOverState()
     engine.store.setDragTarget(null)
   }
+
+  watch(engine.store.dragTarget, (target) => {
+    if (!target)
+      clearDragOverState()
+  })
 
   function resolveVisualDropIndex(rawIndex: number): number | null {
     const valid = validDropIndices.value
@@ -220,64 +199,9 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'copy'
       e.dataTransfer.setData('text/plain', meta.type)
-    }
-    createDragPreview(meta, false)
-  }
-
-  function handleNodeDragStart(e: DragEvent, nodeId: string): void {
-    engine.store.setDragTarget({
-      sourceNodeId: nodeId,
-      widgetType: null,
-    })
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = 'move'
-      e.dataTransfer.setData('text/plain', nodeId)
-    }
-    // Create preview for the moved node
-    createPreviewForNode(nodeId)
-  }
-
-  // ── Drag preview management ──
-
-  function createDragPreview(meta: WidgetMeta, isMove: boolean): void {
-    destroyDragPreview()
-    const el = document.createElement('div')
-    el.className = `dc-drag-preview${isMove ? ' dc-drag-preview--move' : ''}`
-    if (meta.icon) {
-      const iconSpan = document.createElement('span')
-      iconSpan.className = 'dc-drag-preview__icon'
-      if (typeof meta.icon === 'string') {
-        iconSpan.textContent = meta.icon
-      }
-      el.appendChild(iconSpan)
-    }
-    const nameSpan = document.createElement('span')
-    nameSpan.className = 'dc-drag-preview__name'
-    nameSpan.textContent = meta.title
-    el.appendChild(nameSpan)
-    document.body.appendChild(el)
-    dragPreviewEl = el
-  }
-
-  function updateDragPreviewPosition(e: DragEvent): void {
-    if (dragPreviewEl) {
-      dragPreviewEl.style.left = `${e.clientX + 12}px`
-      dragPreviewEl.style.top = `${e.clientY + 12}px`
+      hideNativeDragImage(e.dataTransfer)
     }
   }
-
-  function destroyDragPreview(): void {
-    if (dragPreviewEl) {
-      dragPreviewEl.remove()
-      dragPreviewEl = null
-    }
-  }
-
-  watch(isForbidden, (forbidden) => {
-    if (dragPreviewEl) {
-      dragPreviewEl.classList.toggle('dc-drag-preview--forbidden', forbidden)
-    }
-  })
 
   // ── Canvas drag event handlers (event delegation) ──
 
@@ -294,7 +218,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (!isDropAllowed.value) {
       isForbidden.value = true
       dragOverIndex.value = null
-      updateDragPreviewPosition(e)
       return
     }
     isForbidden.value = false
@@ -302,20 +225,11 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const sortScope = getActiveSortScope()
     if (sortScope === false) {
       dragOverIndex.value = null
-      updateDragPreviewPosition(e)
       return
     }
 
     const rawIndex = computeDropIndex(e, sortScope)
     dragOverIndex.value = resolveVisualDropIndex(rawIndex)
-
-    // Create preview for node drags from the toolbar handle (which doesn't
-    // call createDragPreview directly). Only creates once per drag operation.
-    if (dragTarget?.sourceNodeId && !dragPreviewEl) {
-      createPreviewForNode(dragTarget.sourceNodeId)
-    }
-
-    updateDragPreviewPosition(e)
   }
 
   function handleCanvasDragLeave(e: DragEvent): void {
@@ -376,7 +290,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function handleCanvasDrop(e: DragEvent): void {
-    destroyDragPreview()
     e.preventDefault()
     const visualIndex = dragOverIndex.value
     clearDragOverState()
@@ -411,14 +324,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     lockedIndices,
     validDropIndices,
     handleMaterialDragStart,
-    handleNodeDragStart,
     handleCanvasDragOver,
     handleCanvasDragLeave,
     handleCanvasDrop,
     handleDragEnd,
-    createDragPreview,
-    updateDragPreviewPosition,
     isForbidden,
-    destroyDragPreview,
   }
 }

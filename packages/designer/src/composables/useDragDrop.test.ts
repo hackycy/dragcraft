@@ -33,6 +33,7 @@ function mockDragEvent(overrides?: Partial<DragEvent>): DragEvent {
       effectAllowed: '',
       dropEffect: '',
       setData: vi.fn(),
+      setDragImage: vi.fn(),
     },
     currentTarget: document.createElement('div'),
     relatedTarget: null,
@@ -68,19 +69,7 @@ describe('useDragDrop', () => {
       widgetType: 'image',
     })
     expect(e.dataTransfer!.effectAllowed).toBe('copy')
-    dd.destroyDragPreview()
-  })
-
-  it('handleNodeDragStart sets dragTarget with sourceNodeId', () => {
-    const dd = useDragDrop(engine)
-    const e = mockDragEvent()
-    dd.handleNodeDragStart(e, 'a')
-    expect(engine.store.dragTarget.value).toEqual({
-      sourceNodeId: 'a',
-      widgetType: null,
-    })
-    expect(e.dataTransfer!.effectAllowed).toBe('move')
-    dd.destroyDragPreview()
+    expect(e.dataTransfer!.setDragImage).toHaveBeenCalled()
   })
 
   it('handleCanvasDrop adds new widget from material panel', () => {
@@ -109,8 +98,8 @@ describe('useDragDrop', () => {
     const dd = useDragDrop(engine)
     const e = mockDragEvent()
 
-    // Simulate drag start of existing node 'a'
-    dd.handleNodeDragStart(e, 'a')
+    // Existing node drag starts in renderer and shares the same dragTarget store.
+    engine.store.setDragTarget({ sourceNodeId: 'a', widgetType: null })
 
     // Simulate drag over to index 2 (after 'b')
     dd.dragOverIndex.value = 2

@@ -23,6 +23,8 @@ export interface UseWidgetNodeReturn {
   sortable: ComputedRef<boolean>
   /** Whether this node belongs to a sortable scope */
   inSortScope: ComputedRef<boolean>
+  /** Whether this node is the active drag source */
+  isDragging: ComputedRef<boolean>
   /** Whether this node is visible (from layout.visible, default true) */
   visible: ComputedRef<boolean>
   /** Resolved open layout metadata */
@@ -56,6 +58,7 @@ export function useWidgetNode(
   const resolvedComponent = computed(() => componentMap[getNode().type])
   const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, engine.store.getRawSchema()))
   const inSortScope = computed(() => layout.value.sortScope !== false)
+  const isDragging = computed(() => engine.store.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
 
   function readInstanceCtx(): InstanceBehaviorContext {
@@ -93,6 +96,7 @@ export function useWidgetNode(
       'dc-node--non-selectable': !selectable.value,
       'dc-node--locked': inSortScope.value && !sortable.value,
       'dc-node--unsorted': !inSortScope.value,
+      'dc-node--dragging': isDragging.value,
       'dc-node--hidden': !visible.value,
     },
     state.interactionClasses.value,
@@ -138,6 +142,7 @@ export function useWidgetNode(
     draggable,
     sortable,
     inSortScope,
+    isDragging,
     visible,
     layout,
     wrapperClasses,

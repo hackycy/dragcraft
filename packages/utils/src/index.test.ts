@@ -1,5 +1,6 @@
+// @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
-import { createI18n, EventEmitter, generateShortId } from './index'
+import { createI18n, EventEmitter, generateShortId, hideNativeDragImage } from './index'
 
 describe('utils exports', () => {
   it('emits, removes, and clears event listeners', () => {
@@ -48,5 +49,15 @@ describe('utils exports', () => {
 
   it('generates ids with the dragcraft prefix', () => {
     expect(generateShortId()).toMatch(/^dragcraft_[a-z0-9]+$/)
+  })
+
+  it('uses a mounted transparent element for native drag images', () => {
+    const dataTransfer = { setDragImage: vi.fn() } as unknown as DataTransfer
+
+    hideNativeDragImage(dataTransfer)
+
+    const el = document.querySelector('[data-dc-transparent-drag-image]')
+    expect(el).toBeInstanceOf(HTMLElement)
+    expect(dataTransfer.setDragImage).toHaveBeenCalledWith(el, 0, 0)
   })
 })

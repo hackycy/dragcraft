@@ -17,7 +17,7 @@ export default defineComponent({
   setup(props) {
     const ctx = useDesignerContext()
     const { t } = useI18n()
-    const { engine, extensions, createDragPreview } = ctx
+    const { engine, extensions, handleMaterialDragStart, handleDragEnd: handleDesignerDragEnd } = ctx
 
     const isDragging = ref(false)
 
@@ -39,26 +39,13 @@ export default defineComponent({
         e.preventDefault()
         return
       }
-      engine.store.setDragTarget({
-        sourceNodeId: null,
-        widgetType: props.meta.type,
-      })
-      if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = 'copy'
-        e.dataTransfer.setData('text/plain', props.meta.type)
-        // Hide browser's default drag ghost (replaced by floating preview)
-        const canvas = document.createElement('canvas')
-        canvas.width = 1
-        canvas.height = 1
-        e.dataTransfer.setDragImage(canvas, 0, 0)
-      }
-      createDragPreview(props.meta, false)
+      handleMaterialDragStart(e, props.meta)
       isDragging.value = true
     }
 
-    const handleDragEnd = () => {
+    const handleDragEnd = (e: DragEvent) => {
       isDragging.value = false
-      engine.store.setDragTarget(null)
+      handleDesignerDragEnd(e)
     }
 
     return () => {

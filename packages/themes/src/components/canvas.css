@@ -265,6 +265,10 @@
   box-shadow: none;
 }
 
+.dc-node--dragging {
+  opacity: 0.38;
+}
+
 .dc-node--drag-over {
   background-color: var(--dc-primary-bg-hover);
   border-color: var(--dc-primary);
@@ -303,42 +307,6 @@
 
 .dc-canvas--dragging {
   /* Reserved for future drag-in-progress visual hooks */
-}
-
-/* ── Drag Preview (floating) ────────────── */
-
-.dc-drag-preview {
-  position: fixed;
-  z-index: var(--dc-z-drag-preview);
-  width: 120px;
-  padding: 8px 12px;
-  background: var(--dc-bg);
-  border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius-lg);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  opacity: 0.9;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--dc-text-secondary);
-}
-
-.dc-drag-preview--move {
-  border-color: var(--dc-primary);
-}
-
-.dc-drag-preview__icon {
-  font-size: 20px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-.dc-drag-preview__name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ── Canvas Forbidden State ─────────────── */
