@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import WidgetRenderer from './WidgetRenderer'
@@ -51,12 +52,21 @@ function makeContext(meta: WidgetMeta): RendererContext {
     },
     extensions: {},
     eventHooks: {},
-    actionRegistry: undefined,
+    actionRegistry: {
+      getActions: vi.fn(() => []),
+      register: vi.fn(),
+      unregister: vi.fn(),
+      resolve: vi.fn(() => []),
+    } as unknown as NodeActionRegistry,
     dragOverNodeId: ref(null),
   } as unknown as RendererContext
 }
 
 describe('widgetRenderer', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
   it('keeps self-positioned layer empty space transparent to canvas events', async () => {
     const meta = makeMeta({
       defaultLayout: {
@@ -95,6 +105,73 @@ describe('widgetRenderer', () => {
     finally {
       app.unmount()
       host.remove()
+    }
+  })
+
+  it('teleports selected node toolbar into the designer portal when available', async () => {
+    const meta = makeMeta({ mask: false })
+    const ctx = makeContext(meta)
+    ctx.engine.store.selectedNodeId.value = 'fab'
+    const resolvedActions: ResolvedNodeAction[] = [{
+      key: 'delete',
+      label: 'Delete',
+      type: 'button',
+      order: 100,
+      visible: true,
+      disabled: false,
+      handler: vi.fn(),
+    }]
+    ctx.actionRegistry = {
+      getActions: vi.fn(() => []),
+      register: vi.fn(),
+      unregister: vi.fn(),
+      resolve: vi.fn(() => resolvedActions),
+    }
+
+    const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const host = document.createElement('div')
+    const portal = document.createElement('div')
+    portal.setAttribute('data-dc-designer-portal', '')
+    document.body.append(host, portal)
+
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      if (this instanceof HTMLElement && this.classList.contains('dc-node')) {
+        return {
+          top: 10,
+          right: 110,
+          bottom: 60,
+          left: 10,
+          width: 100,
+          height: 50,
+          x: 10,
+          y: 10,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, { node })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+      await new Promise(resolve => requestAnimationFrame(resolve))
+
+      expect(portal.querySelector('.dc-node__toolbar')).not.toBeNull()
+      expect(host.querySelector('.dc-node__toolbar')).toBeNull()
+    }
+    finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      app.unmount()
+      host.remove()
+      portal.remove()
     }
   })
 })

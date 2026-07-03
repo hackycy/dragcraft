@@ -16,6 +16,7 @@ const LAYOUT_STYLE_KEYS = new Set(['padding', 'margin'])
 const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
 const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
 const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
+const DESIGNER_PORTAL_SELECTOR = '[data-dc-designer-portal]'
 
 interface SplitNodeStyle {
   wrapperStyle?: Record<string, unknown>
@@ -41,6 +42,15 @@ function splitNodeStyle(style: SchemaNode['style']): SplitNodeStyle {
   }
 
   return { wrapperStyle, contentStyle }
+}
+
+function resolveInteractionLayerTarget(): string {
+  if (typeof document === 'undefined')
+    return 'body'
+
+  return document.querySelector(DESIGNER_PORTAL_SELECTOR)
+    ? DESIGNER_PORTAL_SELECTOR
+    : 'body'
 }
 
 /**
@@ -87,6 +97,7 @@ export default defineComponent({
       void ctx.engine.store.schema.value
 
       const node = props.node
+      const interactionLayerTarget = resolveInteractionLayerTarget()
       const placement = widget.layout.value.placement
       const isSelfPositionedLayer = placement.kind === 'layer' && placement.mode === 'self'
       const usesBlockingMask = widget.useMask.value && !isSelfPositionedLayer
@@ -129,7 +140,7 @@ export default defineComponent({
       const wrapperChildren: VNode[] = [innerContent]
 
       if (overlayActive.value && overlayGeometry.value.visible) {
-        wrapperChildren.push(h(Teleport, { to: 'body' }, [
+        wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [
           h('div', {
             'class': [
               'dc-node__block-overlay',
@@ -174,8 +185,9 @@ export default defineComponent({
         )
       }
 
-      // TOOLBAR (when selected): action-driven floating toolbar
-      // Teleported to <body> to escape all ancestor overflow clipping.
+      // TOOLBAR (when selected): action-driven floating toolbar.
+      // Teleported to the designer interaction layer when present, falling
+      // back to <body> for standalone renderer usage.
       // Note: the toolbar must remain visible during drag — hiding it (display:none
       // or removing from DOM) breaks the HTML5 DnD lifecycle because the browser
       // cancels the drag when the source element becomes invisible.
@@ -189,7 +201,7 @@ export default defineComponent({
           onDragStart: drag.handleDragStart,
           onDragEnd: drag.handleDragEnd,
         })
-        wrapperChildren.push(h(Teleport, { to: 'body' }, [toolbarVNode]))
+        wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [toolbarVNode]))
       }
 
       // Build the core wrapper vnode.

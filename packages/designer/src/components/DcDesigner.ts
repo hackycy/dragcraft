@@ -75,6 +75,10 @@ export default defineComponent({
               h(PropertyPanel),
             ]),
           ]),
+          h('div', {
+            'class': 'dc-designer__portal',
+            'data-dc-designer-portal': '',
+          }),
         ],
       )
     }

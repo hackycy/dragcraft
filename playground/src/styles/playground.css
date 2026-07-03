@@ -184,7 +184,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--dc-z-app-modal);
   backdrop-filter: blur(2px);
 }
 

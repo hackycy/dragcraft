@@ -100,7 +100,7 @@
 .dc-node__mask {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: var(--dc-z-node-mask);
   cursor: pointer;
   pointer-events: auto;
 }
@@ -125,7 +125,7 @@
   border: none;
   border-radius: 3px;
   cursor: pointer;
-  z-index: 2;
+  z-index: var(--dc-z-node-handle);
   opacity: 0;
   transition: opacity 0.15s;
   display: flex;
@@ -152,7 +152,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
-  z-index: var(--dc-z-toolbar);
+  z-index: var(--dc-z-node-toolbar);
   padding: 4px;
   border-radius: var(--dc-radius);
   background: var(--dc-primary);
@@ -230,7 +230,6 @@
 
 .dc-node__toolbar--floating {
   right: auto;
-  z-index: var(--dc-z-toolbar-float);
   pointer-events: auto;
 }
 
@@ -241,7 +240,7 @@
   box-sizing: border-box;
   border-radius: 4px;
   pointer-events: none;
-  z-index: calc(var(--dc-z-toolbar-float) - 1);
+  z-index: var(--dc-z-node-overlay);
 }
 
 .dc-node__block-overlay--hovered {
@@ -330,7 +329,7 @@
   color: var(--dc-color-danger, #ef4444);
   font-size: var(--dc-font-size-sm, 14px);
   pointer-events: none;
-  z-index: 10;
+  z-index: var(--dc-z-canvas-forbidden);
   animation: dc-forbidden-pulse 1.5s ease-in-out infinite;
 }
 

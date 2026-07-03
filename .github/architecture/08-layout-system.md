@@ -12,6 +12,8 @@
 
 旧的 slot manifest、positioned overlay 和独立 position 通道已移除。框架不再让某些节点绕过 `LayoutPlan`，所有节点都在同一个 plan 中出现一次。
 
+`flow/chrome/layer` 是设备页面内部的业务布局层。设计器自身的选区外框、节点工具栏、左右面板和应用弹窗使用主题 z-index token 管理，不通过业务 layout 提升或压低。
+
 ## 整体数据流
 
 ```text

@@ -93,6 +93,20 @@ import './my-custom-styles.css'
 | `--dc-panel-header-height` | 面板头部高度 |
 | `--dc-toolbar-height` | 工具栏高度 |
 
+### 层级
+
+| 变量 | 说明 |
+| --- | --- |
+| `--dc-z-node-mask` | 节点透明遮罩 |
+| `--dc-z-node-handle` | 非遮罩节点的选中 handle |
+| `--dc-z-canvas-toolbar` | 画布顶部工具栏 |
+| `--dc-z-canvas-forbidden` | 画布禁止拖入提示 |
+| `--dc-z-designer-portal` | 设计器交互层 portal |
+| `--dc-z-node-overlay` | Teleport 后的节点 hover/selected 外框 |
+| `--dc-z-node-toolbar` | Teleport 后的节点浮动工具栏 |
+| `--dc-z-designer-panel` | 左右设计器面板 |
+| `--dc-z-app-modal` | 应用级模态层 |
+
 ## Themes 文件结构
 
 ```plaintext
@@ -273,9 +287,14 @@ CSS 自定义属性：
 - `--dc-device-frame-status-height`。
 - `--dc-device-frame-titlebar-height`。
 - `--dc-device-frame-nav-height`。
+- `--dc-device-z-scrollbar`。
+- `--dc-device-z-chrome-item`。
+- `--dc-device-z-chrome`。
+- `--dc-device-z-layer`。
 
 约束：
 
 - `DeviceFrameShell` 是稳定组件引用，作为 renderer `containerShell` 传入。
 - 未提供 context 时自动降级为 iPhone 容器。
+- 设备框架内部层级是局部层级；`.dc-device-frame` 使用独立 stacking context，业务 `chrome/layer` 只在设备页面内排序，不参与设计器面板、节点工具栏或应用弹窗的全局层级竞争。
 - 所有 Frame 组件内容区必须包含 `dc-container-shell` class。

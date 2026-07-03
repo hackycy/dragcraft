@@ -80,6 +80,7 @@ src/
 - 点击画布空白处取消选中。
 - 支持 `toolbarRenderer` 扩展点，在画布顶部渲染自定义工具栏。
 - 支持 `WidgetMeta.sortable` 位置锁定约束，只显示合法 drop indicator。
+- 提供 `data-dc-designer-portal` 交互层出口，renderer 的选区外框和节点工具栏优先 Teleport 到该出口，避免直接散落到 `body` 与应用弹窗、面板层级竞争。
 
 ### 右栏：配置区
 
@@ -225,6 +226,8 @@ RootRenderer
       -> render nodeToolbar
       -> apply nodeWrapper
 ```
+
+节点选区外框和浮动工具栏使用 viewport 坐标，并通过 Teleport 逃出画布、设备框架和滚动容器的 overflow clipping。标准 Designer Shell 会提供专用 portal root；Renderer 单独使用时回退到 `body`。
 
 `RootRenderer` 接收：
 
