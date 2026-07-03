@@ -42,6 +42,12 @@
    - 主要导出
    - 依赖方向和集成方式
 
+8. [布局系统](./08-layout-system.md)
+   - Slot 体系与 Position 体系
+   - LayoutPlan 生成与消费
+   - 设备框架渲染层次
+   - 排序与可见性控制
+
 ## 文档维护规则
 
 - 新增或修改包职责时，优先更新 [包职责索引](./07-package-reference.md)。

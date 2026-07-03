@@ -24,7 +24,8 @@ interface SchemaNode {
     slot?: string
     sortScope?: string | false
     order?: number
-    data?: Record<string, unknown>
+    visible?: boolean | ((ctx: { node: SchemaNode, schema: DesignerSchema }) => boolean)
+    position?: { anchor: { block?: 'start' | 'center' | 'end', inline?: 'start' | 'center' | 'end' } }
   }
   children?: SchemaNode[]
 }
@@ -59,6 +60,10 @@ Core 基于 `root.children` 和物料默认布局生成 `LayoutPlan`：
 - `sortScope: false` 表示节点完全退出拖拽排序。
 - `WidgetMeta.defaultLayout` 为物料提供默认布局，节点实例上的 `layout` 可覆盖它。
 - `WidgetMeta.layoutManifest` 声明 slot 的布局诉求，例如 `allocation: reserve` 或 `allocation: overlay`。
+- 声明 `position` 但未声明 `slot` 的节点不进入 LayoutPlan，由设备框架的 positionedOverlay 独立渲染。
+- `visible` 支持静态布尔值或运行时谓词，不可见节点在设计模式下显示为半透明轮廓。
+
+详细的布局机制参见 [布局系统](./08-layout-system.md)。
 
 Renderer 只负责把 slot 分组和 `LayoutPlan` 交给 `containerShell`，具体 shell 读取 manifest 并执行布局策略。slot 名称始终是不透明字符串，框架不从名称推断业务语义。
 
