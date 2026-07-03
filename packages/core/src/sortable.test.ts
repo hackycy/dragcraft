@@ -48,14 +48,14 @@ describe('getLockedIndices', () => {
   })
 
   it('skips nodes outside the current sort scope from locked indices', () => {
-    const children = [makeNode('a'), makeNode('b', 'tabbar', { slot: 'tab-bar.surface' }), makeNode('c')]
+    const children = [makeNode('a'), makeNode('b', 'tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }), makeNode('c')]
     const reg = makeRegistry({ text: { sortable: true } })
     const locked = getLockedIndices(children, reg, makeSchema(children))
     expect(locked.size).toBe(0)
   })
 
-  it('external slots do not alter locked indices in the content sort scope', () => {
-    const children = [makeNode('a', 'header'), makeNode('b', 'tabbar', { slot: 'tab-bar.surface' }), makeNode('c')]
+  it('chrome nodes do not alter locked indices in the content sort scope', () => {
+    const children = [makeNode('a', 'header'), makeNode('b', 'tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }), makeNode('c')]
     const reg = makeRegistry({ header: { sortable: false }, text: { sortable: true } })
     const locked = getLockedIndices(children, reg, makeSchema(children))
     expect(locked).toEqual(new Set([0]))

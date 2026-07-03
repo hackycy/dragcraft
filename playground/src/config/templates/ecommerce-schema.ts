@@ -30,7 +30,7 @@ export const ecommerceSchema: DesignerSchema = {
           transparent: false,
         },
         style: { width: '100%' },
-        layout: { slot: 'navbar.surface', sortScope: false },
+        layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed', reserve: { mode: 'measure', size: 44 }, avoidContent: true } },
       },
 
       // ── TabBar (schema order independent) ─────
@@ -50,7 +50,23 @@ export const ecommerceSchema: DesignerSchema = {
           inactiveColor: '#999999',
         },
         style: { width: '100%' },
-        layout: { slot: 'tab-bar.surface', sortScope: false },
+        layout: { placement: { kind: 'chrome', edge: 'block-end', position: 'fixed', reserve: { mode: 'measure', size: 50 }, avoidContent: true } },
+      },
+
+      // ── Floating Action Button (material self-positioned) ──
+      {
+        id: 'floating-cart',
+        type: 'floating-button',
+        props: {
+          label: '+',
+          side: 'right',
+          bottom: 14,
+          sideOffset: 16,
+          size: 52,
+          backgroundColor: '#07C160',
+          textColor: '#ffffff',
+        },
+        layout: { placement: { kind: 'layer', layer: 'float', mode: 'self', avoid: ['safe-area', 'chrome'] } },
       },
 
       // ── Swiper Banner ─────────────────────

@@ -21,11 +21,23 @@ interface SchemaNode {
   props: Record<string, unknown>
   style?: Record<string, unknown>
   layout?: {
-    slot?: string
-    sortScope?: string | false
+    placement?:
+      | { kind: 'flow', region?: string, sortScope?: string | false }
+      | {
+          kind: 'chrome'
+          edge: 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
+          position?: 'fixed' | 'sticky' | 'flow'
+          reserve?: { mode?: 'measure' | 'size' | 'none', size?: string | number }
+          avoidContent?: boolean
+        }
+      | {
+          kind: 'layer'
+          layer?: string
+          mode?: 'framework' | 'self'
+          anchor?: { block?: 'start' | 'center' | 'end', inline?: 'start' | 'center' | 'end' }
+        }
     order?: number
     visible?: boolean | ((ctx: { node: SchemaNode, schema: DesignerSchema }) => boolean)
-    position?: { anchor: { block?: 'start' | 'center' | 'end', inline?: 'start' | 'center' | 'end' } }
   }
   children?: SchemaNode[]
 }
@@ -42,30 +54,33 @@ interface DesignerSchema {
 - `root.children` 是扁平 widget 数组。
 - 不存在 `nodeType`，不区分容器和 widget。
 - 不支持嵌套子节点，`children` 仅 root 保留。
-- `layout.slot` 是开放挂载点，框架不内置位置枚举。
-- `layout.sortScope` 是开放排序域，`false` 表示节点不参与画布拖拽排序。
+- `layout.placement` 声明节点进入内容流、固定 chrome 还是浮层。
+- `flow.sortScope` 是开放排序域，`false` 表示节点不参与画布拖拽排序。
 
 ## LayoutPlan 投影
 
 Core 基于 `root.children` 和物料默认布局生成 `LayoutPlan`：
 
-- `slots`：按开放 `slot` 分组，供 renderer 分槽渲染。
-- `sortScopes`：按开放 `sortScope` 分组，供拖拽、上移、下移等排序命令使用。
-- `slotManifests`：聚合物料声明的 slot 布局行为，供 container shell 执行空间分配。
+- `entries`：所有布局节点，保证每个节点只渲染一次。
+- `regions`：按 `flow.region` 分组，供 renderer 渲染内容区域。
+- `chrome`：固定或结构 chrome 节点，例如顶部导航栏、底部标签栏。
+- `layers`：浮层节点，例如 FAB、气泡、助手。
+- `sortScopes`：按 `flow.sortScope` 分组，供拖拽、上移、下移等排序命令使用。
+- `insets`：由 chrome 节点贡献的内容避让信息，供设备框架写入 CSS variables。
 
 默认规则：
 
-- 未声明 layout 的节点进入 `content` slot，并参与 `content` sort scope。
-- 非 `content` slot 默认不参与排序，除非显式声明自己的 `sortScope`。
-- `sortScope: false` 表示节点完全退出拖拽排序。
+- 未声明 layout 的节点进入 `content` region，并参与 `content` sort scope。
+- 非 `content` flow region 默认不参与排序，除非显式声明自己的 `sortScope`。
+- `chrome` 和 `layer` 默认退出拖拽排序。
 - `WidgetMeta.defaultLayout` 为物料提供默认布局，节点实例上的 `layout` 可覆盖它。
-- `WidgetMeta.layoutManifest` 声明 slot 的布局诉求，例如 `allocation: reserve` 或 `allocation: overlay`。
-- 声明 `position` 但未声明 `slot` 的节点不进入 LayoutPlan，由设备框架的 positionedOverlay 独立渲染。
+- `chrome.reserve` 声明内容区如何避让固定 chrome，支持测量尺寸或显式尺寸。
+- `layer.mode: 'self'` 允许物料在框架提供的 layer 坐标系中自行定位。
 - `visible` 支持静态布尔值或运行时谓词，不可见节点在设计模式下显示为半透明轮廓。
 
 详细的布局机制参见 [布局系统](./08-layout-system.md)。
 
-Renderer 只负责把 slot 分组和 `LayoutPlan` 交给 `containerShell`，具体 shell 读取 manifest 并执行布局策略。slot 名称始终是不透明字符串，框架不从名称推断业务语义。
+Renderer 负责把 `LayoutPlan` 分发为 `regionVNodes`、`chromeVNodes` 和 `layerVNodes` 交给 `containerShell`。Shell 不重新读取 schema，不创建业务 widget vnode，只执行 content scrollport、chrome layer、floating layer 和 inset 写入。
 
 ## Core 文件结构
 

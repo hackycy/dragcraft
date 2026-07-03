@@ -49,6 +49,12 @@ export interface UseToolbarPositionOptions {
   toolbarWidth?: number
   /** Reactive max right boundary (px, viewport-relative). When set, toolbar flips to left if it would exceed this. */
   maxRight?: Ref<number | undefined>
+  /** Optional descendant selector used as the visual/interaction geometry anchor. */
+  targetSelector?: string
+  /** Optional descendant selector used only when the layout host is a self-positioned layer plane. */
+  selfTargetSelector?: string
+  /** Optional ancestor selector whose outside edge owns toolbar placement. */
+  boundarySelector?: string
 }
 
 export interface UseToolbarPositionReturn {
@@ -75,7 +81,7 @@ export function useToolbarPosition(
   isActive: Ref<boolean>,
   options: UseToolbarPositionOptions = {},
 ): UseToolbarPositionReturn {
-  const { gap = 8, toolbarWidth = 32, maxRight } = options
+  const { gap = 8, toolbarWidth = 32, maxRight, targetSelector, selfTargetSelector, boundarySelector } = options
 
   const position = ref<ToolbarPositionData>({
     top: 0,
@@ -88,14 +94,16 @@ export function useToolbarPosition(
   // ── Core update logic ──
 
   function update() {
-    const el = elRef.value
-    if (!el) {
+    const hostEl = elRef.value
+    if (!hostEl) {
       applyPosition(0, 0, false)
       return
     }
 
-    const rect = el.getBoundingClientRect()
-    const clip = getEffectiveClipRect(el)
+    const anchorEl = resolveAnchorElement(hostEl)
+    const rect = anchorEl.getBoundingClientRect()
+    const clip = getEffectiveClipRect(anchorEl)
+    const boundaryRect = resolveBoundaryElement(hostEl, anchorEl)?.getBoundingClientRect()
 
     // Check if widget is at least partially visible in effective clip area
     // (viewport ∩ all scrollable ancestor containers)
@@ -111,14 +119,9 @@ export function useToolbarPosition(
     }
 
     let top = rect.top
-    let left = rect.right + gap
-
-    // If toolbar would go off the right edge of clip area or exceed maxRight, flip to left side
-    const boundary = maxRight?.value
-    const effectiveRight = boundary != null ? Math.min(clip.right, boundary) : clip.right
-    if (left + toolbarWidth > effectiveRight) {
-      left = rect.left - gap - toolbarWidth
-    }
+    const left = boundaryRect
+      ? computeBoundaryOutsideLeft(boundaryRect)
+      : computeAnchorLeft(rect, clip)
 
     // Clamp top to effective clip bounds
     top = Math.max(top, clip.top)
@@ -136,6 +139,46 @@ export function useToolbarPosition(
     if (prev.top !== top || prev.left !== left || prev.visible !== visible) {
       position.value = { top, left, visible }
     }
+  }
+
+  function resolveAnchorElement(hostEl: HTMLElement): HTMLElement {
+    const selector = targetSelector
+      ?? (hostEl.dataset.dcLayerMode === 'self' ? selfTargetSelector : undefined)
+
+    if (!selector)
+      return hostEl
+
+    const candidate = hostEl.querySelector<HTMLElement>(selector)
+    if (!candidate)
+      return hostEl
+
+    const rect = candidate.getBoundingClientRect()
+    return rect.width > 0 || rect.height > 0 ? candidate : hostEl
+  }
+
+  function resolveBoundaryElement(hostEl: HTMLElement, anchorEl: HTMLElement): HTMLElement | null {
+    if (!boundarySelector)
+      return null
+
+    return hostEl.closest<HTMLElement>(boundarySelector)
+      ?? anchorEl.closest<HTMLElement>(boundarySelector)
+  }
+
+  function effectiveRight(clip: { right: number }): number {
+    const boundary = maxRight?.value
+    return boundary != null ? Math.min(clip.right, boundary) : clip.right
+  }
+
+  function computeAnchorLeft(rect: DOMRect, clip: { right: number }): number {
+    const rightSide = rect.right + gap
+    if (rightSide + toolbarWidth <= effectiveRight(clip))
+      return rightSide
+
+    return rect.left - gap - toolbarWidth
+  }
+
+  function computeBoundaryOutsideLeft(rect: DOMRect): number {
+    return rect.left - gap - toolbarWidth
   }
 
   // ── rAF polling loop ──

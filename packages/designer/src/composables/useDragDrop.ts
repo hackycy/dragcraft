@@ -3,7 +3,7 @@ import type { ComputedRef, Ref } from 'vue'
 import {
   CommandType,
   createLayoutPlan,
-  DEFAULT_LAYOUT_SLOT,
+  DEFAULT_LAYOUT_REGION,
   DEFAULT_SORT_SCOPE,
   findNearestValidIndex,
   getLockedIndices,
@@ -106,11 +106,14 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   // ── Visual drop index computation ──
 
   function resolveMetaSortScope(meta: WidgetMeta): string | false {
-    const layout = meta.defaultLayout
-    const slot = layout?.slot ?? DEFAULT_LAYOUT_SLOT
-    return layout?.sortScope === undefined
-      ? (slot === DEFAULT_LAYOUT_SLOT ? DEFAULT_SORT_SCOPE : false)
-      : layout.sortScope
+    const placement = meta.defaultLayout?.placement
+    if (!placement || placement.kind === 'flow') {
+      const region = placement?.region ?? DEFAULT_LAYOUT_REGION
+      return placement?.sortScope === undefined
+        ? (region === DEFAULT_LAYOUT_REGION ? DEFAULT_SORT_SCOPE : false)
+        : placement.sortScope
+    }
+    return false
   }
 
   function getActiveSortScopeEntries(sortScope: string) {
@@ -126,7 +129,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       return DEFAULT_SORT_SCOPE
     if (target.sourceNodeId) {
       const node = engine.store.getNodeById(target.sourceNodeId)
-      return node ? resolveNodeLayout(node, engine.registry).sortScope : false
+      return node ? resolveNodeLayout(node, engine.registry, engine.store.getRawSchema()).sortScope : false
     }
     if (target.widgetType) {
       const meta = engine.registry.getWidget(target.widgetType)

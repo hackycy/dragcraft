@@ -8,7 +8,15 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    slotVNodes: {
+    regionVNodes: {
+      type: Object,
+      default: () => ({}),
+    },
+    chromeVNodes: {
+      type: Array,
+      default: () => [],
+    },
+    layerVNodes: {
       type: Object,
       default: () => ({}),
     },

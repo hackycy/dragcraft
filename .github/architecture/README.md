@@ -43,9 +43,9 @@
    - 依赖方向和集成方式
 
 8. [布局系统](./08-layout-system.md)
-   - Slot 体系与 Position 体系
+   - Flow、Chrome 与 Layer placement
    - LayoutPlan 生成与消费
-   - 设备框架渲染层次
+   - 设备框架 inset 与浮层渲染
    - 排序与可见性控制
 
 ## 文档维护规则

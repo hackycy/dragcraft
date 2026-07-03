@@ -2,8 +2,10 @@ import type { DesignerSchema, RegistryInstance, SchemaNode, WidgetMeta } from '.
 import { describe, expect, it } from 'vitest'
 import {
   createLayoutPlan,
-  DEFAULT_LAYOUT_SLOT,
+  DEFAULT_LAYER,
+  DEFAULT_LAYOUT_REGION,
   DEFAULT_SORT_SCOPE,
+  getLayoutRegionEntries,
   getSortableArrayIndexForInsert,
   getSortScopeEntries,
   resolveNodeLayout,
@@ -33,137 +35,128 @@ function makeRegistry(metaMap: Record<string, Partial<WidgetMeta>> = {}): Regist
 }
 
 describe('layout protocol', () => {
-  it('defaults nodes to the content slot and content sort scope', () => {
+  it('defaults nodes to content flow and content sort scope', () => {
     const layout = resolveNodeLayout(makeNode('a'), makeRegistry())
-    expect(layout.slot).toBe(DEFAULT_LAYOUT_SLOT)
+    expect(layout.placement).toEqual({
+      kind: 'flow',
+      region: DEFAULT_LAYOUT_REGION,
+      sortScope: DEFAULT_SORT_SCOPE,
+    })
+    expect(layout.region).toBe(DEFAULT_LAYOUT_REGION)
     expect(layout.sortScope).toBe(DEFAULT_SORT_SCOPE)
   })
 
-  it('defaults non-content slots outside sorting', () => {
-    const layout = resolveNodeLayout(makeNode('a', 'tabbar', { slot: 'tab-bar.surface' }), makeRegistry())
-    expect(layout.slot).toBe('tab-bar.surface')
-    expect(layout.sortScope).toBe(false)
-  })
-
-  it('allows widget default layout to be overridden by node layout', () => {
+  it('allows widget default placement to be overridden by node placement', () => {
     const reg = makeRegistry({
-      tabbar: { defaultLayout: { slot: 'tab-bar.surface', sortScope: false } },
+      text: { defaultLayout: { placement: { kind: 'flow', region: 'hero' } } },
     })
-    const layout = resolveNodeLayout(makeNode('a', 'tabbar', { slot: 'custom.surface' }), reg)
-    expect(layout.slot).toBe('custom.surface')
-    expect(layout.sortScope).toBe(false)
+    const layout = resolveNodeLayout(makeNode('a', 'text', { placement: { kind: 'flow', region: 'content' } }), reg)
+    expect(layout.placement).toMatchObject({ kind: 'flow', region: 'content' })
   })
 
-  it('groups entries by open slots and sort scopes', () => {
+  it('groups entries by regions, chrome, layers, and sort scopes', () => {
     const children = [
+      makeNode('nav', 'navbar', { placement: { kind: 'chrome', edge: 'block-start' } }),
       makeNode('a'),
-      makeNode('tab', 'tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('fab', 'fab', { placement: { kind: 'layer', layer: 'float', mode: 'self' } }),
       makeNode('b'),
-      makeNode('fab', 'fab', { slot: 'fab.surface', sortScope: false }),
+      makeNode('tab', 'tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
     ]
     const plan = createLayoutPlan(makeSchema(children), makeRegistry())
 
-    expect(plan.slots.get('content')!.map(entry => entry.node.id)).toEqual(['a', 'b'])
-    expect(plan.slots.get('tab-bar.surface')!.map(entry => entry.node.id)).toEqual(['tab'])
-    expect(plan.slots.get('fab.surface')!.map(entry => entry.node.id)).toEqual(['fab'])
+    expect(plan.entries.map(entry => entry.node.id)).toEqual(['nav', 'a', 'fab', 'b', 'tab'])
+    expect(plan.regions.get('content')!.map(entry => entry.node.id)).toEqual(['a', 'b'])
+    expect(plan.chrome.map(entry => entry.node.id)).toEqual(['nav', 'tab'])
+    expect(plan.layers.get('float')!.map(entry => entry.node.id)).toEqual(['fab'])
     expect(getSortScopeEntries(plan, 'content').map(entry => entry.node.id)).toEqual(['a', 'b'])
   })
 
-  it('aggregates material layout manifests without interpreting slot names', () => {
-    const reg = makeRegistry({
-      navbar: {
-        defaultLayout: { slot: 'navbar.surface', sortScope: false },
-        layoutManifest: {
-          slots: {
-            'navbar.surface': { allocation: 'reserve', axis: 'block', edge: 'start', order: 10 },
-            'help.surface': {
-              allocation: 'overlay',
-              order: 20,
-            },
-          },
-        },
-      },
-    })
-    const plan = createLayoutPlan(makeSchema([makeNode('nav', 'navbar')]), reg)
-
-    expect(plan.slotManifests.get('navbar.surface')).toMatchObject({
-      slot: 'navbar.surface',
-      allocation: 'reserve',
-      axis: 'block',
-      edge: 'start',
-      order: 10,
-    })
-    expect(plan.slotManifests.get('help.surface')).toMatchObject({
-      slot: 'help.surface',
-      allocation: 'overlay',
-      axis: 'block',
-      edge: 'start',
-      order: 20,
-    })
-  })
-
-  it('defaults visible to true', () => {
-    const layout = resolveNodeLayout(makeNode('a'), makeRegistry())
-    expect(layout.visible).toBe(true)
-  })
-
-  it('respects static visible: false', () => {
-    const layout = resolveNodeLayout(makeNode('a', 'text', { visible: false }), makeRegistry())
-    expect(layout.visible).toBe(false)
-  })
-
-  it('evaluates visible predicate with schema context', () => {
-    const schema = makeSchema([makeNode('a')])
-    const layout = resolveNodeLayout(
-      makeNode('a', 'text', { visible: ctx => ctx.node.id === 'a' }),
-      makeRegistry(),
-      schema,
-    )
-    expect(layout.visible).toBe(true)
-  })
-
-  it('returns false for visible predicate when schema is not provided', () => {
-    const layout = resolveNodeLayout(
-      makeNode('a', 'text', { visible: () => true }),
-      makeRegistry(),
-    )
-    expect(layout.visible).toBe(false)
-  })
-
-  it('suppresses default slot for position-only nodes', () => {
-    const layout = resolveNodeLayout(
-      makeNode('a', 'fab', { position: { anchor: { block: 'end', inline: 'end' } } }),
-      makeRegistry(),
-    )
-    expect(layout.slot).toBeUndefined()
-    expect(layout.sortScope).toBe(false)
-    expect(layout.position).toEqual({ anchor: { block: 'end', inline: 'end' } })
-  })
-
-  it('keeps explicit slot even when position is set', () => {
-    const layout = resolveNodeLayout(
-      makeNode('a', 'fab', { slot: 'fab.surface', position: { anchor: { block: 'end', inline: 'end' } } }),
-      makeRegistry(),
-    )
-    expect(layout.slot).toBe('fab.surface')
-  })
-
-  it('excludes position-only nodes from layout plan', () => {
+  it('normalizes chrome placement and contributes content insets', () => {
     const children = [
-      makeNode('a'),
-      makeNode('fab', 'fab', { position: { anchor: { block: 'end', inline: 'end' } } }),
-      makeNode('b'),
+      makeNode('nav', 'navbar', { placement: { kind: 'chrome', edge: 'block-start' } }),
+      makeNode('tab', 'tabbar', {
+        placement: {
+          kind: 'chrome',
+          edge: 'block-end',
+          reserve: { mode: 'size', size: 50 },
+        },
+      }),
     ]
     const plan = createLayoutPlan(makeSchema(children), makeRegistry())
 
-    expect(plan.entries.map(e => e.node.id)).toEqual(['a', 'b'])
-    expect(plan.slots.get('content')!.map(e => e.node.id)).toEqual(['a', 'b'])
+    expect(plan.chrome[0].layout.placement).toMatchObject({
+      kind: 'chrome',
+      edge: 'block-start',
+      position: 'fixed',
+      reserve: { mode: 'measure' },
+      avoidContent: true,
+    })
+    expect(plan.insets.contributors).toEqual([
+      { edge: 'block-start', sourceNodeId: 'nav', reserve: { mode: 'measure', size: undefined } },
+      { edge: 'block-end', sourceNodeId: 'tab', reserve: { mode: 'size', size: 50 } },
+    ])
+  })
+
+  it('supports framework and self positioned layers without leaving the layout plan', () => {
+    const self = resolveNodeLayout(
+      makeNode('self', 'fab', { placement: { kind: 'layer', layer: 'float', mode: 'self' } }),
+      makeRegistry(),
+    )
+    const framework = resolveNodeLayout(
+      makeNode('anchored', 'fab', { placement: { kind: 'layer', anchor: { block: 'start', inline: 'center' } } }),
+      makeRegistry(),
+    )
+
+    expect(self.placement).toMatchObject({
+      kind: 'layer',
+      layer: 'float',
+      mode: 'self',
+      anchor: { block: 'end', inline: 'end' },
+      avoid: ['safe-area', 'chrome'],
+    })
+    expect(framework.placement).toMatchObject({
+      kind: 'layer',
+      layer: DEFAULT_LAYER,
+      mode: 'framework',
+      anchor: { block: 'start', inline: 'center' },
+    })
+
+    const plan = createLayoutPlan(makeSchema([
+      makeNode('a'),
+      makeNode('self', 'fab', { placement: { kind: 'layer', layer: 'float', mode: 'self' } }),
+    ]), makeRegistry())
+    expect(plan.entries.map(entry => entry.node.id)).toEqual(['a', 'self'])
+    expect(plan.layers.get('float')!.map(entry => entry.node.id)).toEqual(['self'])
+  })
+
+  it('resolves static and predicate visibility', () => {
+    const schema = makeSchema([makeNode('a')])
+    expect(resolveNodeLayout(makeNode('a', 'text', { visible: false }), makeRegistry()).visible).toBe(false)
+    expect(resolveNodeLayout(
+      makeNode('a', 'text', { visible: ctx => ctx.node.id === 'a' }),
+      makeRegistry(),
+      schema,
+    ).visible).toBe(true)
+    expect(resolveNodeLayout(
+      makeNode('a', 'text', { visible: () => true }),
+      makeRegistry(),
+    ).visible).toBe(false)
+  })
+
+  it('keeps non-content flow regions outside the default sort scope', () => {
+    const plan = createLayoutPlan(makeSchema([
+      makeNode('hero', 'text', { placement: { kind: 'flow', region: 'hero' } }),
+      makeNode('body'),
+    ]), makeRegistry())
+
+    expect(getLayoutRegionEntries(plan, 'hero').map(entry => entry.node.id)).toEqual(['hero'])
+    expect(getSortScopeEntries(plan, 'content').map(entry => entry.node.id)).toEqual(['body'])
   })
 
   it('maps sort-scope insertion indices back to array indices', () => {
     const children = [
       makeNode('a'),
-      makeNode('tab', 'tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('tab', 'tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
       makeNode('b'),
     ]
     const plan = createLayoutPlan(makeSchema(children), makeRegistry())

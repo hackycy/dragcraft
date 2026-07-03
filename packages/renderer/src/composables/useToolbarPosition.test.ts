@@ -58,6 +58,83 @@ describe('useToolbarPosition', () => {
     expect(position.value.left).toBe(208) // 200 + gap(8)
   })
 
+  it('anchors to the configured interaction surface when the host is larger than the widget', async () => {
+    const host = mockElement({ top: 0, left: 0, right: 400, bottom: 600, width: 400, height: 600 })
+    const surface = mockElement({ top: 480, left: 320, right: 372, bottom: 532, width: 52, height: 52 })
+    surface.setAttribute('data-dc-node-surface', '')
+    host.appendChild(surface)
+
+    const elRef = ref<HTMLElement | null>(host)
+    const active = ref(true)
+
+    const { position, update } = useToolbarPosition(elRef, active, {
+      gap: 8,
+      toolbarWidth: 32,
+      targetSelector: '[data-dc-node-surface]',
+    })
+
+    await nextTick()
+    update()
+
+    expect(position.value.visible).toBe(true)
+    expect(position.value.top).toBe(480)
+    expect(position.value.left).toBe(380)
+  })
+
+  it('places the toolbar outside the left side of the configured boundary while following the block vertically', async () => {
+    const frame = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
+    frame.setAttribute('data-dc-toolbar-boundary', '')
+    frame.style.overflow = 'hidden'
+    const host = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
+    const surface = mockElement({ top: 520, left: 720, right: 772, bottom: 572, width: 52, height: 52 })
+    surface.setAttribute('data-dc-node-surface', '')
+    frame.appendChild(host)
+    host.appendChild(surface)
+
+    const elRef = ref<HTMLElement | null>(host)
+    const active = ref(true)
+
+    const { position, update } = useToolbarPosition(elRef, active, {
+      gap: 8,
+      toolbarWidth: 32,
+      boundarySelector: '[data-dc-toolbar-boundary]',
+    })
+
+    await nextTick()
+    update()
+
+    expect(position.value.visible).toBe(true)
+    expect(position.value.top).toBe(80)
+    expect(position.value.left).toBe(360)
+  })
+
+  it('keeps the toolbar on the left boundary side even when right side has room', async () => {
+    const frame = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
+    frame.setAttribute('data-dc-toolbar-boundary', '')
+    const host = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
+    const surface = mockElement({ top: 120, left: 400, right: 800, bottom: 164, width: 400, height: 44 })
+    surface.setAttribute('data-dc-node-surface', '')
+    frame.appendChild(host)
+    host.appendChild(surface)
+
+    const elRef = ref<HTMLElement | null>(host)
+    const active = ref(true)
+
+    const { position, update } = useToolbarPosition(elRef, active, {
+      gap: 8,
+      toolbarWidth: 32,
+      maxRight: ref(820),
+      boundarySelector: '[data-dc-toolbar-boundary]',
+    })
+
+    await nextTick()
+    update()
+
+    expect(position.value.visible).toBe(true)
+    expect(position.value.top).toBe(80)
+    expect(position.value.left).toBe(360)
+  })
+
   it('flips to left side when element is near right edge', async () => {
     const el = mockElement({ top: 100, left: 900, right: 1000, bottom: 200 })
     const elRef = ref<HTMLElement | null>(el)

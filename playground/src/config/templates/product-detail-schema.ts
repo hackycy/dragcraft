@@ -30,7 +30,7 @@ export const productDetailSchema: DesignerSchema = {
           transparent: false,
         },
         style: { width: '100%' },
-        layout: { slot: 'navbar.surface', sortScope: false },
+        layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed', reserve: { mode: 'measure', size: 44 }, avoidContent: true } },
       },
       // Product hero image
       {

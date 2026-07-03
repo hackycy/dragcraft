@@ -1,5 +1,5 @@
-import type { DesignerSchema, LayoutPlan, RegistryInstance } from '@dragcraft/core'
-import type { PropType } from 'vue'
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType, VNode } from 'vue'
 import { computed, defineComponent, h, inject } from 'vue'
 import { getDefaultPresets } from '../presets'
 import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
@@ -22,13 +22,13 @@ export default defineComponent({
       type: Object as PropType<LayoutPlan>,
       default: undefined,
     },
-    schema: {
-      type: Object as PropType<DesignerSchema>,
-      default: undefined,
+    chromeVNodes: {
+      type: Array as PropType<VNode[]>,
+      default: () => [],
     },
-    registry: {
-      type: Object as PropType<RegistryInstance>,
-      default: undefined,
+    layerVNodes: {
+      type: Object as PropType<Record<string, VNode[]>>,
+      default: () => ({}),
     },
   },
 
@@ -45,6 +45,10 @@ export default defineComponent({
     })
 
     return () =>
-      h(activeFrame.value, { layoutPlan: props.layoutPlan, schema: props.schema, registry: props.registry }, slots)
+      h(activeFrame.value, {
+        layoutPlan: props.layoutPlan,
+        chromeVNodes: props.chromeVNodes,
+        layerVNodes: props.layerVNodes,
+      }, slots)
   },
 })

@@ -122,11 +122,12 @@ export interface WidgetFallbackProps {
 
 /**
  * Props received by a custom container shell component.
- * `slotVNodes` is keyed by open layout slot names defined by the application.
  */
 export interface ContainerShellProps {
   isEmpty: boolean
-  slotVNodes: Record<string, VNode[]>
+  regionVNodes: Record<string, VNode[]>
+  chromeVNodes: VNode[]
+  layerVNodes: Record<string, VNode[]>
   layoutPlan: LayoutPlan
   schema: DesignerSchema
   registry: RegistryInstance
@@ -140,7 +141,7 @@ export interface RendererExtensions {
   /**
    * Replaces the default root canvas wrapper.
    * E.g., a phone frame, tablet frame, or custom viewport shell.
-   * Receives ContainerShellProps and slot functions for open layout slots.
+   * Receives ContainerShellProps and region slot functions.
    */
   containerShell?: Component
 

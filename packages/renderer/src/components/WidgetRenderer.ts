@@ -1,6 +1,7 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
-import { defineComponent, h, ref, Teleport } from 'vue'
+import { computed, defineComponent, h, ref, Teleport } from 'vue'
+import { useBlockOverlayGeometry } from '../composables/useBlockOverlayGeometry'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
 import { useToolbarPosition } from '../composables/useToolbarPosition'
@@ -12,6 +13,9 @@ import DefaultNodeToolbar from './DefaultNodeToolbar'
 import DefaultWidgetFallback from './DefaultWidgetFallback'
 
 const LAYOUT_STYLE_KEYS = new Set(['padding', 'margin'])
+const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
+const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
+const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
 
 interface SplitNodeStyle {
   wrapperStyle?: Record<string, unknown>
@@ -67,8 +71,15 @@ export default defineComponent({
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
+    const overlayActive = computed(() => widget.state.isSelected.value || widget.state.isHovered.value)
+    const { geometry: overlayGeometry } = useBlockOverlayGeometry(nodeElRef, overlayActive, {
+      boundarySelector: OVERLAY_BOUNDARY_SELECTOR,
+      selfTargetSelector: NODE_SURFACE_SELECTOR,
+    })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, widget.state.isSelected, {
       maxRight: ctx.toolbarMaxRight,
+      selfTargetSelector: NODE_SURFACE_SELECTOR,
+      boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
     })
 
     return () => {
@@ -76,6 +87,10 @@ export default defineComponent({
       void ctx.engine.store.schema.value
 
       const node = props.node
+      const placement = widget.layout.value.placement
+      const isSelfPositionedLayer = placement.kind === 'layer' && placement.mode === 'self'
+      const usesBlockingMask = widget.useMask.value && !isSelfPositionedLayer
+      const usesSelectionHandle = !usesBlockingMask && widget.selectable.value && !isSelfPositionedLayer
 
       // Resolve extension components with defaults
       const NodeMask = extensions.nodeMask ?? DefaultNodeMask
@@ -91,22 +106,54 @@ export default defineComponent({
       const { wrapperStyle, contentStyle: rawContentStyle } = splitNodeStyle(node.style)
       let contentStyle = rawContentStyle
 
-      // When mask is active, disable pointer events on widget content
+      // When a blocking mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index
-      if (widget.useMask.value) {
+      if (usesBlockingMask) {
         contentStyle = contentStyle ?? {}
         contentStyle.pointerEvents = 'none'
       }
 
       const innerContent = widget.resolvedComponent.value
-        ? h(widget.resolvedComponent.value, { ...widgetProps, style: contentStyle })
-        : h(WidgetFallback, { nodeId: node.id, nodeType: node.type })
+        ? h(widget.resolvedComponent.value, {
+            ...widgetProps,
+            'style': contentStyle,
+            'data-dc-node-surface': '',
+          })
+        : h(WidgetFallback, {
+            'nodeId': node.id,
+            'nodeType': node.type,
+            'data-dc-node-surface': '',
+          })
 
       // Assemble children
       const wrapperChildren: VNode[] = [innerContent]
 
-      // MASK (mask=true): transparent overlay blocks widget interaction
-      if (widget.useMask.value) {
+      if (overlayActive.value && overlayGeometry.value.visible) {
+        wrapperChildren.push(h(Teleport, { to: 'body' }, [
+          h('div', {
+            'class': [
+              'dc-node__block-overlay',
+              {
+                'dc-node__block-overlay--selected': widget.state.isSelected.value,
+                'dc-node__block-overlay--hovered': widget.state.isHovered.value && !widget.state.isSelected.value,
+              },
+            ],
+            'data-node-id': node.id,
+            'data-node-type': node.type,
+            'style': {
+              top: `${overlayGeometry.value.top}px`,
+              left: `${overlayGeometry.value.left}px`,
+              width: `${overlayGeometry.value.width}px`,
+              height: `${overlayGeometry.value.height}px`,
+            },
+          }),
+        ]))
+      }
+
+      // MASK (mask=true): transparent overlay blocks widget interaction.
+      // Self-positioned layer hosts span the viewport, so they select from the
+      // material hit target instead of rendering a viewport-sized mask.
+      if (usesBlockingMask) {
         wrapperChildren.push(
           h(NodeMask, {
             nodeId: node.id,
@@ -117,7 +164,7 @@ export default defineComponent({
       }
 
       // HANDLE (mask=false + selectable): small handle for selection
-      if (!widget.useMask.value && widget.selectable.value) {
+      if (usesSelectionHandle) {
         wrapperChildren.push(
           h(NodeHandle, {
             nodeId: node.id,
@@ -147,7 +194,7 @@ export default defineComponent({
 
       // Build the core wrapper vnode.
       // Layout properties (padding, margin) from node.style are applied here
-      // so the wrapper controls the widget's position in the page flow.
+      // so the wrapper controls the widget's box in its assigned placement.
       // Content properties (font-size, color, etc.) remain on the widget component.
       const coreWrapper = h(
         'div',
@@ -157,11 +204,14 @@ export default defineComponent({
           'style': wrapperStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
-          'data-dc-layout-slot': widget.layout.value.slot,
+          'data-dc-layout-placement': placement.kind,
+          'data-dc-layer-mode': placement.kind === 'layer' ? placement.mode : undefined,
+          'data-dc-layout-region': widget.layout.value.region,
           'data-dc-sort-scope': widget.layout.value.sortScope === false ? undefined : widget.layout.value.sortScope,
           'data-dc-visible': widget.visible.value ? undefined : 'false',
           'onMouseenter': widget.handleMouseEnter,
           'onMouseleave': widget.handleMouseLeave,
+          'onClick': isSelfPositionedLayer && widget.selectable.value ? widget.handleSelect : undefined,
         },
         wrapperChildren,
       )

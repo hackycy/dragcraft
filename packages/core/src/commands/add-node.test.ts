@@ -59,10 +59,10 @@ describe('addNodeHandler', () => {
     warn.mockRestore()
   })
 
-  it('inserts by sort-scope index when fixed-slot nodes exist', () => {
+  it('inserts by sort-scope index when chrome nodes exist', () => {
     const { ctx, registry, store } = setup(makeSchema([
       makeNode('a'),
-      makeNode('tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
     ]))
     registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] } })
 

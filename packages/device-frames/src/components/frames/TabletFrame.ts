@@ -1,8 +1,8 @@
-import type { DesignerSchema, LayoutPlan, RegistryInstance } from '@dragcraft/core'
-import type { PropType } from 'vue'
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType, VNode } from 'vue'
 import { IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
-import { renderFrameViewport } from '../frame-slots'
+import { useFrameViewport } from '../frame-viewport'
 
 /**
  * Tablet / iPad frame with minimal chrome and thin bezels.
@@ -16,19 +16,26 @@ export default defineComponent({
       type: Object as PropType<LayoutPlan>,
       default: undefined,
     },
-    schema: {
-      type: Object as PropType<DesignerSchema>,
-      default: undefined,
+    chromeVNodes: {
+      type: Array as PropType<VNode[]>,
+      default: () => [],
     },
-    registry: {
-      type: Object as PropType<RegistryInstance>,
-      default: undefined,
+    layerVNodes: {
+      type: Object as PropType<Record<string, VNode[]>>,
+      default: () => ({}),
     },
   },
 
   setup(props, { slots }) {
+    const renderViewport = useFrameViewport(() => ({
+      content: slots.default?.() ?? [],
+      chromeVNodes: props.chromeVNodes,
+      layerVNodes: props.layerVNodes,
+      plan: props.layoutPlan,
+    }))
+
     return () =>
-      h('div', { class: 'dc-device-frame dc-device-frame--tablet' }, [
+      h('div', { 'class': 'dc-device-frame dc-device-frame--tablet', 'data-dc-toolbar-boundary': '' }, [
         // Status bar (iPad-style)
         h('div', { class: 'dc-device-frame__status-bar' }, [
           h('span', { class: 'dc-device-frame__status-time' }, '9:41'),
@@ -37,7 +44,7 @@ export default defineComponent({
             h('span', null, h(IconSignalBar, { size: 10 })),
           ]),
         ]),
-        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan, props.schema, props.registry)),
+        renderViewport(),
       ])
   },
 })

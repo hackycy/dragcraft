@@ -12,17 +12,12 @@ export const navbarWidgetMeta: WidgetMeta = {
   draggable: false,
   sortable: false,
   defaultLayout: {
-    slot: 'navbar.surface',
-    sortScope: false,
-  },
-  layoutManifest: {
-    slots: {
-      'navbar.surface': {
-        allocation: 'reserve',
-        axis: 'block',
-        edge: 'start',
-        order: 10,
-      },
+    placement: {
+      kind: 'chrome',
+      edge: 'block-start',
+      position: 'fixed',
+      reserve: { mode: 'measure', size: 44 },
+      avoidContent: true,
     },
   },
   creatable: (ctx) => {

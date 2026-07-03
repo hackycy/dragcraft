@@ -73,7 +73,6 @@
   position: relative;
   border: 1px solid transparent;
   border-radius: var(--dc-radius);
-  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
   cursor: default;
 }
 
@@ -235,18 +234,35 @@
   pointer-events: auto;
 }
 
+/* ── Block Overlay (hover / selected) ───── */
+
+.dc-node__block-overlay {
+  position: fixed;
+  box-sizing: border-box;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: calc(var(--dc-z-toolbar-float) - 1);
+}
+
+.dc-node__block-overlay--hovered {
+  border: 1px dashed var(--dc-primary);
+  background: var(--dc-primary-bg-hover);
+}
+
+.dc-node__block-overlay--selected {
+  border: 2px solid var(--dc-primary);
+  box-shadow: 0 0 0 3px var(--dc-primary-shadow);
+}
+
 /* ── Interaction States ──────────────────── */
 
 .dc-node--hovered:not(.dc-node--selected) {
-  border-color: var(--dc-primary);
-  border-style: dashed;
+  border-color: transparent;
 }
 
 .dc-node--selected {
-  border-color: var(--dc-primary);
-  border-width: 2px;
-  border-style: solid;
-  box-shadow: 0 0 0 3px var(--dc-primary-shadow);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .dc-node--drag-over {

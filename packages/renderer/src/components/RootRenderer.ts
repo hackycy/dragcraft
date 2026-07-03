@@ -3,7 +3,7 @@ import type { PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
 import type { RendererEventHooks } from '../event-hooks'
 import type { ComponentMap, RendererExtensions } from '../types'
-import { createLayoutPlan, DEFAULT_LAYOUT_SLOT, DEFAULT_SORT_SCOPE } from '@dragcraft/core'
+import { createLayoutPlan, DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE } from '@dragcraft/core'
 import { computed, defineComponent, h, provide } from 'vue'
 import { createRendererContext } from '../context'
 import { RENDERER_CONTEXT_KEY } from '../types'
@@ -87,18 +87,37 @@ export default defineComponent({
       const DropIndicator = props.extensions?.dropIndicator ?? DefaultDropIndicator
       const EmptyState = props.extensions?.emptyState ?? DefaultEmptyState
 
-      const slotVNodes: Record<string, VNode[]> = {}
-      for (const [slot, entries] of plan.slots) {
-        slotVNodes[slot] = entries.map(entry =>
+      const regionVNodes: Record<string, VNode[]> = {}
+      for (const [region, entries] of plan.regions) {
+        regionVNodes[region] = entries.map(entry =>
           h(WidgetRenderer, {
             'key': entry.node.id,
             'node': entry.node,
-            'data-dc-layout-slot': entry.layout.slot,
+            'data-dc-layout-region': entry.layout.region,
           }),
         )
       }
 
-      const contentVNodes = slotVNodes[DEFAULT_LAYOUT_SLOT] ?? []
+      const chromeVNodes = plan.chrome.map(entry =>
+        h(WidgetRenderer, {
+          'key': entry.node.id,
+          'node': entry.node,
+          'data-dc-layout-placement': 'chrome',
+        }),
+      )
+
+      const layerVNodes: Record<string, VNode[]> = {}
+      for (const [layer, entries] of plan.layers) {
+        layerVNodes[layer] = entries.map(entry =>
+          h(WidgetRenderer, {
+            'key': entry.node.id,
+            'node': entry.node,
+            'data-dc-layout-placement': 'layer',
+          }),
+        )
+      }
+
+      const contentVNodes = regionVNodes[DEFAULT_LAYOUT_REGION] ?? []
 
       // Show forbidden overlay or drop indicator at the computed insertion index
       const isForbidden = props.isForbidden?.value ?? false
@@ -136,7 +155,9 @@ export default defineComponent({
             {
               class: { 'dc-container-shell--empty': isEmpty },
               isEmpty,
-              slotVNodes,
+              regionVNodes,
+              chromeVNodes,
+              layerVNodes,
               layoutPlan: plan,
               schema,
               registry: props.engine.registry,
@@ -148,7 +169,7 @@ export default defineComponent({
                 return contentVNodes
               },
               ...Object.fromEntries(
-                Object.entries(slotVNodes).map(([slot, vnodes]) => [slot, () => vnodes]),
+                Object.entries(regionVNodes).map(([region, vnodes]) => [region, () => vnodes]),
               ),
             },
           ),

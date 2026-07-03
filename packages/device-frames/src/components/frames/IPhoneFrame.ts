@@ -1,7 +1,7 @@
-import type { DesignerSchema, LayoutPlan, RegistryInstance } from '@dragcraft/core'
-import type { PropType } from 'vue'
+import type { LayoutPlan } from '@dragcraft/core'
+import type { PropType, VNode } from 'vue'
 import { defineComponent, h } from 'vue'
-import { renderFrameViewport } from '../frame-slots'
+import { useFrameViewport } from '../frame-viewport'
 
 /**
  * iPhone frame with Dynamic Island notch, status bar, and home indicator.
@@ -17,19 +17,26 @@ export default defineComponent({
       type: Object as PropType<LayoutPlan>,
       default: undefined,
     },
-    schema: {
-      type: Object as PropType<DesignerSchema>,
-      default: undefined,
+    chromeVNodes: {
+      type: Array as PropType<VNode[]>,
+      default: () => [],
     },
-    registry: {
-      type: Object as PropType<RegistryInstance>,
-      default: undefined,
+    layerVNodes: {
+      type: Object as PropType<Record<string, VNode[]>>,
+      default: () => ({}),
     },
   },
 
   setup(props, { slots }) {
+    const renderViewport = useFrameViewport(() => ({
+      content: slots.default?.() ?? [],
+      chromeVNodes: props.chromeVNodes,
+      layerVNodes: props.layerVNodes,
+      plan: props.layoutPlan,
+    }))
+
     return () =>
-      h('div', { class: 'dc-device-frame dc-device-frame--iphone' }, [
+      h('div', { 'class': 'dc-device-frame dc-device-frame--iphone', 'data-dc-toolbar-boundary': '' }, [
         // Status bar: time | Dynamic Island | icons
         h('div', { class: 'dc-device-frame__status-bar' }, [
           // Left: time
@@ -75,7 +82,7 @@ export default defineComponent({
             ]),
           ]),
         ]),
-        h('div', { class: 'dc-device-frame__viewport' }, renderFrameViewport(slots, props.layoutPlan, props.schema, props.registry)),
+        renderViewport(),
         // Home indicator bar
         h('div', { class: 'dc-device-frame__home-indicator' }),
       ])

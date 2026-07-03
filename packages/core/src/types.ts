@@ -28,34 +28,18 @@ export interface DesignerSchema {
 // Layout protocol
 // ──────────────────────────────────────────
 
-/**
- * Open layout metadata attached to a node.
- *
- * `slot` is an application-defined mount point. The framework does not assign
- * meaning to values like "content", "tab-bar.surface", or "fab.surface".
- *
- * `sortScope` controls which reorderable sequence the node belongs to:
- * - string: participates in that named sorting domain
- * - false: excluded from drag sorting
- *
- * `visible` controls rendering. Accepts a boolean or a predicate evaluated at runtime.
- *
- * `position` declares instance-level positioning (anchor overrides).
- */
 export interface NodeLayout {
-  slot?: string
-  sortScope?: string | false
+  placement?: NodePlacement
   order?: number
   visible?: boolean | ((ctx: { node: SchemaNode, schema: DesignerSchema }) => boolean)
-  position?: NodePosition
 }
 
 export interface ResolvedNodeLayout {
-  slot: string | undefined
+  placement: ResolvedNodePlacement
+  region?: string
   sortScope: string | false
   order?: number
   visible: boolean
-  position?: NodePosition
 }
 
 export interface LayoutNodeEntry {
@@ -66,44 +50,98 @@ export interface LayoutNodeEntry {
 
 export interface LayoutPlan {
   entries: LayoutNodeEntry[]
-  slots: Map<string, LayoutNodeEntry[]>
+  regions: Map<string, LayoutNodeEntry[]>
+  chrome: LayoutNodeEntry[]
+  layers: Map<string, LayoutNodeEntry[]>
   sortScopes: Map<string, LayoutNodeEntry[]>
-  slotManifests: Map<string, ResolvedLayoutSlotManifest>
+  insets: LayoutInsetPlan
 }
 
-export type LayoutAllocation = 'reserve' | 'overlay'
-export type LayoutAxis = 'block' | 'inline'
-export type LayoutEdge = 'start' | 'end'
+export type LayoutPlacementKind = 'flow' | 'chrome' | 'layer'
+export type LayoutEdge = 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
 export type LayoutAnchor = 'start' | 'center' | 'end'
+export type LayoutChromePosition = 'fixed' | 'sticky' | 'flow'
+export type LayoutLayerMode = 'framework' | 'self'
+export type LayoutReserveMode = 'measure' | 'size' | 'none'
+export type LayoutAvoidTarget = 'safe-area' | 'chrome' | 'viewport'
 
-export interface NodePosition {
+export interface LayoutAnchorSpec {
   anchor: { block?: LayoutAnchor, inline?: LayoutAnchor }
 }
 
-/**
- * Material-declared layout behavior for one open slot.
- *
- * The slot name itself remains opaque. The shell executes these primitive
- * behaviors without knowing whether the material is a navbar, tabbar,
- * survey submit bar, or any other business concept.
- */
-export interface LayoutSlotManifest {
-  allocation: LayoutAllocation
-  axis?: LayoutAxis
-  edge?: LayoutEdge
-  order?: number
-  className?: string
+export interface LayoutOffsets {
+  blockStart?: string | number
+  blockEnd?: string | number
+  inlineStart?: string | number
+  inlineEnd?: string | number
 }
 
-export interface ResolvedLayoutSlotManifest extends LayoutSlotManifest {
-  slot: string
-  axis: LayoutAxis
+export interface LayoutReserveSpec {
+  mode?: LayoutReserveMode
+  size?: string | number
+}
+
+export interface ResolvedLayoutReserveSpec {
+  mode: LayoutReserveMode
+  size?: string | number
+}
+
+export interface FlowPlacement {
+  kind: 'flow'
+  region?: string
+  sortScope?: string | false
+}
+
+export interface ChromePlacement {
+  kind: 'chrome'
   edge: LayoutEdge
-  order: number
+  position?: LayoutChromePosition
+  reserve?: LayoutReserveSpec
+  avoidContent?: boolean
 }
 
-export interface WidgetLayoutManifest {
-  slots?: Record<string, LayoutSlotManifest>
+export interface LayerPlacement {
+  kind: 'layer'
+  layer?: string
+  mode?: LayoutLayerMode
+  anchor?: LayoutAnchorSpec['anchor']
+  offset?: LayoutOffsets
+  avoid?: LayoutAvoidTarget[]
+}
+
+export type NodePlacement = FlowPlacement | ChromePlacement | LayerPlacement
+
+export interface ResolvedFlowPlacement extends FlowPlacement {
+  kind: 'flow'
+  region: string
+  sortScope: string | false
+}
+
+export interface ResolvedChromePlacement extends ChromePlacement {
+  kind: 'chrome'
+  position: LayoutChromePosition
+  reserve: ResolvedLayoutReserveSpec
+  avoidContent: boolean
+}
+
+export interface ResolvedLayerPlacement extends LayerPlacement {
+  kind: 'layer'
+  layer: string
+  mode: LayoutLayerMode
+  anchor: LayoutAnchorSpec['anchor']
+  avoid: LayoutAvoidTarget[]
+}
+
+export type ResolvedNodePlacement = ResolvedFlowPlacement | ResolvedChromePlacement | ResolvedLayerPlacement
+
+export interface LayoutInsetContribution {
+  edge: LayoutEdge
+  sourceNodeId: string
+  reserve: ResolvedLayoutReserveSpec
+}
+
+export interface LayoutInsetPlan {
+  contributors: LayoutInsetContribution[]
 }
 
 // ──────────────────────────────────────────
@@ -257,8 +295,6 @@ export interface WidgetMeta {
   deletable?: BehaviorPredicate<InstanceBehaviorContext>
   /** Default open layout metadata for new and existing instances of this widget type. */
   defaultLayout?: NodeLayout
-  /** Material-declared layout behavior consumed by container shells. */
-  layoutManifest?: WidgetLayoutManifest
 
   // ── Material panel controls ──
 

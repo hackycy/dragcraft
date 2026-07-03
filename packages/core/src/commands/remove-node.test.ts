@@ -70,9 +70,9 @@ describe('removeNodeHandler', () => {
     warn.mockRestore()
   })
 
-  it('does not let fixed-slot nodes affect content removal constraints', () => {
+  it('does not let chrome nodes affect content removal constraints', () => {
     const { ctx, registry, store } = setup([
-      makeNode('tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
       makeNode('locked'),
       makeNode('free'),
     ])

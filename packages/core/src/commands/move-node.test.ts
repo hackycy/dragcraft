@@ -61,10 +61,10 @@ describe('moveNodeHandler', () => {
     warn.mockRestore()
   })
 
-  it('moves nodes by sort-scope index while preserving fixed-slot nodes', () => {
+  it('moves nodes by sort-scope index while preserving chrome nodes', () => {
     const { ctx, store } = setup([
       makeNode('a'),
-      makeNode('tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
       makeNode('b'),
       makeNode('c'),
     ])
@@ -79,7 +79,7 @@ describe('moveNodeHandler', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { ctx, store } = setup([
       makeNode('a'),
-      makeNode('tabbar', { slot: 'tab-bar.surface' }),
+      makeNode('tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
     ])
 
     moveNodeHandler(ctx, { nodeId: 'tabbar', index: 0 })

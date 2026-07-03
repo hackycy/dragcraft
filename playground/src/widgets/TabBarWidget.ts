@@ -30,17 +30,12 @@ export const tabBarWidgetMeta: WidgetMeta = {
   group: 'navigation',
   icon: 'tabbar',
   defaultLayout: {
-    slot: 'tab-bar.surface',
-    sortScope: false,
-  },
-  layoutManifest: {
-    slots: {
-      'tab-bar.surface': {
-        allocation: 'reserve',
-        axis: 'block',
-        edge: 'end',
-        order: 10,
-      },
+    placement: {
+      kind: 'chrome',
+      edge: 'block-end',
+      position: 'fixed',
+      reserve: { mode: 'measure', size: 50 },
+      avoidContent: true,
     },
   },
   creatable: (ctx) => {

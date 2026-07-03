@@ -37,7 +37,7 @@ export function useNodeActions(
   const actionContext = computed<NodeActionContext>(() => {
     const node = getNode()
     const schema = readRawSchema(engine)
-    const layout = resolveNodeLayout(node, engine.registry)
+    const layout = resolveNodeLayout(node, engine.registry, schema)
     const scopeEntries = layout.sortScope === false
       ? []
       : getSortScopeEntries(createLayoutPlan(schema, engine.registry), layout.sortScope)

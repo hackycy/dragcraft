@@ -2,6 +2,7 @@ import type { WidgetMeta } from '@dragcraft/core'
 import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { Component } from 'vue'
 import NavbarTitleField from '../fields/NavbarTitleField'
+import FloatingButtonWidget, { floatingButtonWidgetMeta } from './FloatingButtonWidget'
 import NavbarWidget, { navbarWidgetMeta } from './NavbarWidget'
 import SwiperWidget, { swiperWidgetMeta } from './SwiperWidget'
 import TabBarWidget, { tabBarWidgetMeta } from './TabBarWidget'
@@ -11,6 +12,7 @@ import TabBarWidget, { tabBarWidgetMeta } from './TabBarWidget'
 export const playgroundWidgetMetas: WidgetMeta[] = [
   navbarWidgetMeta,
   tabBarWidgetMeta,
+  floatingButtonWidgetMeta,
   swiperWidgetMeta,
 ]
 
@@ -19,6 +21,7 @@ export const playgroundWidgetMetas: WidgetMeta[] = [
 export const playgroundComponentMap: Record<string, Component> = {
   'navbar': NavbarWidget,
   'tab-bar': TabBarWidget,
+  'floating-button': FloatingButtonWidget,
   'swiper': SwiperWidget,
 }
 
@@ -26,6 +29,7 @@ export const playgroundComponentMap: Record<string, Component> = {
 
 export const playgroundWidgetGroups: WidgetGroupConfig[] = [
   { name: 'navigation', title: '导航容器' },
+  { name: 'action', title: '操作组件' },
 ]
 
 // ── Field components ────────────────────────
@@ -36,6 +40,7 @@ export const playgroundFieldComponents = {
 
 // ── Individual exports ──────────────────────
 
+export { FloatingButtonWidget, floatingButtonWidgetMeta }
 export { NavbarWidget, navbarWidgetMeta }
 export { SwiperWidget, swiperWidgetMeta }
 export { TabBarWidget, tabBarWidgetMeta }

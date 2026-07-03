@@ -2,67 +2,121 @@
 import type { LayoutPlan } from '@dragcraft/core'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
+import { h } from 'vue'
 import DeviceFrameShell from './DeviceFrameShell'
 
 function makePlan(): LayoutPlan {
   return {
     entries: [],
-    slots: new Map([
-      ['unclaimed.surface', []],
-    ]),
+    regions: new Map(),
     sortScopes: new Map(),
-    slotManifests: new Map([
-      ['survey.progress.surface', {
-        slot: 'survey.progress.surface',
-        allocation: 'reserve',
-        axis: 'block',
-        edge: 'start',
-        order: 10,
-      }],
-      ['survey.submit.surface', {
-        slot: 'survey.submit.surface',
-        allocation: 'reserve',
-        axis: 'block',
-        edge: 'end',
-        order: 20,
-      }],
-      ['survey.aside.surface', {
-        slot: 'survey.aside.surface',
-        allocation: 'reserve',
-        axis: 'inline',
-        edge: 'start',
-        order: 25,
-      }],
-      ['assistant.floating.surface', {
-        slot: 'assistant.floating.surface',
-        allocation: 'overlay',
-        axis: 'block',
-        edge: 'start',
-        order: 30,
-      }],
+    chrome: [
+      {
+        node: { id: 'nav', type: 'navbar', props: {} },
+        arrayIndex: 0,
+        layout: {
+          placement: {
+            kind: 'chrome',
+            edge: 'block-start',
+            position: 'fixed',
+            reserve: { mode: 'measure' },
+            avoidContent: true,
+          },
+          sortScope: false,
+          visible: true,
+        },
+      },
+      {
+        node: { id: 'tab', type: 'tabbar', props: {} },
+        arrayIndex: 1,
+        layout: {
+          placement: {
+            kind: 'chrome',
+            edge: 'block-end',
+            position: 'fixed',
+            reserve: { mode: 'size', size: 50 },
+            avoidContent: true,
+          },
+          sortScope: false,
+          visible: true,
+        },
+      },
+    ],
+    layers: new Map([
+      ['float', [
+        {
+          node: { id: 'fab', type: 'fab', props: {} },
+          arrayIndex: 2,
+          layout: {
+            placement: {
+              kind: 'layer',
+              layer: 'float',
+              mode: 'framework',
+              anchor: { block: 'end', inline: 'end' },
+              avoid: ['safe-area', 'chrome'],
+            },
+            sortScope: false,
+            visible: true,
+          },
+        },
+        {
+          node: { id: 'custom', type: 'custom-float', props: {} },
+          arrayIndex: 3,
+          layout: {
+            placement: {
+              kind: 'layer',
+              layer: 'float',
+              mode: 'self',
+              anchor: { block: 'end', inline: 'end' },
+              avoid: ['safe-area', 'chrome'],
+            },
+            sortScope: false,
+            visible: true,
+          },
+        },
+      ]],
     ]),
+    insets: {
+      contributors: [
+        { edge: 'block-start', sourceNodeId: 'nav', reserve: { mode: 'measure' } },
+        { edge: 'block-end', sourceNodeId: 'tab', reserve: { mode: 'size', size: 50 } },
+      ],
+    },
   }
 }
 
 describe('deviceFrameShell', () => {
-  it('executes material layout manifests as reserved and overlay tracks', () => {
+  it('renders content, fixed chrome, and layer nodes from the layout plan', () => {
     const wrapper = mount(DeviceFrameShell, {
-      props: { layoutPlan: makePlan() },
+      props: {
+        layoutPlan: makePlan(),
+        chromeVNodes: [
+          h('div', { 'data-test-id': 'nav' }, 'nav'),
+          h('div', { 'data-test-id': 'tab' }, 'tab'),
+        ],
+        layerVNodes: {
+          float: [
+            h('button', { 'data-test-id': 'fab' }, 'fab'),
+            h('button', { 'data-test-id': 'custom' }, 'custom'),
+          ],
+        },
+      },
       slots: {
-        'default': '<div data-test-id="content">content</div>',
-        'survey.progress.surface': '<div data-test-id="progress">progress</div>',
-        'survey.submit.surface': '<div data-test-id="submit">submit</div>',
-        'survey.aside.surface': '<div data-test-id="aside">aside</div>',
-        'assistant.floating.surface': '<button data-test-id="assistant">assistant</button>',
-        'unclaimed.surface': '<div data-test-id="fallback">fallback</div>',
+        default: '<div data-test-id="content">content</div>',
       },
     })
 
-    expect(wrapper.find('[data-test-id="content"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__dock--block-start [data-test-id="progress"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__dock--block-end [data-test-id="submit"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__dock--inline-start [data-test-id="aside"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__overlay [data-test-id="assistant"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__content [data-test-id="fallback"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content [data-test-id="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content-scroller [data-test-id="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content').classes()).not.toContain('dc-container-shell')
+    expect(wrapper.find('.dc-device-frame__scrollbar').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__viewport').attributes()).toHaveProperty('data-dc-overlay-boundary')
+    expect(wrapper.find('.dc-device-frame__chrome--block-start [data-test-id="nav"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__chrome--block-end [data-test-id="tab"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__layer-item--framework [data-test-id="fab"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__layer-item--self [data-test-id="custom"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__viewport').attributes('style')).toContain('--dc-sized-inset-block-end: 50px')
+    expect(wrapper.find('.dc-device-frame').attributes()).toHaveProperty('data-dc-toolbar-boundary')
   })
 })

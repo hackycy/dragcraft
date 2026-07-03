@@ -131,7 +131,7 @@ describe('useWidgetNode', () => {
 
     it('nodes outside sort scopes are not draggable', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', {
-        defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
+        defaultLayout: { placement: { kind: 'chrome', edge: 'block-end' } },
       }))
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
       expect(node.inSortScope.value).toBe(false)
@@ -172,7 +172,7 @@ describe('useWidgetNode', () => {
 
     it('includes unsorted class when node is outside sort scopes', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', {
-        defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
+        defaultLayout: { placement: { kind: 'chrome', edge: 'block-end' } },
       }))
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
@@ -188,7 +188,7 @@ describe('useWidgetNode', () => {
 
     it('does not include locked class when node is outside sort scopes', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', {
-        defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
+        defaultLayout: { placement: { kind: 'chrome', edge: 'block-end' } },
       }))
       const node = useWidgetNode(() => makeNode('a', 'tabbar'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>

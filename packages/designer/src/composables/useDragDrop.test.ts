@@ -222,10 +222,10 @@ describe('useDragDrop', () => {
     expect(dd.lockedIndices.value.has(2)).toBe(true)
   })
 
-  it('fixed-slot material drops create outside the content sort scope', () => {
+  it('chrome material drops create outside the content sort scope', () => {
     const dd = useDragDrop(engine)
     const meta = makeMeta('tabbar', {
-      defaultLayout: { slot: 'tab-bar.surface', sortScope: false },
+      defaultLayout: { placement: { kind: 'chrome', edge: 'block-end' } },
     })
     engine.registerWidget(meta)
     const e = mockDragEvent()
@@ -238,14 +238,14 @@ describe('useDragDrop', () => {
     expect(children).toHaveLength(3)
     expect(children[2]).toMatchObject({
       type: 'tabbar',
-      layout: { slot: 'tab-bar.surface', sortScope: false },
+      layout: { placement: { kind: 'chrome', edge: 'block-end' } },
     })
   })
 
-  it('handleCanvasDrop inserts by content sort-scope index when fixed-slot nodes exist', () => {
+  it('handleCanvasDrop inserts by content sort-scope index when chrome nodes exist', () => {
     engine.execute({
       type: CommandType.ADD_NODE,
-      payload: { node: makeNode('t', 'tabbar', { slot: 'tab-bar.surface', sortScope: false }) },
+      payload: { node: makeNode('t', 'tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }) },
     })
     // children: [a, b, t(tabbar)]
 
