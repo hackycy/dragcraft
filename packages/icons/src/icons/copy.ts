@@ -15,6 +15,6 @@ export function IconCopy(props: IconProps = {}) {
     'class': cls,
   }, [
     h('rect', { x: 5, y: 5, width: 8, height: 8, rx: 1 }),
-    h('path', { d: 'M3 11V3a1 1 0 0 1 1-1h8' }),
+    h('path', { d: 'M2 11V3a1 1 0 0 1 1-1h9' }),
   ])
 }
