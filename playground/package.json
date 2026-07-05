@@ -8,12 +8,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@dragcraft/builtin-fields": "workspace:*",
-    "@dragcraft/builtin-widgets": "workspace:*",
     "@dragcraft/designer": "workspace:*",
     "@dragcraft/device-frames": "workspace:*",
+    "@dragcraft/form-generator": "workspace:*",
     "@dragcraft/icons": "workspace:*",
     "@dragcraft/themes": "workspace:*",
+    "@dragcraft/utils": "workspace:*",
+    "@dragcraft/widgets": "workspace:*",
+    "ant-design-vue": "catalog:",
     "vue": "catalog:shared"
   },
   "devDependencies": {

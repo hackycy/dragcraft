@@ -307,4 +307,4 @@ interface WidgetActionConfig {
 - `@dragcraft/designer` 调用 engine API，驱动 UI 和配置变更。
 - `@dragcraft/renderer` 消费 schema、选中态、hover 态，并执行节点级命令。
 - `@dragcraft/form-generator` 不直接依赖 core，由 designer 桥接字段变更和命令。
-- `@dragcraft/widgets` 和 `@dragcraft/builtin-widgets` 向 registry 提供物料元信息。
+- `@dragcraft/widgets` 提供物料定义工具，业务应用向 registry 提供物料元信息。

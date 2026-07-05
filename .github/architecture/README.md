@@ -28,8 +28,8 @@
    - 字段联动、验证和值变更数据流
 
 5. [物料、字段与工具包](./05-widgets-fields-and-utils.md)
-   - 物料协议与内置物料
-   - 内置字段组件
+   - 物料协议与工具函数
+   - 字段组件契约
    - icons 与 utils 包职责
 
 6. [主题与设备容器](./06-themes-and-device-frames.md)

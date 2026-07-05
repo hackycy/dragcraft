@@ -6,17 +6,15 @@ import { createDefaultActions, createNodeActionRegistry, rendererMessages } from
 import { createI18n } from '@dragcraft/utils'
 import { designerMessages } from './messages'
 
-function mergeDefaultMessages(builtinMessages: Record<string, MessageTree>): Record<string, MessageTree> {
+function mergeDefaultMessages(): Record<string, MessageTree> {
   const merged: Record<string, MessageTree> = {}
   const locales = new Set([
-    ...Object.keys(builtinMessages),
     ...Object.keys(rendererMessages),
     ...Object.keys(designerMessages),
   ])
 
   for (const locale of locales) {
     merged[locale] = {
-      ...(builtinMessages[locale] ?? {}),
       ...(rendererMessages[locale] ?? {}),
       ...(designerMessages[locale] ?? {}),
     }
@@ -29,18 +27,14 @@ function mergeDefaultMessages(builtinMessages: Record<string, MessageTree>): Rec
  * Creates a designer instance by initializing the core engine,
  * registering widgets, and resolving configuration.
  *
- * Users must explicitly provide widget metas and component maps.
- * Use `@dragcraft/builtin-widgets` and `@dragcraft/builtin-fields` for built-in defaults.
+ * Users must explicitly provide widget metas, component maps, and field maps.
  *
  * @example
  * ```ts
- * import { getAllWidgetMetas, getDefaultComponentMap } from '@dragcraft/builtin-widgets'
- * import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
- *
  * const designer = createDesigner({
- *   widgetMetas: getAllWidgetMetas(),
- *   componentMap: getDefaultComponentMap(),
- *   fieldComponentMap: buildDefaultFieldComponentMap(),
+ *   widgetMetas: myWidgetMetas,
+ *   componentMap: myComponentMap,
+ *   fieldComponentMap: myFieldComponentMap,
  *   globalConfigSchema: myGlobalSchema,
  * })
  * ```
@@ -83,10 +77,9 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
   // 9. Resolve event hooks
   const eventHooks = options.eventHooks ?? {}
 
-  // 10. Create i18n instance with built-in + user messages
+  // 10. Create i18n instance with package defaults + user messages
   const defaultLocale = options.locale ?? 'zh-CN'
-  const builtinMsgs = options.builtinMessages ?? {}
-  const i18n = createI18n(defaultLocale, mergeDefaultMessages(builtinMsgs))
+  const i18n = createI18n(defaultLocale, mergeDefaultMessages())
 
   // Merge user-provided messages
   if (options.messages) {

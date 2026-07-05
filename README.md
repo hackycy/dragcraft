@@ -42,8 +42,6 @@ import { createDesigner, DcDesigner } from '@dragcraft/designer'
 | `@dragcraft/renderer` | [Designer 与 Renderer](./.github/architecture/03-designer-and-renderer.md) |
 | `@dragcraft/form-generator` | [Form 与配置系统](./.github/architecture/04-form-and-configuration.md) |
 | `@dragcraft/widgets` | [物料、字段与工具包](./.github/architecture/05-widgets-fields-and-utils.md) |
-| `@dragcraft/builtin-widgets` | [物料、字段与工具包](./.github/architecture/05-widgets-fields-and-utils.md) |
-| `@dragcraft/builtin-fields` | [物料、字段与工具包](./.github/architecture/05-widgets-fields-and-utils.md) |
 | `@dragcraft/themes` | [主题与设备容器](./.github/architecture/06-themes-and-device-frames.md) |
 | `@dragcraft/device-frames` | [主题与设备容器](./.github/architecture/06-themes-and-device-frames.md) |
 | `@dragcraft/icons` | [包职责索引](./.github/architecture/07-package-reference.md) |

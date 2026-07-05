@@ -174,7 +174,7 @@ export interface FormGeneratorProps {
   values: Record<string, unknown>
   /** Globally disable all fields */
   disabled?: boolean
-  /** Custom/override field components merged on top of built-in defaults */
+  /** Field components keyed by schema component name */
   fieldComponentMap?: FieldComponentMap
 }
 
@@ -208,7 +208,7 @@ export interface SectionTogglePayload {
  * Internal context provided to all FormGenerator descendants via provide/inject.
  */
 export interface FormGeneratorContext {
-  /** Merged field component map (built-in defaults + user overrides) */
+  /** Field component map available to nested fields */
   fieldComponentMap: FieldComponentMap
   /** Callback invoked when any field value changes */
   onFieldChange: (key: string, value: unknown) => void

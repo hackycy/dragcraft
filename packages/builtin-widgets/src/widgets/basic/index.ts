@@ -1,5 +1,0 @@
-export { default as ButtonWidget, buttonWidgetMeta } from './ButtonWidget'
-export { default as DividerWidget, dividerWidgetMeta } from './DividerWidget'
-export { default as ImageWidget, imageWidgetMeta } from './ImageWidget'
-export { default as LinkWidget, linkWidgetMeta } from './LinkWidget'
-export { default as TextWidget, textWidgetMeta } from './TextWidget'

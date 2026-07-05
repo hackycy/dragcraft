@@ -1,5 +1,0 @@
-export { default as FormCheckboxWidget, formCheckboxWidgetMeta } from './FormCheckboxWidget'
-export { default as FormInputWidget, formInputWidgetMeta } from './FormInputWidget'
-export { default as FormRadioWidget, formRadioWidgetMeta } from './FormRadioWidget'
-export { default as FormSelectWidget, formSelectWidgetMeta } from './FormSelectWidget'
-export { default as FormTextareaWidget, formTextareaWidgetMeta } from './FormTextareaWidget'

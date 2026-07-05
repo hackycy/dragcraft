@@ -28,8 +28,7 @@ export interface WidgetGroupConfig {
 /**
  * Options accepted by createDesigner.
  *
- * Users must explicitly provide widget metas and component maps.
- * Use `@dragcraft/builtin-widgets` and `@dragcraft/builtin-fields` for built-in defaults.
+ * Users must explicitly provide widget metas, component maps, and field maps.
  */
 export interface DesignerOptions {
   /** Core engine options (initialSchema, maxHistorySize) */
@@ -52,10 +51,8 @@ export interface DesignerOptions {
   customActions?: NodeActionDefinition[]
   /** Current locale (default: 'zh-CN') */
   locale?: string
-  /** Additional/override messages merged on top of built-in defaults */
+  /** Additional/override messages merged on top of designer and renderer defaults */
   messages?: LocaleMessages
-  /** Built-in widget messages (from @dragcraft/builtin-widgets) to merge into i18n */
-  builtinMessages?: LocaleMessages
 }
 
 // ──────────────────────────────────────────

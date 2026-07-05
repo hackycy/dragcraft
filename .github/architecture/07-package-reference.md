@@ -11,8 +11,6 @@
 | `@dragcraft/renderer` | 将 schema 节点映射为 Vue 组件树 |
 | `@dragcraft/form-generator` | 配置面板 schema 表单引擎 |
 | `@dragcraft/widgets` | 物料协议与通用工具函数 |
-| `@dragcraft/builtin-fields` | 内置表单字段组件 |
-| `@dragcraft/builtin-widgets` | 内置物料实现 |
 | `@dragcraft/themes` | CSS 皮肤包 |
 | `@dragcraft/device-frames` | 设备容器框架 |
 | `@dragcraft/icons` | SVG 图标组件库 |
@@ -38,7 +36,7 @@
 
 - 被 designer 创建并持有。
 - 被 renderer 消费 store 和命令能力。
-- 被 widgets 和 builtin-widgets 复用 `WidgetMeta` 类型。
+- 被 widgets 和业务物料复用 `WidgetMeta` 类型。
 
 ## @dragcraft/designer
 
@@ -102,7 +100,7 @@
 依赖与协作：
 
 - 被 designer 右栏使用。
-- 字段组件由 builtin-fields 或业务自定义组件提供。
+- 字段组件由业务应用显式提供。
 - 值变更由 designer 转为 core command。
 
 ## @dragcraft/widgets
@@ -123,47 +121,7 @@
 依赖与协作：
 
 - 依赖 core 类型和 Vue Component 类型。
-- 被 builtin-widgets 复用。
 - designer 不强依赖本包，业务可以直接传入 meta 和 componentMap。
-
-## @dragcraft/builtin-widgets
-
-职责：
-
-- 提供基础展示和表单交互两组内置物料。
-- 生成默认 widget meta 和 componentMap。
-
-主要入口：
-
-- `getAllWidgetMetas()`。
-- `getDefaultComponentMap()`。
-- `registerAllWidgets()`。
-- `getWidgetsByGroup()`。
-- `allWidgetDefinitions`。
-- `widgetGroups`。
-
-依赖与协作：
-
-- 依赖 core 的 WidgetMeta 与 DesignerEngine 类型。
-- 依赖 widgets 的 WidgetDefinition 和分组类型。
-- 通过 designer options 显式传入。
-
-## @dragcraft/builtin-fields
-
-职责：
-
-- 提供 input、number、textarea、select、switch、color、slider 七个内置字段组件。
-- 构建默认 fieldComponentMap。
-
-主要入口：
-
-- `buildDefaultFieldComponentMap()`。
-- `InputField`、`NumberField`、`TextareaField`、`SelectField`、`SwitchField`、`ColorField`、`SliderField`。
-
-依赖与协作：
-
-- 依赖 form-generator 的字段类型。
-- 通过 designer options 或 FormGenerator prop 显式传入。
 
 ## @dragcraft/themes
 
@@ -251,11 +209,9 @@
   -> @dragcraft/designer
       -> @dragcraft/core
       -> @dragcraft/renderer
-      -> @dragcraft/form-generator
+  -> @dragcraft/form-generator
   -> @dragcraft/themes
-  -> @dragcraft/builtin-widgets
-      -> @dragcraft/widgets
-  -> @dragcraft/builtin-fields
+  -> @dragcraft/widgets
   -> @dragcraft/device-frames
   -> @dragcraft/icons
 
@@ -268,4 +224,4 @@
 - form-generator 不依赖 core。
 - renderer 不直接持久化业务状态。
 - designer 负责包组合与对外简化。
-- 内置物料和字段都是可选依赖，业务可完全替换。
+- 业务应用负责提供物料实现和字段组件映射。

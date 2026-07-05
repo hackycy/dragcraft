@@ -1,15 +1,7 @@
 <script setup lang="ts">
 import { CommandType, createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
-import { IconCopy } from '@dragcraft/icons'
+import { IconArrowDown, IconCopy, IconPhone } from '@dragcraft/icons'
 import type { NodeActionContext } from '@dragcraft/designer'
-import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
-import { builtinWidgetsMessages, getAllWidgetMetas, getDefaultComponentMap, widgetGroups } from '@dragcraft/builtin-widgets'
-import {
-  playgroundWidgetMetas,
-  playgroundComponentMap,
-  playgroundWidgetGroups,
-  playgroundFieldComponents,
-} from './widgets'
 import {
   createDeviceFrameContext,
   createDeviceToolbarRenderer,
@@ -18,6 +10,13 @@ import {
 } from '@dragcraft/device-frames'
 import { defineComponent, h, provide } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
+import { buildPlaygroundFieldComponentMap } from './components/fields'
+import {
+  playgroundComponentMap,
+  playgroundWidgetGroups,
+  playgroundWidgetMessages,
+  playgroundWidgetMetas,
+} from './components/widgets'
 import { globalConfigSchema } from './config/global-config-schema'
 import { templateRegistry } from './config/templates'
 import { useTemplateSwitch } from './composables/useTemplateSwitch'
@@ -44,7 +43,11 @@ const MiniProgramEmptyState = defineComponent({
           'mp-empty-state--drag-over': props.isDragOver,
         },
       }, [
-        h('div', { class: 'mp-empty-state__icon' }, props.isDragOver ? '⬇' : '\u{1F4F1}'),
+        h('div', { class: 'mp-empty-state__icon' }, [
+          props.isDragOver
+            ? h(IconArrowDown, { size: 56, color: 'currentColor' })
+            : h(IconPhone, { size: 56, color: 'currentColor' }),
+        ]),
         h('div', { class: 'mp-empty-state__text' },
           props.isDragOver ? '松开放置组件' : '从左侧拖入组件开始装修'),
       ])
@@ -53,22 +56,17 @@ const MiniProgramEmptyState = defineComponent({
 
 // ── Create designer instance ─────────────────
 
-// Merge builtin + playground widgets
-const allMetas = [...getAllWidgetMetas(), ...playgroundWidgetMetas]
-const allComponentMap = { ...getDefaultComponentMap(), ...playgroundComponentMap }
-const allGroups = [...widgetGroups, ...playgroundWidgetGroups]
-
 const designer = createDesigner({
   engineOptions: {
     initialSchema: templateRegistry[0].schema,
     maxHistorySize: 50,
   },
-  widgetMetas: allMetas,
-  componentMap: allComponentMap,
-  fieldComponentMap: { ...buildDefaultFieldComponentMap(), ...playgroundFieldComponents },
-  widgetGroups: allGroups,
+  widgetMetas: playgroundWidgetMetas,
+  componentMap: playgroundComponentMap,
+  fieldComponentMap: buildPlaygroundFieldComponentMap(),
+  widgetGroups: playgroundWidgetGroups,
   globalConfigSchema,
-  builtinMessages: builtinWidgetsMessages,
+  messages: playgroundWidgetMessages,
   eventHooks: {
     onBeforeDelete: () => {
       return new Promise<boolean>((resolve) => {

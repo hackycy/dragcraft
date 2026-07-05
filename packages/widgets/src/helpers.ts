@@ -12,9 +12,8 @@ import type { WidgetDefinition } from './types'
  * @example
  * ```ts
  * import { registerWidgets } from '@dragcraft/widgets'
- * import { allWidgetDefinitions } from '@dragcraft/builtin-widgets'
  *
- * registerWidgets(engine, allWidgetDefinitions)
+ * registerWidgets(engine, myWidgetDefinitions)
  * ```
  */
 export function registerWidgets(engine: DesignerEngine, definitions: WidgetDefinition[]): void {
@@ -30,9 +29,8 @@ export function registerWidgets(engine: DesignerEngine, definitions: WidgetDefin
  * @example
  * ```ts
  * import { buildComponentMap } from '@dragcraft/widgets'
- * import { allWidgetDefinitions } from '@dragcraft/builtin-widgets'
  *
- * const componentMap = buildComponentMap(allWidgetDefinitions)
+ * const componentMap = buildComponentMap(myWidgetDefinitions)
  * ```
  */
 export function buildComponentMap(definitions: WidgetDefinition[]): Record<string, Component> {

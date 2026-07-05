@@ -193,19 +193,17 @@ h(FormGenerator, {
   -> designer dispatch UPDATE_PROPS 或 SET_GLOBAL_CONFIG
 ```
 
-## 内置字段包关系
+## 字段组件关系
 
-`@dragcraft/form-generator` 不再内置字段组件。内置字段组件由 `@dragcraft/builtin-fields` 提供：
+`@dragcraft/form-generator` 不内置字段组件。业务应用需要显式提供字段组件映射：
 
 ```ts
-import { buildDefaultFieldComponentMap } from '@dragcraft/builtin-fields'
-
 h(FormGenerator, {
-  fieldComponentMap: buildDefaultFieldComponentMap(),
+  fieldComponentMap: myFieldComponentMap,
 })
 ```
 
-业务也可以完全不使用内置字段，直接传入自己的字段组件映射。
+字段组件只需要实现 `modelValue`、`disabled`、`field` 和 `update:modelValue` 契约。
 
 ## CSS Class 层级
 
