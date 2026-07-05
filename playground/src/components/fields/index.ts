@@ -1,8 +1,9 @@
 import type { FieldComponentMap, FieldSchema } from '@dragcraft/form-generator'
 import type { Component, PropType } from 'vue'
 import { FORM_GENERATOR_CONTEXT_KEY } from '@dragcraft/form-generator'
+import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
-import { Button, Collapse, Input, InputNumber, Select, Slider, Switch } from 'ant-design-vue'
+import { Button, Input, InputNumber, Select, Slider, Switch } from 'ant-design-vue'
 import { computed, defineComponent, h, inject, ref } from 'vue'
 
 interface SelectOption {
@@ -26,8 +27,6 @@ interface NavbarTitleConfig {
 }
 
 const AButton = Button as unknown as Component
-const ACollapse = Collapse as unknown as Component
-const ACollapsePanel = Collapse.Panel as unknown as Component
 const AInput = Input as unknown as Component
 const AInputNumber = InputNumber as unknown as Component
 const ASelect = Select as unknown as Component
@@ -237,13 +236,18 @@ export const ArrayField = defineComponent({
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
+    const { t } = useI18n()
     const ctx = inject(FORM_GENERATOR_CONTEXT_KEY, null)
-    const activeKeys = ref<string[]>(['0'])
+    const expandedKeys = ref<string[]>(['0'])
     const fieldComponentMap = computed<FieldComponentMap>(() => ctx?.fieldComponentMap ?? {})
     const config = computed(() => getFieldProps(props.field) as unknown as ArrayFieldConfig)
     const items = computed(() => props.modelValue ?? [])
     const canAdd = computed(() => config.value.maxItems === undefined || items.value.length < config.value.maxItems)
     const canRemove = computed(() => items.value.length > (config.value.minItems ?? 0))
+    const itemCountText = computed(() => {
+      const max = config.value.maxItems
+      return max === undefined ? `${items.value.length}` : `${items.value.length}/${max}`
+    })
 
     const updateItems = (nextItems: Array<Record<string, unknown>>) => {
       emit('update:modelValue', nextItems)
@@ -253,13 +257,17 @@ export const ArrayField = defineComponent({
       if (!canAdd.value)
         return
       updateItems([...items.value, { ...(config.value.defaultItem ?? {}) }])
-      activeKeys.value = [String(items.value.length)]
+      expandedKeys.value = [String(items.value.length)]
     }
 
     const removeItem = (index: number) => {
       if (!canRemove.value)
         return
       updateItems(items.value.filter((_, itemIndex) => itemIndex !== index))
+      expandedKeys.value = expandedKeys.value
+        .map(key => Number(key))
+        .filter(itemIndex => itemIndex !== index)
+        .map(itemIndex => String(itemIndex > index ? itemIndex - 1 : itemIndex))
     }
 
     const moveItem = (index: number, offset: -1 | 1) => {
@@ -270,13 +278,22 @@ export const ArrayField = defineComponent({
       const [item] = nextItems.splice(index, 1)
       nextItems.splice(target, 0, item)
       updateItems(nextItems)
-      activeKeys.value = [String(target)]
+      expandedKeys.value = [String(target)]
     }
 
     const updateItem = (index: number, key: string, value: unknown) => {
       const nextItems = [...items.value]
       nextItems[index] = { ...nextItems[index], [key]: value }
       updateItems(nextItems)
+    }
+
+    const isExpanded = (index: number) => expandedKeys.value.includes(String(index))
+
+    const toggleItem = (index: number) => {
+      const key = String(index)
+      expandedKeys.value = expandedKeys.value.includes(key)
+        ? expandedKeys.value.filter(item => item !== key)
+        : [...expandedKeys.value, key]
     }
 
     const renderItemField = (item: Record<string, unknown>, index: number, field: FieldSchema) => {
@@ -301,71 +318,104 @@ export const ArrayField = defineComponent({
       ])
     }
 
+    const renderIconButton = (
+      label: string,
+      icon: Component,
+      onClick: (event: MouseEvent) => void,
+      disabled = false,
+      danger = false,
+    ) =>
+      h(AButton, {
+        'aria-label': label,
+        'class': 'playground-array-field__icon-button',
+        'danger': danger,
+        'disabled': disabled,
+        'shape': 'circle',
+        'size': 'small',
+        'title': label,
+        'type': 'text',
+        onClick,
+      }, () => h(icon, { size: 14, color: 'currentColor' }))
+
     return () => {
       const itemFields = config.value.itemFields ?? []
       const sortable = config.value.sortable ?? false
-      const panels = items.value.map((item, index) => {
+      const cards = items.value.map((item, index) => {
         const title = String(item.label ?? item.name ?? item.title ?? `Item ${index + 1}`)
-        const header = h('div', { class: 'playground-array-field__header' }, [
-          h('span', { class: 'playground-array-field__title' }, title),
-          h('div', { class: 'playground-array-field__actions' }, [
-            sortable
-              ? h(AButton, {
-                  disabled: props.disabled || index === 0,
-                  size: 'small',
-                  type: 'text',
-                  onClick: (event: MouseEvent) => {
+        const expanded = isExpanded(index)
+
+        return h('div', {
+          class: [
+            'playground-array-field__item',
+            { 'playground-array-field__item--expanded': expanded },
+          ],
+          key: index,
+        }, [
+          h('div', {
+            class: 'playground-array-field__header',
+            onClick: () => toggleItem(index),
+          }, [
+            h('span', { class: 'playground-array-field__index' }, String(index + 1).padStart(2, '0')),
+            h('div', { class: 'playground-array-field__title-wrap' }, [
+              h('span', { class: 'playground-array-field__title' }, title),
+              h('span', { class: 'playground-array-field__meta' }, expanded
+                ? t('field.array.editing', '编辑中')
+                : t('field.array.collapsed', '点击编辑')),
+            ]),
+            h('div', { class: 'playground-array-field__actions' }, [
+              sortable
+                ? renderIconButton(t('field.array.moveUp', '上移'), IconArrowUp, (event: MouseEvent) => {
                     event.stopPropagation()
                     moveItem(index, -1)
-                  },
-                }, () => 'Up')
-              : null,
-            sortable
-              ? h(AButton, {
-                  disabled: props.disabled || index === items.value.length - 1,
-                  size: 'small',
-                  type: 'text',
-                  onClick: (event: MouseEvent) => {
+                  }, props.disabled || index === 0)
+                : null,
+              sortable
+                ? renderIconButton(t('field.array.moveDown', '下移'), IconArrowDown, (event: MouseEvent) => {
                     event.stopPropagation()
                     moveItem(index, 1)
-                  },
-                }, () => 'Down')
-              : null,
-            h(AButton, {
-              disabled: props.disabled || !canRemove.value,
-              size: 'small',
-              danger: true,
-              type: 'text',
-              onClick: (event: MouseEvent) => {
+                  }, props.disabled || index === items.value.length - 1)
+                : null,
+              renderIconButton(t('field.array.remove', '删除'), IconDelete, (event: MouseEvent) => {
                 event.stopPropagation()
                 removeItem(index)
-              },
-            }, () => 'Remove'),
+              }, props.disabled || !canRemove.value, true),
+              h('span', {
+                class: [
+                  'playground-array-field__chevron',
+                  { 'playground-array-field__chevron--expanded': expanded },
+                ],
+              }),
+            ]),
           ]),
+          expanded
+            ? h('div', { class: 'playground-array-field__body' }, itemFields.map(field => renderItemField(item, index, field)))
+            : null,
         ])
-
-        return h(ACollapsePanel, { key: String(index), header }, () =>
-          h('div', { class: 'playground-array-field__body' }, itemFields.map(field => renderItemField(item, index, field))))
       })
 
       return h('div', { class: 'playground-array-field' }, [
+        h('div', { class: 'playground-array-field__toolbar' }, [
+          h('div', { class: 'playground-array-field__summary' }, [
+            h('span', { class: 'playground-array-field__summary-title' }, props.field.label),
+            h('span', { class: 'playground-array-field__summary-count' }, itemCountText.value),
+          ]),
+          h(AButton, {
+            class: 'playground-array-field__add-button',
+            disabled: props.disabled || !canAdd.value,
+            size: 'small',
+            type: 'primary',
+            onClick: addItem,
+          }, () => [
+            h(IconPlus, { size: 13, color: 'currentColor' }),
+            h('span', null, t('field.array.add', '新增')),
+          ]),
+        ]),
         items.value.length > 0
-          ? h(ACollapse, {
-              'activeKey': activeKeys.value,
-              'size': 'small',
-              'ghost': true,
-              'onUpdate:activeKey': (value: unknown) => {
-                activeKeys.value = (Array.isArray(value) ? value : [value]).map(String)
-              },
-            }, () => panels)
-          : h('div', { class: 'playground-array-field__empty' }, 'No items'),
-        h(AButton, {
-          block: true,
-          disabled: props.disabled || !canAdd.value,
-          size: 'small',
-          type: 'dashed',
-          onClick: addItem,
-        }, () => 'Add item'),
+          ? h('div', { class: 'playground-array-field__list' }, cards)
+          : h('div', { class: 'playground-array-field__empty' }, [
+              h('span', { class: 'playground-array-field__empty-title' }, t('field.array.emptyTitle', '暂无项目')),
+              h('span', { class: 'playground-array-field__empty-copy' }, t('field.array.emptyCopy', '点击新增来配置列表内容。')),
+            ]),
       ])
     }
   },

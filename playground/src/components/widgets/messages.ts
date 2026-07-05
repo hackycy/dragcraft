@@ -8,6 +8,18 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       navigation: '导航容器',
       action: '操作组件',
     },
+    field: {
+      array: {
+        add: '新增',
+        collapsed: '点击编辑',
+        editing: '编辑中',
+        emptyCopy: '点击新增来配置列表内容。',
+        emptyTitle: '暂无项目',
+        moveDown: '下移',
+        moveUp: '上移',
+        remove: '删除',
+      },
+    },
     widget: {
       'text': {
         title: '文本',
@@ -121,6 +133,18 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       form: 'Form',
       navigation: 'Navigation',
       action: 'Action',
+    },
+    field: {
+      array: {
+        add: 'Add',
+        collapsed: 'Click to edit',
+        editing: 'Editing item',
+        emptyCopy: 'Add an item to configure this list.',
+        emptyTitle: 'No items yet',
+        moveDown: 'Move down',
+        moveUp: 'Move up',
+        remove: 'Remove item',
+      },
     },
     widget: {
       'text': { title: 'Text' },

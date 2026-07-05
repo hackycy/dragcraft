@@ -95,11 +95,12 @@ export const navbarWidgetMeta: WidgetMeta = {
               titleFontSize: config.titleFontSize,
               titleFontWeight: config.titleFontWeight,
             }),
-            valueFormat: (_value: unknown, ctx: { values: Record<string, unknown> }) => ({
+            valueFormat: (value: unknown, ctx: { values: Record<string, unknown> }) => ({
               title: ctx.values.title,
               subtitle: ctx.values.subtitle,
               titleFontSize: ctx.values.titleFontSize,
               titleFontWeight: ctx.values.titleFontWeight,
+              ...(typeof value === 'object' && value !== null ? value : {}),
             }),
           },
         ],
