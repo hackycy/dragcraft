@@ -7,6 +7,15 @@ export type {
   NodeActionRegistry,
   ResolvedNodeAction,
 } from './action-registry'
+export { createConfirmActionInterceptor, runActionPipeline } from './action-runtime'
+export type {
+  ActionConfirmRequest,
+  ActionDecision,
+  ActionInterceptor,
+  ActionInvocation,
+  ActionRisk,
+  ConfirmActionInterceptorOptions,
+} from './action-runtime'
 // ── Components ───────────────────────────
 export {
   DefaultContainerShell,
@@ -35,11 +44,9 @@ export { createRendererContext, useRendererContext } from './context'
 export { createDefaultEventHooks, fireAfterHook, resolveBeforeHook } from './event-hooks'
 
 export type {
-  DeleteHookPayload,
   DragHookPayload,
   HoverHookPayload,
   MaybePromise,
-  MoveHookPayload,
   RendererEventHooks,
   SelectHookPayload,
 } from './event-hooks'

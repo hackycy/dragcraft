@@ -1,6 +1,6 @@
 import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance, WidgetMeta } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
-import type { ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions } from '@dragcraft/renderer'
+import type { ActionInterceptor, ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions } from '@dragcraft/renderer'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/utils'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
@@ -45,8 +45,10 @@ export interface DesignerOptions {
   globalConfigSchema?: FormSchema
   /** Extension point overrides */
   extensions?: DesignerExtensions
-  /** Renderer event hooks (interceptors for select, delete, move, drag) */
+  /** Renderer event hooks for selection, drag, and hover */
   eventHooks?: RendererEventHooks
+  /** Interceptors for node actions such as delete, move, duplicate, and custom actions */
+  actionInterceptors?: ActionInterceptor[]
   /** Custom node action definitions to add or override default actions */
   customActions?: NodeActionDefinition[]
   /** Current locale (default: 'zh-CN') */
@@ -125,6 +127,8 @@ export interface DesignerInstance {
   globalConfigSchema: FormSchema | null
   /** Renderer event hooks */
   eventHooks: RendererEventHooks
+  /** Node action interceptors */
+  actionInterceptors: ActionInterceptor[]
   /** Node action registry */
   actionRegistry: NodeActionRegistry
   /** i18n instance for locale management */
@@ -148,6 +152,7 @@ export interface DesignerContext {
   fieldComponentMap: FieldComponentMap | undefined
   globalConfigSchema: FormSchema | null
   eventHooks: RendererEventHooks
+  actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
   dragOverIndex: Ref<number | null>

@@ -22,7 +22,7 @@ export default defineComponent({
   setup() {
     const ctx = useDesignerContext()
     const { t } = useI18n()
-    const { engine, actionRegistry, eventHooks } = ctx
+    const { engine, actionRegistry, actionInterceptors, eventHooks } = ctx
     const selectPending = { value: false }
 
     const items = computed<StructureItem[]>(() => {
@@ -46,7 +46,7 @@ export default defineComponent({
           meta,
           engine,
         }
-        const actions = actionRegistry.resolve(actionCtx, eventHooks)
+        const actions = actionRegistry.resolve(actionCtx, actionInterceptors)
 
         return {
           node,

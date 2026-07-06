@@ -32,7 +32,7 @@ export function useNodeActions(
   getNode: () => SchemaNode,
   ctx: RendererContext,
 ): UseNodeActionsReturn {
-  const { engine, actionRegistry, eventHooks } = ctx
+  const { engine, actionRegistry, actionInterceptors } = ctx
 
   const actionContext = computed<NodeActionContext>(() => {
     const node = getNode()
@@ -55,7 +55,7 @@ export function useNodeActions(
   })
 
   const actions = computed<ResolvedNodeAction[]>(() => {
-    return actionRegistry.resolve(actionContext.value, eventHooks)
+    return actionRegistry.resolve(actionContext.value, actionInterceptors)
   })
 
   return { actions, actionContext }

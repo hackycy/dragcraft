@@ -52,6 +52,7 @@ function makeContext(meta: WidgetMeta): RendererContext {
     },
     extensions: {},
     eventHooks: {},
+    actionInterceptors: [],
     actionRegistry: {
       getActions: vi.fn(() => []),
       register: vi.fn(),
@@ -117,6 +118,7 @@ describe('widgetRenderer', () => {
       label: 'Delete',
       type: 'button',
       order: 100,
+      risk: 'destructive',
       visible: true,
       disabled: false,
       handler: vi.fn(),

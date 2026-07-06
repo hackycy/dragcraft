@@ -268,9 +268,12 @@ export interface WidgetActionConfig {
     icon?: string | Component
     type: 'button' | 'drag-handle'
     order: number
+    risk?: 'normal' | 'destructive'
+    metadata?: Record<string, unknown>
     visible?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
     disabled?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
     available?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
+    command?: (ctx: { node: SchemaNode, index: number, siblingCount: number }, e: MouseEvent) => Command | null | undefined
     handler?: (ctx: { node: SchemaNode, index: number, siblingCount: number }, e: MouseEvent) => void
     className?: string
   }>

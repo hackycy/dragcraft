@@ -19,7 +19,7 @@ export default defineComponent({
   },
 
   setup(props) {
-    const { engine, componentMap, widgetGroups, extensions, fieldComponentMap, globalConfigSchema, eventHooks, actionRegistry, i18n } = props.instance
+    const { engine, componentMap, widgetGroups, extensions, fieldComponentMap, globalConfigSchema, eventHooks, actionInterceptors, actionRegistry, i18n } = props.instance
     const searchQuery = ref('')
     const activeTab = ref<'global' | 'widget'>('widget')
     const leftPanelActiveTab = ref<'materials' | 'structure'>('materials')
@@ -36,6 +36,7 @@ export default defineComponent({
       fieldComponentMap,
       globalConfigSchema,
       eventHooks,
+      actionInterceptors,
       actionRegistry,
       dragOverNodeId: dragDrop.dragOverNodeId,
       dragOverIndex: dragDrop.dragOverIndex,

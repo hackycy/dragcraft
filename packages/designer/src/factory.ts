@@ -76,6 +76,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
 
   // 9. Resolve event hooks
   const eventHooks = options.eventHooks ?? {}
+  const actionInterceptors = options.actionInterceptors ?? []
 
   // 10. Create i18n instance with package defaults + user messages
   const defaultLocale = options.locale ?? 'zh-CN'
@@ -108,6 +109,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     fieldComponentMap,
     globalConfigSchema,
     eventHooks,
+    actionInterceptors,
     actionRegistry,
     i18n,
     dispose,

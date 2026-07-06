@@ -25,25 +25,6 @@ export interface SelectHookPayload {
 }
 
 /**
- * Payload for delete hooks.
- */
-export interface DeleteHookPayload {
-  nodeId: string
-  event?: MouseEvent
-}
-
-/**
- * Payload for move hooks.
- */
-export interface MoveHookPayload {
-  nodeId: string
-  direction: 'up' | 'down'
-  fromIndex: number
-  toIndex: number
-  event?: MouseEvent
-}
-
-/**
  * Payload for drag hooks.
  */
 export interface DragHookPayload {
@@ -63,10 +44,10 @@ export interface HoverHookPayload {
 // ──────────────────────────────────────────
 
 /**
- * Interceptable event hooks for the renderer.
+ * Interceptable event hooks for non-action renderer events.
  *
  * "onBefore*" hooks are called BEFORE the action. Returning `false`
- * cancels the action (e.g., prevents selection, prevents deletion).
+ * cancels the event (e.g., prevents selection).
  * Returning `undefined` or `true` allows the action to proceed.
  * Hooks may return a Promise for async operations (e.g., confirmation dialogs, API validation).
  *
@@ -81,14 +62,6 @@ export interface RendererEventHooks {
   // ── Selection ──
   onBeforeSelect?: (payload: SelectHookPayload) => MaybePromise<boolean | void>
   onAfterSelect?: (payload: SelectHookPayload) => MaybePromise<void>
-
-  // ── Deletion ──
-  onBeforeDelete?: (payload: DeleteHookPayload) => MaybePromise<boolean | void>
-  onAfterDelete?: (payload: DeleteHookPayload) => MaybePromise<void>
-
-  // ── Movement ──
-  onBeforeMove?: (payload: MoveHookPayload) => MaybePromise<boolean | void>
-  onAfterMove?: (payload: MoveHookPayload) => MaybePromise<void>
 
   // ── Drag (onBeforeDrag stays sync — DragEvent constraint) ──
   onBeforeDrag?: (payload: DragHookPayload) => boolean | void

@@ -20,6 +20,7 @@ export default defineComponent({
       handleCanvasDragLeave,
       handleCanvasDrop,
       eventHooks,
+      actionInterceptors,
       actionRegistry,
     } = ctx
 
@@ -63,6 +64,7 @@ export default defineComponent({
             componentMap,
             extensions: rendererExtensions.value,
             eventHooks,
+            actionInterceptors,
             actionRegistry,
             dragOverNodeId,
             dragOverIndex,

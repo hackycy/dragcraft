@@ -43,6 +43,7 @@ function makeContext(instance: DesignerInstance): DesignerContext {
     fieldComponentMap: instance.fieldComponentMap,
     globalConfigSchema: instance.globalConfigSchema,
     eventHooks: instance.eventHooks,
+    actionInterceptors: instance.actionInterceptors,
     actionRegistry: instance.actionRegistry,
     dragOverNodeId: ref(null),
     dragOverIndex: ref(null),

@@ -109,8 +109,12 @@ const designer = createDesigner({
     materialPanelRenderer: CustomPanel,
     toolbarRenderer: (api) => [],
   },
+  actionInterceptors: [
+    createConfirmActionInterceptor({
+      confirm: ({ invocation }) => appModal.confirm(`确认执行 ${invocation.label}?`),
+    }),
+  ],
   eventHooks: {
-    onBeforeDelete: ({ nodeId }) => confirm(`确认删除 ${nodeId}?`),
     onAfterSelect: ({ nodeId }) => console.log('选中:', nodeId),
   },
   customActions: [],
@@ -236,13 +240,14 @@ RootRenderer
 - `componentMap`。
 - `extensions`。
 - `eventHooks`。
+- `actionInterceptors`。
 - `actionRegistry`。
 - `dragOverNodeId`。
 - `dragOverIndex`。
 
-## Node Action 系统
+## Node Action 与 Action Runtime
 
-节点工具栏由 `NodeActionRegistry` 管理。
+节点工具栏由 `NodeActionRegistry` 管理。点击动作统一进入 Action Runtime，运行 `actionInterceptors` 后再执行 action 声明的 `command` 或 `handler`。
 
 内置动作：
 
@@ -251,9 +256,9 @@ RootRenderer
 | `drag` | 100 | `drag-handle` | 拖拽排序 |
 | `move-up` | 200 | `button` | 上移 |
 | `move-down` | 300 | `button` | 下移 |
-| `delete` | 400 | `button` | 删除 |
+| `delete` | 400 | `button` | 删除，`risk: 'destructive'` |
 
-复制等自定义 action 如果会新增节点，必须执行 `ADD_NODE`，由 core 统一校验 `WidgetMeta.creatable` 和排序约束；action 的 `available` 可复用同一决策提前禁用按钮。
+复制等自定义 action 如果会新增节点，必须声明或执行 `ADD_NODE`，由 core 统一校验 `WidgetMeta.creatable` 和排序约束；action 的 `available` 可复用同一决策提前禁用按钮。
 
 动作定义：
 
@@ -264,25 +269,37 @@ interface NodeActionDefinition {
   icon?: string | Component
   type: 'button' | 'drag-handle'
   order: number
+  risk?: 'normal' | 'destructive'
+  metadata?: Record<string, unknown>
   visible?: (ctx: NodeActionContext) => boolean
+  available?: (ctx: NodeActionContext) => boolean
   disabled?: (ctx: NodeActionContext) => boolean
-  handler?: (ctx: NodeActionContext, e: MouseEvent) => void
+  command?: (ctx: NodeActionContext, e: MouseEvent) => Command | null | undefined
+  handler?: (ctx: NodeActionContext, e: MouseEvent) => MaybePromise<void>
   className?: string
 }
 ```
 
+Action Runtime 拦截器：
+
+```ts
+interface ActionInterceptor {
+  beforeAction?: (invocation: ActionInvocation) => MaybePromise<boolean | ActionDecision | void>
+  afterAction?: (invocation: ActionInvocation) => MaybePromise<void>
+  onActionError?: (invocation: ActionInvocation, error: unknown) => void
+}
+```
+
+确认框、权限校验、埋点、审计、toast 等业务侧行为通过 `actionInterceptors` 注入。库不调用浏览器原生 `confirm`，只提供 `createConfirmActionInterceptor` 辅助业务把任意确认 UI 接入管线。
+
 ## Event Hooks
 
-Renderer hooks 支持同步和异步 before 操作，`onBefore*` 返回 `false` 可取消操作。
+Renderer hooks 只处理非 action 的渲染交互事件。节点动作的取消、确认和副作用统一进入 Action Runtime。
 
 ```ts
 interface RendererEventHooks {
   onBeforeSelect?: (payload: SelectHookPayload) => MaybePromise<boolean | void>
   onAfterSelect?: (payload: SelectHookPayload) => MaybePromise<void>
-  onBeforeDelete?: (payload: DeleteHookPayload) => MaybePromise<boolean | void>
-  onAfterDelete?: (payload: DeleteHookPayload) => MaybePromise<void>
-  onBeforeMove?: (payload: MoveHookPayload) => MaybePromise<boolean | void>
-  onAfterMove?: (payload: MoveHookPayload) => MaybePromise<void>
   onBeforeDrag?: (payload: DragHookPayload) => boolean | void
   onAfterDrag?: (payload: DragHookPayload) => MaybePromise<void>
   onHoverChange?: (payload: HoverHookPayload) => void

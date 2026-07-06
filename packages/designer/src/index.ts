@@ -88,6 +88,7 @@ export type {
 // ── Re-exports: @dragcraft/renderer ─────
 export {
   ActionKey,
+  createConfirmActionInterceptor,
   createDefaultActions,
   createNodeActionRegistry,
   DefaultEmptyState,
@@ -100,7 +101,13 @@ export {
   useWidgetNode,
 } from '@dragcraft/renderer'
 export type {
+  ActionConfirmRequest,
+  ActionDecision,
+  ActionInterceptor,
+  ActionInvocation,
+  ActionRisk,
   ComponentMap,
+  ConfirmActionInterceptorOptions,
   EmptyStateProps,
   NodeActionContext,
   NodeActionDefinition,

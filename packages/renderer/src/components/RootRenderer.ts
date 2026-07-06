@@ -1,6 +1,7 @@
 import type { CreationBlockReason, DesignerEngine } from '@dragcraft/core'
 import type { Component, PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
+import type { ActionInterceptor } from '../action-runtime'
 import type { RendererEventHooks } from '../event-hooks'
 import type { ComponentMap, RendererExtensions } from '../types'
 import { createLayoutPlan, DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE } from '@dragcraft/core'
@@ -37,6 +38,10 @@ export default defineComponent({
       type: Object as PropType<RendererEventHooks>,
       default: undefined,
     },
+    actionInterceptors: {
+      type: Array as PropType<ActionInterceptor[]>,
+      default: undefined,
+    },
     actionRegistry: {
       type: Object as PropType<NodeActionRegistry>,
       default: undefined,
@@ -70,6 +75,7 @@ export default defineComponent({
       componentMap: props.componentMap,
       extensions: props.extensions,
       eventHooks: props.eventHooks,
+      actionInterceptors: props.actionInterceptors,
       actionRegistry: props.actionRegistry,
       dragOverNodeId: props.dragOverNodeId,
       toolbarMaxRight: props.toolbarMaxRight,

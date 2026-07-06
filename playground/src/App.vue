@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CommandType, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
+import { CommandType, createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
 import { IconArrowDown, IconCopy, IconPhone } from '@dragcraft/icons'
 import type { NodeActionContext } from '@dragcraft/designer'
 import { cloneDeep, generateShortId } from '@dragcraft/utils'
@@ -9,6 +9,7 @@ import {
   DEVICE_FRAME_CONTEXT_KEY,
   DeviceFrameShell,
 } from '@dragcraft/device-frames'
+import { Modal } from 'ant-design-vue'
 import { defineComponent, h, provide } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
 import { buildPlaygroundFieldComponentMap } from './components/fields'
@@ -55,6 +56,36 @@ const MiniProgramEmptyState = defineComponent({
   },
 })
 
+interface ConfirmModalOptions {
+  title: string
+  content: string
+  okText?: string
+  okType?: 'primary' | 'danger'
+}
+
+function confirmWithModal(options: ConfirmModalOptions): Promise<boolean> {
+  return new Promise((resolve) => {
+    let settled = false
+    const settle = (value: boolean) => {
+      if (settled)
+        return
+      settled = true
+      resolve(value)
+    }
+
+    Modal.confirm({
+      title: options.title,
+      content: options.content,
+      okText: options.okText ?? '确定',
+      cancelText: '取消',
+      okType: options.okType,
+      onOk: () => settle(true),
+      onCancel: () => settle(false),
+      afterClose: () => settle(false),
+    })
+  })
+}
+
 // ── Create designer instance ─────────────────
 
 const designer = createDesigner({
@@ -68,13 +99,16 @@ const designer = createDesigner({
   widgetGroups: playgroundWidgetGroups,
   globalConfigSchema,
   messages: playgroundWidgetMessages,
-  eventHooks: {
-    onBeforeDelete: () => {
-      return new Promise<boolean>((resolve) => {
-        resolve(confirm('确认删除该组件？'))
-      })
-    },
-  },
+  actionInterceptors: [
+    createConfirmActionInterceptor({
+      confirm: () => confirmWithModal({
+        title: '确认删除',
+        content: '删除后可通过撤销恢复，是否继续？',
+        okText: '删除',
+        okType: 'danger',
+      }),
+    }),
+  ],
   customActions: [
     {
       key: 'duplicate',
@@ -90,18 +124,18 @@ const designer = createDesigner({
           schema: ctx.engine.store.getRawSchema(),
         }, true).allowed
       },
-      handler: (ctx: NodeActionContext) => {
+      command: (ctx: NodeActionContext) => {
         const clonedNode = cloneDeep(ctx.node)
         delete clonedNode.children
         clonedNode.id = generateShortId()
-        ctx.engine.execute({
+        return {
           type: CommandType.ADD_NODE,
           payload: {
             node: clonedNode,
             index: ctx.index + 1,
             sortScope: ctx.sortScope || undefined,
           },
-        })
+        }
       },
     },
   ],
@@ -116,7 +150,15 @@ const designer = createDesigner({
 
 const { exportSchema, importSchema, undo, redo, canUndo, canRedo } = useDesigner(designer)
 
-const templateSwitch = useTemplateSwitch({ importSchema, exportSchema, confirmSwitch: () => confirm('当前修改将丢失，是否切换？') })
+const templateSwitch = useTemplateSwitch({
+  importSchema,
+  exportSchema,
+  confirmSwitch: () => confirmWithModal({
+    title: '确认切换模板',
+    content: '当前修改将丢失，是否切换？',
+    okText: '切换',
+  }),
+})
 
 const io = useSchemaIO(exportSchema, importSchema)
 

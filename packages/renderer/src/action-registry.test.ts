@@ -1,6 +1,6 @@
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { NodeActionContext } from './action-registry'
-import type { RendererEventHooks } from './event-hooks'
+import type { ActionInterceptor } from './action-runtime'
 import { resolveBehavior } from '@dragcraft/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
@@ -142,11 +142,11 @@ describe('createNodeActionRegistry', () => {
 
 describe('resolve', () => {
   let engine: DesignerEngine
-  let emptyHooks: RendererEventHooks
+  let emptyInterceptors: ActionInterceptor[]
 
   beforeEach(() => {
     engine = makeEngine()
-    emptyHooks = {}
+    emptyInterceptors = []
   })
 
   afterEach(() => {
@@ -157,7 +157,7 @@ describe('resolve', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     // All 4 default actions visible by default (resolveBehavior mocked to return true)
     expect(resolved).toHaveLength(4)
     expect(resolved.every(a => a.visible)).toBe(true)
@@ -169,7 +169,7 @@ describe('resolve', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     const drag = resolved.find(a => a.key === ActionKey.DRAG)
     expect(drag).toBeDefined()
     expect(drag!.disabled).toBe(true)
@@ -180,7 +180,7 @@ describe('resolve', () => {
     const meta = makeMeta({ actions: { only: [ActionKey.DELETE] } })
     const ctx = makeCtx(engine, { meta })
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     expect(resolved).toHaveLength(1)
     expect(resolved[0].key).toBe(ActionKey.DELETE)
   })
@@ -190,7 +190,7 @@ describe('resolve', () => {
     const meta = makeMeta({ actions: { exclude: [ActionKey.DRAG, ActionKey.MOVE_UP, ActionKey.MOVE_DOWN] } })
     const ctx = makeCtx(engine, { meta })
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     expect(resolved).toHaveLength(1)
     expect(resolved[0].key).toBe(ActionKey.DELETE)
   })
@@ -206,7 +206,7 @@ describe('resolve', () => {
     const meta = makeMeta({ actions: { extra: [extraAction] } })
     const ctx = makeCtx(engine, { meta })
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     expect(resolved).toHaveLength(5)
     expect(resolved[0].key).toBe('custom') // order 50 comes first
   })
@@ -215,7 +215,7 @@ describe('resolve', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, { index: 1 })
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     const moveUp = resolved.find(a => a.key === ActionKey.MOVE_UP)!
     moveUp.handler(mockEvent())
 
@@ -229,7 +229,7 @@ describe('resolve', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, { index: 1 })
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     const moveDown = resolved.find(a => a.key === ActionKey.MOVE_DOWN)!
     moveDown.handler(mockEvent())
 
@@ -243,7 +243,7 @@ describe('resolve', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
     del.handler(mockEvent())
 
@@ -253,43 +253,50 @@ describe('resolve', () => {
     })
   })
 
-  it('sync before hook returning false cancels delete', () => {
-    const hooks: RendererEventHooks = {
-      onBeforeDelete: vi.fn(() => false),
-    }
+  it('sync before-action interceptor returning false cancels delete', () => {
+    const beforeAction = vi.fn((invocation) => {
+      expect(invocation.key).toBe(ActionKey.DELETE)
+      expect(invocation.risk).toBe('destructive')
+      expect(invocation.command).toEqual({
+        type: 'REMOVE_NODE',
+        payload: { nodeId: 'node-1' },
+      })
+      return false
+    })
+    const interceptors: ActionInterceptor[] = [{ beforeAction }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
     del.handler(mockEvent())
 
-    expect(hooks.onBeforeDelete).toHaveBeenCalled()
+    expect(beforeAction).toHaveBeenCalled()
     expect(engine.execute).not.toHaveBeenCalled()
   })
 
-  it('sync before hook returning true allows delete', () => {
-    const hooks: RendererEventHooks = {
-      onBeforeDelete: vi.fn(() => true),
-    }
+  it('sync before-action interceptor returning true allows delete', () => {
+    const interceptors: ActionInterceptor[] = [{
+      beforeAction: vi.fn(() => true),
+    }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
     del.handler(mockEvent())
 
     expect(engine.execute).toHaveBeenCalled()
   })
 
-  it('async before hook cancels delete when promise resolves false', async () => {
-    const hooks: RendererEventHooks = {
-      onBeforeDelete: vi.fn(() => Promise.resolve(false)),
-    }
+  it('async before-action interceptor cancels delete when promise resolves false', async () => {
+    const interceptors: ActionInterceptor[] = [{
+      beforeAction: vi.fn(() => Promise.resolve(false)),
+    }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
     const result = del.handler(mockEvent())
 
@@ -298,14 +305,14 @@ describe('resolve', () => {
     expect(engine.execute).not.toHaveBeenCalled()
   })
 
-  it('async before hook allows delete when promise resolves true', async () => {
-    const hooks: RendererEventHooks = {
-      onBeforeDelete: vi.fn(() => Promise.resolve(true)),
-    }
+  it('async before-action interceptor allows delete when promise resolves true', async () => {
+    const interceptors: ActionInterceptor[] = [{
+      beforeAction: vi.fn(() => Promise.resolve(true)),
+    }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
     const result = del.handler(mockEvent())
 
@@ -316,13 +323,14 @@ describe('resolve', () => {
 
   it('pending guard prevents concurrent async invocations', async () => {
     let resolveFirst!: (v: boolean) => void
-    const hooks: RendererEventHooks = {
-      onBeforeDelete: vi.fn(() => new Promise<boolean>((r) => { resolveFirst = r })),
-    }
+    const beforeAction = vi.fn(() => new Promise<boolean>((resolve) => {
+      resolveFirst = resolve
+    }))
+    const interceptors: ActionInterceptor[] = [{ beforeAction }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
 
     // First invocation starts async hook
@@ -331,7 +339,7 @@ describe('resolve', () => {
     // Second invocation while first is pending — should be no-op
     del.handler(mockEvent())
 
-    expect(hooks.onBeforeDelete).toHaveBeenCalledTimes(1)
+    expect(beforeAction).toHaveBeenCalledTimes(1)
 
     // Resolve the first
     resolveFirst(true)
@@ -340,51 +348,52 @@ describe('resolve', () => {
     expect(engine.execute).toHaveBeenCalledTimes(1)
   })
 
-  it('fires onAfterDelete hook after successful delete', () => {
-    const hooks: RendererEventHooks = {
-      onAfterDelete: vi.fn(),
-    }
+  it('fires after-action interceptor after successful delete', () => {
+    const afterAction = vi.fn()
+    const interceptors: ActionInterceptor[] = [{ afterAction }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const del = resolved.find(a => a.key === ActionKey.DELETE)!
     del.handler(mockEvent())
 
-    expect(hooks.onAfterDelete).toHaveBeenCalledWith({
-      nodeId: 'node-1',
+    expect(afterAction).toHaveBeenCalledWith(expect.objectContaining({
+      key: ActionKey.DELETE,
+      risk: 'destructive',
       event: expect.anything(),
-    })
+    }))
   })
 
-  it('fires onAfterMove hook after successful move', () => {
-    const hooks: RendererEventHooks = {
-      onAfterMove: vi.fn(),
-    }
+  it('fires after-action interceptor after successful move', () => {
+    const afterAction = vi.fn()
+    const interceptors: ActionInterceptor[] = [{ afterAction }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, { index: 1 })
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const moveUp = resolved.find(a => a.key === ActionKey.MOVE_UP)!
     moveUp.handler(mockEvent())
 
-    expect(hooks.onAfterMove).toHaveBeenCalledWith({
-      nodeId: 'node-1',
-      direction: 'up',
-      fromIndex: 1,
-      toIndex: 0,
+    expect(afterAction).toHaveBeenCalledWith(expect.objectContaining({
+      key: ActionKey.MOVE_UP,
+      risk: 'normal',
+      command: {
+        type: 'MOVE_NODE',
+        payload: { nodeId: 'node-1', index: 0, sortScope: 'content' },
+      },
       event: expect.anything(),
-    })
+    }))
   })
 
-  it('sync before hook returning false cancels move', () => {
-    const hooks: RendererEventHooks = {
-      onBeforeMove: vi.fn(() => false),
-    }
+  it('sync before-action interceptor returning false cancels move', () => {
+    const interceptors: ActionInterceptor[] = [{
+      beforeAction: vi.fn(invocation => invocation.key === ActionKey.MOVE_UP ? false : undefined),
+    }]
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, { index: 1 })
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     const moveUp = resolved.find(a => a.key === ActionKey.MOVE_UP)!
     moveUp.handler(mockEvent())
 
@@ -402,7 +411,7 @@ describe('resolve', () => {
     })
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     const action = resolved.find(a => a.key === 'test-action')
 
     expect(action).toBeDefined()
@@ -422,7 +431,7 @@ describe('resolve', () => {
     })
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     const action = resolved.find(a => a.key === 'test-action')
 
     expect(action).toBeDefined()
@@ -440,7 +449,7 @@ describe('resolve', () => {
     })
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     expect(resolved.find(a => a.key === 'test-action')).toBeUndefined()
   })
 
@@ -455,17 +464,16 @@ describe('resolve', () => {
     })
     const ctx = makeCtx(engine)
 
-    const resolved = registry.resolve(ctx, emptyHooks)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
     const action = resolved.find(a => a.key === 'test-action')
 
     expect(action).toBeDefined()
     expect(action!.disabled).toBe(true)
   })
 
-  it('custom actions bypass event hooks', () => {
-    const hooks: RendererEventHooks = {
-      onBeforeDelete: vi.fn(() => false),
-    }
+  it('custom actions run through action interceptors', () => {
+    const beforeAction = vi.fn(() => false)
+    const interceptors: ActionInterceptor[] = [{ beforeAction }]
     const customHandler = vi.fn()
     const registry = createNodeActionRegistry()
     registry.register({
@@ -479,9 +487,10 @@ describe('resolve', () => {
     const meta = makeMeta({ actions: { only: ['custom'] } })
     const ctx = makeCtx(engine, { siblingCount: 1, meta })
 
-    const resolved = registry.resolve(ctx, hooks)
+    const resolved = registry.resolve(ctx, interceptors)
     resolved[0].handler(mockEvent())
 
-    expect(customHandler).toHaveBeenCalled()
+    expect(beforeAction).toHaveBeenCalledWith(expect.objectContaining({ key: 'custom' }))
+    expect(customHandler).not.toHaveBeenCalled()
   })
 })

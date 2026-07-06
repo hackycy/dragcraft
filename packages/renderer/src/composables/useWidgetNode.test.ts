@@ -38,6 +38,7 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
     componentMap: {},
     extensions: {},
     eventHooks: {},
+    actionInterceptors: [],
     actionRegistry: {} as RendererContext['actionRegistry'],
     dragOverNodeId: ref(null),
     ...overrides,

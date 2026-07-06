@@ -1,6 +1,7 @@
 import type { CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, RegistryInstance, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
+import type { ActionInterceptor } from './action-runtime'
 import type { RendererEventHooks } from './event-hooks'
 
 // ──────────────────────────────────────────
@@ -220,6 +221,8 @@ export interface RendererOptions {
   extensions?: RendererExtensions
   /** Interceptable event hooks for renderer events */
   eventHooks?: RendererEventHooks
+  /** Interceptors for node actions such as delete, move, duplicate, and custom actions */
+  actionInterceptors?: ActionInterceptor[]
   /** Node action registry. If not provided, default actions are used. */
   actionRegistry?: NodeActionRegistry
   /**
@@ -258,6 +261,7 @@ export interface RendererContext {
   componentMap: ComponentMap
   extensions: RendererExtensions
   eventHooks: RendererEventHooks
+  actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
   /** Optional max right boundary for toolbar positioning (viewport px). */

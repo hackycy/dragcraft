@@ -1,9 +1,10 @@
-import type { DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { Command, DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
-import type { RendererEventHooks } from './event-hooks'
+import type { ActionInterceptor, ActionRisk } from './action-runtime'
+import type { MaybePromise } from './event-hooks'
 import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconDelete, IconDrag } from '@dragcraft/icons'
-import { runBeforeAfterHook } from './event-hooks'
+import { runActionPipeline } from './action-runtime'
 
 /**
  * Builds an InstanceBehaviorContext from a NodeActionContext.
@@ -73,6 +74,10 @@ export interface NodeActionDefinition {
   type: 'button' | 'drag-handle'
   /** Sort order. Built-in actions use 100, 200, 300, 400. */
   order: number
+  /** Risk level used by action interceptors. */
+  risk?: ActionRisk
+  /** Optional metadata passed through action interceptors. */
+  metadata?: Record<string, unknown>
   /**
    * Whether this action is visible.
    * Return false to hide the action for this node.
@@ -90,10 +95,15 @@ export interface NodeActionDefinition {
    */
   disabled?: (ctx: NodeActionContext) => boolean
   /**
-   * Handler invoked when the action is triggered (clicked).
-   * Not applicable for 'drag-handle' type.
+   * Command invoked when the action is triggered.
+   * Prefer this for schema writes so the action remains declarative.
    */
-  handler?: (ctx: NodeActionContext, event: MouseEvent) => void
+  command?: (ctx: NodeActionContext, event: MouseEvent) => Command | null | undefined
+  /**
+   * Handler invoked when the action is triggered.
+   * Use this for side effects or actions that do not map to a core command.
+   */
+  handler?: (ctx: NodeActionContext, event: MouseEvent) => MaybePromise<void>
   /**
    * CSS class name(s) to add to the action element.
    */
@@ -113,6 +123,8 @@ export interface ResolvedNodeAction {
   icon?: string | Component
   type: 'button' | 'drag-handle'
   order: number
+  risk: ActionRisk
+  metadata?: Record<string, unknown>
   visible: boolean
   disabled: boolean
   handler: (event: MouseEvent) => void | Promise<void>
@@ -137,7 +149,7 @@ export interface NodeActionRegistry {
    * Resolve actions for a specific node, applying visibility/disabled predicates
    * and per-widget overrides from WidgetMeta.
    */
-  resolve: (ctx: NodeActionContext, eventHooks: RendererEventHooks) => ResolvedNodeAction[]
+  resolve: (ctx: NodeActionContext, actionInterceptors?: ActionInterceptor[]) => ResolvedNodeAction[]
 }
 
 // ──────────────────────────────────────────
@@ -172,6 +184,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowUp,
       type: 'button',
       order: 200,
+      metadata: { commandType: CommandType.MOVE_NODE, direction: 'up' },
       available: canReorder,
       disabled: (ctx) => {
         if (ctx.index === 0)
@@ -181,13 +194,12 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return false
         return !isMoveAllowed(ctx.index, ctx.index - 1, lockedIndices)
       },
-      handler: (ctx, e) => {
-        e.stopPropagation()
-        if (ctx.index > 0) {
-          ctx.engine.execute({
-            type: CommandType.MOVE_NODE,
-            payload: { nodeId: ctx.node.id, index: ctx.index - 1, sortScope: ctx.sortScope || undefined },
-          })
+      command: (ctx) => {
+        if (ctx.index <= 0)
+          return null
+        return {
+          type: CommandType.MOVE_NODE,
+          payload: { nodeId: ctx.node.id, index: ctx.index - 1, sortScope: ctx.sortScope || undefined },
         }
       },
     },
@@ -197,6 +209,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowDown,
       type: 'button',
       order: 300,
+      metadata: { commandType: CommandType.MOVE_NODE, direction: 'down' },
       available: canReorder,
       disabled: (ctx) => {
         if (ctx.index >= ctx.siblingCount - 1)
@@ -206,13 +219,12 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return false
         return !isMoveAllowed(ctx.index, ctx.index + 1, lockedIndices)
       },
-      handler: (ctx, e) => {
-        e.stopPropagation()
-        if (ctx.index < ctx.siblingCount - 1) {
-          ctx.engine.execute({
-            type: CommandType.MOVE_NODE,
-            payload: { nodeId: ctx.node.id, index: ctx.index + 1, sortScope: ctx.sortScope || undefined },
-          })
+      command: (ctx) => {
+        if (ctx.index >= ctx.siblingCount - 1)
+          return null
+        return {
+          type: CommandType.MOVE_NODE,
+          payload: { nodeId: ctx.node.id, index: ctx.index + 1, sortScope: ctx.sortScope || undefined },
         }
       },
     },
@@ -222,6 +234,8 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconDelete,
       type: 'button',
       order: 400,
+      risk: 'destructive',
+      metadata: { commandType: CommandType.REMOVE_NODE },
       className: 'dc-node__toolbar-btn--delete',
       available: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
       disabled: (ctx) => {
@@ -232,13 +246,10 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return false
         return !isRemoveAllowed(ctx.index, lockedIndices)
       },
-      handler: (ctx, e) => {
-        e.stopPropagation()
-        ctx.engine.execute({
-          type: CommandType.REMOVE_NODE,
-          payload: { nodeId: ctx.node.id },
-        })
-      },
+      command: ctx => ({
+        type: CommandType.REMOVE_NODE,
+        payload: { nodeId: ctx.node.id },
+      }),
     },
   ]
 }
@@ -271,7 +282,7 @@ export function createNodeActionRegistry(
       actions.delete(key)
     },
 
-    resolve(ctx: NodeActionContext, eventHooks: RendererEventHooks): ResolvedNodeAction[] {
+    resolve(ctx: NodeActionContext, actionInterceptors: ActionInterceptor[] = []): ResolvedNodeAction[] {
       // Get per-widget action overrides from WidgetMeta
       const widgetActions = ctx.meta?.actions
 
@@ -312,43 +323,31 @@ export function createNodeActionRegistry(
             icon: def.icon,
             type: def.type,
             order: def.order,
+            risk: def.risk ?? 'normal',
+            metadata: def.metadata,
             visible: true,
             disabled,
             handler: (event: MouseEvent): void | Promise<void> => {
               if (pending.value)
                 return
 
-              const execute = () => def.handler?.(ctx, event)
-
-              // ── DELETE action ──
-              if (def.key === ActionKey.DELETE) {
-                const payload = { nodeId: ctx.node.id, event }
-                if (eventHooks.onBeforeDelete || eventHooks.onAfterDelete) {
-                  return runBeforeAfterHook(eventHooks.onBeforeDelete, payload, execute, eventHooks.onAfterDelete, pending)
-                }
-                execute()
-                return
+              event.stopPropagation()
+              const command = def.command?.(ctx, event) ?? undefined
+              const execute = () => {
+                if (command)
+                  ctx.engine.execute(command)
+                return def.handler?.(ctx, event)
               }
 
-              // ── MOVE UP / MOVE DOWN actions ──
-              if (def.key === ActionKey.MOVE_UP || def.key === ActionKey.MOVE_DOWN) {
-                const direction = def.key === ActionKey.MOVE_UP ? 'up' as const : 'down' as const
-                const payload = {
-                  nodeId: ctx.node.id,
-                  direction,
-                  fromIndex: ctx.index,
-                  toIndex: direction === 'up' ? ctx.index - 1 : ctx.index + 1,
-                  event,
-                }
-                if (eventHooks.onBeforeMove || eventHooks.onAfterMove) {
-                  return runBeforeAfterHook(eventHooks.onBeforeMove, payload, execute, eventHooks.onAfterMove, pending)
-                }
-                execute()
-                return
-              }
-
-              // ── Custom / other actions: just call the handler ──
-              execute()
+              return runActionPipeline({
+                key: def.key,
+                label: def.label,
+                ctx,
+                event,
+                risk: def.risk ?? 'normal',
+                command,
+                metadata: def.metadata,
+              }, execute, actionInterceptors, pending)
             },
             className: def.className,
           }

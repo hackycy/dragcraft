@@ -302,8 +302,12 @@ interface WidgetActionConfig {
     icon?: string | Component
     type: 'button' | 'drag-handle'
     order: number
+    risk?: 'normal' | 'destructive'
+    metadata?: Record<string, unknown>
     visible?: (ctx) => boolean
+    available?: (ctx) => boolean
     disabled?: (ctx) => boolean
+    command?: (ctx, e: MouseEvent) => Command | null | undefined
     handler?: (ctx, e: MouseEvent) => void
     className?: string
   }>
