@@ -59,6 +59,49 @@ describe('addNodeHandler', () => {
     warn.mockRestore()
   })
 
+  it('blocks add when creatable is false', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { ctx, registry, store } = setup()
+    registry.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      creatable: false,
+    })
+
+    addNodeHandler(ctx, { node: makeNode('new') })
+
+    expect(store.getRawSchema().root.children).toHaveLength(0)
+    expect(warn).toHaveBeenCalledWith(
+      '[dragcraft/core] ADD_NODE: blocked by creatable constraint for widget type "text"',
+    )
+    warn.mockRestore()
+  })
+
+  it('evaluates dynamic creatable with the current schema before add', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { ctx, registry, store } = setup(makeSchema([makeNode('existing')]))
+    registry.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      creatable: ({ schema, widgetType }) => {
+        const children = schema.root.children ?? []
+        return !children.some(child => child.type === widgetType)
+      },
+    })
+
+    addNodeHandler(ctx, { node: makeNode('new') })
+
+    expect(store.getRawSchema().root.children).toHaveLength(1)
+    expect(store.getRawSchema().root.children![0].id).toBe('existing')
+    warn.mockRestore()
+  })
+
   it('inserts by sort-scope index when chrome nodes exist', () => {
     const { ctx, registry, store } = setup(makeSchema([
       makeNode('a'),

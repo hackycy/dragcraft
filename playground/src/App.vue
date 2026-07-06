@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { CommandType, createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
+import { CommandType, createDesigner, DcDesigner, resolveBehavior, useDesigner } from '@dragcraft/designer'
 import { IconArrowDown, IconCopy, IconPhone } from '@dragcraft/icons'
 import type { NodeActionContext } from '@dragcraft/designer'
+import { cloneDeep, generateShortId } from '@dragcraft/utils'
 import {
   createDeviceFrameContext,
   createDeviceToolbarRenderer,
@@ -81,18 +82,24 @@ const designer = createDesigner({
       icon: IconCopy,
       type: 'button',
       order: 350,
+      available: (ctx: NodeActionContext) => {
+        if (!ctx.meta)
+          return true
+        return resolveBehavior(ctx.meta.creatable, {
+          widgetType: ctx.node.type,
+          schema: ctx.engine.store.getRawSchema(),
+        }, true)
+      },
       handler: (ctx: NodeActionContext) => {
-        const node = ctx.node
+        const clonedNode = cloneDeep(ctx.node)
+        delete clonedNode.children
+        clonedNode.id = generateShortId()
         ctx.engine.execute({
           type: CommandType.ADD_NODE,
           payload: {
-            node: {
-              id: `${node.type}-${Date.now()}`,
-              type: node.type,
-              props: { ...node.props },
-              style: node.style ? { ...node.style } : undefined,
-            },
+            node: clonedNode,
             index: ctx.index + 1,
+            sortScope: ctx.sortScope || undefined,
           },
         })
       },

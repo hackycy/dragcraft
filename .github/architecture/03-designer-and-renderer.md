@@ -57,7 +57,7 @@ src/
 - 按 `title` 和 `type` 模糊搜索。
 - HTML5 drag source，drag start 时设置 `engine.store.setDragTarget`。
 - `renderWidgetItem` 扩展点，自定义单个物料卡片。
-- `WidgetMeta.creatable` 动态控制物料是否可拖入画布。
+- `WidgetMeta.creatable` 动态控制该类型是否可创建，并驱动物料是否可拖入画布。
 
 当 `creatable` 为 `false` 或谓词函数返回 `false` 时，物料卡片会带 `dc-material-item--disabled` class，`draggable` 设为 `false`，自定义渲染函数会收到 `disabled` prop。
 
@@ -251,6 +251,8 @@ RootRenderer
 | `move-up` | 200 | `button` | 上移 |
 | `move-down` | 300 | `button` | 下移 |
 | `delete` | 400 | `button` | 删除 |
+
+复制等自定义 action 如果会新增节点，必须执行 `ADD_NODE`，由 core 统一校验 `WidgetMeta.creatable` 和排序约束；action 的 `available` 可复用同一谓词提前禁用按钮。
 
 动作定义：
 

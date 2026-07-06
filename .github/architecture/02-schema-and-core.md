@@ -246,11 +246,13 @@ interface WidgetMeta {
 | `draggable` | `true` | 为 `false` 时隐藏拖拽 handle 和上移/下移按钮 |
 | `sortable` | `true` | 为 `false` 时锁定当前数组索引，并隐含 `draggable=false` |
 | `deletable` | `true` | 为 `false` 时隐藏删除按钮 |
-| `creatable` | `true` | 为 `false` 时物料面板禁用，不可拖入画布 |
+| `creatable` | `true` | 为 `false` 时禁止创建该类型的新实例；物料面板禁用，拖入、复制等 `ADD_NODE` 入口都会被 core 拦截 |
 | `actions` | 无 | 控制节点工具栏动作 |
 | `wrapper` | 无 | 为该 widget 类型覆盖全局 nodeWrapper |
 
 当行为字段为函数时，renderer 在 `computed` 中求值，schema 变更会触发重新计算。
+
+`creatable` 是类型级创建能力，不是物料面板专属开关。凡是会新增 schema node 的交互都必须进入 `ADD_NODE`，由 core 基于当前 schema 统一校验该字段；UI 层仍可提前读取同一谓词来禁用物料、复制等入口，但不能把 UI 判断作为唯一约束。
 
 ## 位置锁定
 

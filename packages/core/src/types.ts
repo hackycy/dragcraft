@@ -299,9 +299,9 @@ export interface WidgetMeta {
   // ── Material panel controls ──
 
   /**
-   * Whether new instances can be created from the material panel (default: true).
-   * When false or predicate returns false, the material item appears disabled
-   * and cannot be dragged. Evaluated per-type, not per-instance.
+   * Whether new instances of this widget type can be created (default: true).
+   * Applies to every ADD_NODE entry, including material drops and duplicate
+   * actions. Evaluated per-type, not per-instance.
    */
   creatable?: BehaviorPredicate<TypeBehaviorContext>
 
