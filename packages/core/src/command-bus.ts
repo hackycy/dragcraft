@@ -48,10 +48,10 @@ export function createCommandBus(
     }
 
     const beforeSnapshot = cloneSchemaRef(store.schema)
-    history.pushSnapshot(command.type, beforeSnapshot)
+    let result: boolean | void
 
     try {
-      handler(ctx, command.payload)
+      result = handler(ctx, command.payload)
     }
     catch (error) {
       store.setSchema(beforeSnapshot)
@@ -59,6 +59,12 @@ export function createCommandBus(
       return
     }
 
+    if (result === false) {
+      store.setSchema(beforeSnapshot)
+      return
+    }
+
+    history.pushSnapshot(command.type, beforeSnapshot)
     store.triggerUpdate()
 
     const specificEvent = COMMAND_EVENT_MAP[command.type]

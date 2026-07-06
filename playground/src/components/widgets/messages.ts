@@ -20,6 +20,10 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
         remove: '删除',
       },
     },
+    forbidden: {
+      navbarExists: '页面只能配置一个导航栏',
+      tabBarExists: '页面只能配置一个 Tab 栏',
+    },
     widget: {
       'text': {
         title: '文本',
@@ -145,6 +149,10 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
         moveUp: 'Move up',
         remove: 'Remove item',
       },
+    },
+    forbidden: {
+      navbarExists: 'Only one navigation bar can be configured on a page',
+      tabBarExists: 'Only one tab bar can be configured on a page',
     },
     widget: {
       'text': { title: 'Text' },

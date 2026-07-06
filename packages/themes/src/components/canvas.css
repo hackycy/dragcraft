@@ -18,6 +18,7 @@
 .dc-canvas__content:has(.dc-device-frame--desktop) { --device-width: 1280px; }
 
 .dc-root-renderer {
+  position: relative;
   min-height: 100%;
   background: var(--dc-bg);
   border-radius: var(--dc-radius-lg);
@@ -319,28 +320,36 @@
 .dc-forbidden-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(239, 68, 68, 0.08);
-  border: 2px dashed var(--dc-color-danger, #ef4444);
+  min-height: 120px;
+  background: var(--dc-danger-bg-hover);
+  border: 2px dashed var(--dc-danger);
   border-radius: var(--dc-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  color: var(--dc-color-danger, #ef4444);
-  font-size: var(--dc-font-size-sm, 14px);
+  color: var(--dc-danger);
+  font-size: var(--dc-font-size-sm);
+  font-weight: 500;
+  line-height: 1.5;
   pointer-events: none;
   z-index: var(--dc-z-canvas-forbidden);
   animation: dc-forbidden-pulse 1.5s ease-in-out infinite;
 }
 
-.dc-forbidden-overlay__icon {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
+.dc-device-frame > .dc-forbidden-overlay {
+  border-radius: inherit;
+  z-index: 300;
 }
 
 .dc-forbidden-overlay__text {
-  white-space: nowrap;
+  max-width: min(280px, calc(100% - 32px));
+  padding: 6px 10px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  background: var(--dc-bg);
+  border: 1px solid color-mix(in srgb, var(--dc-danger), transparent 70%);
+  border-radius: var(--dc-radius);
 }
 
 @keyframes dc-forbidden-pulse {

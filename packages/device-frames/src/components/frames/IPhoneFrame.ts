@@ -25,6 +25,10 @@ export default defineComponent({
       type: Object as PropType<Record<string, VNode[]>>,
       default: () => ({}),
     },
+    forbiddenOverlayVNode: {
+      type: Object as PropType<VNode | null>,
+      default: null,
+    },
   },
 
   setup(props, { slots }) {
@@ -85,6 +89,7 @@ export default defineComponent({
         renderViewport(),
         // Home indicator bar
         h('div', { class: 'dc-device-frame__home-indicator' }),
+        props.forbiddenOverlayVNode,
       ])
   },
 })

@@ -24,6 +24,10 @@ export default defineComponent({
       type: Object as PropType<Record<string, VNode[]>>,
       default: () => ({}),
     },
+    forbiddenOverlayVNode: {
+      type: Object as PropType<VNode | null>,
+      default: null,
+    },
   },
 
   setup(props, { slots }) {
@@ -51,6 +55,7 @@ export default defineComponent({
           h('span', { class: 'dc-device-frame__nav-btn dc-device-frame__nav-btn--home' }, h(IconNavHome, { size: 12 })),
           h('span', { class: 'dc-device-frame__nav-btn' }, h(IconNavRecent, { size: 12 })),
         ]),
+        props.forbiddenOverlayVNode,
       ])
   },
 })

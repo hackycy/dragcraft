@@ -45,6 +45,7 @@ export default defineComponent({
       handleCanvasDragLeave: dragDrop.handleCanvasDragLeave,
       handleCanvasDrop: dragDrop.handleCanvasDrop,
       isForbidden: dragDrop.isForbidden,
+      forbiddenReason: dragDrop.forbiddenReason,
       searchQuery,
       activeTab,
       leftPanelActiveTab,

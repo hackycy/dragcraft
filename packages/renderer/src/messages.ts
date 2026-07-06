@@ -13,6 +13,7 @@ export const rendererMessages: Record<string, MessageTree> = {
       'node-handle': '选中组件',
     },
     forbidden: {
+      default: '当前物料不满足创建条件，无法添加到画布',
       alreadyExists: '无法添加 — 该类型已存在',
     },
   },
@@ -28,6 +29,7 @@ export const rendererMessages: Record<string, MessageTree> = {
       'node-handle': 'Select component',
     },
     forbidden: {
+      default: 'This component cannot be added to the canvas',
       alreadyExists: 'Cannot add — this type already exists',
     },
   },

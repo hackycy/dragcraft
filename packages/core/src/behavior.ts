@@ -1,4 +1,4 @@
-import type { BehaviorPredicate } from './types'
+import type { BehaviorPredicate, CreatableBehaviorPredicate, CreatableBehaviorResult, CreatableDecision, TypeBehaviorContext } from './types'
 
 /**
  * Resolves a behavior field that may be a static boolean or a predicate function.
@@ -21,4 +21,24 @@ export function resolveBehavior<Ctx>(
   if (typeof field === 'function')
     return field(ctx)
   return field
+}
+
+function normalizeCreatableDecision(
+  value: CreatableBehaviorResult | undefined,
+  defaultValue: boolean,
+): CreatableDecision {
+  if (value === undefined)
+    return { allowed: defaultValue }
+  if (typeof value === 'boolean')
+    return { allowed: value }
+  return value
+}
+
+export function resolveCreatable(
+  field: CreatableBehaviorPredicate | undefined,
+  ctx: TypeBehaviorContext,
+  defaultValue = true,
+): CreatableDecision {
+  const value = typeof field === 'function' ? field(ctx) : field
+  return normalizeCreatableDecision(value, defaultValue)
 }

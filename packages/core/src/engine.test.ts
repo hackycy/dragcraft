@@ -1,6 +1,6 @@
 import type { DesignerSchema, SchemaNode } from './types'
 import { describe, expect, it, vi } from 'vitest'
-import { CommandType } from './constants'
+import { CommandType, EventName } from './constants'
 import { createEngine } from './engine'
 
 function makeNode(id: string): SchemaNode {
@@ -34,6 +34,35 @@ describe('createEngine', () => {
     })
     expect(engine.store.schema.value.root.children).toHaveLength(1)
     expect(engine.store.schema.value.root.children![0].id).toBe('a')
+    engine.dispose()
+  })
+
+  it('execute ADD_NODE blocked by creatable does not push history or emit mutation events', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const engine = createEngine()
+    const nodeAdded = vi.fn()
+    const schemaChanged = vi.fn()
+    engine.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'basic',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      creatable: false,
+    })
+    engine.eventHub.on(EventName.NODE_ADDED, nodeAdded)
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    engine.execute({
+      type: CommandType.ADD_NODE,
+      payload: { node: makeNode('a') },
+    })
+
+    expect(engine.store.schema.value.root.children).toHaveLength(0)
+    expect(engine.history.canUndo()).toBe(false)
+    expect(nodeAdded).not.toHaveBeenCalled()
+    expect(schemaChanged).not.toHaveBeenCalled()
+    warn.mockRestore()
     engine.dispose()
   })
 

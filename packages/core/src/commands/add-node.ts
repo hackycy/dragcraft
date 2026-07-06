@@ -1,22 +1,27 @@
 import type { AddNodePayload, CommandContext } from '../types'
-import { resolveBehavior } from '../behavior'
+import { resolveCreatable } from '../behavior'
 import { insertNodeIntoTree } from '../helpers'
 import { createLayoutPlan, DEFAULT_SORT_SCOPE, getSortableArrayIndexForInsert, getSortScopeEntries, resolveNodeLayout } from '../layout'
 import { getLockedIndicesFromEntries, isInsertAllowed } from '../sortable'
 
-export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): void {
+export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): boolean | void {
   const { store, registry } = ctx
   const rawSchema = store.getRawSchema()
   const meta = registry.getWidget(payload.node.type)
 
-  if (meta && !resolveBehavior(meta.creatable, {
-    widgetType: payload.node.type,
-    schema: rawSchema,
-  }, true)) {
+  const createDecision = meta
+    ? resolveCreatable(meta.creatable, {
+        widgetType: payload.node.type,
+        schema: rawSchema,
+      }, true)
+    : { allowed: true }
+
+  if (!createDecision.allowed) {
+    const reason = createDecision.message ?? createDecision.messageKey ?? createDecision.code
     console.warn(
-      `[dragcraft/core] ADD_NODE: blocked by creatable constraint for widget type "${payload.node.type}"`,
+      `[dragcraft/core] ADD_NODE: blocked by creatable constraint for widget type "${payload.node.type}"${reason ? ` (${reason})` : ''}`,
     )
-    return
+    return false
   }
 
   const children = rawSchema.root.children ?? []
@@ -36,7 +41,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): vo
       console.warn(
         `[dragcraft/core] ADD_NODE: blocked by sortable constraint at index ${arrayIndex}`,
       )
-      return
+      return false
     }
     arrayIndex = getSortableArrayIndexForInsert(scopeEntries, children, arrayIndex)
   }

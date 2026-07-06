@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CommandType, createDesigner, DcDesigner, resolveBehavior, useDesigner } from '@dragcraft/designer'
+import { CommandType, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
 import { IconArrowDown, IconCopy, IconPhone } from '@dragcraft/icons'
 import type { NodeActionContext } from '@dragcraft/designer'
 import { cloneDeep, generateShortId } from '@dragcraft/utils'
@@ -85,10 +85,10 @@ const designer = createDesigner({
       available: (ctx: NodeActionContext) => {
         if (!ctx.meta)
           return true
-        return resolveBehavior(ctx.meta.creatable, {
+        return resolveCreatable(ctx.meta.creatable, {
           widgetType: ctx.node.type,
           schema: ctx.engine.store.getRawSchema(),
-        }, true)
+        }, true).allowed
       },
       handler: (ctx: NodeActionContext) => {
         const clonedNode = cloneDeep(ctx.node)

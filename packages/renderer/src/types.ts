@@ -1,4 +1,4 @@
-import type { DesignerEngine, DesignerSchema, LayoutPlan, RegistryInstance, WidgetMeta } from '@dragcraft/core'
+import type { CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, RegistryInstance, WidgetMeta } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { RendererEventHooks } from './event-hooks'
@@ -108,6 +108,8 @@ export interface EmptyStateProps {
 export interface ForbiddenOverlayProps {
   /** The widget type that was blocked */
   widgetType: string
+  /** User-facing reason for the blocked creation attempt */
+  reason: CreationBlockReason | null
 }
 
 /**
@@ -128,6 +130,7 @@ export interface ContainerShellProps {
   regionVNodes: Record<string, VNode[]>
   chromeVNodes: VNode[]
   layerVNodes: Record<string, VNode[]>
+  forbiddenOverlayVNode?: VNode | null
   layoutPlan: LayoutPlan
   schema: DesignerSchema
   registry: RegistryInstance
@@ -190,7 +193,7 @@ export interface RendererExtensions {
 
   /**
    * Replaces the default forbidden overlay shown when a widget type
-   * cannot be dropped (e.g., singleton already exists).
+   * cannot be dropped.
    * Receives ForbiddenOverlayProps.
    */
   forbiddenOverlay?: Component
@@ -243,6 +246,8 @@ export interface RendererOptions {
    * Managed externally by the designer package.
    */
   isForbidden?: Ref<boolean>
+  /** Optional reason explaining the current forbidden drag-over state. */
+  forbiddenReason?: Ref<CreationBlockReason | null>
 }
 
 /**

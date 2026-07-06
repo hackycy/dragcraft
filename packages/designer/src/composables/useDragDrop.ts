@@ -1,4 +1,4 @@
-import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { CreationBlockReason, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
 import {
   CommandType,
@@ -9,7 +9,7 @@ import {
   getLockedIndices,
   getSortScopeEntries,
   getValidDropIndices,
-  resolveBehavior,
+  resolveCreatable,
   resolveNodeLayout,
 } from '@dragcraft/core'
 import { generateShortId, hideNativeDragImage } from '@dragcraft/utils'
@@ -38,8 +38,10 @@ export interface UseDragDropReturn {
   handleCanvasDrop: (e: DragEvent) => void
   /** Handle drag end (cleanup) */
   handleDragEnd: (e: DragEvent) => void
-  /** Whether the current drag-over is forbidden (widget type already exists) */
+  /** Whether the current drag-over is forbidden */
   isForbidden: Ref<boolean>
+  /** User-facing reason for the current forbidden drag-over state */
+  forbiddenReason: Ref<CreationBlockReason | null>
 }
 
 // ──────────────────────────────────────────
@@ -57,6 +59,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   const dragOverNodeId = ref<string | null>(null)
   const dragOverIndex = ref<number | null>(null)
   const isForbidden = ref(false)
+  const forbiddenReason = ref<CreationBlockReason | null>(null)
 
   // ── Sortable constraint computeds ──
 
@@ -81,14 +84,14 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     return getValidDropIndices(scopeEntries, lockedIndices.value, dragTarget.sourceNodeId)
   })
 
-  const isDropAllowed = computed(() => {
+  const createDecision = computed(() => {
     const target = engine.store.dragTarget.value
     if (!target?.widgetType)
-      return true // node move, not material drop
+      return { allowed: true }
     const meta = engine.registry.getWidget(target.widgetType)
     if (!meta)
-      return true
-    return resolveBehavior(meta.creatable, {
+      return { allowed: true }
+    return resolveCreatable(meta.creatable, {
       widgetType: target.widgetType,
       schema: engine.store.schema.value,
     }, true)
@@ -133,6 +136,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     dragOverNodeId.value = null
     dragOverIndex.value = null
     isForbidden.value = false
+    forbiddenReason.value = null
   }
 
   function resetDragState(): void {
@@ -157,10 +161,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function canCreateWidget(meta: WidgetMeta): boolean {
-    return resolveBehavior(meta.creatable, {
+    return resolveCreatable(meta.creatable, {
       widgetType: meta.type,
       schema: engine.store.getRawSchema(),
-    })
+    }).allowed
   }
 
   function createSchemaNode(meta: WidgetMeta): SchemaNode {
@@ -215,12 +219,21 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
 
     // Check if drop is allowed by creatable predicate
-    if (!isDropAllowed.value) {
+    const decision = createDecision.value
+    if (!decision.allowed) {
       isForbidden.value = true
+      forbiddenReason.value = {
+        code: decision.code,
+        messageKey: decision.messageKey,
+        message: decision.message,
+      }
       dragOverIndex.value = null
+      if (e.dataTransfer)
+        e.dataTransfer.dropEffect = 'none'
       return
     }
     isForbidden.value = false
+    forbiddenReason.value = null
 
     const sortScope = getActiveSortScope()
     if (sortScope === false) {
@@ -299,7 +312,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       return
 
     // Forbidden drop (creatable predicate returned false)
-    if (!isDropAllowed.value) {
+    if (!createDecision.value.allowed) {
       engine.store.setDragTarget(null)
       return
     }
@@ -329,5 +342,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     handleCanvasDrop,
     handleDragEnd,
     isForbidden,
+    forbiddenReason,
   }
 }

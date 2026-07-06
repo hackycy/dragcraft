@@ -1,4 +1,4 @@
-import type { DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance, WidgetMeta } from '@dragcraft/core'
+import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance, WidgetMeta } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions } from '@dragcraft/renderer'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/utils'
@@ -156,8 +156,10 @@ export interface DesignerContext {
   handleCanvasDragOver: (e: DragEvent) => void
   handleCanvasDragLeave: (e: DragEvent) => void
   handleCanvasDrop: (e: DragEvent) => void
-  /** Whether the current drag-over is forbidden (widget type blocked by creatable predicate) */
+  /** Whether the current drag-over is forbidden */
   isForbidden: Ref<boolean>
+  /** User-facing reason for the current forbidden drag-over state */
+  forbiddenReason: Ref<CreationBlockReason | null>
   searchQuery: Ref<string>
   activeTab: Ref<PropertyTabKey>
   leftPanelActiveTab: Ref<LeftPanelTabKey>

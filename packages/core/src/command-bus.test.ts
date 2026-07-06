@@ -121,6 +121,31 @@ describe('createCommandBus', () => {
     errorSpy.mockRestore()
   })
 
+  it('execute cancels without history, update, or events when handler returns false', () => {
+    const { commandBus, eventHub, history, store } = setup(
+      makeSchema([{ id: 'a', type: 'text', props: { label: 'original' } }]),
+    )
+    const originalSchema = store.getSchema()
+    const triggerUpdate = vi.spyOn(store, 'triggerUpdate')
+    const schemaChanged = vi.fn()
+    const nodeAdded = vi.fn()
+    eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+    eventHub.on(EventName.NODE_ADDED, nodeAdded)
+
+    commandBus.registerHandler(CommandType.ADD_NODE, () => {
+      store.getRawSchema().root.children![0]!.props.label = 'mutated'
+      return false
+    })
+
+    commandBus.execute({ type: CommandType.ADD_NODE, payload: null })
+
+    expect(store.getSchema()).toEqual(originalSchema)
+    expect(history.canUndo()).toBe(false)
+    expect(triggerUpdate).not.toHaveBeenCalled()
+    expect(schemaChanged).not.toHaveBeenCalled()
+    expect(nodeAdded).not.toHaveBeenCalled()
+  })
+
   it('execute does not emit events when handler throws', () => {
     const { commandBus, eventHub } = setup()
     const schemaChanged = vi.fn()

@@ -1,7 +1,7 @@
-import type { TypeBehaviorContext, WidgetMeta } from '@dragcraft/core'
+import type { WidgetMeta } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import { useI18n } from '@dragcraft/utils'
-import { computed, defineComponent, h, ref } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
 
 export default defineComponent({
@@ -17,28 +17,11 @@ export default defineComponent({
   setup(props) {
     const ctx = useDesignerContext()
     const { t } = useI18n()
-    const { engine, extensions, handleMaterialDragStart, handleDragEnd: handleDesignerDragEnd } = ctx
+    const { extensions, handleMaterialDragStart, handleDragEnd: handleDesignerDragEnd } = ctx
 
     const isDragging = ref(false)
 
-    const isCreatable = computed(() => {
-      const field = props.meta.creatable
-      if (typeof field !== 'function')
-        return field !== false
-      // Dynamic: establish schema reactivity so this re-evaluates on schema changes
-      void engine.store.schema.value
-      const behaviorCtx: TypeBehaviorContext = {
-        widgetType: props.meta.type,
-        schema: engine.store.getRawSchema(),
-      }
-      return field(behaviorCtx)
-    })
-
     const handleDragStart = (e: DragEvent) => {
-      if (!isCreatable.value) {
-        e.preventDefault()
-        return
-      }
       handleMaterialDragStart(e, props.meta)
       isDragging.value = true
     }
@@ -50,14 +33,13 @@ export default defineComponent({
 
     return () => {
       const meta = props.meta
-      const creatable = isCreatable.value
 
       // Support custom widget item renderer via extension
       if (extensions.renderWidgetItem) {
         const CustomItem = extensions.renderWidgetItem(meta)
         return h(CustomItem, {
-          draggable: creatable,
-          disabled: !creatable,
+          draggable: true,
+          disabled: false,
           onDragstart: handleDragStart,
           onDragend: handleDragEnd,
         })
@@ -69,11 +51,10 @@ export default defineComponent({
           class: [
             'dc-material-item',
             {
-              'dc-material-item--disabled': !creatable,
               'dc-material-item--dragging': isDragging.value,
             },
           ],
-          draggable: creatable,
+          draggable: true,
           onDragstart: handleDragStart,
           onDragend: handleDragEnd,
         },

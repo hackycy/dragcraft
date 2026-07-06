@@ -1,5 +1,5 @@
 // ── Behavior utilities ──────────────────
-export { resolveBehavior } from './behavior'
+export { resolveBehavior, resolveCreatable } from './behavior'
 
 export { createCommandBus } from './command-bus'
 
@@ -61,6 +61,10 @@ export type {
   Command,
   CommandContext,
   CommandHandler,
+  CreatableBehaviorPredicate,
+  CreatableBehaviorResult,
+  CreatableDecision,
+  CreationBlockReason,
   DesignerSchema,
   DragTarget,
   EngineOptions,

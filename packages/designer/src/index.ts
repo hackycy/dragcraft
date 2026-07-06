@@ -43,6 +43,7 @@ export {
   createEngine,
   EventName,
   resolveBehavior,
+  resolveCreatable,
 } from '@dragcraft/core'
 
 export type {
@@ -50,6 +51,10 @@ export type {
   BehaviorPredicate,
   Command,
   CommandHandler,
+  CreatableBehaviorPredicate,
+  CreatableBehaviorResult,
+  CreatableDecision,
+  CreationBlockReason,
   DesignerEngine,
   DesignerSchema,
   DragTarget,

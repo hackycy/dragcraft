@@ -190,13 +190,34 @@ export interface TypeBehaviorContext {
  * // Static
  * draggable: false
  *
- * // Dynamic — singleton pattern
- * creatable: (ctx) => {
- *   const children = ctx.schema.root.children ?? []
- *   return !children.some(c => c.type === 'tab')
- * }
+ * // Dynamic
+ * draggable: ({ node }) => node.type !== 'fixed'
  */
 export type BehaviorPredicate<Ctx> = boolean | ((ctx: Ctx) => boolean)
+
+/**
+ * User-facing reason for a blocked creation attempt.
+ *
+ * `code` is stable for analytics and custom UI mapping.
+ * `messageKey` lets applications provide localized copy.
+ * `message` is the fallback text when no localized message exists.
+ */
+export interface CreationBlockReason {
+  code?: string
+  messageKey?: string
+  message?: string
+}
+
+export interface CreatableDecision extends CreationBlockReason {
+  allowed: boolean
+}
+
+/**
+ * Type-level creation rule. Return `false` for a generic blocked state, or
+ * return `{ allowed: false, messageKey, message }` to explain the reason.
+ */
+export type CreatableBehaviorResult = boolean | CreatableDecision
+export type CreatableBehaviorPredicate = CreatableBehaviorResult | ((ctx: TypeBehaviorContext) => CreatableBehaviorResult)
 
 // ──────────────────────────────────────────
 // Form schema shape (minimal, for WidgetMeta.formSchema typing)
@@ -296,14 +317,14 @@ export interface WidgetMeta {
   /** Default open layout metadata for new and existing instances of this widget type. */
   defaultLayout?: NodeLayout
 
-  // ── Material panel controls ──
+  // ── Creation controls ──
 
   /**
    * Whether new instances of this widget type can be created (default: true).
    * Applies to every ADD_NODE entry, including material drops and duplicate
    * actions. Evaluated per-type, not per-instance.
    */
-  creatable?: BehaviorPredicate<TypeBehaviorContext>
+  creatable?: CreatableBehaviorPredicate
 
   // ── Action system ──
 
@@ -337,7 +358,7 @@ export interface CommandContext {
 export type CommandHandler<T = unknown> = (
   ctx: CommandContext,
   payload: T,
-) => void
+) => boolean | void
 
 // ──────────────────────────────────────────
 // Command payloads (built-in)

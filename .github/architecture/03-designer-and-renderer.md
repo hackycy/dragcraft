@@ -57,9 +57,9 @@ src/
 - 按 `title` 和 `type` 模糊搜索。
 - HTML5 drag source，drag start 时设置 `engine.store.setDragTarget`。
 - `renderWidgetItem` 扩展点，自定义单个物料卡片。
-- `WidgetMeta.creatable` 动态控制该类型是否可创建，并驱动物料是否可拖入画布。
+- 物料项始终可拖拽，`WidgetMeta.creatable` 在画布 drag-over/drop 阶段统一裁决是否可创建。
 
-当 `creatable` 为 `false` 或谓词函数返回 `false` 时，物料卡片会带 `dc-material-item--disabled` class，`draggable` 设为 `false`，自定义渲染函数会收到 `disabled` prop。
+当 `creatable` 返回禁止决策时，画布显示红色虚线框，并在框中展示禁止原因；如果没有提供原因，则展示默认提示。禁用提示层由 container shell 渲染，使用 device frame 时覆盖整个设备预览区域，提示文本位于 frame 中央。自定义物料卡片仍会收到 `draggable: true` 与 `disabled: false`，避免左栏和画布出现两套创建规则。
 
 结构树 tab 使用 `DcStructurePanel`，按当前扁平 schema 的 `root.children` 展示节点：
 
@@ -80,6 +80,7 @@ src/
 - 点击画布空白处取消选中。
 - 支持 `toolbarRenderer` 扩展点，在画布顶部渲染自定义工具栏。
 - 支持 `WidgetMeta.sortable` 位置锁定约束，只显示合法 drop indicator。
+- 支持 `WidgetMeta.creatable` 禁止原因，拖入被拒绝时通过 `forbiddenOverlay` 展示原因。
 - 提供 `data-dc-designer-portal` 交互层出口，renderer 的选区外框和节点工具栏优先 Teleport 到该出口，避免直接散落到 `body` 与应用弹窗、面板层级竞争。
 
 ### 右栏：配置区
@@ -252,7 +253,7 @@ RootRenderer
 | `move-down` | 300 | `button` | 下移 |
 | `delete` | 400 | `button` | 删除 |
 
-复制等自定义 action 如果会新增节点，必须执行 `ADD_NODE`，由 core 统一校验 `WidgetMeta.creatable` 和排序约束；action 的 `available` 可复用同一谓词提前禁用按钮。
+复制等自定义 action 如果会新增节点，必须执行 `ADD_NODE`，由 core 统一校验 `WidgetMeta.creatable` 和排序约束；action 的 `available` 可复用同一决策提前禁用按钮。
 
 动作定义：
 

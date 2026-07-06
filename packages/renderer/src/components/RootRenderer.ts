@@ -1,5 +1,5 @@
-import type { DesignerEngine } from '@dragcraft/core'
-import type { PropType, Ref, VNode } from 'vue'
+import type { CreationBlockReason, DesignerEngine } from '@dragcraft/core'
+import type { Component, PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
 import type { RendererEventHooks } from '../event-hooks'
 import type { ComponentMap, RendererExtensions } from '../types'
@@ -12,6 +12,10 @@ import DefaultDropIndicator from './DefaultDropIndicator'
 import DefaultEmptyState from './DefaultEmptyState'
 import DefaultForbiddenOverlay from './DefaultForbiddenOverlay'
 import WidgetRenderer from './WidgetRenderer'
+
+function handlesForbiddenOverlay(component: Component): boolean {
+  return Boolean((component as Component & { __dcHandlesForbiddenOverlay?: boolean }).__dcHandlesForbiddenOverlay)
+}
 
 export default defineComponent({
   name: 'DcRootRenderer',
@@ -51,6 +55,10 @@ export default defineComponent({
     },
     isForbidden: {
       type: Object as PropType<Ref<boolean>>,
+      default: undefined,
+    },
+    forbiddenReason: {
+      type: Object as PropType<Ref<CreationBlockReason | null>>,
       default: undefined,
     },
   },
@@ -121,14 +129,17 @@ export default defineComponent({
 
       // Show forbidden overlay or drop indicator at the computed insertion index
       const isForbidden = props.isForbidden?.value ?? false
-
-      if (isDragOver && isForbidden) {
-        contentVNodes.push(h(ForbiddenOverlay.value, {
+      const createForbiddenOverlayVNode = () =>
+        h(ForbiddenOverlay.value, {
           key: '__forbidden__',
           widgetType: props.engine.store.dragTarget.value?.widgetType ?? '',
-        }))
-      }
-      else if (isDragOver) {
+          reason: props.forbiddenReason?.value ?? null,
+        })
+      const forbiddenOverlayVNode = isDragOver && isForbidden
+        ? createForbiddenOverlayVNode()
+        : null
+
+      if (isDragOver && !isForbidden) {
         const idx = props.dragOverIndex?.value
         const scopeLength = plan.sortScopes.get(DEFAULT_SORT_SCOPE)?.length ?? contentVNodes.length
         if (idx != null && idx >= 0 && idx <= scopeLength) {
@@ -141,6 +152,10 @@ export default defineComponent({
 
       // Empty state placeholder (only when no children and not dragging)
       const isEmpty = (plan.sortScopes.get(DEFAULT_SORT_SCOPE)?.length ?? 0) === 0 && !isDragOver
+      const ContainerShellComponent = ContainerShell.value
+      const fallbackForbiddenOverlayVNode = forbiddenOverlayVNode && !handlesForbiddenOverlay(ContainerShellComponent)
+        ? createForbiddenOverlayVNode()
+        : null
 
       return h(
         'div',
@@ -151,13 +166,14 @@ export default defineComponent({
         },
         [
           h(
-            ContainerShell.value,
+            ContainerShellComponent,
             {
               class: { 'dc-container-shell--empty': isEmpty },
               isEmpty,
               regionVNodes,
               chromeVNodes,
               layerVNodes,
+              forbiddenOverlayVNode,
               layoutPlan: plan,
               schema,
               registry: props.engine.registry,
@@ -173,6 +189,7 @@ export default defineComponent({
               ),
             },
           ),
+          fallbackForbiddenOverlayVNode,
         ],
       )
     }

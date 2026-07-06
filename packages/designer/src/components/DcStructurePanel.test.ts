@@ -52,6 +52,7 @@ function makeContext(instance: DesignerInstance): DesignerContext {
     handleCanvasDragLeave: vi.fn(),
     handleCanvasDrop: vi.fn(),
     isForbidden: ref(false),
+    forbiddenReason: ref(null),
     searchQuery: ref(''),
     activeTab: ref('widget'),
     leftPanelActiveTab: ref('materials'),

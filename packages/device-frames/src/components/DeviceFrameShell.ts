@@ -1,5 +1,5 @@
 import type { LayoutPlan } from '@dragcraft/core'
-import type { PropType, VNode } from 'vue'
+import type { Component, PropType, VNode } from 'vue'
 import { computed, defineComponent, h, inject } from 'vue'
 import { getDefaultPresets } from '../presets'
 import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
@@ -14,7 +14,7 @@ import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
  *
  * Falls back to the iPhone frame if no context is provided.
  */
-export default defineComponent({
+const DeviceFrameShell = defineComponent({
   name: 'DcDeviceFrameShell',
 
   props: {
@@ -29,6 +29,10 @@ export default defineComponent({
     layerVNodes: {
       type: Object as PropType<Record<string, VNode[]>>,
       default: () => ({}),
+    },
+    forbiddenOverlayVNode: {
+      type: Object as PropType<VNode | null>,
+      default: null,
     },
   },
 
@@ -49,6 +53,12 @@ export default defineComponent({
         layoutPlan: props.layoutPlan,
         chromeVNodes: props.chromeVNodes,
         layerVNodes: props.layerVNodes,
+        forbiddenOverlayVNode: props.forbiddenOverlayVNode,
       }, slots)
   },
 })
+
+const DeviceFrameShellWithOverlay = DeviceFrameShell as Component & { __dcHandlesForbiddenOverlay?: boolean }
+DeviceFrameShellWithOverlay.__dcHandlesForbiddenOverlay = true
+
+export default DeviceFrameShell

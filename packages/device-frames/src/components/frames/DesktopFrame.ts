@@ -23,6 +23,10 @@ export default defineComponent({
       type: Object as PropType<Record<string, VNode[]>>,
       default: () => ({}),
     },
+    forbiddenOverlayVNode: {
+      type: Object as PropType<VNode | null>,
+      default: null,
+    },
   },
 
   setup(props, { slots }) {
@@ -47,6 +51,7 @@ export default defineComponent({
           h('div', { class: 'dc-device-frame__url-bar' }, 'localhost:5173'),
         ]),
         renderViewport(),
+        props.forbiddenOverlayVNode,
       ])
   },
 })

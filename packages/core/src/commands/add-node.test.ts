@@ -102,6 +102,31 @@ describe('addNodeHandler', () => {
     warn.mockRestore()
   })
 
+  it('includes creatable reason metadata in warning when available', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { ctx, registry, store } = setup()
+    registry.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      creatable: {
+        allowed: false,
+        code: 'singleton.text',
+        message: 'Only one text widget is allowed',
+      },
+    })
+
+    addNodeHandler(ctx, { node: makeNode('new') })
+
+    expect(store.getRawSchema().root.children).toHaveLength(0)
+    expect(warn).toHaveBeenCalledWith(
+      '[dragcraft/core] ADD_NODE: blocked by creatable constraint for widget type "text" (Only one text widget is allowed)',
+    )
+    warn.mockRestore()
+  })
+
   it('inserts by sort-scope index when chrome nodes exist', () => {
     const { ctx, registry, store } = setup(makeSchema([
       makeNode('a'),

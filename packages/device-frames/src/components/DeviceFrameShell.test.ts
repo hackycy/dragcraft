@@ -100,6 +100,7 @@ describe('deviceFrameShell', () => {
             h('button', { 'data-test-id': 'custom' }, 'custom'),
           ],
         },
+        forbiddenOverlayVNode: h('div', { 'class': 'dc-forbidden-overlay', 'data-test-id': 'forbidden' }, 'blocked'),
       },
       slots: {
         default: '<div data-test-id="content">content</div>',
@@ -118,5 +119,7 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame__layer-item--self [data-test-id="custom"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport').attributes('style')).toContain('--dc-sized-inset-block-end: 50px')
     expect(wrapper.find('.dc-device-frame').attributes()).toHaveProperty('data-dc-toolbar-boundary')
+    expect(wrapper.find('.dc-device-frame > .dc-forbidden-overlay[data-test-id="forbidden"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content-surface .dc-forbidden-overlay').exists()).toBe(false)
   })
 })

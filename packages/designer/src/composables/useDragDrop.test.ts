@@ -57,11 +57,12 @@ describe('useDragDrop', () => {
     expect(dd.dragOverNodeId.value).toBeNull()
     expect(dd.dragOverIndex.value).toBeNull()
     expect(dd.isForbidden.value).toBe(false)
+    expect(dd.forbiddenReason.value).toBeNull()
   })
 
-  it('handleMaterialDragStart sets dragTarget with widgetType', () => {
+  it('handleMaterialDragStart sets dragTarget with widgetType even when creatable is false', () => {
     const dd = useDragDrop(engine)
-    const meta = makeMeta('image')
+    const meta = makeMeta('image', { creatable: false })
     const e = mockDragEvent()
     dd.handleMaterialDragStart(e, meta)
     expect(engine.store.dragTarget.value).toEqual({
@@ -135,14 +136,29 @@ describe('useDragDrop', () => {
 
   it('handleCanvasDrop respects creatable predicate (forbidden)', () => {
     engine.registerWidget(makeMeta('singleton', {
-      creatable: () => false,
+      creatable: () => ({
+        allowed: false,
+        code: 'singleton',
+        messageKey: 'forbidden.singleton',
+        message: 'Only one singleton is allowed',
+      }),
     }))
     const dd = useDragDrop(engine)
     const spy = vi.spyOn(engine, 'execute')
     const e = mockDragEvent()
 
     dd.handleMaterialDragStart(e, makeMeta('singleton'))
+    dd.handleCanvasDragOver(e)
     dd.dragOverIndex.value = 0
+
+    expect(dd.isForbidden.value).toBe(true)
+    expect(dd.forbiddenReason.value).toEqual({
+      code: 'singleton',
+      messageKey: 'forbidden.singleton',
+      message: 'Only one singleton is allowed',
+    })
+    expect(e.dataTransfer!.dropEffect).toBe('none')
+
     dd.handleCanvasDrop(e)
 
     expect(spy).not.toHaveBeenCalled()
@@ -176,12 +192,14 @@ describe('useDragDrop', () => {
     dd.dragOverNodeId.value = 'root'
     dd.dragOverIndex.value = 2
     dd.isForbidden.value = true
+    dd.forbiddenReason.value = { code: 'test', message: 'Blocked' }
     engine.store.setDragTarget({ sourceNodeId: 'a', widgetType: null })
 
     dd.handleDragEnd(mockDragEvent())
     expect(dd.dragOverNodeId.value).toBeNull()
     expect(dd.dragOverIndex.value).toBeNull()
     expect(dd.isForbidden.value).toBe(false)
+    expect(dd.forbiddenReason.value).toBeNull()
     expect(engine.store.dragTarget.value).toBeNull()
   })
 

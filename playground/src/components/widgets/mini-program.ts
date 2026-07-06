@@ -67,7 +67,14 @@ export const navbarWidgetMeta: WidgetMeta = {
   },
   creatable: (ctx) => {
     const children = ctx.schema.root.children ?? []
-    return !children.some(child => child.type === 'navbar')
+    return children.some(child => child.type === 'navbar')
+      ? {
+          allowed: false,
+          code: 'singleton.navbar',
+          messageKey: 'forbidden.navbarExists',
+          message: '页面只能配置一个导航栏',
+        }
+      : true
   },
   defaultProps: {
     title: '页面标题',
@@ -184,7 +191,14 @@ export const tabBarWidgetMeta: WidgetMeta = {
   },
   creatable: (ctx) => {
     const children = ctx.schema.root.children ?? []
-    return !children.some(child => child.type === 'tab-bar')
+    return children.some(child => child.type === 'tab-bar')
+      ? {
+          allowed: false,
+          code: 'singleton.tab-bar',
+          messageKey: 'forbidden.tabBarExists',
+          message: '页面只能配置一个 Tab 栏',
+        }
+      : true
   },
   defaultProps: {
     tabs: DEFAULT_TABS,
