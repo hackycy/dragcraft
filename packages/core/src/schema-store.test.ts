@@ -109,8 +109,19 @@ describe('createSchemaStore', () => {
 
   it('applyTransientPatch updates style', () => {
     const store = createSchemaStore(makeSchema([{ id: 'a', type: 'text', props: {} }]))
-    store.applyTransientPatch('a', { style: { color: 'red' } })
-    expect(store.getNodeById('a')!.style).toEqual({ color: 'red' })
+    store.applyTransientPatch('a', { style: { content: { color: 'red' } } })
+    expect(store.getNodeById('a')!.style).toEqual({ content: { color: 'red' } })
+  })
+
+  it('applyTransientPatch deep merges style scopes', () => {
+    const store = createSchemaStore(makeSchema([{
+      id: 'a',
+      type: 'text',
+      props: {},
+      style: { container: { marginTop: -8 } },
+    }]))
+    store.applyTransientPatch('a', { style: { container: { marginBottom: 12 } } })
+    expect(store.getNodeById('a')!.style).toEqual({ container: { marginTop: -8, marginBottom: 12 } })
   })
 
   it('applyTransientPatch does nothing for missing node', () => {

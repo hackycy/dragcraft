@@ -19,7 +19,7 @@ interface SchemaNode {
   id: string
   type: string
   props: Record<string, unknown>
-  style?: Record<string, unknown>
+  style?: NodeStyle
   layout?: {
     placement?:
       | { kind: 'flow', region?: string, sortScope?: string | false }
@@ -47,15 +47,65 @@ interface DesignerSchema {
   globalConfig: Record<string, unknown>
   root: SchemaNode
 }
+
+interface NodeStyle {
+  container?: Record<string, unknown>
+  content?: Record<string, unknown>
+  surface?: Record<string, unknown>
+}
 ```
 
 核心规则：
 
 - `root.children` 是扁平 widget 数组。
+- `root` 是页面承载节点，`root.style.surface` 描述页面 surface 的开放样式 DSL。
 - 不存在 `nodeType`，不区分容器和 widget。
 - 不支持嵌套子节点，`children` 仅 root 保留。
+- `style.container` 描述节点外层布局盒子，`style.content` 描述 widget 内容样式，`style.surface` 描述该节点拥有的承载面样式。
 - `layout.placement` 声明节点进入内容流、固定 chrome 还是浮层。
 - `flow.sortScope` 是开放排序域，`false` 表示节点不参与画布拖拽排序。
+
+## 样式 DSL
+
+Schema 的样式字段只表达跨端 DSL，不绑定 Web、小程序、RN 或任意具体运行时。设计器预览层可以把这些样式解释为 DOM inline style，其他消费端可以映射到自己的样式系统。
+
+样式按作用域显式拆分：
+
+| 字段 | 语义 | 典型使用 |
+| --- | --- | --- |
+| `style.container` | 节点在当前 surface 中的外层布局盒子 | `marginTop: -12`、`padding`、`width` |
+| `style.content` | 传给 widget 组件内容的样式 | `color`、`fontSize` |
+| `style.surface` | 页面或容器节点拥有的承载面样式 | `backgroundColor`、`backgroundImage` |
+
+示例：
+
+```ts
+const schema: DesignerSchema = {
+  version: '1.0.0',
+  globalConfig: {},
+  root: {
+    id: 'root',
+    type: 'root',
+    props: {},
+    style: {
+      surface: {
+        backgroundColor: '#f7f7f7',
+        backgroundImage: 'url(https://example.com/bg.png)',
+      },
+    },
+    children: [{
+      id: 'hero',
+      type: 'banner',
+      props: {},
+      style: {
+        container: { marginTop: -12 },
+      },
+    }],
+  },
+}
+```
+
+`globalConfig` 保持业务开放配置，不作为页面背景、间距等可视 DSL 的固定入口。需要由全局表单编辑页面视觉时，应通过表单字段绑定写入 `root.style.surface.*`。
 
 ## LayoutPlan 投影
 
@@ -135,8 +185,8 @@ src/
 - `ADD_NODE`：添加 widget 到目标排序域，`index` 表示插入点。
 - `MOVE_NODE`：在节点所属 `sortScope` 中重排序。
 - `REMOVE_NODE`：删除节点。
-- `UPDATE_PROPS`：更新节点 props/style。
-- `SET_GLOBAL_CONFIG`：更新全局配置。
+- `UPDATE_PROPS`：更新节点 props/style，嵌套对象按路径递归合并。
+- `SET_GLOBAL_CONFIG`：更新全局配置，嵌套对象按路径递归合并。
 
 命令执行流程：
 
@@ -222,7 +272,7 @@ interface WidgetMeta {
   group: string
   icon?: string
   defaultProps: Record<string, unknown>
-  defaultStyle?: Record<string, unknown>
+  defaultStyle?: NodeStyle
   formSchema: Record<string, unknown>
 
   mask?: BehaviorPredicate<InstanceBehaviorContext>

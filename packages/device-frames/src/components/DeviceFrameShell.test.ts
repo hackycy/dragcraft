@@ -90,6 +90,17 @@ describe('deviceFrameShell', () => {
     const wrapper = mount(DeviceFrameShell, {
       props: {
         layoutPlan: makePlan(),
+        schema: {
+          version: '1.0.0',
+          globalConfig: {},
+          root: {
+            id: 'root',
+            type: 'root',
+            props: {},
+            style: { surface: { backgroundColor: '#fff7e6' } },
+            children: [],
+          },
+        },
         chromeVNodes: [
           h('div', { 'data-test-id': 'nav' }, 'nav'),
           h('div', { 'data-test-id': 'tab' }, 'tab'),
@@ -111,6 +122,9 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame__content-scroller [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content').classes()).not.toContain('dc-container-shell')
+    expect(wrapper.find<HTMLElement>('.dc-device-frame__content').element.style.backgroundColor).toBe('#fff7e6')
+    expect(wrapper.find<HTMLElement>('.dc-device-frame__content-scroller').element.style.backgroundColor).toBe('#fff7e6')
+    expect(wrapper.find<HTMLElement>('.dc-device-frame__content-surface').element.style.backgroundColor).toBe('#fff7e6')
     expect(wrapper.find('.dc-device-frame__scrollbar').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport').attributes()).toHaveProperty('data-dc-overlay-boundary')
     expect(wrapper.find('.dc-device-frame__chrome--block-start [data-test-id="nav"]').exists()).toBe(true)

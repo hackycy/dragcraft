@@ -16,15 +16,10 @@ export default defineComponent({
       selectedNode,
       selectedFormSchema,
       selectedNodeProps,
+      globalConfigValues,
       handlePropertyChange,
       handleGlobalConfigChange,
-    } = usePropertyBinding(engine)
-
-    // Global config values from schema
-    const globalConfigValues = computed(() => {
-      void engine.store.schema.value
-      return { ...engine.store.getRawSchema().globalConfig }
-    })
+    } = usePropertyBinding(engine, { globalConfigSchema })
 
     // Available tabs (Widget tab only when a node is selected)
     const tabs = computed(() => {

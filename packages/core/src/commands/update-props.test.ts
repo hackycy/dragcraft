@@ -29,24 +29,27 @@ describe('updatePropsHandler', () => {
 
   it('merges style onto node', () => {
     const { ctx, store } = setup([makeNode('a')])
-    updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { color: 'red' } })
+    updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { content: { color: 'red' } } })
     const node = store.getRawSchema().root.children![0]
-    expect(node.style).toEqual({ color: 'red' })
+    expect(node.style).toEqual({ content: { color: 'red' } })
   })
 
   it('initializes style if missing', () => {
     const { ctx, store } = setup([makeNode('a')])
     expect(store.getRawSchema().root.children![0].style).toBeUndefined()
-    updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { margin: '10px' } })
-    expect(store.getRawSchema().root.children![0].style).toEqual({ margin: '10px' })
+    updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { container: { marginTop: '10px' } } })
+    expect(store.getRawSchema().root.children![0].style).toEqual({ container: { marginTop: '10px' } })
   })
 
   it('merges into existing style', () => {
     const node = makeNode('a')
-    node.style = { color: 'red' }
+    node.style = { container: { marginTop: '10px' }, content: { color: 'red' } }
     const { ctx, store } = setup([node])
-    updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { margin: '10px' } })
-    expect(store.getRawSchema().root.children![0].style).toEqual({ color: 'red', margin: '10px' })
+    updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { container: { marginBottom: '4px' } } })
+    expect(store.getRawSchema().root.children![0].style).toEqual({
+      container: { marginTop: '10px', marginBottom: '4px' },
+      content: { color: 'red' },
+    })
   })
 
   it('warns when node not found', () => {

@@ -28,6 +28,24 @@ interface WidgetDefinition {
 }
 ```
 
+`WidgetMeta.defaultStyle` 使用 core 的 scoped style DSL：
+
+```ts
+const meta: WidgetMeta = {
+  type: 'banner',
+  title: 'Banner',
+  group: 'basic',
+  defaultProps: {},
+  defaultStyle: {
+    container: { marginTop: 0 },
+    content: { color: '#1f1f1f' },
+  },
+  formSchema: { sections: [] },
+}
+```
+
+物料希望暴露外层盒子样式时，表单字段应通过 `bindTo: { scope: 'node', path: 'style.container.*' }` 写入 schema，而不是把这些值塞进业务 props 后再由组件自行模拟。
+
 工具函数：
 
 | 函数 | 说明 |

@@ -1,12 +1,14 @@
-import type { LayoutEdge, LayoutNodeEntry, LayoutPlan, ResolvedChromePlacement, ResolvedLayerPlacement } from '@dragcraft/core'
+import type { LayoutEdge, LayoutNodeEntry, LayoutPlan, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from '@dragcraft/core'
 import type { VNode, VNodeChild } from 'vue'
 import { h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
+import { normalizeStyle, pickBackgroundStyle } from './style-utils'
 
 export interface FrameViewportOptions {
   content?: VNodeChild[]
   chromeVNodes?: VNode[]
   layerVNodes?: Record<string, VNode[]>
   plan?: LayoutPlan
+  surfaceStyle?: StyleValueMap
 }
 
 function edgeClass(edge: LayoutEdge): string {
@@ -280,19 +282,29 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
 
   return () => {
     const current = options()
+    const surfaceStyle = normalizeStyle(current.surfaceStyle)
+    const backgroundStyle = pickBackgroundStyle(surfaceStyle)
     return h('div', {
       'ref': viewportRef,
       'class': 'dc-device-frame__viewport',
       'data-dc-overlay-boundary': '',
       'style': viewportStyle(current.plan),
     }, [
-      h('div', { class: 'dc-device-frame__content' }, [
+      h('div', { class: 'dc-device-frame__content', style: backgroundStyle }, [
         h('div', {
           ref: scrollerRef,
           class: 'dc-device-frame__content-scroller',
+          style: backgroundStyle,
           onScroll: updateScrollMetrics,
         }, [
-          h('div', { class: 'dc-device-frame__content-surface dc-container-shell' }, current.content ?? []),
+          h(
+            'div',
+            {
+              class: 'dc-device-frame__content-surface dc-container-shell',
+              style: surfaceStyle,
+            },
+            current.content ?? [],
+          ),
         ]),
         h('div', { 'class': 'dc-device-frame__scrollbar', 'aria-hidden': 'true' }, [
           h('div', { class: 'dc-device-frame__scrollbar-thumb', style: thumbStyle.value }),

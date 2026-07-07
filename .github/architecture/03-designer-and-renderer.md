@@ -316,6 +316,56 @@ interface RendererEventHooks {
 - after hook fire-and-forget，异常只输出错误，不影响状态。
 - 异步 before hook 执行期间，相同操作会被丢弃，避免并发状态不一致。
 
+## 样式 DSL 预览解释
+
+Renderer 只负责把 schema DSL 解释成设计器预览效果，不把 DSL 绑定到某个运行时平台。
+
+当前解释规则：
+
+| DSL | 预览位置 |
+| --- | --- |
+| `schema.root.style.surface` | 默认 container shell 或 device frame 内容 surface |
+| `node.style.container` | `.dc-node` 外层节点盒子 |
+| `node.style.content` | 实际 widget 组件 vnode 的 `style` |
+
+示例：
+
+```ts
+{
+  id: 'banner',
+  type: 'banner',
+  props: {},
+  style: {
+    container: { marginTop: -12 },
+    content: { color: '#1677ff' },
+  },
+}
+```
+
+`container/content/surface` 内部是开放对象。Renderer 不枚举“背景色”“背景图”等业务字段，只按作用域把对象放到对应预览承载点。
+
+## Widget Runtime
+
+物料组件如果需要在自身交互中修改当前节点，可以使用 renderer 提供的注入式 runtime：
+
+```ts
+import { useWidgetRuntime } from '@dragcraft/renderer'
+
+const runtime = useWidgetRuntime()
+runtime.updateContainerStyle({ marginTop: -12 })
+runtime.updateContentStyle({ color: '#1677ff' })
+runtime.updateProps({ title: '新标题' })
+```
+
+Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core command：
+
+- `updateProps(patch)` -> `UPDATE_PROPS({ props })`
+- `updateStyle(patch)` -> `UPDATE_PROPS({ style })`
+- `updateContainerStyle(patch)` -> `UPDATE_PROPS({ style: { container } })`
+- `updateContentStyle(patch)` -> `UPDATE_PROPS({ style: { content } })`
+
+因此物料内部修改仍会进入历史记录、事件通知和 schema 导出链路。物料不应通过 runtime 直接修改 DOM 状态来模拟 schema 行为。
+
 ## Renderer 扩展点
 
 | 扩展点 | 默认实现 | 说明 |

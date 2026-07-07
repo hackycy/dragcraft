@@ -1,48 +1,23 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
-import { computed, defineComponent, h, ref, Teleport } from 'vue'
+import { computed, defineComponent, h, provide, ref, Teleport } from 'vue'
 import { useBlockOverlayGeometry } from '../composables/useBlockOverlayGeometry'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
 import { useToolbarPosition } from '../composables/useToolbarPosition'
 import { useWidgetNode } from '../composables/useWidgetNode'
 import { useRendererContext } from '../context'
+import { normalizeStyle } from '../style-utils'
+import { createWidgetRuntimeContext, WIDGET_RUNTIME_CONTEXT_KEY } from '../widget-runtime'
 import DefaultNodeHandle from './DefaultNodeHandle'
 import DefaultNodeMask from './DefaultNodeMask'
 import DefaultNodeToolbar from './DefaultNodeToolbar'
 import DefaultWidgetFallback from './DefaultWidgetFallback'
 
-const LAYOUT_STYLE_KEYS = new Set(['padding', 'margin'])
 const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
 const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
 const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
 const DESIGNER_PORTAL_SELECTOR = '[data-dc-designer-portal]'
-
-interface SplitNodeStyle {
-  wrapperStyle?: Record<string, unknown>
-  contentStyle?: Record<string, unknown>
-}
-
-function splitNodeStyle(style: SchemaNode['style']): SplitNodeStyle {
-  if (!style)
-    return {}
-
-  let wrapperStyle: Record<string, unknown> | undefined
-  let contentStyle: Record<string, unknown> | undefined
-
-  for (const [key, value] of Object.entries(style)) {
-    if (LAYOUT_STYLE_KEYS.has(key)) {
-      wrapperStyle = wrapperStyle ?? {}
-      wrapperStyle[key] = value
-    }
-    else {
-      contentStyle = contentStyle ?? {}
-      contentStyle[key] = value
-    }
-  }
-
-  return { wrapperStyle, contentStyle }
-}
 
 function resolveInteractionLayerTarget(): string {
   if (typeof document === 'undefined')
@@ -73,6 +48,7 @@ export default defineComponent({
   setup(props) {
     const ctx = useRendererContext()
     const { extensions } = ctx
+    provide(WIDGET_RUNTIME_CONTEXT_KEY, createWidgetRuntimeContext(() => props.node))
 
     // Composables extract all logic
     const widget = useWidgetNode(() => props.node, ctx)
@@ -114,8 +90,8 @@ export default defineComponent({
 
       // Render widget content
       const widgetProps = { ...node.props }
-      const { wrapperStyle, contentStyle: rawContentStyle } = splitNodeStyle(node.style)
-      let contentStyle = rawContentStyle
+      const wrapperStyle = normalizeStyle(node.style?.container)
+      let contentStyle = normalizeStyle(node.style?.content)
 
       // When a blocking mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index
@@ -204,10 +180,8 @@ export default defineComponent({
         wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [toolbarVNode]))
       }
 
-      // Build the core wrapper vnode.
-      // Layout properties (padding, margin) from node.style are applied here
-      // so the wrapper controls the widget's box in its assigned placement.
-      // Content properties (font-size, color, etc.) remain on the widget component.
+      // Build the core wrapper vnode. Container styles control the node's box
+      // in its assigned placement; content styles are passed to the widget.
       const coreWrapper = h(
         'div',
         {

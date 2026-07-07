@@ -2,9 +2,11 @@
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
+import { CommandType } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { RENDERER_CONTEXT_KEY } from '../types'
+import { useWidgetRuntime } from '../widget-runtime'
 import WidgetRenderer from './WidgetRenderer'
 
 function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
@@ -22,6 +24,7 @@ function makeContext(meta: WidgetMeta): RendererContext {
   const selectNode = vi.fn()
   return {
     engine: {
+      execute: vi.fn(),
       store: {
         schema: ref({
           version: '1.0.0',
@@ -174,6 +177,85 @@ describe('widgetRenderer', () => {
       app.unmount()
       host.remove()
       portal.remove()
+    }
+  })
+
+  it('applies container styles to the node box and content styles to the widget', async () => {
+    const meta = makeMeta({ mask: false })
+    const ctx = makeContext(meta)
+    const node: SchemaNode = {
+      id: 'fab',
+      type: 'floating-button',
+      props: {},
+      style: {
+        container: { marginTop: -20 },
+        content: { color: 'red' },
+      },
+    }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, { node })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+
+      expect(host.querySelector<HTMLElement>('.dc-node')?.style.marginTop).toBe('-20px')
+      expect(host.querySelector<HTMLElement>('.widget-root')?.style.color).toBe('red')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('provides a command-backed widget runtime to rendered widgets', async () => {
+    const meta = makeMeta({ mask: false })
+    const RuntimeWidget = defineComponent({
+      setup() {
+        const runtime = useWidgetRuntime()
+        return () => h('button', {
+          class: 'runtime-widget',
+          onClick: () => runtime.updateContainerStyle({ marginTop: -20 }),
+        }, 'update')
+      },
+    })
+    const ctx = makeContext(meta)
+    ctx.componentMap['floating-button'] = RuntimeWidget
+    const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, { node })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+
+      host.querySelector<HTMLElement>('.runtime-widget')?.click()
+      expect(ctx.engine.execute).toHaveBeenCalledWith({
+        type: CommandType.UPDATE_PROPS,
+        payload: {
+          nodeId: 'fab',
+          props: {},
+          style: { container: { marginTop: -20 } },
+        },
+      })
+    }
+    finally {
+      app.unmount()
+      host.remove()
     }
   })
 })

@@ -29,7 +29,7 @@ export const formInputWidgetMeta: WidgetMeta = {
     required: false,
     disabled: false,
   },
-  defaultStyle: { width: '100%' },
+  defaultStyle: { content: { width: '100%' } },
   formSchema: {
     sections: [
       {
@@ -86,7 +86,7 @@ export const formTextareaWidgetMeta: WidgetMeta = {
     required: false,
     disabled: false,
   },
-  defaultStyle: { width: '100%' },
+  defaultStyle: { content: { width: '100%' } },
   formSchema: {
     sections: [
       {
@@ -145,7 +145,7 @@ export const formSelectWidgetMeta: WidgetMeta = {
     required: false,
     disabled: false,
   },
-  defaultStyle: { width: '100%' },
+  defaultStyle: { content: { width: '100%' } },
   formSchema: {
     sections: [
       {

@@ -8,10 +8,21 @@ export interface SchemaNode {
   id: string
   type: string
   props: Record<string, unknown>
-  style?: Record<string, unknown>
+  style?: NodeStyle
   layout?: NodeLayout
   /** Only used on the root node to hold the flat widget list */
   children?: SchemaNode[]
+}
+
+export type StyleValueMap = Record<string, unknown>
+
+export interface NodeStyle {
+  /** Styles applied to the node's layout box in its assigned surface. */
+  container?: StyleValueMap
+  /** Styles applied to the rendered widget component. */
+  content?: StyleValueMap
+  /** Styles applied to a page or container surface owned by this node. */
+  surface?: StyleValueMap
 }
 
 // ──────────────────────────────────────────
@@ -295,8 +306,8 @@ export interface WidgetMeta {
   icon?: string
   /** Default prop values when creating a new instance */
   defaultProps: Record<string, unknown>
-  /** Default inline styles when creating a new instance */
-  defaultStyle?: Record<string, unknown>
+  /** Default scoped styles when creating a new instance */
+  defaultStyle?: NodeStyle
   /** Form schema for the property panel */
   formSchema: FormSchemaShape
 
@@ -388,7 +399,7 @@ export interface RemoveNodePayload {
 export interface UpdatePropsPayload {
   nodeId: string
   props: Record<string, unknown>
-  style?: Record<string, unknown>
+  style?: NodeStyle
 }
 
 export interface SetGlobalConfigPayload {

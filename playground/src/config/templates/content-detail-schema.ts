@@ -17,6 +17,14 @@ export const contentDetailSchema: DesignerSchema = {
     id: 'root',
     type: 'root',
     props: {},
+    style: {
+      surface: {
+        backgroundColor: '#ffffff',
+        backgroundSize: 'cover',
+        padding: 0,
+        maxWidth: 375,
+      },
+    },
     children: [
       // Navbar
       {
@@ -29,7 +37,7 @@ export const contentDetailSchema: DesignerSchema = {
           textColor: '#1a1a1a',
           transparent: false,
         },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
         layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed', reserve: { mode: 'measure', size: 44 }, avoidContent: true } },
       },
       // Cover image
@@ -41,7 +49,7 @@ export const contentDetailSchema: DesignerSchema = {
           alt: '文章封面',
           objectFit: 'cover',
         },
-        style: { width: '100%', height: '200px' },
+        style: { content: { width: '100%', height: '200px' } },
       },
       // Title
       {
@@ -54,7 +62,7 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: { padding: '20px 16px 8px' },
+        style: { container: { padding: '20px 16px 8px' } },
       },
       // Author info
       {
@@ -67,14 +75,14 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { padding: '0 16px 16px' },
+        style: { container: { padding: '0 16px 16px' } },
       },
       // Divider
       {
         id: 'divider-1',
         type: 'divider',
         props: { direction: 'horizontal', color: '#f0f0f0', thickness: 1 },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
       },
       // Body paragraph 1
       {
@@ -87,7 +95,7 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#333333',
           textAlign: 'left',
         },
-        style: { padding: '16px 16px 8px', lineHeight: '1.8' },
+        style: { container: { padding: '16px 16px 8px' }, content: { lineHeight: '1.8' } },
       },
       // Inline image
       {
@@ -98,7 +106,7 @@ export const contentDetailSchema: DesignerSchema = {
           alt: '架构示意图',
           objectFit: 'cover',
         },
-        style: { width: '100%', height: '180px', padding: '8px 16px' },
+        style: { container: { padding: '8px 16px' }, content: { width: '100%', height: '180px' } },
       },
       // Body paragraph 2
       {
@@ -111,27 +119,27 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#333333',
           textAlign: 'left',
         },
-        style: { padding: '8px 16px 16px', lineHeight: '1.8' },
+        style: { container: { padding: '8px 16px 16px' }, content: { lineHeight: '1.8' } },
       },
       // Divider
       {
         id: 'divider-2',
         type: 'divider',
         props: { direction: 'horizontal', color: '#f0f0f0', thickness: 1 },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
       },
       // Action buttons
       {
         id: 'follow-btn',
         type: 'button',
         props: { text: '关注作者', type: 'button', disabled: false, size: 'medium' },
-        style: { padding: '16px 16px 8px', width: '100%' },
+        style: { container: { padding: '16px 16px 8px' }, content: { width: '100%' } },
       },
       {
         id: 'share-link',
         type: 'link',
         props: { text: '分享给朋友', href: '#', target: '_self', color: '#07C160' },
-        style: { padding: '8px 16px 24px' },
+        style: { container: { padding: '8px 16px 24px' } },
       },
     ],
   },

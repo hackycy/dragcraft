@@ -70,3 +70,7 @@ export type {
   WidgetFallbackProps,
 } from './types'
 export { RENDERER_CONTEXT_KEY } from './types'
+
+// ── Widget Runtime ───────────────────────
+export { useWidgetRuntime, WIDGET_RUNTIME_CONTEXT_KEY } from './widget-runtime'
+export type { WidgetRuntimeContext } from './widget-runtime'

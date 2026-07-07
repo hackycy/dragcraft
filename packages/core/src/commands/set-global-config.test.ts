@@ -33,4 +33,12 @@ describe('setGlobalConfigHandler', () => {
     setGlobalConfigHandler(ctx, { config: { lang: 'zh-CN' } })
     expect(store.getRawSchema().globalConfig).toEqual({ lang: 'zh-CN' })
   })
+
+  it('deep merges nested config objects', () => {
+    const { ctx, store } = setup({ theme: { mode: 'light', tokens: { radius: 4 } } })
+    setGlobalConfigHandler(ctx, { config: { theme: { tokens: { color: '#1677ff' } } } })
+    expect(store.getRawSchema().globalConfig).toEqual({
+      theme: { mode: 'light', tokens: { radius: 4, color: '#1677ff' } },
+    })
+  })
 })

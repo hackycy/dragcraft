@@ -60,6 +60,15 @@ export type FieldComponentProps<Props extends object = Record<string, unknown>>
   = | Props
     | ((ctx: FormContext) => Props)
 
+export type FieldBindingScope = 'node' | 'schema' | 'globalConfig'
+
+export interface FieldBindingTarget {
+  /** The document area this field writes to. Defaults depend on the host form. */
+  scope?: FieldBindingScope
+  /** Dot path inside the selected scope. */
+  path: string
+}
+
 export interface FieldSchema<
   ComponentType extends string = string,
   ComponentProps extends object = Record<string, unknown>,
@@ -80,6 +89,8 @@ export interface FieldSchema<
   optionKeyPrefix?: string
   /** Registered field component name (e.g., 'Input', 'Select', 'Color') */
   component: ComponentType
+  /** Optional DSL path binding used by host applications such as the designer. */
+  bindTo?: string | FieldBindingTarget
   /** Props forwarded to the registered UI component. Static or dynamic. */
   componentProps?: FieldComponentProps<ComponentProps>
   /** Declares which other fields this field depends on, and how to react. */

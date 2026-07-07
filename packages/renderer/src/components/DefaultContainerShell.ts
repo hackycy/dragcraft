@@ -1,5 +1,7 @@
+import type { DesignerSchema } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
 import { defineComponent, h } from 'vue'
+import { normalizeStyle } from '../style-utils'
 
 const DefaultContainerShell = defineComponent({
   name: 'DcDefaultContainerShell',
@@ -30,7 +32,7 @@ const DefaultContainerShell = defineComponent({
       default: undefined,
     },
     schema: {
-      type: Object,
+      type: Object as PropType<DesignerSchema>,
       default: undefined,
     },
   },
@@ -39,7 +41,10 @@ const DefaultContainerShell = defineComponent({
     return () =>
       h(
         'div',
-        { class: 'dc-container-shell' },
+        {
+          class: 'dc-container-shell',
+          style: normalizeStyle(props.schema?.root?.style?.surface),
+        },
         [
           ...(slots.default?.() ?? []),
           props.forbiddenOverlayVNode,

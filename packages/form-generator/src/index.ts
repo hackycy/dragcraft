@@ -10,6 +10,8 @@ export { useFormGeneratorContext } from './context'
 
 // ── Types ────────────────────────────────
 export type {
+  FieldBindingScope,
+  FieldBindingTarget,
   FieldChangePayload,
   FieldComponentDefinition,
   FieldComponentMap,

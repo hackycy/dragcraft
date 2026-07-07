@@ -1,4 +1,4 @@
-import type { LayoutPlan } from '@dragcraft/core'
+import type { DesignerSchema, LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
 import { computed, defineComponent, h, inject } from 'vue'
 import { getDefaultPresets } from '../presets'
@@ -34,6 +34,10 @@ const DeviceFrameShell = defineComponent({
       type: Object as PropType<VNode | null>,
       default: null,
     },
+    schema: {
+      type: Object as PropType<DesignerSchema>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -54,6 +58,7 @@ const DeviceFrameShell = defineComponent({
         chromeVNodes: props.chromeVNodes,
         layerVNodes: props.layerVNodes,
         forbiddenOverlayVNode: props.forbiddenOverlayVNode,
+        surfaceStyle: props.schema?.root.style?.surface as StyleValueMap | undefined,
       }, slots)
   },
 })

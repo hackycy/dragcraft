@@ -86,7 +86,7 @@ export const navbarWidgetMeta: WidgetMeta = {
     textColor: '#1a1a1a',
     transparent: false,
   },
-  defaultStyle: { width: '100%' },
+  defaultStyle: { content: { width: '100%' } },
   formSchema: {
     sections: [
       {
@@ -207,7 +207,7 @@ export const tabBarWidgetMeta: WidgetMeta = {
     activeColor: '#07C160',
     inactiveColor: '#8a8f98',
   },
-  defaultStyle: { width: '100%' },
+  defaultStyle: { content: { width: '100%' } },
   formSchema: {
     sections: [
       {
@@ -374,7 +374,7 @@ export const swiperWidgetMeta: WidgetMeta = {
     height: 180,
     borderRadius: 0,
   },
-  defaultStyle: { width: '100%' },
+  defaultStyle: { content: { width: '100%' } },
   formSchema: {
     sections: [
       {

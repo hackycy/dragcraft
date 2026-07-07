@@ -1,6 +1,22 @@
 import type { CommandContext, UpdatePropsPayload } from '../types'
 import { findNodeById } from '../helpers'
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function mergeRecord(target: Record<string, unknown>, patch: Record<string, unknown>): void {
+  for (const [key, value] of Object.entries(patch)) {
+    const current = target[key]
+    if (isPlainRecord(current) && isPlainRecord(value)) {
+      mergeRecord(current, value)
+    }
+    else {
+      target[key] = value
+    }
+  }
+}
+
 export function updatePropsHandler(ctx: CommandContext, payload: UpdatePropsPayload): void {
   const { store } = ctx
   const rawSchema = store.getRawSchema()
@@ -11,11 +27,11 @@ export function updatePropsHandler(ctx: CommandContext, payload: UpdatePropsPayl
     return
   }
 
-  Object.assign(node.props, payload.props)
+  mergeRecord(node.props, payload.props)
 
   if (payload.style) {
     if (!node.style)
       node.style = {}
-    Object.assign(node.style, payload.style)
+    mergeRecord(node.style as Record<string, unknown>, payload.style as Record<string, unknown>)
   }
 }

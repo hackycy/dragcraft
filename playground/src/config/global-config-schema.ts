@@ -38,12 +38,38 @@ export const globalConfigSchema: FormSchema = {
           label: '背景颜色',
           component: 'Color',
           defaultValue: '#ffffff',
+          bindTo: { scope: 'schema', path: 'root.style.surface.backgroundColor' },
+        },
+        {
+          key: 'backgroundImage',
+          label: '背景图片',
+          component: 'Input',
+          defaultValue: '',
+          bindTo: { scope: 'schema', path: 'root.style.surface.backgroundImage' },
+          componentProps: {
+            placeholder: 'url(https://example.com/bg.png)',
+          },
+        },
+        {
+          key: 'backgroundSize',
+          label: '背景尺寸',
+          component: 'Select',
+          defaultValue: 'cover',
+          bindTo: { scope: 'schema', path: 'root.style.surface.backgroundSize' },
+          componentProps: {
+            options: [
+              { label: '覆盖', value: 'cover' },
+              { label: '包含', value: 'contain' },
+              { label: '自动', value: 'auto' },
+            ],
+          },
         },
         {
           key: 'padding',
           label: '内边距 (px)',
           component: 'InputNumber',
           defaultValue: 0,
+          bindTo: { scope: 'schema', path: 'root.style.surface.padding' },
           componentProps: {
             min: 0,
             max: 100,
@@ -54,6 +80,7 @@ export const globalConfigSchema: FormSchema = {
           label: '最大宽度 (px)',
           component: 'InputNumber',
           defaultValue: 375,
+          bindTo: { scope: 'schema', path: 'root.style.surface.maxWidth' },
           componentProps: {
             min: 320,
             max: 1920,

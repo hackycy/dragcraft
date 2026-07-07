@@ -5,6 +5,22 @@ import { DEFAULT_SCHEMA_VERSION } from './constants'
 import { findNodeById as findNode } from './helpers'
 import { cloneRawSchema, cloneSchema } from './schema-utils'
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function mergeRecord(target: Record<string, unknown>, patch: Record<string, unknown>): void {
+  for (const [key, value] of Object.entries(patch)) {
+    const current = target[key]
+    if (isPlainRecord(current) && isPlainRecord(value)) {
+      mergeRecord(current, value)
+    }
+    else {
+      target[key] = value
+    }
+  }
+}
+
 export function createDefaultSchema(): DesignerSchema {
   return {
     version: DEFAULT_SCHEMA_VERSION,
@@ -82,12 +98,12 @@ export function createSchemaStore(
     if (!node)
       return
     if (partial.props) {
-      Object.assign(node.props, partial.props)
+      mergeRecord(node.props, partial.props)
     }
     if (partial.style) {
       if (!node.style)
         node.style = {}
-      Object.assign(node.style, partial.style)
+      mergeRecord(node.style as Record<string, unknown>, partial.style as Record<string, unknown>)
     }
     triggerRef(schema)
   }

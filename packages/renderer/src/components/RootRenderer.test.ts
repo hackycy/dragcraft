@@ -79,4 +79,40 @@ describe('rootRenderer forbidden overlay', () => {
       app.unmount()
     }
   })
+
+  it('applies root surface styles in the default container shell', () => {
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const engine = createEngine({
+      initialSchema: {
+        version: '1.0.0',
+        globalConfig: {},
+        root: {
+          id: 'root',
+          type: 'root',
+          props: {},
+          style: { surface: { backgroundColor: '#f6ffed' } },
+          children: [],
+        },
+      },
+    })
+
+    const app = createApp(defineComponent({
+      setup() {
+        return () => h(RootRenderer, {
+          engine,
+          componentMap: {},
+        })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      expect(host.querySelector<HTMLElement>('.dc-container-shell')?.style.backgroundColor).toBe('#f6ffed')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
 })

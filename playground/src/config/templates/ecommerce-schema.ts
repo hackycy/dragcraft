@@ -17,6 +17,14 @@ export const ecommerceSchema: DesignerSchema = {
     id: 'root',
     type: 'root',
     props: {},
+    style: {
+      surface: {
+        backgroundColor: '#ffffff',
+        backgroundSize: 'cover',
+        padding: 0,
+        maxWidth: 375,
+      },
+    },
     children: [
       // ── Navbar ─────────────────────────────
       {
@@ -29,7 +37,7 @@ export const ecommerceSchema: DesignerSchema = {
           textColor: '#1a1a1a',
           transparent: false,
         },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
         layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed', reserve: { mode: 'measure', size: 44 }, avoidContent: true } },
       },
 
@@ -49,7 +57,7 @@ export const ecommerceSchema: DesignerSchema = {
           activeColor: '#07C160',
           inactiveColor: '#999999',
         },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
         layout: { placement: { kind: 'chrome', edge: 'block-end', position: 'fixed', reserve: { mode: 'measure', size: 50 }, avoidContent: true } },
       },
 
@@ -83,7 +91,7 @@ export const ecommerceSchema: DesignerSchema = {
           height: 180,
           borderRadius: 0,
         },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
       },
 
       // ── Shop Title ────────────────────────
@@ -97,9 +105,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: {
-          padding: '16px 16px 4px',
-        },
+        style: { container: { padding: '16px 16px 4px' } },
       },
 
       // ── Shop Description ──────────────────
@@ -113,9 +119,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: {
-          padding: '0 16px 12px',
-        },
+        style: { container: { padding: '0 16px 12px' } },
       },
 
       // ── Divider ───────────────────────────
@@ -127,9 +131,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#f0f0f0',
           thickness: 1,
         },
-        style: {
-          width: '100%',
-        },
+        style: { content: { width: '100%' } },
       },
 
       // ── Product Image ─────────────────────
@@ -141,11 +143,7 @@ export const ecommerceSchema: DesignerSchema = {
           alt: '热销商品',
           objectFit: 'cover',
         },
-        style: {
-          width: '100%',
-          height: '200px',
-          padding: '12px 16px 0',
-        },
+        style: { container: { padding: '12px 16px 0' }, content: { width: '100%', height: '200px' } },
       },
 
       // ── Product Name ──────────────────────
@@ -159,9 +157,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: {
-          padding: '12px 16px 4px',
-        },
+        style: { container: { padding: '12px 16px 4px' } },
       },
 
       // ── Product Price ─────────────────────
@@ -175,9 +171,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#e64340',
           textAlign: 'left',
         },
-        style: {
-          padding: '0 16px 12px',
-        },
+        style: { container: { padding: '0 16px 12px' } },
       },
 
       // ── Buy Button ────────────────────────
@@ -190,10 +184,7 @@ export const ecommerceSchema: DesignerSchema = {
           disabled: false,
           size: 'large',
         },
-        style: {
-          padding: '0 16px 16px',
-          width: '100%',
-        },
+        style: { container: { padding: '0 16px 16px' }, content: { width: '100%' } },
       },
 
       // ── Divider 2 ─────────────────────────
@@ -205,9 +196,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#f0f0f0',
           thickness: 8,
         },
-        style: {
-          width: '100%',
-        },
+        style: { content: { width: '100%' } },
       },
 
       // ── Member Section Title ──────────────
@@ -221,9 +210,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: {
-          padding: '16px 16px 4px',
-        },
+        style: { container: { padding: '16px 16px 4px' } },
       },
       {
         id: 'member-desc',
@@ -235,9 +222,7 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: {
-          padding: '0 16px 12px',
-        },
+        style: { container: { padding: '0 16px 12px' } },
       },
 
       // ── Form: Name ────────────────────────
@@ -251,10 +236,7 @@ export const ecommerceSchema: DesignerSchema = {
           required: true,
           disabled: false,
         },
-        style: {
-          width: '100%',
-          padding: '0 16px',
-        },
+        style: { container: { padding: '0 16px' }, content: { width: '100%' } },
       },
 
       // ── Form: Phone ───────────────────────
@@ -268,10 +250,7 @@ export const ecommerceSchema: DesignerSchema = {
           required: true,
           disabled: false,
         },
-        style: {
-          width: '100%',
-          padding: '0 16px',
-        },
+        style: { container: { padding: '0 16px' }, content: { width: '100%' } },
       },
 
       // ── Form: Gender ──────────────────────
@@ -287,10 +266,7 @@ export const ecommerceSchema: DesignerSchema = {
           ],
           disabled: false,
         },
-        style: {
-          width: '100%',
-          padding: '0 16px',
-        },
+        style: { container: { padding: '0 16px' }, content: { width: '100%' } },
       },
 
       // ── Form: Agreement ───────────────────
@@ -302,9 +278,7 @@ export const ecommerceSchema: DesignerSchema = {
           checked: false,
           disabled: false,
         },
-        style: {
-          padding: '4px 16px',
-        },
+        style: { container: { padding: '4px 16px' } },
       },
 
       // ── Submit Button ─────────────────────
@@ -317,10 +291,7 @@ export const ecommerceSchema: DesignerSchema = {
           disabled: false,
           size: 'large',
         },
-        style: {
-          padding: '8px 16px 24px',
-          width: '100%',
-        },
+        style: { container: { padding: '8px 16px 24px' }, content: { width: '100%' } },
       },
     ],
   },

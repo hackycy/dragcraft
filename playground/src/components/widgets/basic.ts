@@ -15,7 +15,7 @@ export const textWidgetMeta: WidgetMeta = {
     color: '#333333',
     textAlign: 'left',
   },
-  defaultStyle: { display: 'block' },
+  defaultStyle: { content: { display: 'block' } },
   formSchema: {
     sections: [
       {
@@ -69,6 +69,19 @@ export const textWidgetMeta: WidgetMeta = {
                 { label: '右对齐', value: 'right' },
               ],
             },
+          },
+        ],
+      },
+      {
+        title: '容器样式',
+        fields: [
+          {
+            key: 'marginTop',
+            label: '上外边距',
+            component: 'InputNumber',
+            defaultValue: 0,
+            bindTo: { scope: 'node', path: 'style.container.marginTop' },
+            componentProps: { min: -120, max: 120 },
           },
         ],
       },
@@ -174,8 +187,10 @@ export const imageWidgetMeta: WidgetMeta = {
     objectFit: 'contain',
   },
   defaultStyle: {
-    width: '200px',
-    height: '150px',
+    content: {
+      width: '200px',
+      height: '150px',
+    },
   },
   formSchema: {
     sections: [
@@ -290,7 +305,10 @@ export const dividerWidgetMeta: WidgetMeta = {
     color: '#e8e8e8',
     thickness: 1,
   },
-  defaultStyle: { width: '100%', margin: '8px 0' },
+  defaultStyle: {
+    container: { margin: '8px 0' },
+    content: { width: '100%' },
+  },
   formSchema: {
     sections: [
       {

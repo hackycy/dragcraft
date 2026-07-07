@@ -17,6 +17,14 @@ export const productDetailSchema: DesignerSchema = {
     id: 'root',
     type: 'root',
     props: {},
+    style: {
+      surface: {
+        backgroundColor: '#ffffff',
+        backgroundSize: 'cover',
+        padding: 0,
+        maxWidth: 375,
+      },
+    },
     children: [
       // Navbar
       {
@@ -29,7 +37,7 @@ export const productDetailSchema: DesignerSchema = {
           textColor: '#1a1a1a',
           transparent: false,
         },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
         layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed', reserve: { mode: 'measure', size: 44 }, avoidContent: true } },
       },
       // Product hero image
@@ -41,7 +49,7 @@ export const productDetailSchema: DesignerSchema = {
           alt: '商品主图',
           objectFit: 'cover',
         },
-        style: { width: '100%', height: '300px' },
+        style: { content: { width: '100%', height: '300px' } },
       },
       // Price row
       {
@@ -54,7 +62,7 @@ export const productDetailSchema: DesignerSchema = {
           color: '#e64340',
           textAlign: 'left',
         },
-        style: { padding: '16px 16px 0' },
+        style: { container: { padding: '16px 16px 0' } },
       },
       {
         id: 'price-original',
@@ -66,7 +74,7 @@ export const productDetailSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { padding: '4px 16px 8px', textDecoration: 'line-through' },
+        style: { container: { padding: '4px 16px 8px' }, content: { textDecoration: 'line-through' } },
       },
       // Product name
       {
@@ -79,7 +87,7 @@ export const productDetailSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: { padding: '8px 16px 4px' },
+        style: { container: { padding: '8px 16px 4px' } },
       },
       // Product description
       {
@@ -92,14 +100,14 @@ export const productDetailSchema: DesignerSchema = {
           color: '#666666',
           textAlign: 'left',
         },
-        style: { padding: '0 16px 12px' },
+        style: { container: { padding: '0 16px 12px' } },
       },
       // Divider
       {
         id: 'divider-1',
         type: 'divider',
         props: { direction: 'horizontal', color: '#f0f0f0', thickness: 8 },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
       },
       // Color spec
       {
@@ -117,7 +125,7 @@ export const productDetailSchema: DesignerSchema = {
           required: false,
           disabled: false,
         },
-        style: { width: '100%', padding: '12px 16px 0' },
+        style: { container: { padding: '12px 16px 0' }, content: { width: '100%' } },
       },
       // Size spec
       {
@@ -135,14 +143,14 @@ export const productDetailSchema: DesignerSchema = {
           required: false,
           disabled: false,
         },
-        style: { width: '100%', padding: '8px 16px 12px' },
+        style: { container: { padding: '8px 16px 12px' }, content: { width: '100%' } },
       },
       // Divider
       {
         id: 'divider-2',
         type: 'divider',
         props: { direction: 'horizontal', color: '#f0f0f0', thickness: 1 },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
       },
       // Quantity note
       {
@@ -155,27 +163,27 @@ export const productDetailSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { padding: '12px 16px' },
+        style: { container: { padding: '12px 16px' } },
       },
       // Divider
       {
         id: 'divider-3',
         type: 'divider',
         props: { direction: 'horizontal', color: '#f0f0f0', thickness: 8 },
-        style: { width: '100%' },
+        style: { content: { width: '100%' } },
       },
       // Action buttons
       {
         id: 'cart-btn',
         type: 'button',
         props: { text: '加入购物车', type: 'button', disabled: false, size: 'large' },
-        style: { padding: '16px 16px 8px', width: '100%' },
+        style: { container: { padding: '16px 16px 8px' }, content: { width: '100%' } },
       },
       {
         id: 'buy-btn',
         type: 'button',
         props: { text: '立即购买', type: 'button', disabled: false, size: 'large' },
-        style: { padding: '8px 16px 24px', width: '100%' },
+        style: { container: { padding: '8px 16px 24px' }, content: { width: '100%' } },
       },
     ],
   },

@@ -40,6 +40,7 @@ interface FieldSchema {
   key: string
   label: string
   component: string
+  bindTo?: string | { scope?: 'node' | 'schema' | 'globalConfig', path: string }
   componentProps?: Record<string, unknown> | ((ctx: FormContext) => Record<string, unknown>)
   defaultValue?: unknown
   visible?: (ctx: FormContext) => boolean
@@ -60,6 +61,53 @@ interface FormSchema {
 ```
 
 字段组件名通过 `fieldComponentMap` 解析，schema 本身只声明使用哪个 adapter 和传给 UI 组件的 `componentProps`。
+
+### 字段绑定到 Schema DSL
+
+`FormGenerator` 本身不理解 `bindTo`，它只维护字段值并 emit `{ key, value }`。`@dragcraft/designer` 在右侧属性面板中解释 `bindTo`，把字段变更翻译成 core command。
+
+默认绑定：
+
+- Widget 表单字段默认写入当前节点 `props.{field.key}`。
+- Global 表单字段默认写入 `globalConfig.{field.key}`。
+
+显式绑定：
+
+```ts
+const widgetForm: FormSchema = {
+  sections: [{
+    title: '容器',
+    fields: [{
+      key: 'marginTop',
+      label: '上外边距',
+      component: 'Number',
+      bindTo: { scope: 'node', path: 'style.container.marginTop' },
+    }],
+  }],
+}
+
+const globalForm: FormSchema = {
+  sections: [{
+    title: '页面',
+    fields: [{
+      key: 'pageBg',
+      label: '页面背景色',
+      component: 'Color',
+      bindTo: { scope: 'schema', path: 'root.style.surface.backgroundColor' },
+    }],
+  }],
+}
+```
+
+`scope` 说明：
+
+| Scope | Path 基准 | 写入命令 |
+| --- | --- | --- |
+| `node` | 当前选中节点 | `UPDATE_PROPS` |
+| `schema` | 整个 `DesignerSchema` | 根据路径翻译为语义命令，例如 `root.style.*` 进入 `UPDATE_PROPS(root)` |
+| `globalConfig` | `schema.globalConfig` | `SET_GLOBAL_CONFIG` |
+
+这使配置面板可以编辑开放 DSL，例如页面 surface 样式或物料容器样式，而不需要把背景、间距等业务场景硬编码成固定全局字段。
 
 带类型提示的业务 schema 可以使用 `TypedFormSchema<PropsMap>`：
 
@@ -222,7 +270,7 @@ h(FormGenerator, {
   -> FormGenerator 更新本地 values 并触发验证
   -> FormGenerator emit change
   -> designer 接收 change
-  -> designer dispatch UPDATE_PROPS 或 SET_GLOBAL_CONFIG
+  -> designer 根据 bindTo/default binding dispatch UPDATE_PROPS 或 SET_GLOBAL_CONFIG
 ```
 
 ## 字段包关系

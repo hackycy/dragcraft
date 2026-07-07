@@ -1,4 +1,4 @@
-import type { LayoutPlan } from '@dragcraft/core'
+import type { LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import { defineComponent, h } from 'vue'
 import { useFrameViewport } from '../frame-viewport'
@@ -29,6 +29,10 @@ export default defineComponent({
       type: Object as PropType<VNode | null>,
       default: null,
     },
+    surfaceStyle: {
+      type: Object as PropType<StyleValueMap>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -37,6 +41,7 @@ export default defineComponent({
       chromeVNodes: props.chromeVNodes,
       layerVNodes: props.layerVNodes,
       plan: props.layoutPlan,
+      surfaceStyle: props.surfaceStyle,
     }))
 
     return () =>

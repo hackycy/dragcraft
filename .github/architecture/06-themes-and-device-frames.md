@@ -167,6 +167,8 @@ src/
 设计边界：
 
 - 不含业务逻辑，只负责设备容器视觉外壳。
+- 不读取业务 `globalConfig` 字段，不定义页面背景等业务配置协议。
+- 只消费 renderer 传入的 schema DSL 预览信息，例如 `root.style.surface`。
 - 通过 Vue provide/inject 管理设备状态。
 - 自包含 CSS 样式。设备外观是固有样式，不依赖主题皮肤。
 
@@ -269,6 +271,39 @@ DeviceFrameShell -> inject(ctx) -> currentDevice -> frameComponent
 
 toolbar click -> ctx.setDevice('android') -> activeFrame recompute
 ```
+
+## 页面 Surface 预览
+
+Device frame 的内容区由 `useFrameViewport()` 渲染：
+
+```plaintext
+.dc-device-frame__viewport
+  .dc-device-frame__content
+    .dc-device-frame__content-scroller
+      .dc-device-frame__content-surface.dc-container-shell
+```
+
+`DeviceFrameShell` 接收 renderer 传入的 `schema`，把 `schema.root.style.surface` 作为开放样式对象传给具体 frame。最终样式应用到 `.dc-device-frame__content-surface`，用于预览页面承载面效果。
+
+示例：
+
+```ts
+root: {
+  id: 'root',
+  type: 'root',
+  props: {},
+  style: {
+    surface: {
+      backgroundColor: '#f7f7f7',
+      backgroundImage: 'url(https://example.com/page-bg.png)',
+      backgroundSize: 'cover',
+    },
+  },
+  children: [],
+}
+```
+
+Device frame 不枚举这些字段，也不保证非 Web 运行时的最终渲染语义；跨端消费方应按自身平台解释同一份 DSL。
 
 ## Device Frame CSS
 
