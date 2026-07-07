@@ -34,7 +34,7 @@ describe('useFieldDependencies', () => {
       dependencies: {
         fields: ['sourceType'],
         handler: form => ({
-          props: { placeholder: form.sourceType === 'api' ? 'Enter URL' : '' },
+          componentProps: { placeholder: form.sourceType === 'api' ? 'Enter URL' : '' },
           ifShow: form.sourceType === 'api',
         }),
       },
@@ -42,7 +42,7 @@ describe('useFieldDependencies', () => {
     const ctx = makeCtx({ sourceType: 'api' })
     const { resolvedField } = useFieldDependencies(field, ctx)
 
-    expect(resolvedField.value.props).toEqual({ placeholder: 'Enter URL' })
+    expect(resolvedField.value.componentProps).toEqual({ placeholder: 'Enter URL' })
     expect(resolvedField.value.ifShow).toBe(true)
     expect(resolvedField.value.key).toBe('endpoint')
     expect(resolvedField.value.component).toBe('input')

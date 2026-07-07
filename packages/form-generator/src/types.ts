@@ -56,14 +56,21 @@ export interface ValidationError {
 /**
  * Describes a single form field.
  */
-export interface FieldSchema {
+export type FieldComponentProps<Props extends object = Record<string, unknown>>
+  = | Props
+    | ((ctx: FormContext) => Props)
+
+export interface FieldSchema<
+  ComponentType extends string = string,
+  ComponentProps extends object = Record<string, unknown>,
+> {
   /** Property key in the values object (e.g., 'text', 'fontSize') */
   key: string
   /** Human-readable label */
   label: string
   /** i18n message key for label; overrides `label` when i18n is active */
   labelKey?: string
-  /** i18n message key for placeholder; overrides field.props.placeholder when i18n is active */
+  /** i18n message key for placeholder; overrides field.componentProps.placeholder when i18n is active */
   placeholderKey?: string
   /**
    * i18n key prefix for select/radio option labels.
@@ -71,12 +78,12 @@ export interface FieldSchema {
    * Falls back to the static `option.label` when the key is missing.
    */
   optionKeyPrefix?: string
-  /** Registered field component name (e.g., 'input', 'select', 'color') */
-  component: string
-  /** Extra props forwarded to the field component. Static or dynamic. */
-  props?: Record<string, unknown> | ((ctx: FormContext) => Record<string, unknown>)
+  /** Registered field component name (e.g., 'Input', 'Select', 'Color') */
+  component: ComponentType
+  /** Props forwarded to the registered UI component. Static or dynamic. */
+  componentProps?: FieldComponentProps<ComponentProps>
   /** Declares which other fields this field depends on, and how to react. */
-  dependencies?: FieldDependencies
+  dependencies?: FieldDependencies<FieldSchema<ComponentType, ComponentProps>>
   /** If false (or predicate returns false), field is hidden via CSS (preserves DOM state). */
   show?: boolean | ((ctx: FormContext) => boolean)
   /** If false (or predicate returns false), field is removed from DOM entirely. */
@@ -102,7 +109,7 @@ export interface FieldSchema {
 /**
  * Declares dependencies on other fields and how to react when they change.
  */
-export interface FieldDependencies {
+export interface FieldDependencies<Field extends FieldSchema<string, object> = FieldSchema> {
   /** Field keys this field depends on. */
   fields: string[]
 
@@ -114,19 +121,19 @@ export interface FieldDependencies {
   handler: (
     form: Record<string, unknown>,
     fieldValue: unknown,
-  ) => Partial<Omit<FieldSchema, 'key' | 'component' | 'dependencies'>>
+  ) => Partial<Omit<Field, 'key' | 'component' | 'dependencies'>>
 }
 
 /**
  * A titled group of fields.
  */
-export interface SectionSchema {
+export interface SectionSchema<Field extends FieldSchema<string, object> = FieldSchema> {
   title: string
   /** i18n message key for title; overrides `title` when i18n is active */
   titleKey?: string
   /** Whether the section starts collapsed. Defaults to false. */
   collapsed?: boolean
-  fields: FieldSchema[]
+  fields: Field[]
   /** Number of grid columns. Defaults to 1 (vertical stack). */
   columns?: number
 }
@@ -134,31 +141,52 @@ export interface SectionSchema {
 /**
  * Top-level schema that FormGenerator accepts.
  */
-export interface FormSchema {
-  sections: SectionSchema[]
+export interface FormSchema<Field extends FieldSchema<string, object> = FieldSchema> {
+  sections: Array<SectionSchema<Field>>
 }
+
+export type TypedFieldSchema<PropsMap extends object> = {
+  [ComponentType in Extract<keyof PropsMap, string>]:
+  PropsMap[ComponentType] extends object
+    ? FieldSchema<ComponentType, PropsMap[ComponentType]>
+    : never
+}[Extract<keyof PropsMap, string>]
+
+export type TypedSectionSchema<PropsMap extends object> = SectionSchema<TypedFieldSchema<PropsMap>>
+
+export type TypedFormSchema<PropsMap extends object> = FormSchema<TypedFieldSchema<PropsMap>>
 
 // ──────────────────────────────────────────
 // Component resolution
 // ──────────────────────────────────────────
 
-/**
- * Maps field component names (e.g., 'input', 'select') to Vue components.
- */
-export type FieldComponentMap = Record<string, Component>
+export interface FieldComponentTransformContext {
+  field: FieldSchema
+  values: Record<string, unknown>
+}
 
 /**
- * Standard props that every field component receives.
- * Field components must implement v-model via modelValue + onUpdate:modelValue.
+ * Describes how a schema field binds to a concrete Vue UI component.
  */
-export interface FieldComponentProps {
-  /** Current field value */
-  modelValue: unknown
-  /** Whether the field is disabled */
-  disabled: boolean
-  /** The full field schema, so the component can read field.props for extra configuration */
-  field: FieldSchema
+export interface FieldComponentDefinition {
+  /** Vue component rendered for this field type. */
+  component: Component
+  /** Prop name used by the UI component as its model value. Defaults to `modelValue`. */
+  modelPropName?: string
+  /** Event prop used to receive model updates. Defaults to `onUpdate:modelValue`. */
+  updateEventName?: string
+  /** Default UI component props merged before field.componentProps. */
+  defaultProps?: Record<string, unknown>
+  /** Transform model value before passing it to the UI component. */
+  formatValue?: (value: unknown, ctx: FieldComponentTransformContext) => unknown
+  /** Transform UI component value before writing it to the form model. */
+  normalizeValue?: (value: unknown, ctx: FieldComponentTransformContext) => unknown
 }
+
+/**
+ * Maps field component names (e.g., 'Input', 'Select') to component adapters.
+ */
+export type FieldComponentMap = Record<string, FieldComponentDefinition>
 
 // ──────────────────────────────────────────
 // FormGenerator props and events

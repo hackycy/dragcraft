@@ -218,6 +218,22 @@ importers:
         specifier: catalog:shared
         version: 3.5.38(typescript@5.9.3)
 
+  packages/fields/ant-design-vue:
+    dependencies:
+      '@dragcraft/form-generator':
+        specifier: workspace:*
+        version: link:../../form-generator
+    devDependencies:
+      ant-design-vue:
+        specifier: 'catalog:'
+        version: 4.2.6(vue@3.5.38(typescript@5.9.3))
+      vitest:
+        specifier: catalog:testing
+        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+      vue:
+        specifier: catalog:shared
+        version: 3.5.38(typescript@5.9.3)
+
   packages/form-generator:
     dependencies:
       '@dragcraft/utils':
@@ -299,6 +315,9 @@ importers:
       '@dragcraft/device-frames':
         specifier: workspace:*
         version: link:../packages/device-frames
+      '@dragcraft/fields-ant-design-vue':
+        specifier: workspace:*
+        version: link:../packages/fields/ant-design-vue
       '@dragcraft/form-generator':
         specifier: workspace:*
         version: link:../packages/form-generator

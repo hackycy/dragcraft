@@ -1,18 +1,15 @@
-import type { FieldComponentMap, FieldSchema } from '@dragcraft/form-generator'
+import type { FieldComponentMap, FieldSchema, FormContext } from '@dragcraft/form-generator'
 import type { Component, PropType } from 'vue'
-import { FORM_GENERATOR_CONTEXT_KEY } from '@dragcraft/form-generator'
+import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
+import { FORM_GENERATOR_CONTEXT_KEY, resolveFieldComponentProps } from '@dragcraft/form-generator'
 import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
-import { Button, Input, InputNumber, Select, Slider, Switch } from 'ant-design-vue'
+import { Button, Input, Select, Slider } from 'ant-design-vue'
 import { computed, defineComponent, h, inject, ref } from 'vue'
-
-interface SelectOption {
-  label: string
-  value: string | number | boolean
-}
 
 interface ArrayFieldConfig {
   itemFields?: FieldSchema[]
+  title?: string
   minItems?: number
   maxItems?: number
   defaultItem?: Record<string, unknown>
@@ -28,157 +25,14 @@ interface NavbarTitleConfig {
 
 const AButton = Button as unknown as Component
 const AInput = Input as unknown as Component
-const AInputNumber = InputNumber as unknown as Component
 const ASelect = Select as unknown as Component
 const ASlider = Slider as unknown as Component
-const ASwitch = Switch as unknown as Component
-const ATextarea = Input.TextArea as unknown as Component
-
-function getFieldProps(field: FieldSchema): Record<string, unknown> {
-  return (field.props ?? {}) as Record<string, unknown>
-}
-
-function resolvePlaceholder(field: FieldSchema, t: ReturnType<typeof useI18n>['t']): string {
-  const raw = (getFieldProps(field).placeholder as string) ?? ''
-  return field.placeholderKey ? t(field.placeholderKey, raw) : raw
-}
-
-export const InputField = defineComponent({
-  name: 'PlaygroundInputField',
-  props: {
-    modelValue: { type: [String, Number] as PropType<string | number>, default: '' },
-    disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    const { t } = useI18n()
-
-    return () =>
-      h(AInput, {
-        'value': props.modelValue ?? '',
-        'disabled': props.disabled,
-        'placeholder': resolvePlaceholder(props.field, t),
-        'size': 'small',
-        'allowClear': true,
-        'onChange': (event: Event) => emit('update:modelValue', (event.target as HTMLInputElement).value),
-        'onUpdate:value': (value: string) => emit('update:modelValue', value),
-      })
-  },
-})
-
-export const NumberField = defineComponent({
-  name: 'PlaygroundNumberField',
-  props: {
-    modelValue: { type: Number as PropType<number>, default: 0 },
-    disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    const { t } = useI18n()
-
-    return () => {
-      const extra = getFieldProps(props.field)
-      return h(AInputNumber, {
-        'value': props.modelValue ?? 0,
-        'disabled': props.disabled,
-        'min': extra.min as number | undefined,
-        'max': extra.max as number | undefined,
-        'step': extra.step as number | undefined,
-        'placeholder': resolvePlaceholder(props.field, t),
-        'size': 'small',
-        'style': { width: '100%' },
-        'onUpdate:value': (value: number | null) => emit('update:modelValue', value ?? 0),
-      })
-    }
-  },
-})
-
-export const TextareaField = defineComponent({
-  name: 'PlaygroundTextareaField',
-  props: {
-    modelValue: { type: String as PropType<string>, default: '' },
-    disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    const { t } = useI18n()
-
-    return () => {
-      const extra = getFieldProps(props.field)
-      return h(ATextarea, {
-        'value': props.modelValue ?? '',
-        'disabled': props.disabled,
-        'placeholder': resolvePlaceholder(props.field, t),
-        'rows': (extra.rows as number) ?? 3,
-        'size': 'small',
-        'allowClear': true,
-        'onChange': (event: Event) => emit('update:modelValue', (event.target as HTMLTextAreaElement).value),
-        'onUpdate:value': (value: string) => emit('update:modelValue', value),
-      })
-    }
-  },
-})
-
-export const SelectField = defineComponent({
-  name: 'PlaygroundSelectField',
-  props: {
-    modelValue: { type: [String, Number, Boolean] as PropType<string | number | boolean>, default: '' },
-    disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    const { t } = useI18n()
-
-    return () => {
-      const extra = getFieldProps(props.field)
-      const optionPrefix = props.field.optionKeyPrefix
-      const options = ((extra.options as SelectOption[] | undefined) ?? []).map(option => ({
-        value: option.value,
-        label: optionPrefix ? t(`${optionPrefix}.${option.value}`, option.label) : option.label,
-      }))
-
-      return h(ASelect, {
-        'value': props.modelValue ?? '',
-        'disabled': props.disabled,
-        'placeholder': resolvePlaceholder(props.field, t),
-        options,
-        'size': 'small',
-        'style': { width: '100%' },
-        'onUpdate:value': (value: string | number | boolean) => emit('update:modelValue', value),
-      })
-    }
-  },
-})
-
-export const SwitchField = defineComponent({
-  name: 'PlaygroundSwitchField',
-  props: {
-    modelValue: { type: Boolean as PropType<boolean>, default: false },
-    disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    return () =>
-      h(ASwitch, {
-        'checked': props.modelValue ?? false,
-        'disabled': props.disabled,
-        'size': 'small',
-        'onUpdate:checked': (checked: unknown) => emit('update:modelValue', checked === true),
-      })
-  },
-})
 
 export const ColorField = defineComponent({
   name: 'PlaygroundColorField',
   props: {
     modelValue: { type: String as PropType<string>, default: '#000000' },
     disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
@@ -201,38 +55,17 @@ export const ColorField = defineComponent({
   },
 })
 
-export const SliderField = defineComponent({
-  name: 'PlaygroundSliderField',
-  props: {
-    modelValue: { type: Number as PropType<number>, default: 0 },
-    disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    return () => {
-      const extra = getFieldProps(props.field)
-      return h('div', { class: 'playground-field-slider' }, [
-        h(ASlider, {
-          'value': props.modelValue ?? 0,
-          'disabled': props.disabled,
-          'min': (extra.min as number) ?? 0,
-          'max': (extra.max as number) ?? 100,
-          'step': (extra.step as number) ?? 1,
-          'onUpdate:value': (value: unknown) => emit('update:modelValue', typeof value === 'number' ? value : props.modelValue),
-        }),
-        h('span', { class: 'playground-field-slider__value' }, String(props.modelValue ?? 0)),
-      ])
-    }
-  },
-})
-
 export const ArrayField = defineComponent({
   name: 'PlaygroundArrayField',
   props: {
     modelValue: { type: Array as PropType<Array<Record<string, unknown>>>, default: () => [] },
     disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
+    itemFields: { type: Array as PropType<FieldSchema[]>, default: () => [] },
+    title: { type: String, default: '列表项目' },
+    minItems: { type: Number, default: undefined },
+    maxItems: { type: Number, default: undefined },
+    defaultItem: { type: Object as PropType<Record<string, unknown>>, default: () => ({}) },
+    sortable: { type: Boolean, default: false },
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
@@ -240,7 +73,14 @@ export const ArrayField = defineComponent({
     const ctx = inject(FORM_GENERATOR_CONTEXT_KEY, null)
     const expandedKeys = ref<string[]>(['0'])
     const fieldComponentMap = computed<FieldComponentMap>(() => ctx?.fieldComponentMap ?? {})
-    const config = computed(() => getFieldProps(props.field) as unknown as ArrayFieldConfig)
+    const config = computed<ArrayFieldConfig>(() => ({
+      itemFields: props.itemFields,
+      title: props.title,
+      minItems: props.minItems,
+      maxItems: props.maxItems,
+      defaultItem: props.defaultItem,
+      sortable: props.sortable,
+    }))
     const items = computed(() => props.modelValue ?? [])
     const canAdd = computed(() => config.value.maxItems === undefined || items.value.length < config.value.maxItems)
     const canRemove = computed(() => items.value.length > (config.value.minItems ?? 0))
@@ -297,13 +137,24 @@ export const ArrayField = defineComponent({
     }
 
     const renderItemField = (item: Record<string, unknown>, index: number, field: FieldSchema) => {
-      const FieldComponent = fieldComponentMap.value[field.component]
-      const control = FieldComponent
-        ? h(FieldComponent, {
-            'modelValue': item[field.key] ?? '',
-            'disabled': props.disabled,
-            'field': { ...field, props: getFieldProps(field) },
-            'onUpdate:modelValue': (value: unknown) => updateItem(index, field.key, value),
+      const definition = fieldComponentMap.value[field.component]
+      const rawValue = item[field.key] ?? field.defaultValue
+      const formCtx: FormContext = { values: item }
+      const schemaValue = field.valueFormat?.(rawValue, formCtx) ?? rawValue
+      const transformCtx = { field, values: item }
+      const currentValue = definition?.formatValue?.(schemaValue, transformCtx) ?? schemaValue
+
+      const control = definition
+        ? h(definition.component, {
+            ...definition.defaultProps,
+            ...resolveFieldComponentProps(field, formCtx, t),
+            disabled: props.disabled,
+            [definition.modelPropName ?? 'modelValue']: currentValue,
+            [definition.updateEventName ?? 'onUpdate:modelValue']: (value: unknown) => {
+              const normalized = definition.normalizeValue?.(value, transformCtx) ?? value
+              const transformed = field.parseValue?.(normalized, formCtx) ?? normalized
+              updateItem(index, field.key, transformed)
+            },
           })
         : h(AInput, {
             'value': item[field.key] ?? '',
@@ -396,7 +247,7 @@ export const ArrayField = defineComponent({
       return h('div', { class: 'playground-array-field' }, [
         h('div', { class: 'playground-array-field__toolbar' }, [
           h('div', { class: 'playground-array-field__summary' }, [
-            h('span', { class: 'playground-array-field__summary-title' }, props.field.label),
+            h('span', { class: 'playground-array-field__summary-title' }, config.value.title),
             h('span', { class: 'playground-array-field__summary-count' }, itemCountText.value),
           ]),
           h(AButton, {
@@ -429,7 +280,6 @@ export const NavbarTitleField = defineComponent({
       default: () => ({ title: '页面标题', subtitle: '', titleFontSize: 16, titleFontWeight: '600' }),
     },
     disabled: { type: Boolean, default: false },
-    field: { type: Object as PropType<FieldSchema>, required: true },
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
@@ -501,14 +351,9 @@ export const NavbarTitleField = defineComponent({
 
 export function buildPlaygroundFieldComponentMap(): FieldComponentMap {
   return {
-    'input': InputField,
-    'number': NumberField,
-    'textarea': TextareaField,
-    'select': SelectField,
-    'switch': SwitchField,
-    'color': ColorField,
-    'slider': SliderField,
-    'array': ArrayField,
-    'navbar-title': NavbarTitleField,
+    ...createAntDesignVueFields(),
+    Color: { component: ColorField },
+    Array: { component: ArrayField },
+    NavbarTitle: { component: NavbarTitleField },
   }
 }

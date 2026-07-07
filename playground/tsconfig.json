@@ -4,6 +4,7 @@
     "jsx": "preserve",
     "jsxImportSource": "vue",
     "paths": {
+      "@dragcraft/fields-ant-design-vue": ["../packages/fields/ant-design-vue/src"],
       "@dragcraft/*": ["../packages/*/src"]
     }
   },

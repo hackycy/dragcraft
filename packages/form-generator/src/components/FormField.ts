@@ -5,7 +5,7 @@ import { defineComponent, h } from 'vue'
 import { useFieldDependencies } from '../composables/useFieldDependencies'
 import { useFieldState } from '../composables/useFieldState'
 import { useFormGeneratorContext } from '../context'
-import { createFormContext } from '../utils'
+import { createFormContext, resolveFieldComponentProps } from '../utils'
 
 export default defineComponent({
   name: 'DcFormField',
@@ -31,27 +31,26 @@ export default defineComponent({
       const field = resolvedField.value
       const formCtx: FormContext = createFormContext(ctx.values)
 
-      // Resolve dynamic props
-      const extraProps = typeof field.props === 'function'
-        ? field.props(formCtx)
-        : field.props ?? {}
-
       // Value transform: model -> component
       const rawValue = ctx.getFieldValue(field.key) ?? field.defaultValue
-      const currentValue = field.valueFormat?.(rawValue, formCtx) ?? rawValue
+      const schemaValue = field.valueFormat?.(rawValue, formCtx) ?? rawValue
+      const definition = ctx.fieldComponentMap[field.component]
+      const transformCtx = { field, values: ctx.values }
+      const currentValue = definition?.formatValue?.(schemaValue, transformCtx) ?? schemaValue
 
-      const FieldComponent = ctx.fieldComponentMap[field.component]
+      const FieldComponent = definition?.component
       const errorMsg = ctx.fieldErrors.value[field.key]
       const disabled = isDisabled.value
 
-      const fieldContent = FieldComponent
+      const fieldContent = definition && FieldComponent
         ? h(FieldComponent, {
-            'modelValue': currentValue,
-            'disabled': disabled,
-            'field': { ...field, props: extraProps },
-            'onUpdate:modelValue': (value: unknown) => {
-              // Value transform: input -> model
-              const transformed = field.parseValue?.(value, formCtx) ?? value
+            ...definition.defaultProps,
+            ...resolveFieldComponentProps(field, formCtx, t),
+            disabled,
+            [definition.modelPropName ?? 'modelValue']: currentValue,
+            [definition.updateEventName ?? 'onUpdate:modelValue']: (value: unknown) => {
+              const normalized = definition.normalizeValue?.(value, transformCtx) ?? value
+              const transformed = field.parseValue?.(normalized, formCtx) ?? normalized
               ctx.onFieldChange(field.key, transformed)
               ctx.validateField(field.key, field)
             },

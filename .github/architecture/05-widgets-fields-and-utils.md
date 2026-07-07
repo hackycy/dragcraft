@@ -1,6 +1,6 @@
 # 物料、字段与工具包
 
-本章覆盖 `@dragcraft/widgets`、字段组件契约、`@dragcraft/icons` 和 `@dragcraft/utils`。
+本章覆盖 `@dragcraft/widgets`、字段 adapter、内置字段包、`@dragcraft/icons` 和 `@dragcraft/utils`。
 
 ## 物料协议包
 
@@ -62,24 +62,47 @@ playground 作为本仓库的产品级示例，在 `playground/src/components/wi
 - 物料 `formSchema` 遵循 form-generator 的运行时结构。
 - 业务应用负责维护物料组件、样式和多语言文案。
 
-## 字段组件契约
+## 字段 Adapter 与内置字段包
 
-`@dragcraft/form-generator` 不内置字段组件。业务应用传入 `FieldComponentMap`，每个字段组件实现统一契约：
+`@dragcraft/form-generator` 不直接依赖具体 UI 库。业务应用传入 `FieldComponentMap`，其中每一项是一个 `FieldComponentDefinition`，用于声明真实 UI 组件和值绑定方式：
 
-| Prop / Event | 说明 |
+| 字段 | 说明 |
 | --- | --- |
-| `modelValue` | 当前字段值 |
-| `disabled` | 字段禁用态 |
-| `field` | 完整 FieldSchema，包含解析后的 `field.props` |
-| `update:modelValue` | 字段值变更事件 |
+| `component` | 真实 Vue UI 组件 |
+| `modelPropName` | UI 组件接收当前值的 prop，默认 `modelValue` |
+| `updateEventName` | UI 组件更新值的事件 prop，默认 `onUpdate:modelValue` |
+| `defaultProps` | adapter 默认 props |
+| `formatValue` | model 到 UI 组件值的转换 |
+| `normalizeValue` | UI 组件值到 model 的转换 |
 
-playground 在 `playground/src/components/fields` 中用 Ant Design Vue 维护本地字段适配器，覆盖 `input`、`number`、`textarea`、`select`、`switch`、`color`、`slider`、`array` 和业务字段。
+字段 schema 使用 `componentProps` 传递 UI 库原始 props：
 
-字段组件可以读取：
+```ts
+{
+  key: 'title',
+  label: '标题',
+  component: 'Input',
+  componentProps: {
+    placeholder: '请输入标题',
+    allowClear: true,
+  },
+}
+```
 
-- `field.props`：控件配置，例如 placeholder、options、min、max、rows。
-- `field.placeholderKey`：placeholder 多语言 key。
-- `field.optionKeyPrefix`：选项多语言 key 前缀。
+### @dragcraft/fields-ant-design-vue
+
+`@dragcraft/fields-ant-design-vue` 提供 Ant Design Vue 字段 adapter：
+
+- 导出 `createAntDesignVueFields()` 与 `antDesignVueFieldComponents`。
+- 内置 `Input`、`InputNumber`、`Textarea`、`Select`、`Switch`、`Slider`、`Radio`、`RadioGroup`、`Checkbox`、`CheckboxGroup`、`Cascader`、`DatePicker`、`RangePicker`、`TimePicker`、`TreeSelect`、`Rate`、`AutoComplete`、`Mentions`。
+- 导出 `AntDesignVueFieldComponentPropsMap`，可与 `TypedFormSchema<PropsMap>` 联动获得 `componentProps` 类型提示。
+
+playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueFields()` 与本地业务字段，业务字段包括 `Color`、`Array`、`NavbarTitle`。
+
+字段多语言辅助仍由 form-generator 处理：
+
+- `field.placeholderKey`：覆盖 `componentProps.placeholder` 的多语言 key。
+- `field.optionKeyPrefix`：覆盖 `componentProps.options[].label` 的多语言 key 前缀。
 
 ## Icons 包
 

@@ -95,7 +95,7 @@ export const navbarWidgetMeta: WidgetMeta = {
           {
             key: 'titleConfig',
             label: '标题配置',
-            component: 'navbar-title',
+            component: 'NavbarTitle',
             parseValue: (config: Record<string, unknown>) => ({
               title: config.title,
               subtitle: config.subtitle,
@@ -115,15 +115,15 @@ export const navbarWidgetMeta: WidgetMeta = {
       {
         title: '基础设置',
         fields: [
-          { key: 'showBack', label: '显示返回按钮', component: 'switch', defaultValue: false },
+          { key: 'showBack', label: '显示返回按钮', component: 'Switch', defaultValue: false },
         ],
       },
       {
         title: '样式设置',
         fields: [
-          { key: 'backgroundColor', label: '背景颜色', component: 'color', defaultValue: '#ffffff' },
-          { key: 'textColor', label: '文字颜色', component: 'color', defaultValue: '#1a1a1a' },
-          { key: 'transparent', label: '透明背景', component: 'switch', defaultValue: false },
+          { key: 'backgroundColor', label: '背景颜色', component: 'Color', defaultValue: '#ffffff' },
+          { key: 'textColor', label: '文字颜色', component: 'Color', defaultValue: '#1a1a1a' },
+          { key: 'transparent', label: '透明背景', component: 'Switch', defaultValue: false },
         ],
       },
     ],
@@ -216,11 +216,12 @@ export const tabBarWidgetMeta: WidgetMeta = {
           {
             key: 'tabs',
             label: 'Tab 列表',
-            component: 'array',
-            props: {
+            component: 'Array',
+            componentProps: {
+              title: 'Tab 列表',
               itemFields: [
-                { key: 'label', label: '标签文字', component: 'input', props: { placeholder: '请输入标签文字' } },
-                { key: 'icon', label: '图标', component: 'input', props: { placeholder: 'home/category/cart/user' } },
+                { key: 'label', label: '标签文字', component: 'Input', componentProps: { placeholder: '请输入标签文字' } },
+                { key: 'icon', label: '图标', component: 'Input', componentProps: { placeholder: 'home/category/cart/user' } },
               ],
               defaultItem: { label: '新标签', icon: 'home' },
               sortable: true,
@@ -228,15 +229,15 @@ export const tabBarWidgetMeta: WidgetMeta = {
               maxItems: 5,
             },
           },
-          { key: 'activeIndex', label: '当前选中', component: 'number', defaultValue: 0, props: { min: 0, max: 10 } },
+          { key: 'activeIndex', label: '当前选中', component: 'InputNumber', defaultValue: 0, componentProps: { min: 0, max: 10 } },
         ],
       },
       {
         title: '样式设置',
         fields: [
-          { key: 'backgroundColor', label: '背景颜色', component: 'color', defaultValue: '#ffffff' },
-          { key: 'activeColor', label: '选中颜色', component: 'color', defaultValue: '#07C160' },
-          { key: 'inactiveColor', label: '未选中颜色', component: 'color', defaultValue: '#8a8f98' },
+          { key: 'backgroundColor', label: '背景颜色', component: 'Color', defaultValue: '#ffffff' },
+          { key: 'activeColor', label: '选中颜色', component: 'Color', defaultValue: '#07C160' },
+          { key: 'inactiveColor', label: '未选中颜色', component: 'Color', defaultValue: '#8a8f98' },
         ],
       },
     ],
@@ -298,7 +299,7 @@ export const floatingButtonWidgetMeta: WidgetMeta = {
     sections: [
       {
         title: '内容',
-        fields: [{ key: 'label', label: '按钮文字', component: 'input', defaultValue: '+' }],
+        fields: [{ key: 'label', label: '按钮文字', component: 'Input', defaultValue: '+' }],
       },
       {
         title: '位置',
@@ -306,20 +307,20 @@ export const floatingButtonWidgetMeta: WidgetMeta = {
           {
             key: 'side',
             label: '水平位置',
-            component: 'select',
+            component: 'Select',
             defaultValue: 'right',
-            props: { options: [{ label: '右侧', value: 'right' }, { label: '左侧', value: 'left' }] },
+            componentProps: { options: [{ label: '右侧', value: 'right' }, { label: '左侧', value: 'left' }] },
           },
-          { key: 'bottom', label: '底部距离', component: 'number', defaultValue: 16, props: { min: 0, max: 120 } },
-          { key: 'sideOffset', label: '侧边距离', component: 'number', defaultValue: 16, props: { min: 0, max: 120 } },
+          { key: 'bottom', label: '底部距离', component: 'InputNumber', defaultValue: 16, componentProps: { min: 0, max: 120 } },
+          { key: 'sideOffset', label: '侧边距离', component: 'InputNumber', defaultValue: 16, componentProps: { min: 0, max: 120 } },
         ],
       },
       {
         title: '样式',
         fields: [
-          { key: 'size', label: '尺寸', component: 'number', defaultValue: 52, props: { min: 36, max: 88 } },
-          { key: 'backgroundColor', label: '背景颜色', component: 'color', defaultValue: '#07C160' },
-          { key: 'textColor', label: '文字颜色', component: 'color', defaultValue: '#ffffff' },
+          { key: 'size', label: '尺寸', component: 'InputNumber', defaultValue: 52, componentProps: { min: 36, max: 88 } },
+          { key: 'backgroundColor', label: '背景颜色', component: 'Color', defaultValue: '#07C160' },
+          { key: 'textColor', label: '文字颜色', component: 'Color', defaultValue: '#ffffff' },
         ],
       },
     ],
@@ -382,20 +383,20 @@ export const swiperWidgetMeta: WidgetMeta = {
           {
             key: 'images',
             label: '图片列表',
-            component: 'textarea',
+            component: 'Textarea',
             defaultValue: DEFAULT_IMAGES,
             valueFormat: (value: unknown) => Array.isArray(value) ? value.join('\n') : value,
             parseValue: (value: unknown) => String(value ?? '').split('\n').map(item => item.trim()).filter(Boolean),
-            props: { rows: 4, placeholder: '每行一个图片 URL' },
+            componentProps: { rows: 4, placeholder: '每行一个图片 URL' },
           },
         ],
       },
       {
         title: '样式设置',
         fields: [
-          { key: 'showIndicator', label: '显示指示器', component: 'switch', defaultValue: true },
-          { key: 'height', label: '高度 (px)', component: 'number', defaultValue: 180, props: { min: 80, max: 500 } },
-          { key: 'borderRadius', label: '圆角 (px)', component: 'number', defaultValue: 0, props: { min: 0, max: 50 } },
+          { key: 'showIndicator', label: '显示指示器', component: 'Switch', defaultValue: true },
+          { key: 'height', label: '高度 (px)', component: 'InputNumber', defaultValue: 180, componentProps: { min: 80, max: 500 } },
+          { key: 'borderRadius', label: '圆角 (px)', component: 'InputNumber', defaultValue: 0, componentProps: { min: 0, max: 50 } },
         ],
       },
     ],

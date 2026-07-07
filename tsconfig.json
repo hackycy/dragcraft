@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
+      "@dragcraft/fields-ant-design-vue": ["./packages/fields/ant-design-vue/src"],
       "@dragcraft/*": ["./packages/*/src"]
     },
     "resolveJsonModule": true,

@@ -1,0 +1,47 @@
+{
+  "name": "@dragcraft/fields-ant-design-vue",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Ant Design Vue field adapters for @dragcraft/form-generator",
+  "author": "hackycy <hackycy@outlook.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/hackycy-collection/dragcraft#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hackycy-collection/dragcraft.git"
+  },
+  "bugs": "https://github.com/hackycy-collection/dragcraft/issues",
+  "keywords": [],
+  "sideEffects": false,
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "eslint",
+    "prepublishOnly": "nr build",
+    "release": "bumpp",
+    "test": "vitest",
+    "typecheck": "tsc"
+  },
+  "peerDependencies": {
+    "ant-design-vue": ">=4.0.0",
+    "vue": ">=3.0.0"
+  },
+  "dependencies": {
+    "@dragcraft/form-generator": "workspace:*"
+  },
+  "devDependencies": {
+    "ant-design-vue": "catalog:",
+    "vitest": "catalog:testing",
+    "vue": "catalog:shared"
+  }
+}

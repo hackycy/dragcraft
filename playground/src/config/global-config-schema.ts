@@ -12,18 +12,18 @@ export const globalConfigSchema: FormSchema = {
         {
           key: 'title',
           label: '页面标题',
-          component: 'input',
+          component: 'Input',
           defaultValue: 'My Page',
-          props: {
+          componentProps: {
             placeholder: '请输入页面标题',
           },
         },
         {
           key: 'description',
           label: '页面描述',
-          component: 'textarea',
+          component: 'Textarea',
           defaultValue: '',
-          props: {
+          componentProps: {
             placeholder: '请输入页面描述',
             rows: 2,
           },
@@ -36,15 +36,15 @@ export const globalConfigSchema: FormSchema = {
         {
           key: 'backgroundColor',
           label: '背景颜色',
-          component: 'color',
+          component: 'Color',
           defaultValue: '#ffffff',
         },
         {
           key: 'padding',
           label: '内边距 (px)',
-          component: 'number',
+          component: 'InputNumber',
           defaultValue: 0,
-          props: {
+          componentProps: {
             min: 0,
             max: 100,
           },
@@ -52,9 +52,9 @@ export const globalConfigSchema: FormSchema = {
         {
           key: 'maxWidth',
           label: '最大宽度 (px)',
-          component: 'number',
+          component: 'InputNumber',
           defaultValue: 375,
-          props: {
+          componentProps: {
             min: 320,
             max: 1920,
           },

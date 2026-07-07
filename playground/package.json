@@ -10,6 +10,7 @@
   "dependencies": {
     "@dragcraft/designer": "workspace:*",
     "@dragcraft/device-frames": "workspace:*",
+    "@dragcraft/fields-ant-design-vue": "workspace:*",
     "@dragcraft/form-generator": "workspace:*",
     "@dragcraft/icons": "workspace:*",
     "@dragcraft/themes": "workspace:*",

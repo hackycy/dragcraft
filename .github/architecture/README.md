@@ -29,7 +29,7 @@
 
 5. [物料、字段与工具包](./05-widgets-fields-and-utils.md)
    - 物料协议与工具函数
-   - 字段组件契约
+   - 字段 adapter 与内置字段包
    - icons 与 utils 包职责
 
 6. [主题与设备容器](./06-themes-and-device-frames.md)

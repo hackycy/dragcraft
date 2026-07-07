@@ -10,6 +10,7 @@
 | `@dragcraft/designer` | 对外 API、Vue3 设计器布局与交互编排 |
 | `@dragcraft/renderer` | 将 schema 节点映射为 Vue 组件树 |
 | `@dragcraft/form-generator` | 配置面板 schema 表单引擎 |
+| `@dragcraft/fields-ant-design-vue` | Ant Design Vue 字段 adapter 包 |
 | `@dragcraft/widgets` | 物料协议与通用工具函数 |
 | `@dragcraft/themes` | CSS 皮肤包 |
 | `@dragcraft/device-frames` | 设备容器框架 |
@@ -88,6 +89,7 @@
 
 - 基于 FormSchema 渲染配置表单。
 - 管理字段 visible、disabled、验证和变更事件。
+- 定义字段 adapter 协议，并将 `componentProps` 原样透传给真实 UI 组件。
 - 不直接依赖 core，不执行命令。
 
 主要入口：
@@ -95,13 +97,34 @@
 - `FormGenerator`。
 - `useFieldState()`。
 - `useFormValidation()`。
-- FormSchema、FieldSchema、FieldComponentMap 类型。
+- FormSchema、FieldSchema、FieldComponentMap、TypedFormSchema 类型。
 
 依赖与协作：
 
 - 被 designer 右栏使用。
-- 字段组件由业务应用显式提供。
+- 字段 adapter 由业务应用或内置字段包显式提供。
 - 值变更由 designer 转为 core command。
+
+## @dragcraft/fields-ant-design-vue
+
+职责：
+
+- 提供 Ant Design Vue 表单组件的 FieldComponentDefinition 注册表。
+- 保持 `componentProps` 与 Ant Design Vue 原组件 props 一致。
+- 提供 `AntDesignVueFieldComponentPropsMap` 用于 schema 类型提示。
+
+主要入口：
+
+- `createAntDesignVueFields()`。
+- `antDesignVueFieldComponents`。
+- `AntDesignVueFieldComponentType`。
+- `AntDesignVueFieldComponentPropsMap`。
+
+依赖与协作：
+
+- 依赖 form-generator 类型和 Ant Design Vue 组件。
+- 被业务应用或 playground 合并进 `fieldComponentMap`。
+- 不承载业务特化字段；`Color`、`Array`、`NavbarTitle` 等由业务侧维护。
 
 ## @dragcraft/widgets
 
@@ -210,6 +233,7 @@
       -> @dragcraft/core
       -> @dragcraft/renderer
   -> @dragcraft/form-generator
+  -> @dragcraft/fields-ant-design-vue
   -> @dragcraft/themes
   -> @dragcraft/widgets
   -> @dragcraft/device-frames
@@ -224,4 +248,4 @@
 - form-generator 不依赖 core。
 - renderer 不直接持久化业务状态。
 - designer 负责包组合与对外简化。
-- 业务应用负责提供物料实现和字段组件映射。
+- 业务应用负责提供物料实现，并选择内置字段包或自定义字段 adapter。

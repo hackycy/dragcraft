@@ -99,11 +99,13 @@ src/
 ### createDesigner
 
 ```ts
+import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
+
 const designer = createDesigner({
   engineOptions: { initialSchema, maxHistorySize: 50 },
   widgetMetas: getAllWidgetMetas(),
   componentMap: getDefaultComponentMap(),
-  fieldComponentMap: buildDefaultFieldComponentMap(),
+  fieldComponentMap: createAntDesignVueFields(),
   globalConfigSchema: myGlobalFormSchema,
   extensions: {
     materialPanelRenderer: CustomPanel,

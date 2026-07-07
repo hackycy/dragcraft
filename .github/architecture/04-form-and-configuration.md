@@ -7,7 +7,7 @@
 - 将配置协议抽象为 `FormSchema`，不与具体业务字段耦合。
 - 支持全局配置和 widget 配置两类模型。
 - 为 `@dragcraft/designer` 提供可替换的右侧面板实现。
-- 字段组件由消费方通过 `fieldComponentMap` 显式提供。
+- 字段组件通过 adapter 描述值绑定方式，UI 库 props 通过 `componentProps` 原样透传。
 
 ## 设计边界
 
@@ -40,7 +40,7 @@ interface FieldSchema {
   key: string
   label: string
   component: string
-  props?: Record<string, unknown>
+  componentProps?: Record<string, unknown> | ((ctx: FormContext) => Record<string, unknown>)
   defaultValue?: unknown
   visible?: (ctx: FormContext) => boolean
   disabled?: (ctx: FormContext) => boolean
@@ -59,7 +59,26 @@ interface FormSchema {
 }
 ```
 
-字段组件名通过 `fieldComponentMap` 解析，schema 本身不绑定具体实现。
+字段组件名通过 `fieldComponentMap` 解析，schema 本身只声明使用哪个 adapter 和传给 UI 组件的 `componentProps`。
+
+带类型提示的业务 schema 可以使用 `TypedFormSchema<PropsMap>`：
+
+```ts
+import type { TypedFormSchema } from '@dragcraft/form-generator'
+import type { AntDesignVueFieldComponentPropsMap } from '@dragcraft/fields-ant-design-vue'
+
+const schema: TypedFormSchema<AntDesignVueFieldComponentPropsMap> = {
+  sections: [{
+    title: '基础设置',
+    fields: [{
+      key: 'title',
+      label: '标题',
+      component: 'Input',
+      componentProps: { allowClear: true },
+    }],
+  }],
+}
+```
 
 ## 渲染管线
 
@@ -108,15 +127,18 @@ Field 负责：
 - 渲染 label、字段组件、tooltip 与 error message。
 - 触发字段级验证和值变更。
 
-## 字段组件协议
+## 字段 Adapter 协议
 
-自定义字段组件需要接收标准 props，并通过 `update:modelValue` 通知变化：
+字段组件不再要求实现固定的 `modelValue + field` 协议。`FieldComponentMap` 注册的是 adapter definition：
 
 ```ts
-interface FieldComponentProps {
-  modelValue: unknown
-  disabled: boolean
-  field: FieldSchema
+interface FieldComponentDefinition {
+  component: Component
+  modelPropName?: string
+  updateEventName?: string
+  defaultProps?: Record<string, unknown>
+  formatValue?: (value: unknown, ctx: FieldComponentTransformContext) => unknown
+  normalizeValue?: (value: unknown, ctx: FieldComponentTransformContext) => unknown
 }
 ```
 
@@ -125,11 +147,21 @@ interface FieldComponentProps {
 ```ts
 h(FormGenerator, {
   fieldComponentMap: {
-    input: MyCustomInput,
-    'icon-picker': MyIconPicker,
+    Input: {
+      component: AInput,
+      modelPropName: 'value',
+      updateEventName: 'onUpdate:value',
+    },
+    Switch: {
+      component: ASwitch,
+      modelPropName: 'checked',
+      updateEventName: 'onUpdate:checked',
+    },
   },
 })
 ```
+
+`@dragcraft/form-generator` 负责把 `defaultProps`、`componentProps`、禁用态和 model 绑定合并后传给真实 UI 组件。禁用态由表单层最终写入 `disabled`，覆盖 `componentProps.disabled`。
 
 ## 字段联动
 
@@ -139,7 +171,7 @@ h(FormGenerator, {
 {
   key: 'linkUrl',
   label: '链接地址',
-  component: 'input',
+  component: 'Input',
   visible: (ctx) => ctx.values.hasLink === true,
   disabled: (ctx) => ctx.values.isLocked === true,
 }
@@ -155,7 +187,7 @@ h(FormGenerator, {
 {
   key: 'name',
   label: '名称',
-  component: 'input',
+  component: 'Input',
   rules: [
     { required: true, message: '名称不能为空' },
     {
@@ -185,7 +217,7 @@ h(FormGenerator, {
 ## 值变更数据流
 
 ```plaintext
-字段组件 emit update:modelValue
+字段组件 emit adapter.updateEventName
   -> FormField 调用 ctx.onFieldChange(key, value)
   -> FormGenerator 更新本地 values 并触发验证
   -> FormGenerator emit change
@@ -193,17 +225,22 @@ h(FormGenerator, {
   -> designer dispatch UPDATE_PROPS 或 SET_GLOBAL_CONFIG
 ```
 
-## 字段组件关系
+## 字段包关系
 
-`@dragcraft/form-generator` 不内置字段组件。业务应用需要显式提供字段组件映射：
+`@dragcraft/form-generator` 只提供 adapter 协议和表单运行时，不直接依赖具体 UI 库。UI 库字段由独立字段包提供，例如 `@dragcraft/fields-ant-design-vue`：
 
 ```ts
+import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
+
 h(FormGenerator, {
-  fieldComponentMap: myFieldComponentMap,
+  fieldComponentMap: {
+    ...createAntDesignVueFields(),
+    Color: { component: ColorField },
+  },
 })
 ```
 
-字段组件只需要实现 `modelValue`、`disabled`、`field` 和 `update:modelValue` 契约。
+业务特化字段仍由业务侧注册到同一个 `fieldComponentMap`。如果业务希望获得 schema 侧的 `componentProps` 类型提示，应为字段包导出 `ComponentPropsMap`，并配合 `TypedFormSchema<PropsMap>` 使用。
 
 ## CSS Class 层级
 
