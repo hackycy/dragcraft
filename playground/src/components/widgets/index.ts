@@ -1,4 +1,4 @@
-import type { WidgetGroupConfig } from '@dragcraft/designer'
+import type { DesignerWidgetMeta, WidgetGroupConfig } from '@dragcraft/designer'
 import type { WidgetDefinition } from '@dragcraft/widgets'
 import { buildComponentMap, getWidgetMetas } from '@dragcraft/widgets'
 import { basicWidgetDefinitions } from './basic'
@@ -6,7 +6,7 @@ import { formWidgetDefinitions } from './form'
 import { playgroundWidgetMessages } from './messages'
 import { miniProgramWidgetDefinitions } from './mini-program'
 
-export const playgroundWidgetDefinitions: WidgetDefinition[] = [
+export const playgroundWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[] = [
   ...basicWidgetDefinitions,
   ...formWidgetDefinitions,
   ...miniProgramWidgetDefinitions,

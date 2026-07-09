@@ -1,4 +1,4 @@
-import type { WidgetMeta } from '@dragcraft/core'
+import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
 import { IconMaterial, IconNavBack, IconNavHome, IconNavRecent, IconPlus } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
@@ -48,12 +48,19 @@ function renderTabIcon(icon: string, active: boolean) {
   return h('span', { class: 'pg-widget-tabbar__text-icon' }, text)
 }
 
-export const navbarWidgetMeta: WidgetMeta = {
+export const navbarWidgetMeta: DesignerWidgetMeta = {
   type: 'navbar',
   title: '导航栏',
   titleKey: 'widget.navbar.title',
   group: 'navigation',
   icon: 'navbar',
+  material: {
+    icon: '导',
+    description: '配置页面顶部标题和返回入口',
+    descriptionKey: 'widget.navbar.material.description',
+    tags: ['框架'],
+    keywords: ['navigation', 'header', 'top bar', '导航'],
+  },
   draggable: false,
   sortable: false,
   defaultLayout: {
@@ -174,12 +181,19 @@ export const NavbarWidget = defineComponent({
   },
 })
 
-export const tabBarWidgetMeta: WidgetMeta = {
+export const tabBarWidgetMeta: DesignerWidgetMeta = {
   type: 'tab-bar',
   title: 'Tab 栏',
   titleKey: 'widget.tab-bar.title',
   group: 'navigation',
   icon: 'tabbar',
+  material: {
+    icon: '栏',
+    description: '配置底部多页面导航入口',
+    descriptionKey: 'widget.tab-bar.material.description',
+    tags: ['框架'],
+    keywords: ['tab', 'bottom navigation', 'tabs', '底部导航'],
+  },
   defaultLayout: {
     placement: {
       kind: 'chrome',
@@ -272,12 +286,19 @@ export const TabBarWidget = defineComponent({
   },
 })
 
-export const floatingButtonWidgetMeta: WidgetMeta = {
+export const floatingButtonWidgetMeta: DesignerWidgetMeta = {
   type: 'floating-button',
   title: '浮动按钮',
   titleKey: 'widget.floating-button.title',
   group: 'action',
   icon: 'fab',
+  material: {
+    icon: '浮',
+    description: '悬浮在页面上的快捷操作入口',
+    descriptionKey: 'widget.floating-button.material.description',
+    tags: ['操作'],
+    keywords: ['fab', 'floating action', 'quick action', '悬浮'],
+  },
   defaultLayout: {
     placement: {
       kind: 'layer',
@@ -362,12 +383,19 @@ export const FloatingButtonWidget = defineComponent({
   },
 })
 
-export const swiperWidgetMeta: WidgetMeta = {
+export const swiperWidgetMeta: DesignerWidgetMeta = {
   type: 'swiper',
   title: '轮播',
   titleKey: 'widget.swiper.title',
   group: 'basic',
   icon: 'swiper',
+  material: {
+    icon: '播',
+    description: '展示多张活动图或商品图',
+    descriptionKey: 'widget.swiper.material.description',
+    tags: ['媒体'],
+    keywords: ['carousel', 'banner', 'swiper', '轮播'],
+  },
   defaultProps: {
     images: DEFAULT_IMAGES,
     showIndicator: true,

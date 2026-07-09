@@ -1,4 +1,4 @@
-import type { WidgetMeta } from '@dragcraft/core'
+import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
 
@@ -16,12 +16,19 @@ function renderRequired(required: boolean) {
   return required ? h('span', { class: 'pg-widget-form__required' }, '*') : null
 }
 
-export const formInputWidgetMeta: WidgetMeta = {
+export const formInputWidgetMeta: DesignerWidgetMeta = {
   type: 'form-input',
   title: '输入框',
   titleKey: 'widget.form-input.title',
   group: 'form',
   icon: 'input',
+  material: {
+    icon: '入',
+    description: '收集单行文本、手机号等信息',
+    descriptionKey: 'widget.form-input.material.description',
+    tags: ['表单'],
+    keywords: ['field', 'input', 'text field', '输入'],
+  },
   defaultProps: {
     label: '标签',
     placeholder: '请输入',
@@ -72,12 +79,19 @@ export const FormInputWidget = defineComponent({
   },
 })
 
-export const formTextareaWidgetMeta: WidgetMeta = {
+export const formTextareaWidgetMeta: DesignerWidgetMeta = {
   type: 'form-textarea',
   title: '多行文本',
   titleKey: 'widget.form-textarea.title',
   group: 'form',
   icon: 'textarea',
+  material: {
+    icon: '多',
+    description: '收集备注、反馈和长文本内容',
+    descriptionKey: 'widget.form-textarea.material.description',
+    tags: ['表单'],
+    keywords: ['textarea', 'feedback', 'comment', '备注'],
+  },
   defaultProps: {
     label: '标签',
     placeholder: '请输入',
@@ -131,12 +145,19 @@ export const FormTextareaWidget = defineComponent({
   },
 })
 
-export const formSelectWidgetMeta: WidgetMeta = {
+export const formSelectWidgetMeta: DesignerWidgetMeta = {
   type: 'form-select',
   title: '下拉选择',
   titleKey: 'widget.form-select.title',
   group: 'form',
   icon: 'select',
+  material: {
+    icon: '选',
+    description: '从预设选项中选择一个值',
+    descriptionKey: 'widget.form-select.material.description',
+    tags: ['表单'],
+    keywords: ['dropdown', 'select', 'option', '选择'],
+  },
   defaultProps: {
     label: '标签',
     placeholder: '请选择',
@@ -192,12 +213,19 @@ export const FormSelectWidget = defineComponent({
   },
 })
 
-export const formCheckboxWidgetMeta: WidgetMeta = {
+export const formCheckboxWidgetMeta: DesignerWidgetMeta = {
   type: 'form-checkbox',
   title: '复选框',
   titleKey: 'widget.form-checkbox.title',
   group: 'form',
   icon: 'checkbox',
+  material: {
+    icon: '勾',
+    description: '表达勾选、同意或开关状态',
+    descriptionKey: 'widget.form-checkbox.material.description',
+    tags: ['表单'],
+    keywords: ['check', 'agree', 'boolean', '勾选'],
+  },
   defaultProps: {
     label: '复选框',
     checked: false,
@@ -236,12 +264,19 @@ export const FormCheckboxWidget = defineComponent({
   },
 })
 
-export const formRadioWidgetMeta: WidgetMeta = {
+export const formRadioWidgetMeta: DesignerWidgetMeta = {
   type: 'form-radio-group',
   title: '单选组',
   titleKey: 'widget.form-radio-group.title',
   group: 'form',
   icon: 'radio',
+  material: {
+    icon: '单',
+    description: '在多个互斥选项中选择一个',
+    descriptionKey: 'widget.form-radio-group.material.description',
+    tags: ['表单'],
+    keywords: ['radio', 'single choice', 'option', '单选'],
+  },
   defaultProps: {
     label: '单选组',
     value: '',

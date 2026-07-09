@@ -1,13 +1,20 @@
-import type { WidgetMeta } from '@dragcraft/core'
+import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
 
-export const textWidgetMeta: WidgetMeta = {
+export const textWidgetMeta: DesignerWidgetMeta = {
   type: 'text',
   title: '文本',
   titleKey: 'widget.text.title',
   group: 'basic',
   icon: 'text',
+  material: {
+    icon: '文',
+    description: '展示标题、段落和说明文案',
+    descriptionKey: 'widget.text.material.description',
+    tags: ['基础'],
+    keywords: ['copy', 'paragraph', 'content', '文案', '段落'],
+  },
   defaultProps: {
     content: '文本内容',
     fontSize: 14,
@@ -112,12 +119,19 @@ export const TextWidget = defineComponent({
   },
 })
 
-export const buttonWidgetMeta: WidgetMeta = {
+export const buttonWidgetMeta: DesignerWidgetMeta = {
   type: 'button',
   title: '按钮',
   titleKey: 'widget.button.title',
   group: 'basic',
   icon: 'button',
+  material: {
+    icon: '钮',
+    description: '触发提交、跳转和业务动作',
+    descriptionKey: 'widget.button.material.description',
+    tags: ['操作'],
+    keywords: ['cta', 'action', 'submit', '点击'],
+  },
   defaultProps: {
     text: '按钮',
     type: 'button',
@@ -175,12 +189,19 @@ export const ButtonWidget = defineComponent({
   },
 })
 
-export const imageWidgetMeta: WidgetMeta = {
+export const imageWidgetMeta: DesignerWidgetMeta = {
   type: 'image',
   title: '图片',
   titleKey: 'widget.image.title',
   group: 'basic',
   icon: 'image',
+  material: {
+    icon: '图',
+    description: '展示商品、横幅和内容配图',
+    descriptionKey: 'widget.image.material.description',
+    tags: ['媒体'],
+    keywords: ['media', 'banner', 'photo', '图片', '海报'],
+  },
   defaultProps: {
     src: '',
     alt: '',
@@ -238,12 +259,19 @@ export const ImageWidget = defineComponent({
   },
 })
 
-export const linkWidgetMeta: WidgetMeta = {
+export const linkWidgetMeta: DesignerWidgetMeta = {
   type: 'link',
   title: '链接',
   titleKey: 'widget.link.title',
   group: 'basic',
   icon: 'link',
+  material: {
+    icon: '链',
+    description: '跳转到页面、活动或外部地址',
+    descriptionKey: 'widget.link.material.description',
+    tags: ['跳转'],
+    keywords: ['href', 'navigation', 'url', '链接'],
+  },
   defaultProps: {
     text: '链接',
     href: '#',
@@ -294,12 +322,19 @@ export const LinkWidget = defineComponent({
   },
 })
 
-export const dividerWidgetMeta: WidgetMeta = {
+export const dividerWidgetMeta: DesignerWidgetMeta = {
   type: 'divider',
   title: '分割线',
   titleKey: 'widget.divider.title',
   group: 'basic',
   icon: 'divider',
+  material: {
+    icon: '线',
+    description: '分隔内容区块并建立视觉层次',
+    descriptionKey: 'widget.divider.material.description',
+    tags: ['布局'],
+    keywords: ['line', 'separator', 'rule', '分隔'],
+  },
   defaultProps: {
     direction: 'horizontal',
     color: '#e8e8e8',

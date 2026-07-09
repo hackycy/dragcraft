@@ -56,9 +56,10 @@ src/
 物料 tab 使用 `DcMaterialPanel`，提供：
 
 - widget 分组展示。
-- 按 `title` 和 `type` 模糊搜索。
+- 按 `type`、标题、描述、标签和关键词模糊搜索。
 - HTML5 drag source，drag start 时设置 `engine.store.setDragTarget`。
-- `renderWidgetItem` 扩展点，自定义单个物料卡片。
+- `DesignerWidgetMeta.material` 展示协议，用于声明物料卡片标题、图标、描述、缩略图、标签和搜索关键词。
+- `materialItemRenderer` 扩展点，自定义单个物料项内容；外层盒子、尺寸约束和拖拽行为由 designer 统一控制。
 - 物料项始终可拖拽，`WidgetMeta.creatable` 在画布 drag-over/drop 阶段统一裁决是否可创建。
 
 当 `creatable` 返回禁止决策时，画布显示红色虚线框，并在框中展示禁止原因；如果没有提供原因，则展示默认提示。禁用提示层由 container shell 渲染，使用 device frame 时覆盖整个设备预览区域，提示文本位于 frame 中央。自定义物料卡片仍会收到 `draggable: true` 与 `disabled: false`，避免左栏和画布出现两套创建规则。
@@ -112,6 +113,8 @@ const designer = createDesigner({
   globalConfigSchema: myGlobalFormSchema,
   extensions: {
     materialPanelRenderer: CustomPanel,
+    materialItemRenderer: ({ material }) =>
+      h('div', { class: 'my-material-content' }, material.title),
     toolbarRenderer: (api) => [],
   },
   actionInterceptors: [
@@ -155,9 +158,41 @@ const {
 | --- | --- |
 | `materialPanelRenderer` | 替换左侧 Materials tab 内容 |
 | `propertyPanelRenderer` | 替换右栏配置区渲染 |
-| `renderWidgetItem` | 自定义单个物料卡片渲染 |
+| `materialItemRenderer` | 自定义单个物料项内容渲染 |
 | `rendererExtensions` | 透传给 renderer 的扩展点 |
 | `toolbarRenderer` | 自定义画布内工具栏内容 |
+
+`DesignerWidgetMeta.material` 是 designer 层的一等物料展示协议，不进入 core schema，也不影响画布渲染组件：
+
+```ts
+interface DesignerWidgetMeta extends RendererWidgetMeta {
+  material?: {
+    title?: string
+    titleKey?: string
+    icon?: string | Component
+    description?: string
+    descriptionKey?: string
+    thumbnail?: string
+    tags?: string[]
+    keywords?: string[]
+    metadata?: Record<string, unknown>
+  }
+}
+```
+
+`materialItemRenderer` 接收解析后的展示数据和交互状态。Designer 始终拥有外层物料项 shell，负责固定宽度、截断、overflow 防护和拖拽事件；业务渲染器只输出内部内容：
+
+```ts
+interface MaterialItemRenderProps {
+  meta: DesignerWidgetMeta
+  material: ResolvedMaterialItem
+  draggable: boolean
+  disabled: boolean
+  dragging: boolean
+}
+```
+
+物料栏属于高密度工具区，推荐常驻展示只包含图标、标题和短标签；描述、关键词和更多业务数据优先用于搜索、tooltip 或完整替换 `materialPanelRenderer` 后的详情交互，避免两列栏位出现横向滚动或信息噪声。
 
 `toolbarRenderer` 接收 `ToolbarSlotAPI`：
 
@@ -217,7 +252,7 @@ src/
 
 ## ComponentMap 与 RendererWidgetMeta
 
-Core 的 `CoreWidgetMeta` 不包含 Vue 组件引用。Renderer 通过 `ComponentMap` 解析 `node.type`，并在 `RendererWidgetMeta` 中承载 renderer 专属 UI 元数据（如 `wrapper` 与扩展 action）：
+Core 的 `CoreWidgetMeta` 不包含 Vue 组件引用。Renderer 通过 `ComponentMap` 解析 `node.type`，并在 `RendererWidgetMeta` 中承载 renderer 专属 UI 元数据（如 `wrapper` 与扩展 action）。Designer 在此之上用 `DesignerWidgetMeta.material` 承载物料栏展示元数据：
 
 ```ts
 type ComponentMap = Record<string, Component>

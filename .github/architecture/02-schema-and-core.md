@@ -301,7 +301,7 @@ interface CoreWidgetMeta {
 }
 ```
 
-Vue 组件引用、`wrapper` 和 renderer 侧 action extra 配置不属于 core 协议；这些 UI 元数据由 renderer 的 `RendererWidgetMeta` 扩展承载。
+Vue 组件引用、`wrapper`、renderer 侧 action extra 配置和物料栏展示数据不属于 core 协议；这些 UI 元数据由 renderer 的 `RendererWidgetMeta` 与 designer 的 `DesignerWidgetMeta.material` 扩展承载。
 
 行为字段支持静态布尔值或运行时谓词函数：
 

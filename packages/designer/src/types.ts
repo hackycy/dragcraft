@@ -22,6 +22,62 @@ export interface WidgetGroupConfig {
 }
 
 // ──────────────────────────────────────────
+// Material item display protocol
+// ──────────────────────────────────────────
+
+export type MaterialItemIcon = string | Component
+
+/**
+ * Designer-owned display metadata for a widget in the material panel.
+ * Core registration remains UI-agnostic; this protocol only affects designer UI.
+ */
+export interface MaterialDisplayMeta {
+  /** Material panel title override. Falls back to WidgetMeta.title/titleKey. */
+  title?: string
+  /** i18n message key for material panel title. */
+  titleKey?: string
+  /** Icon or Vue component shown in the material panel. Falls back to WidgetMeta.icon. */
+  icon?: MaterialItemIcon
+  /** Short supporting copy for richer material cards. */
+  description?: string
+  /** i18n message key for description. */
+  descriptionKey?: string
+  /** Image URL for visual material cards. */
+  thumbnail?: string
+  /** Compact labels shown by custom material item renderers. */
+  tags?: string[]
+  /** Additional search terms for the material panel. */
+  keywords?: string[]
+  /** App-specific display data for custom material item renderers. */
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * Widget metadata accepted by designer. Extends renderer metadata with
+ * material-panel display information without coupling core to Vue UI.
+ */
+export interface DesignerWidgetMeta extends RendererWidgetMeta {
+  material?: MaterialDisplayMeta
+}
+
+export interface ResolvedMaterialItem {
+  title: string
+  icon?: MaterialItemIcon
+  description?: string
+  thumbnail?: string
+  tags: string[]
+  keywords: string[]
+}
+
+export interface MaterialItemRenderProps {
+  meta: DesignerWidgetMeta
+  material: ResolvedMaterialItem
+  draggable: boolean
+  disabled: boolean
+  dragging: boolean
+}
+
+// ──────────────────────────────────────────
 // Designer options (input to createDesigner)
 // ──────────────────────────────────────────
 
@@ -34,7 +90,7 @@ export interface DesignerOptions {
   /** Core engine options (initialSchema, maxHistorySize) */
   engineOptions?: EngineOptions
   /** Widget metas to register with the engine */
-  widgetMetas?: RendererWidgetMeta[]
+  widgetMetas?: DesignerWidgetMeta[]
   /** Widget type → Vue component map for canvas rendering */
   componentMap?: ComponentMap
   /** Widget group configurations for material panel. If not provided, groups are derived from registered widgets. */
@@ -92,8 +148,8 @@ export interface DesignerExtensions {
   materialPanelRenderer?: Component
   /** Completely replace the right property panel */
   propertyPanelRenderer?: Component
-  /** Custom render function for a single material item card */
-  renderWidgetItem?: (meta: RendererWidgetMeta) => Component
+  /** Custom content renderer for a single material item. Designer owns the outer shell and drag behavior. */
+  materialItemRenderer?: (props: MaterialItemRenderProps) => VNodeChild
   /** Renderer extensions (dropIndicator) forwarded to @dragcraft/renderer */
   rendererExtensions?: RendererExtensions
   /**

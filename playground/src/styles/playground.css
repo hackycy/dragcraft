@@ -71,6 +71,47 @@ body {
   line-height: 1.6;
 }
 
+/* ── Playground Material Cards ───────────── */
+
+.pg-material-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.pg-material-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: rgba(7, 193, 96, 0.08);
+  color: rgba(7, 193, 96, 0.58);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.pg-material-card__title {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.25;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── Widget Visual Enhancement (Mini-Program Style) ── */
 
 /* Button — WeChat pill style */

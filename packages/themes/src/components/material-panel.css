@@ -5,6 +5,7 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  min-width: 0;
 }
 
 .dc-material-panel__search {
@@ -36,6 +37,7 @@
 .dc-material-panel__groups {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 4px 0;
 }
 
@@ -85,20 +87,26 @@
 
 .dc-material-group__body {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   padding: 4px 12px 12px;
+  min-width: 0;
 }
 
 /* ── Material Item ───────────────────────── */
 
 .dc-material-item {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 10px 4px;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  min-height: 68px;
+  padding: 8px 6px;
+  overflow: hidden;
   border: 1px solid var(--dc-border-light);
   border-radius: var(--dc-radius);
   background: var(--dc-bg);
@@ -109,7 +117,7 @@
 
 .dc-material-item:hover {
   border-color: var(--dc-primary);
-  background: var(--dc-primary-light);
+  background: var(--dc-primary-bg-hover);
   box-shadow: var(--dc-shadow-sm);
 }
 
@@ -118,18 +126,64 @@
 }
 
 .dc-material-item__icon {
-  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--dc-radius);
+  background: var(--dc-primary-bg-hover);
+  color: var(--dc-primary);
+  opacity: 0.6;
+  font-size: 16px;
   line-height: 1;
+  overflow: hidden;
+}
+
+.dc-material-item__thumbnail {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 28px;
+  border-radius: var(--dc-radius);
+  object-fit: cover;
+  background: var(--dc-bg-light);
+}
+
+.dc-material-item__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
 }
 
 .dc-material-item__title {
+  display: block;
+  width: 100%;
+  min-width: 0;
   font-size: 11px;
+  font-weight: 400;
   color: var(--dc-text-secondary);
+  opacity: 0.82;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+}
+
+.dc-material-item__description {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--dc-text-placeholder);
+  font-size: 10px;
+  line-height: 1.35;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .dc-material-item--disabled {

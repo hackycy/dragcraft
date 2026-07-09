@@ -27,6 +27,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
     widget: {
       'text': {
         title: '文本',
+        material: { description: '展示标题、段落和说明文案' },
         form: { basic: { title: '内容' }, style: { title: '样式' } },
         field: {
           content: { label: '文本内容', placeholder: '请输入文本' },
@@ -38,6 +39,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'button': {
         title: '按钮',
+        material: { description: '触发提交、跳转和业务动作' },
         form: { basic: { title: '基础设置' } },
         field: {
           text: { label: '按钮文字', placeholder: '请输入按钮文字' },
@@ -48,6 +50,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'image': {
         title: '图片',
+        material: { description: '展示商品、横幅和内容配图' },
         form: { basic: { title: '基础设置' } },
         field: {
           src: { label: '图片地址', placeholder: '请输入图片 URL' },
@@ -57,6 +60,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'link': {
         title: '链接',
+        material: { description: '跳转到页面、活动或外部地址' },
         form: { basic: { title: '基础设置' } },
         field: {
           text: { label: '链接文字', placeholder: '请输入链接文字' },
@@ -67,6 +71,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'divider': {
         title: '分割线',
+        material: { description: '分隔内容区块并建立视觉层次' },
         form: { basic: { title: '基础设置' } },
         field: {
           direction: { label: '方向', option: { horizontal: '水平', vertical: '垂直' } },
@@ -76,6 +81,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'form-input': {
         title: '输入框',
+        material: { description: '收集单行文本、手机号等信息' },
         form: { basic: { title: '基础设置' } },
         field: {
           label: { label: '标签' },
@@ -87,6 +93,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'form-textarea': {
         title: '多行文本',
+        material: { description: '收集备注、反馈和长文本内容' },
         form: { basic: { title: '基础设置' } },
         field: {
           label: { label: '标签' },
@@ -99,6 +106,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'form-select': {
         title: '下拉选择',
+        material: { description: '从预设选项中选择一个值' },
         form: { basic: { title: '基础设置' } },
         field: {
           label: { label: '标签' },
@@ -109,6 +117,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'form-checkbox': {
         title: '复选框',
+        material: { description: '表达勾选、同意或开关状态' },
         form: { basic: { title: '基础设置' } },
         field: {
           label: { label: '标签' },
@@ -118,6 +127,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'form-radio-group': {
         title: '单选组',
+        material: { description: '在多个互斥选项中选择一个' },
         form: { basic: { title: '基础设置' } },
         field: {
           label: { label: '标签' },
@@ -125,10 +135,10 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
           disabled: { label: '禁用' },
         },
       },
-      'navbar': { title: '导航栏' },
-      'tab-bar': { title: 'Tab 栏' },
-      'floating-button': { title: '浮动按钮' },
-      'swiper': { title: '轮播' },
+      'navbar': { title: '导航栏', material: { description: '配置页面顶部标题和返回入口' } },
+      'tab-bar': { title: 'Tab 栏', material: { description: '配置底部多页面导航入口' } },
+      'floating-button': { title: '浮动按钮', material: { description: '悬浮在页面上的快捷操作入口' } },
+      'swiper': { title: '轮播', material: { description: '展示多张活动图或商品图' } },
     },
   },
   'en': {
@@ -155,20 +165,20 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       tabBarExists: 'Only one tab bar can be configured on a page',
     },
     widget: {
-      'text': { title: 'Text' },
-      'button': { title: 'Button' },
-      'image': { title: 'Image' },
-      'link': { title: 'Link' },
-      'divider': { title: 'Divider' },
-      'form-input': { title: 'Input' },
-      'form-textarea': { title: 'Textarea' },
-      'form-select': { title: 'Select' },
-      'form-checkbox': { title: 'Checkbox' },
-      'form-radio-group': { title: 'Radio Group' },
-      'navbar': { title: 'Navigation Bar' },
-      'tab-bar': { title: 'Tab Bar' },
-      'floating-button': { title: 'Floating Button' },
-      'swiper': { title: 'Carousel' },
+      'text': { title: 'Text', material: { description: 'Display headings, paragraphs, and helper copy' } },
+      'button': { title: 'Button', material: { description: 'Trigger submits, navigation, and business actions' } },
+      'image': { title: 'Image', material: { description: 'Show products, banners, and content artwork' } },
+      'link': { title: 'Link', material: { description: 'Navigate to pages, campaigns, or external URLs' } },
+      'divider': { title: 'Divider', material: { description: 'Separate content sections and visual hierarchy' } },
+      'form-input': { title: 'Input', material: { description: 'Collect single-line text and phone numbers' } },
+      'form-textarea': { title: 'Textarea', material: { description: 'Collect notes, feedback, and long-form text' } },
+      'form-select': { title: 'Select', material: { description: 'Choose one value from predefined options' } },
+      'form-checkbox': { title: 'Checkbox', material: { description: 'Represent checked, agreed, or boolean states' } },
+      'form-radio-group': { title: 'Radio Group', material: { description: 'Choose one mutually exclusive option' } },
+      'navbar': { title: 'Navigation Bar', material: { description: 'Configure the page title and back entry' } },
+      'tab-bar': { title: 'Tab Bar', material: { description: 'Configure bottom navigation for multiple pages' } },
+      'floating-button': { title: 'Floating Button', material: { description: 'Add a quick action floating above the page' } },
+      'swiper': { title: 'Carousel', material: { description: 'Show multiple campaign or product images' } },
     },
   },
 }

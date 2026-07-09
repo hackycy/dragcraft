@@ -22,8 +22,8 @@
 Widget 定义由元信息和 Vue 组件组成：
 
 ```ts
-interface WidgetDefinition {
-  meta: WidgetMeta
+interface WidgetDefinition<Meta extends WidgetMeta = WidgetMeta> {
+  meta: Meta
   component: Component
 }
 ```
@@ -66,6 +66,24 @@ const designer = createDesigner({
   widgetMetas: getWidgetMetas(myWidgetDefinitions),
   componentMap: buildComponentMap(myWidgetDefinitions),
 })
+```
+
+接入设计器时，业务物料可以把 meta 声明为 `DesignerWidgetMeta`，通过 `material` 字段描述物料栏展示形态与搜索语义；该字段不会进入 core schema：
+
+```ts
+const meta: DesignerWidgetMeta = {
+  type: 'banner',
+  title: 'Banner',
+  group: 'basic',
+  material: {
+    icon: BannerIcon,
+    description: '活动、商品或内容横幅',
+    tags: ['营销'],
+    keywords: ['campaign', 'hero'],
+  },
+  defaultProps: {},
+  formSchema: { sections: [] },
+}
 ```
 
 playground 作为本仓库的产品级示例，在 `playground/src/components/widgets` 中维护面向小程序装修场景的本地物料：

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CommandType, createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
 import { IconArrowDown, IconCopy, IconPhone } from '@dragcraft/icons'
-import type { NodeActionContext } from '@dragcraft/designer'
+import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@dragcraft/designer'
 import { cloneDeep, generateShortId } from '@dragcraft/utils'
 import {
   createDeviceFrameContext,
@@ -55,6 +55,27 @@ const MiniProgramEmptyState = defineComponent({
       ])
   },
 })
+
+function renderMaterialIcon(icon: MaterialItemIcon | undefined) {
+  if (!icon)
+    return null
+
+  return h('span', { class: 'pg-material-card__icon' }, [
+    typeof icon === 'string'
+      ? icon
+      : h(icon, { size: 18, color: 'currentColor' }),
+  ])
+}
+
+const materialItemRenderer: DesignerExtensions['materialItemRenderer'] = ({
+  material,
+}) =>
+  h('div', {
+    class: 'pg-material-card',
+  }, [
+    renderMaterialIcon(material.icon),
+    h('span', { class: 'pg-material-card__title' }, material.title),
+  ])
 
 interface ConfirmModalOptions {
   title: string
@@ -140,6 +161,7 @@ const designer = createDesigner({
     },
   ],
   extensions: {
+    materialItemRenderer,
     rendererExtensions: {
       containerShell: DeviceFrameShell,
       emptyState: MiniProgramEmptyState,

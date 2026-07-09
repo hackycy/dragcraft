@@ -27,6 +27,12 @@ export { useDesignerContext } from './context'
 // ── Factory ─────────────────────────────
 export { createDesigner } from './factory'
 
+// ── Material protocol helpers ────────────
+export {
+  materialItemMatchesQuery,
+  resolveMaterialItem,
+} from './material'
+
 // ── Messages ────────────────────────────
 export { designerMessages } from './messages'
 // ── Types ───────────────────────────────
@@ -35,8 +41,13 @@ export type {
   DesignerExtensions,
   DesignerInstance,
   DesignerOptions,
+  DesignerWidgetMeta,
   LeftPanelTabKey,
+  MaterialDisplayMeta,
+  MaterialItemIcon,
+  MaterialItemRenderProps,
   PropertyTabKey,
+  ResolvedMaterialItem,
   ToolbarSlotAPI,
   UseDesignerReturn,
   WidgetGroupConfig,

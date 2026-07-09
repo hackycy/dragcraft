@@ -1,5 +1,5 @@
-import type { RendererWidgetMeta } from '@dragcraft/renderer'
 import type { PropType } from 'vue'
+import type { DesignerWidgetMeta } from '../types'
 import { defineComponent, h, ref } from 'vue'
 import DcMaterialItem from './DcMaterialItem'
 
@@ -12,7 +12,7 @@ export default defineComponent({
       required: true,
     },
     widgets: {
-      type: Array as PropType<RendererWidgetMeta[]>,
+      type: Array as PropType<DesignerWidgetMeta[]>,
       required: true,
     },
   },

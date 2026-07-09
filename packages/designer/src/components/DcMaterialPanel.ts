@@ -1,11 +1,9 @@
+import type { DesignerWidgetMeta } from '../types'
 import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
+import { materialItemMatchesQuery, resolveMaterialItem } from '../material'
 import DcMaterialGroup from './DcMaterialGroup'
-
-function includesQuery(value: string, query: string): boolean {
-  return value.toLowerCase().includes(query)
-}
 
 export default defineComponent({
   name: 'DcMaterialPanel',
@@ -17,7 +15,7 @@ export default defineComponent({
 
     // Filter widgets by search query, grouped by widget group
     const filteredGroups = computed(() => {
-      const allWidgets = engine.registry.getAllWidgets()
+      const allWidgets = engine.registry.getAllWidgets() as DesignerWidgetMeta[]
       const query = searchQuery.value.toLowerCase().trim()
 
       // Use provided widget groups, or derive from registered widgets
@@ -26,11 +24,8 @@ export default defineComponent({
 
       const widgetsByGroup = new Map<string, typeof allWidgets>()
       for (const widget of allWidgets) {
-        if (
-          query
-          && !includesQuery(widget.title, query)
-          && !includesQuery(widget.type, query)
-        ) {
+        const material = resolveMaterialItem(widget, t)
+        if (!materialItemMatchesQuery(widget, material, query)) {
           continue
         }
 
