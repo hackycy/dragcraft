@@ -5,24 +5,35 @@
 先看两个入口：
 
 ```ts
-import { registerWidgets, buildComponentMap } from '@dragcraft/widgets'
+import { createDesigner } from '@dragcraft/designer'
+import { buildComponentMap, getWidgetMetas } from '@dragcraft/widgets'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 ```
 
-`@dragcraft/widgets` 负责帮你整理 widget meta 和组件映射。`@dragcraft/fields-ant-design-vue` 提供的是右侧表单字段的 adapter map。
+`@dragcraft/designer` 的标准接入方式，就是把 `widgetMetas`、`componentMap` 和 `fieldComponentMap` 一起交给 `createDesigner()`。`@dragcraft/widgets` 负责帮你从一组 widget 定义里整理出前两者，`@dragcraft/fields-ant-design-vue` 提供的是右侧表单字段的 adapter map。
 
 ## 物料最少需要什么
 
 至少要有一组 `widgetMetas`，再配上一份 `componentMap`。
 
-设计器左侧显示哪些卡片，取决于 `DesignerWidgetMeta.material`。画布里真正渲染什么，则取决于 `componentMap`。
+```ts
+const designer = createDesigner({
+  widgetMetas: getWidgetMetas(myWidgetDefinitions),
+  componentMap: buildComponentMap(myWidgetDefinitions),
+  fieldComponentMap: createAntDesignVueFields(),
+})
+```
+
+设计器左侧显示哪些卡片，取决于 `widgetMetas` 里的 `DesignerWidgetMeta.material`。画布里真正渲染什么，则取决于 `componentMap`。
+
+如果你已经在业务里维护了一组 `WidgetDefinition[]`，最省事的路径就是继续沿用 `getWidgetMetas()` 和 `buildComponentMap()`。
 
 ## 字段组件最少需要什么
 
 如果你直接使用 Ant Design Vue，可以先用：
 
 ```ts
-const fieldComponentMap = createAntDesignVueFields()
+fieldComponentMap: createAntDesignVueFields(),
 ```
 
 这个 map 会把 `Input`、`Select`、`Switch` 这类字段类型绑定到真实组件，同时声明每个字段的 `modelPropName` 和更新事件。

@@ -22,7 +22,17 @@ import '@dragcraft/device-frames/styles'
 如果你想让画布以 iPhone、Android、Tablet 或 Desktop 的形式预览，再接 `DeviceFrameShell`。
 
 ```ts
+import { createDesigner } from '@dragcraft/designer'
+import {
+  createDeviceFrameContext,
+  createDeviceToolbarRenderer,
+  DEVICE_FRAME_CONTEXT_KEY,
+  DeviceFrameShell,
+} from '@dragcraft/device-frames'
+import { provide } from 'vue'
+
 const deviceCtx = createDeviceFrameContext({ initialDevice: 'iphone' })
+provide(DEVICE_FRAME_CONTEXT_KEY, deviceCtx)
 
 const designer = createDesigner({
   extensions: {
