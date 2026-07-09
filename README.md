@@ -5,7 +5,7 @@
 ## 设计原则
 
 - **无头组件库**：所有 UI 包仅输出语义化 BEM 类名，不捆绑 CSS —— 实现逻辑与样式完全解耦。
-- 核心与 UI 解耦：`@dragcraft/core` 专注状态与命令。
+- 核心与 UI 解耦：`@dragcraft/core` 专注状态、命令与安全读取 facade；UI 侧读取优先走 `engine.state`，写入统一走 `engine.execute()`。
 - 单一对外入口：业务方仅需使用 `@dragcraft/designer`。
 - 开箱即用：`@dragcraft/themes` 提供内置皮肤，一行 import 获得完整视觉效果。
 - 可扩展：左栏物料、中间画布容器、画布节点、右栏表单均支持扩展。
@@ -24,6 +24,7 @@ import { createDesigner, DcDesigner } from '@dragcraft/designer'
 ## 快速理解
 
 - 外部接入：引入 `@dragcraft/designer` + `@dragcraft/themes`。
+- 读写边界：读取 schema 与交互状态优先使用 `engine.state`，schema 写入必须执行 core command。
 - 左栏：物料分组 + 可自定义物料项渲染。
 - 中栏：支持容器壳自定义（仅容器）+ 拖拽高亮态。
 - 右栏：Schema 表单，Tab 分为全局配置与 widget 配置。

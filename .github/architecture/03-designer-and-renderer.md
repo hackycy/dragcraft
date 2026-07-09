@@ -26,6 +26,8 @@ src/
 ├── types.ts
 ├── context.ts
 ├── factory.ts
+├── bindings/
+│   └── field-binding.ts
 ├── composables/
 │   ├── useDesigner.ts
 │   ├── useDragDrop.ts
@@ -91,7 +93,8 @@ src/
 - Global 配置始终可见。
 - Widget 配置随当前选中节点变化。
 - 选中 widget 时自动切到 Widget Tab。
-- 属性变更通过 `UPDATE_PROPS` 或 `SET_GLOBAL_CONFIG` 命令提交。
+- `usePropertyBinding` 负责协调表单读写，字段绑定解析与命令翻译位于纯函数 helpers `bindings/field-binding.ts`。
+- 属性变更通过 `engine.execute()` 分发 `UPDATE_PROPS` 或 `SET_GLOBAL_CONFIG` 命令提交。
 - 节点切换时通过 `key` 强制重新挂载表单。
 
 ## Designer API
@@ -142,6 +145,10 @@ const {
 } = useDesigner(designer)
 ```
 
+### Public API 分级
+
+`@dragcraft/designer` 默认出口保留标准接入面：`createDesigner`、`DcDesigner`、`useDesigner`、核心 schema/command 类型、字段 schema 类型和常用 renderer 扩展类型。直接访问 `engine.store`、renderer 内部 composable 或 action registry 属于高级集成能力；业务侧应优先使用 `engine.state` 和 `engine.execute()`。
+
 ## Designer 扩展点
 
 | 扩展点 | 说明 |
@@ -177,7 +184,7 @@ const {
 设计边界：
 
 - 不承担业务状态管理。
-- 不直接修改 schema。
+- 不直接修改 schema；读取 schema 使用 `engine.state`，写入必须执行 core command。
 - 选中和 hover 是 store 状态操作，移动、删除等 schema 写入必须执行 core command。
 - 不内置 CSS 样式，只应用 class。
 
@@ -208,9 +215,9 @@ src/
 └── index.ts
 ```
 
-## ComponentMap
+## ComponentMap 与 RendererWidgetMeta
 
-Core 的 `WidgetMeta` 不包含 Vue 组件引用。Renderer 通过 `ComponentMap` 解析 `node.type`：
+Core 的 `CoreWidgetMeta` 不包含 Vue 组件引用。Renderer 通过 `ComponentMap` 解析 `node.type`，并在 `RendererWidgetMeta` 中承载 renderer 专属 UI 元数据（如 `wrapper` 与扩展 action）：
 
 ```ts
 type ComponentMap = Record<string, Component>

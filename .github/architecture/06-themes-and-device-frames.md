@@ -162,7 +162,7 @@ src/
 - 提供 iPhone、Android、平板、桌面浏览器四种常见设备容器。
 - 支持运行时动态切换设备类型。
 - 提供 toolbar 工厂函数，便于在画布工具栏中集成设备切换按钮。
-- 不依赖 designer 或 renderer，仅依赖 Vue。
+- 不依赖 designer 或 renderer；依赖 Vue、`@dragcraft/core` 的 layout/schema 类型，以及 `@dragcraft/icons` 的设备切换图标。
 
 设计边界：
 

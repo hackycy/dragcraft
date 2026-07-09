@@ -39,14 +39,26 @@ src/
 interface FieldSchema {
   key: string
   label: string
+  labelKey?: string
+  placeholderKey?: string
+  optionKeyPrefix?: string
   component: string
   bindTo?: string | { scope?: 'node' | 'schema' | 'globalConfig', path: string }
   componentProps?: Record<string, unknown> | ((ctx: FormContext) => Record<string, unknown>)
+  dependencies?: {
+    fields: string[]
+    handler: (form: Record<string, unknown>, fieldValue: unknown) => Partial<FieldSchema>
+  }
+  show?: boolean | ((ctx: FormContext) => boolean)
+  ifShow?: boolean | ((ctx: FormContext) => boolean)
+  parseValue?: (value: unknown, ctx: FormContext) => unknown
+  valueFormat?: (value: unknown, ctx: FormContext) => unknown
   defaultValue?: unknown
   visible?: (ctx: FormContext) => boolean
   disabled?: (ctx: FormContext) => boolean
   rules?: ValidationRule[]
   tooltip?: string
+  span?: number
 }
 
 interface SectionSchema {
@@ -61,6 +73,8 @@ interface FormSchema {
 ```
 
 字段组件名通过 `fieldComponentMap` 解析，schema 本身只声明使用哪个 adapter 和传给 UI 组件的 `componentProps`。
+
+`visible` 和 `ifShow` 控制字段是否渲染；`ifShow` 优先，`visible` 保留为语义化别名。`show` 控制 CSS 隐藏并保留 DOM 状态。`parseValue` 处理 input -> model，`valueFormat` 处理 model -> input。`dependencies` 可根据其他字段值返回字段 schema 覆盖，但不能改变 `key`、`component` 或 `dependencies` 本身。
 
 ### 字段绑定到 Schema DSL
 

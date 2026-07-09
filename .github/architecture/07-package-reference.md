@@ -24,7 +24,7 @@
 - 管理 DesignerSchema 响应式状态。
 - 提供 CommandBus、HistoryManager、Registry、EventHub。
 - 提供 LayoutPlan 投影和位置锁定约束。
-- 定义 widget 行为控制协议。
+- 定义 `CoreWidgetMeta` 等 widget 行为控制协议。
 
 主要入口：
 
@@ -37,7 +37,7 @@
 
 - 被 designer 创建并持有。
 - 被 renderer 消费 store 和命令能力。
-- 被 widgets 和业务物料复用 `WidgetMeta` 类型。
+- 被 widgets 和业务物料复用基础 widget meta 类型；renderer 在此之上扩展 `RendererWidgetMeta`。
 
 ## @dragcraft/designer
 
@@ -47,6 +47,7 @@
 - 组合 core、renderer、form-generator。
 - 提供三栏设计器 UI Shell。
 - 管理拖拽、属性绑定、扩展点和事件 hooks 透传。
+- 通过 `bindings/field-binding.ts` 纯函数 helpers 翻译属性面板字段绑定。
 
 主要入口：
 
@@ -68,7 +69,7 @@
 - 把 `root.children` 渲染为 widget 节点列表。
 - 管理节点 mask、handle、toolbar、fallback、empty state。
 - 提供 renderer extensions、event hooks、node actions 与 composables。
-- 处理节点交互状态，但 schema 写入回到 core command。
+- 处理节点交互状态，并持有 `RendererWidgetMeta` 的 UI 扩展字段；schema 写入回到 core command。
 
 主要入口：
 
@@ -183,7 +184,7 @@
 
 依赖与协作：
 
-- 仅依赖 Vue。
+- 依赖 Vue、`@dragcraft/core` layout/schema 类型和 `@dragcraft/icons`，不依赖 designer 或 renderer。
 - 与 designer 通过 `toolbarRenderer` 集成。
 - 与 renderer 通过 `containerShell` 集成。
 - 样式自包含，不依赖 themes。

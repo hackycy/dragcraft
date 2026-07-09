@@ -44,6 +44,7 @@ root
 - 事件总线：拖拽生命周期、选中变化、schema 变更通知。
 
 所有 schema 写操作必须通过 core 的命令系统进入，UI 层不能直接修改 schema。
+`engine.state` 是对外读取 schema 与运行时状态的安全入口，返回 clone 或快照；`engine.store` 保留给内部命令、历史和迁移流程使用，不作为业务侧写入入口。
 
 ### UI Shell
 
@@ -94,7 +95,7 @@ const designer = createDesigner({
 
 ## 跨包设计约束
 
-- Runtime 一致性：所有 schema 写操作必须通过 core command。
+- Runtime 一致性：schema 写操作必须通过 core command；无效或被拒绝的命令不写入 history，也不触发 `schema:changed`。
 - Headless 一致性：UI 逻辑包不内置主题样式，只输出稳定 class。
 - 可扩展性：左栏物料、画布容器、节点渲染、节点工具栏、空状态、右栏表单都通过显式扩展点替换。
 - 可测试性：core 可独立单元测试，UI 层通过集成测试覆盖交互。

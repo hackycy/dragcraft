@@ -169,12 +169,22 @@ src/
 - `hoveredNodeId`：当前 hover 节点。
 - `dragTarget`：拖拽目标信息。
 - `getSchema()`：返回 schema 深拷贝，用于安全导出。
-- `getRawSchema()`：返回原始 schema 对象，供命令处理器原地修改。
+- `getRawSchema()`：内部命令处理器使用的原始 schema 引用；业务侧应使用 `engine.state.getSchema()`。
 - `setSchema(schema)`：替换整个 schema。
 - `selectNode(id | null)`、`hoverNode(id | null)`、`setDragTarget(target | null)`。
 - `getNodeById(id)`：在 `root.children` 中线性查找。
 - `applyTransientPatch(nodeId, partial)`：局部更新 props/style，不触发历史快照和事件。
 - `triggerUpdate()`：手动触发响应式通知。
+
+### EngineState
+
+`engine.state` 是公开读取 facade：
+
+- `getSchema()`：返回当前 schema 深拷贝。
+- `getNodeById(id)`：返回节点快照，调用方修改不会影响内部 schema。
+- `getSelectedNodeId()`、`getHoveredNodeId()`、`getDragTarget()`：返回运行时交互状态快照。
+
+UI 层读取 schema 时优先使用 `engine.state`。只有 core 内部命令、history 和 migration 可以读取 raw schema。
 
 ### CommandBus
 
@@ -193,8 +203,10 @@ src/
 ```plaintext
 engine.execute({ type, payload })
   -> CommandBus
-  -> cloneDeep 快照并写入 history
-  -> handler(ctx, payload) 原地修改原始 schema
+  -> cloneDeep before snapshot
+  -> handler(ctx, payload) mutates raw schema or returns false
+  -> if false: rollback and stop without history/events
+  -> if changed: push before snapshot to history
   -> store.triggerUpdate()
   -> eventHub.emit()
 ```
@@ -247,6 +259,7 @@ undo/redo 直接恢复快照，不经过 `CommandBus`，避免历史回放再次
 ```ts
 interface DesignerEngine {
   store: SchemaStoreInstance
+  state: EngineState
   commandBus: CommandBusInstance
   history: HistoryManagerInstance
   registry: RegistryInstance
@@ -263,29 +276,32 @@ interface DesignerEngine {
 
 ## Widget 行为控制
 
-`WidgetMeta` 描述物料注册信息与画布行为：
+`CoreWidgetMeta` 描述物料注册信息与 core 可见的画布行为协议：
 
 ```ts
-interface WidgetMeta {
+interface CoreWidgetMeta {
   type: string
   title: string
+  titleKey?: string
   group: string
   icon?: string
   defaultProps: Record<string, unknown>
   defaultStyle?: NodeStyle
-  formSchema: Record<string, unknown>
+  formSchema: FormSchemaShape
 
   mask?: BehaviorPredicate<InstanceBehaviorContext>
   selectable?: BehaviorPredicate<InstanceBehaviorContext>
   draggable?: BehaviorPredicate<InstanceBehaviorContext>
   sortable?: BehaviorPredicate<InstanceBehaviorContext>
   deletable?: BehaviorPredicate<InstanceBehaviorContext>
+  defaultLayout?: NodeLayout
 
   creatable?: CreatableBehaviorPredicate
-  actions?: WidgetActionConfig
-  wrapper?: Component
+  actions?: CoreWidgetActionConfig
 }
 ```
+
+Vue 组件引用、`wrapper` 和 renderer 侧 action extra 配置不属于 core 协议；这些 UI 元数据由 renderer 的 `RendererWidgetMeta` 扩展承载。
 
 行为字段支持静态布尔值或运行时谓词函数：
 
