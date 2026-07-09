@@ -364,7 +364,7 @@ interface CoreWidgetActionConfig {
 }
 ```
 
-Renderer 侧 `wrapper` 与 action `extra` 扩展见 [`.github/architecture/03-designer-and-renderer.md`](/Users/qigong-it-1/Workspace/dragcraft-worktrees/architecture-fixes/.github/architecture/03-designer-and-renderer.md)。
+Renderer 侧 `wrapper` 与 action `extra` 扩展见 [`.github/architecture/03-designer-and-renderer.md`](./03-designer-and-renderer.md)。
 
 ## Core 工具函数
 
