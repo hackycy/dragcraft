@@ -7,23 +7,6 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   srcExclude: ['superpowers/**'],
-  ignoreDeadLinks: [
-    '/guide/getting-started',
-    '/guide/mental-model',
-    '/guide/schema-and-layout',
-    '/guide/designer-integration',
-    '/guide/materials-and-fields',
-    '/guide/themes-and-device-frames',
-    '/guide/import-export-and-i18n',
-    '/reference/overview',
-    '/reference/designer',
-    '/reference/core',
-    '/reference/renderer',
-    '/reference/form-generator',
-    '/reference/device-frames',
-    '/reference/widgets-and-fields',
-    '/reference/themes-and-utils',
-  ],
   themeConfig: {
     siteTitle: 'dragcraft',
     nav: [
