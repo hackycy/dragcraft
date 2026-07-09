@@ -13,3 +13,5 @@ cache
 .eslintcache
 .turbo
 .claude
+.agents
+skills-lock.json
