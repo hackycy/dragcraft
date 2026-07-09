@@ -32,7 +32,8 @@ import { createDesigner, DcDesigner } from '@dragcraft/designer'
 
 ## 文档
 
-[Architecture Map 技术架构文档入口](./.github/architecture/README.md)
+- `docs/`: 面向使用者的 VitePress 文档站点
+- `.github/architecture/`: 面向维护者的架构文档
 
 ## Packages
 
