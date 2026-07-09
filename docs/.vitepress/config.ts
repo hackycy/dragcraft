@@ -12,7 +12,7 @@ export default defineConfig({
     nav: [
       { text: '指南', link: '/guide/getting-started' },
       { text: '参考', link: '/reference/overview' },
-      { text: '架构', link: 'https://github.com/hackycy-collection/dragcraft/tree/main/.github/architecture' },
+      { text: '架构', link: 'https://github.com/hackycy/dragcraft/tree/main/.github/architecture' },
     ],
     sidebar: {
       '/guide/': [
@@ -58,7 +58,7 @@ export default defineConfig({
       provider: 'local',
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/hackycy-collection/dragcraft' },
+      { icon: 'github', link: 'https://github.com/hackycy/dragcraft' },
     ],
   },
 })

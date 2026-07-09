@@ -5,12 +5,12 @@
   "description": "@dragcraft/designer",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
-  "homepage": "https://github.com/hackycy-collection/dragcraft#readme",
+  "homepage": "https://github.com/hackycy/dragcraft#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hackycy-collection/dragcraft.git"
+    "url": "git+https://github.com/hackycy/dragcraft.git"
   },
-  "bugs": "https://github.com/hackycy-collection/dragcraft/issues",
+  "bugs": "https://github.com/hackycy/dragcraft/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {
