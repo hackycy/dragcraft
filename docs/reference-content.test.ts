@@ -37,11 +37,20 @@ describe('reference docs content', () => {
 
     expect(core).toContain('```ts')
     expect(core).toContain('import { createEngine, CommandType } from \'@dragcraft/core\'')
-    expect(core).toContain('engine.execute(CommandType.SetGlobalConfig')
+    expect(core).toContain('type: CommandType.SET_GLOBAL_CONFIG')
+    expect(core).toContain('engine.execute({')
+    expect(core).toContain('const schema = engine.state.getSchema()')
+    expect(core).not.toContain('engine.execute(CommandType.')
+    expect(core).not.toContain('engine.state.schema')
     expect(core).toContain('[Schema 与布局](/guide/schema-and-layout)')
 
     expect(renderer).toContain('```ts')
     expect(renderer).toContain('import { RootRenderer, createNodeActionRegistry } from \'@dragcraft/renderer\'')
+    expect(renderer).toContain('nodeActions.register({')
+    expect(renderer).toContain('type: \'button\'')
+    expect(renderer).toContain('handler(ctx, event) {')
+    expect(renderer).not.toContain('nodeActions.register(\'')
+    expect(renderer).not.toContain('run(ctx)')
     expect(renderer).toContain('createNodeActionRegistry()')
     expect(renderer).toContain('[集成设计器](/guide/designer-integration)')
 
