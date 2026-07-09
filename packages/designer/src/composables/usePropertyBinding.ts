@@ -1,15 +1,9 @@
 import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
-import type { FieldBindingScope, FieldBindingTarget, FieldSchema, FormSchema } from '@dragcraft/form-generator'
+import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
-import { CommandType } from '@dragcraft/core'
+import type { FieldBinding } from '../bindings/field-binding'
 import { computed } from 'vue'
-
-type FieldBinding = string | FieldBindingTarget | undefined
-
-interface ResolvedBinding {
-  scope: FieldBindingScope
-  path: string
-}
+import { createBindingCommand, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
 
 interface UsePropertyBindingOptions {
   globalConfigSchema?: FormSchema | null
@@ -36,42 +30,6 @@ export interface UsePropertyBindingReturn {
   handleGlobalConfigChange: (key: string, value: unknown) => void
 }
 
-const BLOCKED_PATH_SEGMENTS = new Set(['__proto__', 'prototype', 'constructor'])
-
-function toPathSegments(path: string): string[] {
-  return path
-    .split('.')
-    .map(segment => segment.trim())
-    .filter(Boolean)
-    .filter(segment => !BLOCKED_PATH_SEGMENTS.has(segment))
-}
-
-function readPath(source: unknown, path: string): unknown {
-  let current = source
-  for (const segment of toPathSegments(path)) {
-    if (typeof current !== 'object' || current === null)
-      return undefined
-    current = (current as Record<string, unknown>)[segment]
-  }
-  return current
-}
-
-function setPatchPath(path: string, value: unknown): Record<string, unknown> {
-  const segments = toPathSegments(path)
-  if (segments.length === 0)
-    return {}
-
-  const root: Record<string, unknown> = {}
-  let cursor = root
-  for (let i = 0; i < segments.length - 1; i++) {
-    const next: Record<string, unknown> = {}
-    cursor[segments[i]] = next
-    cursor = next
-  }
-  cursor[segments[segments.length - 1]] = value
-  return root
-}
-
 function findField(schema: FormSchema | null | undefined, key: string): FieldSchema | undefined {
   for (const section of schema?.sections ?? []) {
     const field = section.fields.find(item => item.key === key)
@@ -85,34 +43,7 @@ function getFieldBinding(field: FieldSchema | undefined): FieldBinding {
   return field?.bindTo
 }
 
-function resolveBinding(
-  binding: FieldBinding,
-  fallback: ResolvedBinding,
-): ResolvedBinding {
-  if (typeof binding === 'string')
-    return { scope: fallback.scope, path: binding }
-  if (binding)
-    return { scope: binding.scope ?? fallback.scope, path: binding.path }
-  return fallback
-}
-
-function readBindingValue(
-  binding: ResolvedBinding,
-  schema: ReturnType<DesignerEngine['store']['getRawSchema']>,
-  node: SchemaNode | null,
-): unknown {
-  if (binding.scope === 'globalConfig')
-    return readPath(schema.globalConfig, binding.path)
-  if (binding.scope === 'schema')
-    return readPath(schema, binding.path)
-  return node ? readPath(node, binding.path) : undefined
-}
-
-function splitHead(path: string): [string | undefined, string] {
-  const segments = toPathSegments(path)
-  const [head, ...rest] = segments
-  return [head, rest.join('.')]
-}
+type ResolvedBinding = ReturnType<typeof resolveFieldBinding>
 
 // ──────────────────────────────────────────
 // Composable
@@ -156,7 +87,7 @@ export function usePropertyBinding(
     const values = { ...node.props }
     for (const section of selectedFormSchema.value?.sections ?? []) {
       for (const field of section.fields) {
-        const binding = resolveBinding(
+        const binding = resolveFieldBinding(
           getFieldBinding(field),
           { scope: 'node', path: `props.${field.key}` },
         )
@@ -173,7 +104,7 @@ export function usePropertyBinding(
     const values = { ...schema.globalConfig }
     for (const section of options.globalConfigSchema?.sections ?? []) {
       for (const field of section.fields) {
-        const binding = resolveBinding(
+        const binding = resolveFieldBinding(
           getFieldBinding(field),
           { scope: 'globalConfig', path: field.key },
         )
@@ -185,59 +116,17 @@ export function usePropertyBinding(
     return values
   })
 
-  function dispatchNodeBinding(nodeId: string, path: string, value: unknown): void {
-    const [head, rest] = splitHead(path)
-    if (head === 'props') {
-      engine.execute({
-        type: CommandType.UPDATE_PROPS,
-        payload: { nodeId, props: setPatchPath(rest, value) },
-      })
-      return
-    }
-    if (head === 'style') {
-      engine.execute({
-        type: CommandType.UPDATE_PROPS,
-        payload: { nodeId, props: {}, style: setPatchPath(rest, value) },
-      })
-      return
-    }
-    console.warn(`[dragcraft/designer] Unsupported node binding path "${path}"`)
-  }
-
-  function dispatchSchemaBinding(path: string, value: unknown): void {
-    const [head, rest] = splitHead(path)
-    if (head === 'globalConfig') {
-      engine.execute({
-        type: CommandType.SET_GLOBAL_CONFIG,
-        payload: { config: setPatchPath(rest, value) },
-      })
-      return
-    }
-    if (head === 'root') {
-      dispatchNodeBinding('root', rest, value)
-      return
-    }
-    console.warn(`[dragcraft/designer] Unsupported schema binding path "${path}"`)
-  }
-
   function dispatchBinding(
     binding: ResolvedBinding,
     value: unknown,
     nodeId?: string,
   ): void {
-    if (binding.scope === 'globalConfig') {
-      engine.execute({
-        type: CommandType.SET_GLOBAL_CONFIG,
-        payload: { config: setPatchPath(binding.path, value) },
-      })
+    const command = createBindingCommand(binding, value, nodeId)
+    if (!command) {
+      console.warn(`[dragcraft/designer] Unsupported binding path "${binding.path}"`)
       return
     }
-    if (binding.scope === 'schema') {
-      dispatchSchemaBinding(binding.path, value)
-      return
-    }
-    if (nodeId)
-      dispatchNodeBinding(nodeId, binding.path, value)
+    engine.execute(command)
   }
 
   function handlePropertyChange(key: string, value: unknown): void {
@@ -246,7 +135,7 @@ export function usePropertyBinding(
       return
 
     const field = findField(selectedFormSchema.value, key)
-    const binding = resolveBinding(
+    const binding = resolveFieldBinding(
       getFieldBinding(field),
       { scope: 'node', path: `props.${key}` },
     )
@@ -255,7 +144,7 @@ export function usePropertyBinding(
 
   function handleGlobalConfigChange(key: string, value: unknown): void {
     const field = findField(options.globalConfigSchema, key)
-    const binding = resolveBinding(
+    const binding = resolveFieldBinding(
       getFieldBinding(field),
       { scope: 'globalConfig', path: key },
     )

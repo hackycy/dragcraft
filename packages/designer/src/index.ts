@@ -1,3 +1,10 @@
+export {
+  createBindingCommand,
+  readBindingValue,
+  resolveFieldBinding,
+} from './bindings/field-binding'
+
+export type { FieldBinding, ResolvedFieldBinding } from './bindings/field-binding'
 // ── Components ──────────────────────────
 export {
   DcCanvas,
@@ -13,11 +20,10 @@ export {
 
 // ── Composables ─────────────────────────
 export { useDesigner, useDragDrop, usePropertyBinding } from './composables'
-export type { UseDragDropReturn, UsePropertyBindingReturn } from './composables'
 
+export type { UseDragDropReturn, UsePropertyBindingReturn } from './composables'
 // ── Context ─────────────────────────────
 export { useDesignerContext } from './context'
-
 // ── Factory ─────────────────────────────
 export { createDesigner } from './factory'
 
