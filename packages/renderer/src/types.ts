@@ -1,8 +1,8 @@
-import type { CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, RegistryInstance, WidgetMeta } from '@dragcraft/core'
+import type { Command, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, RegistryInstance } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
-import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
-import type { ActionInterceptor } from './action-runtime'
-import type { RendererEventHooks } from './event-hooks'
+import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
+import type { ActionInterceptor, ActionRisk } from './action-runtime'
+import type { MaybePromise, RendererEventHooks } from './event-hooks'
 
 // ──────────────────────────────────────────
 // Component resolution
@@ -31,7 +31,34 @@ export interface NodeWrapperProps {
   /** Reactive interaction state */
   state: NodeInteractionState
   /** The resolved widget meta, if available */
-  meta: WidgetMeta | undefined
+  meta: RendererWidgetMeta | undefined
+}
+
+export interface RendererWidgetActionExtra {
+  key: string
+  label: string
+  icon?: string | Component
+  type: 'button' | 'drag-handle'
+  order: number
+  risk?: ActionRisk
+  metadata?: Record<string, unknown>
+  visible?: (ctx: NodeActionContext) => boolean
+  available?: (ctx: NodeActionContext) => boolean
+  disabled?: (ctx: NodeActionContext) => boolean
+  command?: (ctx: NodeActionContext, event: MouseEvent) => Command | null | undefined
+  handler?: (ctx: NodeActionContext, event: MouseEvent) => MaybePromise<void>
+  className?: string
+}
+
+export interface WidgetActionConfig {
+  only?: string[]
+  exclude?: string[]
+  extra?: RendererWidgetActionExtra[]
+}
+
+export interface RendererWidgetMeta extends CoreWidgetMeta {
+  actions?: WidgetActionConfig
+  wrapper?: Component
 }
 
 /**

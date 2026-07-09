@@ -29,6 +29,26 @@ const definitions: WidgetDefinition[] = [
 ]
 
 describe('widgets helpers', () => {
+  it('accepts widget definitions with core-compatible extended metadata', () => {
+    type ExtendedMeta = WidgetDefinition['meta'] & {
+      actions: { extra: [{ key: 'inspect', label: 'Inspect', type: 'button', order: 10 }] }
+    }
+
+    const definition: WidgetDefinition<ExtendedMeta> = {
+      meta: {
+        type: 'c',
+        title: 'C',
+        group: 'basic',
+        defaultProps: {},
+        formSchema: { sections: [] },
+        actions: { extra: [{ key: 'inspect', label: 'Inspect', type: 'button', order: 10 }] },
+      },
+      component: componentA,
+    }
+
+    expect(definition.meta.actions.extra[0].key).toBe('inspect')
+  })
+
   it('builds component maps from widget definitions', () => {
     expect(buildComponentMap(definitions)).toEqual({
       a: componentA,

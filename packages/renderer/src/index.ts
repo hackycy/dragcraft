@@ -66,7 +66,10 @@ export type {
   RendererContext,
   RendererExtensions,
   RendererOptions,
+  RendererWidgetActionExtra,
+  RendererWidgetMeta,
   ToolbarPositionData,
+  WidgetActionConfig,
   WidgetFallbackProps,
 } from './types'
 export { RENDERER_CONTEXT_KEY } from './types'

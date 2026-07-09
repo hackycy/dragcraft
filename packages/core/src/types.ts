@@ -1,4 +1,4 @@
-import type { Component, Ref, ShallowRef } from 'vue'
+import type { Ref, ShallowRef } from 'vue'
 
 // ──────────────────────────────────────────
 // Node types
@@ -267,33 +267,17 @@ export interface FormSchemaShape {
  * Per-widget action configuration.
  * Controls which actions appear in the node toolbar for this widget type.
  */
-export interface WidgetActionConfig {
+export interface CoreWidgetActionConfig {
   /** If provided, only show actions with these keys */
   only?: string[]
   /** Exclude actions with these keys */
   exclude?: string[]
-  /** Additional action definitions to add for this widget type */
-  extra?: Array<{
-    key: string
-    label: string
-    icon?: string | Component
-    type: 'button' | 'drag-handle'
-    order: number
-    risk?: 'normal' | 'destructive'
-    metadata?: Record<string, unknown>
-    visible?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
-    disabled?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
-    available?: (ctx: { node: SchemaNode, index: number, siblingCount: number }) => boolean
-    command?: (ctx: { node: SchemaNode, index: number, siblingCount: number }, e: MouseEvent) => Command | null | undefined
-    handler?: (ctx: { node: SchemaNode, index: number, siblingCount: number }, e: MouseEvent) => void
-    className?: string
-  }>
 }
 
 /**
  * Widget meta protocol — the contract every widget registers with the engine.
  */
-export interface WidgetMeta {
+export interface CoreWidgetMeta {
   /** Unique widget type identifier */
   type: string
   /** Human-readable title for material panel */
@@ -343,17 +327,11 @@ export interface WidgetMeta {
   // ── Action system ──
 
   /** Per-widget toolbar action configuration */
-  actions?: WidgetActionConfig
-
-  // ── Custom wrapper ──
-
-  /**
-   * Custom wrapper component for this specific widget type.
-   * If provided, overrides the global nodeWrapper extension for this widget.
-   * Receives NodeWrapperProps and must render a default slot.
-   */
-  wrapper?: Component
+  actions?: CoreWidgetActionConfig
 }
+
+export type WidgetMeta = CoreWidgetMeta
+export type WidgetActionConfig = CoreWidgetActionConfig
 
 // ──────────────────────────────────────────
 // Command system

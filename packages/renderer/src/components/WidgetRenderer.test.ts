@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
 import { CommandType } from '@dragcraft/core'
@@ -22,7 +22,7 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
 
 function makeContext(meta: WidgetMeta): RendererContext {
   const selectNode = vi.fn()
-  const schema = {
+  const schema: DesignerSchema = {
     version: '1.0.0',
     globalConfig: {},
     root: { id: 'root', type: 'root', props: {}, children: [] },

@@ -1,4 +1,4 @@
-import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { RendererContext } from '../types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
@@ -20,7 +20,7 @@ function makeMeta(type: string, overrides?: Partial<WidgetMeta>): WidgetMeta {
 }
 
 function makeContext(overrides?: Partial<RendererContext>): RendererContext {
-  const schema = { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }
+  const schema: DesignerSchema = { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }
   return {
     engine: {
       store: {

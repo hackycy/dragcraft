@@ -62,6 +62,8 @@ export type {
   CommandContext,
   CommandHandler,
   CommandResult,
+  CoreWidgetActionConfig,
+  CoreWidgetMeta,
   CreatableBehaviorPredicate,
   CreatableBehaviorResult,
   CreatableDecision,

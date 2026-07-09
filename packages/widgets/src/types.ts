@@ -1,4 +1,4 @@
-import type { WidgetMeta } from '@dragcraft/core'
+import type { CoreWidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
 
 // ──────────────────────────────────────────
@@ -9,9 +9,9 @@ import type { Component } from 'vue'
  * Complete widget definition combining metadata and Vue component.
  * Used for registering widgets with the engine and renderer.
  */
-export interface WidgetDefinition {
+export interface WidgetDefinition<Meta extends CoreWidgetMeta = CoreWidgetMeta> {
   /** Widget metadata for core registry */
-  meta: WidgetMeta
+  meta: Meta
   /** Vue component for rendering in canvas */
   component: Component
 }

@@ -1,7 +1,8 @@
-import type { Command, DesignerEngine, InstanceBehaviorContext, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { Command, DesignerEngine, InstanceBehaviorContext, SchemaNode } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
+import type { RendererWidgetMeta } from './types'
 import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
@@ -51,7 +52,7 @@ export interface NodeActionContext {
   /** Sort scope this action context belongs to, or false when unsorted */
   sortScope: string | false
   /** The widget meta, if registered */
-  meta: WidgetMeta | undefined
+  meta: RendererWidgetMeta | undefined
   /** The engine instance for executing commands */
   engine: DesignerEngine
 }

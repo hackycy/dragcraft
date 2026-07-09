@@ -1,6 +1,7 @@
-import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core'
 import type { NodeActionContext } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
+import type { RendererWidgetMeta } from './types'
 import { resolveBehavior } from '@dragcraft/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
@@ -32,7 +33,7 @@ function makeNode(overrides?: Partial<SchemaNode>): SchemaNode {
 }
 
 function makeEngine(overrides?: Partial<DesignerEngine>): DesignerEngine {
-  const schema = { version: '1', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }
+  const schema: DesignerSchema = { version: '1', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }
   return {
     store: {
       schema: { value: schema },
@@ -56,7 +57,7 @@ function makeEngine(overrides?: Partial<DesignerEngine>): DesignerEngine {
   } as DesignerEngine
 }
 
-function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
+function makeMeta(overrides?: Partial<RendererWidgetMeta>): RendererWidgetMeta {
   return {
     type: 'button',
     title: 'Button',
@@ -64,7 +65,7 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
     defaultProps: {},
     formSchema: { sections: [] },
     ...overrides,
-  } as WidgetMeta
+  } as RendererWidgetMeta
 }
 
 function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>): NodeActionContext {
@@ -78,6 +79,19 @@ function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>)
     ...overrides,
   }
 }
+
+it('accepts renderer-specific widget metadata with Vue UI fields', () => {
+  const meta: RendererWidgetMeta = {
+    type: 'text',
+    title: 'Text',
+    group: 'basic',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    actions: { exclude: ['delete'] },
+  }
+
+  expect(meta.actions?.exclude).toEqual(['delete'])
+})
 
 describe('createDefaultActions', () => {
   afterEach(() => {

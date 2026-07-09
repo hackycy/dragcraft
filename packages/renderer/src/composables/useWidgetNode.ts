@@ -1,6 +1,6 @@
-import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
-import type { NodeInteractionState, RendererContext } from '../types'
+import type { NodeInteractionState, RendererContext, RendererWidgetMeta } from '../types'
 import { resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
 import { runBeforeAfterHook } from '../event-hooks'
@@ -12,7 +12,7 @@ export interface UseWidgetNodeReturn {
   /** The resolved Vue component for this widget type, or undefined */
   resolvedComponent: ComputedRef<Component | undefined>
   /** The widget meta from the registry */
-  meta: ComputedRef<WidgetMeta | undefined>
+  meta: ComputedRef<RendererWidgetMeta | undefined>
   /** Whether to use mask (from meta.mask, default true) */
   useMask: ComputedRef<boolean>
   /** Whether this node is selectable (from meta.selectable, default true) */
@@ -54,7 +54,9 @@ export function useWidgetNode(
 
   const state = useNodeState(() => getNode().id, ctx)
 
-  const meta = computed(() => engine.registry.getWidget(getNode().type))
+  const meta = computed<RendererWidgetMeta | undefined>(() =>
+    engine.registry.getWidget(getNode().type) as RendererWidgetMeta | undefined,
+  )
   const resolvedComponent = computed(() => componentMap[getNode().type])
   const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, engine.state.getSchema()))
   const inSortScope = computed(() => layout.value.sortScope !== false)
