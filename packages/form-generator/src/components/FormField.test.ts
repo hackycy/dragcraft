@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import type { FieldComponentMap, FormSchema } from '../types'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick } from 'vue'
+import { createApp, defineComponent, h, nextTick, reactive, ref } from 'vue'
 import FormGenerator from './FormGenerator'
 
 const InputLike = defineComponent({
@@ -44,6 +44,23 @@ const SwitchLike = defineComponent({
   },
 })
 
+const DisplayLike = defineComponent({
+  name: 'DisplayLike',
+  props: {
+    modelValue: { type: null, default: undefined },
+    disabled: { type: Boolean, default: false },
+  },
+  emits: ['update:modelValue'],
+  setup(props) {
+    return () =>
+      h('div', {
+        'class': 'display-like',
+        'data-value': props.modelValue === null ? 'null' : String(props.modelValue),
+        'data-disabled': String(props.disabled),
+      })
+  },
+})
+
 const fieldComponentMap: FieldComponentMap = {
   Input: {
     component: InputLike,
@@ -54,6 +71,9 @@ const fieldComponentMap: FieldComponentMap = {
     component: SwitchLike,
     modelPropName: 'checked',
     updateEventName: 'onUpdate:checked',
+  },
+  Display: {
+    component: DisplayLike,
   },
 }
 
@@ -205,6 +225,203 @@ describe('formField', () => {
       const input = host.querySelector<HTMLInputElement>('.input-like')
 
       expect(input?.disabled).toBe(true)
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('reacts when a schema replaces a field object with the same key', async () => {
+    const schemaRef = ref<FormSchema>({
+      sections: [{
+        title: 'Basic',
+        fields: [{
+          key: 'name',
+          label: 'Name',
+          component: 'Input',
+          componentProps: { placeholder: 'Old placeholder' },
+        }],
+      }],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () =>
+        h(FormGenerator, {
+          schema: schemaRef.value,
+          values: { name: 'Ada' },
+          fieldComponentMap,
+        }),
+    })
+    app.mount(host)
+
+    try {
+      await nextTick()
+      expect(host.querySelector<HTMLInputElement>('.input-like')?.placeholder).toBe('Old placeholder')
+
+      schemaRef.value = {
+        sections: [{
+          title: 'Basic',
+          fields: [{
+            key: 'name',
+            label: 'Full name',
+            component: 'Input',
+            componentProps: { placeholder: 'New placeholder' },
+          }],
+        }],
+      }
+      await nextTick()
+
+      expect(host.querySelector<HTMLInputElement>('.input-like')?.placeholder).toBe('New placeholder')
+      expect(host.querySelector('.dc-form-field__label')?.textContent).toBe('Full name')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('syncs in-place parent value mutations into rendered controls', async () => {
+    const schema: FormSchema = {
+      sections: [{
+        title: 'Basic',
+        fields: [{ key: 'name', label: 'Name', component: 'Input' }],
+      }],
+    }
+    const values = reactive({ name: 'Ada' })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () =>
+        h(FormGenerator, {
+          schema,
+          values,
+          fieldComponentMap,
+        }),
+    })
+    app.mount(host)
+
+    try {
+      await nextTick()
+      expect(host.querySelector<HTMLInputElement>('.input-like')?.value).toBe('Ada')
+
+      values.name = 'Grace'
+      await nextTick()
+
+      expect(host.querySelector<HTMLInputElement>('.input-like')?.value).toBe('Grace')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('does not validate fields hidden from the generated form', async () => {
+    const schema: FormSchema = {
+      sections: [{
+        title: 'Basic',
+        fields: [{
+          key: 'secret',
+          label: 'Secret',
+          component: 'Input',
+          ifShow: false,
+          rules: [{ required: true, message: 'Secret required' }],
+        }],
+      }],
+    }
+    const formRef = ref<{ validate: () => Array<{ key: string, message: string }> }>()
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () =>
+        h(FormGenerator, {
+          ref: formRef,
+          schema,
+          values: { secret: '' },
+          fieldComponentMap,
+        }),
+    })
+    app.mount(host)
+
+    try {
+      await nextTick()
+      expect(formRef.value?.validate()).toEqual([])
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('revalidates fields that depend on a changed controller field', async () => {
+    const schema: FormSchema = {
+      sections: [{
+        title: 'Basic',
+        fields: [
+          { key: 'enabled', label: 'Enabled', component: 'Switch' },
+          {
+            key: 'endpoint',
+            label: 'Endpoint',
+            component: 'Input',
+            dependencies: {
+              fields: ['enabled'],
+              handler: form => ({
+                rules: form.enabled ? [{ required: true, message: 'Endpoint required' }] : [],
+              }),
+            },
+          },
+        ],
+      }],
+    }
+    const formRef = ref<{ validate: () => Array<{ key: string, message: string }> }>()
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () =>
+        h(FormGenerator, {
+          ref: formRef,
+          schema,
+          values: { enabled: true, endpoint: '' },
+          fieldComponentMap,
+        }),
+    })
+    app.mount(host)
+
+    try {
+      await nextTick()
+      expect(formRef.value?.validate()).toEqual([{ key: 'endpoint', message: 'Endpoint required' }])
+      await nextTick()
+      expect(host.querySelector('.dc-form-field__error')?.textContent).toBe('Endpoint required')
+
+      host.querySelector<HTMLButtonElement>('.switch-like')!.click()
+      await nextTick()
+
+      expect(host.querySelector('.dc-form-field__error')).toBeNull()
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('preserves null values instead of replacing them with defaultValue', async () => {
+    const schema: FormSchema = {
+      sections: [{
+        title: 'Basic',
+        fields: [{
+          key: 'choice',
+          label: 'Choice',
+          component: 'Display',
+          defaultValue: 'fallback',
+        }],
+      }],
+    }
+    const { app, host } = mountForm(schema, { choice: null })
+
+    try {
+      await nextTick()
+      expect(host.querySelector<HTMLElement>('.display-like')?.dataset.value).toBe('null')
     }
     finally {
       app.unmount()

@@ -1,5 +1,5 @@
 import type { FieldSchema, FormSchema } from '../types'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { useFormValidation } from './useFormValidation'
 
 function makeSchema(fieldOverrides?: Record<string, Partial<FieldSchema>>): FormSchema {
@@ -200,6 +200,30 @@ describe('useFormValidation', () => {
       validateField('email')
       expect(fieldErrors.value.email).toBeUndefined()
     })
+
+    it('warns when duplicate field keys are indexed', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [
+            { key: 'name', label: 'Name', component: 'input' },
+            { key: 'name', label: 'Duplicate name', component: 'input' },
+          ],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ name: 'Ada' }))
+
+      try {
+        validateField('name')
+        expect(warn).toHaveBeenCalledWith(
+          '[dragcraft/form-generator] Duplicate field key "name" found in schema.',
+        )
+      }
+      finally {
+        warn.mockRestore()
+      }
+    })
   })
 
   describe('validateAll', () => {
@@ -243,6 +267,49 @@ describe('useFormValidation', () => {
       values.name = 'John'
       validateAll()
       expect(fieldErrors.value.name).toBeUndefined()
+    })
+
+    it('skips fields hidden by ifShow, visible, or show predicates', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Hidden',
+          fields: [
+            {
+              key: 'ifHidden',
+              label: 'If hidden',
+              component: 'input',
+              ifShow: false,
+              rules: [{ required: true, message: 'ifShow should be skipped' }],
+            },
+            {
+              key: 'visibleHidden',
+              label: 'Visible hidden',
+              component: 'input',
+              visible: () => false,
+              rules: [{ required: true, message: 'visible should be skipped' }],
+            },
+            {
+              key: 'showHidden',
+              label: 'Show hidden',
+              component: 'input',
+              show: false,
+              rules: [{ required: true, message: 'show should be skipped' }],
+            },
+          ],
+        }],
+      }
+      const { validateAll, fieldErrors } = useFormValidation(schema, () => ({
+        ifHidden: '',
+        visibleHidden: '',
+        showHidden: '',
+      }))
+
+      expect(validateAll()).toEqual([])
+      expect(fieldErrors.value).toEqual({
+        ifHidden: undefined,
+        visibleHidden: undefined,
+        showHidden: undefined,
+      })
     })
   })
 
@@ -660,6 +727,24 @@ describe('useFormValidation', () => {
       }
       const { validateField } = useFormValidation(schema, () => ({ code: 'ABC' }))
 
+      expect(validateField('code')).toBeUndefined()
+    })
+
+    it('resets stateful regex patterns before each validation', () => {
+      const schema: FormSchema = {
+        sections: [{
+          title: 'Test',
+          fields: [{
+            key: 'code',
+            label: 'Code',
+            component: 'input',
+            rules: [{ pattern: /a/g }],
+          }],
+        }],
+      }
+      const { validateField } = useFormValidation(schema, () => ({ code: 'a' }))
+
+      expect(validateField('code')).toBeUndefined()
       expect(validateField('code')).toBeUndefined()
     })
 

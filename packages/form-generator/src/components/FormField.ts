@@ -21,7 +21,7 @@ export default defineComponent({
     const ctx = useFormGeneratorContext()
     const { t } = useI18n()
 
-    const { resolvedField } = useFieldDependencies(props.field, ctx)
+    const { resolvedField } = useFieldDependencies(() => props.field, ctx)
     const { isVisible, isShown, isDisabled } = useFieldState(() => resolvedField.value, ctx)
 
     return () => {
@@ -32,7 +32,8 @@ export default defineComponent({
       const formCtx: FormContext = createFormContext(ctx.values)
 
       // Value transform: model -> component
-      const rawValue = ctx.getFieldValue(field.key) ?? field.defaultValue
+      const value = ctx.getFieldValue(field.key)
+      const rawValue = value === undefined ? field.defaultValue : value
       const schemaValue = field.valueFormat?.(rawValue, formCtx) ?? rawValue
       const definition = ctx.fieldComponentMap[field.component]
       const transformCtx = { field, values: ctx.values }

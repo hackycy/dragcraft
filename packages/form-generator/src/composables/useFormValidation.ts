@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import type { FieldSchema, FormContext, FormSchema, ValidationError } from '../types'
 import { ref } from 'vue'
-import { createFormContext } from '../utils'
+import { createFormContext, evaluateBoolean } from '../utils'
 
 /**
  * Form-level validation interface.
@@ -28,6 +28,9 @@ function createFieldIndex(schema: FormSchema): Map<string, FieldSchema> {
 
   for (const section of schema.sections) {
     for (const field of section.fields) {
+      if (index.has(field.key)) {
+        console.warn(`[dragcraft/form-generator] Duplicate field key "${field.key}" found in schema.`)
+      }
       index.set(field.key, field)
     }
   }
@@ -47,6 +50,11 @@ export function findFieldSchema(schema: FormSchema, key: string): FieldSchema | 
 
 function isEmptyValue(value: unknown): boolean {
   return value === null || value === undefined || value === ''
+}
+
+function shouldValidateField(field: FieldSchema, formCtx: FormContext): boolean {
+  const visible = field.ifShow !== undefined ? field.ifShow : field.visible
+  return evaluateBoolean(visible, formCtx, true) && evaluateBoolean(field.show, formCtx, true)
 }
 
 function runFieldValidation(
@@ -87,8 +95,10 @@ function runFieldValidation(
     }
 
     // pattern (string only)
-    if (rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
-      return rule.message ?? 'Invalid format'
+    if (rule.pattern && typeof value === 'string') {
+      rule.pattern.lastIndex = 0
+      if (!rule.pattern.test(value))
+        return rule.message ?? 'Invalid format'
     }
 
     // enum
@@ -140,6 +150,11 @@ export function useFormValidation(
     const values = getValues()
     const value = values[key]
     const formCtx: FormContext = createFormContext(values)
+    if (!shouldValidateField(field, formCtx)) {
+      fieldErrors.value = { ...fieldErrors.value, [key]: undefined }
+      return undefined
+    }
+
     const error = runFieldValidation(field, value, formCtx)
 
     fieldErrors.value = { ...fieldErrors.value, [key]: error }
@@ -156,6 +171,11 @@ export function useFormValidation(
       for (const field of section.fields) {
         const resolved = resolveField?.(field.key) ?? field
         const value = values[resolved.key]
+        if (!shouldValidateField(resolved, formCtx)) {
+          newFieldErrors[resolved.key] = undefined
+          continue
+        }
+
         const error = runFieldValidation(resolved, value, formCtx)
         newFieldErrors[resolved.key] = error
         if (error) {

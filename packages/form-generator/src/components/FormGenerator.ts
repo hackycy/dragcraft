@@ -1,10 +1,26 @@
 import type { PropType } from 'vue'
-import type { FieldChangePayload, FieldComponentMap, FormGeneratorContext, FormSchema, SectionTogglePayload } from '../types'
+import type { FieldChangePayload, FieldComponentMap, FieldSchema, FormGeneratorContext, FormSchema, SectionTogglePayload } from '../types'
 import { computed, defineComponent, h, provide, reactive, watch } from 'vue'
 import { findFieldSchema, useFormValidation } from '../composables/useFormValidation'
 import { FORM_GENERATOR_CONTEXT_KEY } from '../types'
 import { copyFormValues, resolveFieldDependencies, syncReactiveRecord } from '../utils'
 import FormSection from './FormSection'
+
+function createDependencyIndex(schema: FormSchema): Map<string, string[]> {
+  const index = new Map<string, string[]>()
+
+  for (const section of schema.sections) {
+    for (const field of section.fields) {
+      for (const dependencyKey of field.dependencies?.fields ?? []) {
+        const dependentKeys = index.get(dependencyKey) ?? []
+        dependentKeys.push(field.key)
+        index.set(dependencyKey, dependentKeys)
+      }
+    }
+  }
+
+  return index
+}
 
 export default defineComponent({
   name: 'DcFormGenerator',
@@ -44,10 +60,11 @@ export default defineComponent({
       (newValues) => {
         syncReactiveRecord(localValues, newValues)
       },
-      { deep: false },
+      { deep: true },
     )
 
     const fieldComponentMapRef = computed(() => props.fieldComponentMap ?? {})
+    const dependencyIndex = computed(() => createDependencyIndex(props.schema))
 
     // Expose localValues directly for fine-grained reactivity in useFieldState
     const getFormValues = () => copyFormValues(localValues)
@@ -65,11 +82,20 @@ export default defineComponent({
       resolveField,
     )
 
+    const validateResolvedField = (key: string, resolvedField?: FieldSchema) => {
+      const field = resolvedField ?? resolveField(key)
+      if (field)
+        validateField(key, field)
+    }
+
     // Field change handler
     // Note: validation is called by FormField with the resolved field
     const onFieldChange = (key: string, value: unknown) => {
       localValues[key] = value
       emit('change', { key, value })
+      for (const dependentKey of dependencyIndex.value.get(key) ?? []) {
+        validateResolvedField(dependentKey)
+      }
     }
 
     // Disabled ref

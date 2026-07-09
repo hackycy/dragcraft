@@ -93,6 +93,36 @@ describe('useFieldDependencies', () => {
     expect(resolvedField.value.ifShow).toBe(true)
   })
 
+  it('does not recompute when unrelated fields change', async () => {
+    const handler = vi.fn(form => ({
+      ifShow: form.sourceType === 'api',
+    }))
+    const field: FieldSchema = {
+      key: 'endpoint',
+      label: 'Endpoint',
+      component: 'input',
+      dependencies: {
+        fields: ['sourceType'],
+        handler,
+      },
+    }
+    const ctx = makeCtx({ sourceType: 'api', unrelated: 'initial' })
+    const { resolvedField } = useFieldDependencies(field, ctx)
+
+    expect(resolvedField.value.ifShow).toBe(true)
+    expect(handler).toHaveBeenCalledTimes(1)
+
+    ctx.values.unrelated = 'changed'
+    await new Promise(r => setTimeout(r, 0))
+    expect(resolvedField.value.ifShow).toBe(true)
+    expect(handler).toHaveBeenCalledTimes(1)
+
+    ctx.values.sourceType = 'static'
+    await new Promise(r => setTimeout(r, 0))
+    expect(resolvedField.value.ifShow).toBe(false)
+    expect(handler).toHaveBeenCalledTimes(2)
+  })
+
   it('passes current field value as second argument to handler', () => {
     let receivedFieldValue: unknown
     const field: FieldSchema = {
