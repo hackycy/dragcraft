@@ -115,7 +115,7 @@ describe('first-run docs content', () => {
     const readme = readWorkspaceFile('README.md')
 
     expect(readme).toContain('## 文档')
-    expect(readme).toContain('- `docs/`: 面向使用者的 VitePress 文档站点')
+    expect(readme).toContain('- `docs/`: 面向接入者的文档站点')
     expect(readme).toContain('- `.github/architecture/`: 面向维护者的架构文档')
   })
 })
