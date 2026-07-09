@@ -78,6 +78,32 @@ describe('first-run docs content', () => {
     expect(importExportAndI18n).toContain('[参考总览](/reference/overview)')
   })
 
+  it('explains where widget materials and field adapters come from', () => {
+    const materialsAndFields = readWorkspaceFile('docs/guide/materials-and-fields.md')
+
+    expect(materialsAndFields).toContain('# 物料与字段')
+    expect(materialsAndFields).toContain('这一页会回答两个问题：左侧能拖的物料从哪里来，右侧字段组件又是怎么接进来的。')
+    expect(materialsAndFields).toContain('import { registerWidgets, buildComponentMap } from \'@dragcraft/widgets\'')
+    expect(materialsAndFields).toContain('import { createAntDesignVueFields } from \'@dragcraft/fields-ant-design-vue\'')
+    expect(materialsAndFields).toContain('设计器左侧显示哪些卡片，取决于 `DesignerWidgetMeta.material`。')
+    expect(materialsAndFields).toContain('const fieldComponentMap = createAntDesignVueFields()')
+    expect(materialsAndFields).toContain('这个 map 会把 `Input`、`Select`、`Switch` 这类字段类型绑定到真实组件')
+    expect(materialsAndFields).toContain('[主题与设备框架](/guide/themes-and-device-frames)')
+  })
+
+  it('explains when to apply themes alone and when to add device frames', () => {
+    const themesAndDeviceFrames = readWorkspaceFile('docs/guide/themes-and-device-frames.md')
+
+    expect(themesAndDeviceFrames).toContain('# 主题与设备框架')
+    expect(themesAndDeviceFrames).toContain('这一页会解释什么时候直接导入主题，什么时候再接入设备外壳。')
+    expect(themesAndDeviceFrames).toContain('import \'@dragcraft/themes/antd\'')
+    expect(themesAndDeviceFrames).toContain('import \'@dragcraft/device-frames/styles\'')
+    expect(themesAndDeviceFrames).toContain('主题包不会改动组件逻辑，它只覆盖稳定的 `dc-*` class 和 CSS 变量。')
+    expect(themesAndDeviceFrames).toContain('const deviceCtx = createDeviceFrameContext({ initialDevice: \'iphone\' })')
+    expect(themesAndDeviceFrames).toContain('toolbarRenderer: createDeviceToolbarRenderer(deviceCtx),')
+    expect(themesAndDeviceFrames).toContain('[导入导出与国际化](/guide/import-export-and-i18n)')
+  })
+
   it('points the root README docs section at the consumer site and maintainer architecture docs', () => {
     const readme = readWorkspaceFile('README.md')
 
