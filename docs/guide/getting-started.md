@@ -22,7 +22,7 @@ const designer = createDesigner({
 ## 安装依赖
 
 ```bash
-pnpm add @dragcraft/designer @dragcraft/themes @dragcraft/fields-ant-design-vue vue
+pnpm add @dragcraft/designer @dragcraft/themes @dragcraft/fields-ant-design-vue ant-design-vue vue
 ```
 
 如果你想直接得到完整视觉样式，导入 `@dragcraft/themes`。如果你准备完全自定义样式，也可以先不导入主题。

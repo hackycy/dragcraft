@@ -28,7 +28,7 @@ describe('first-run docs content', () => {
     expect(gettingStarted).toContain('import { createAntDesignVueFields } from \'@dragcraft/fields-ant-design-vue\'')
     expect(gettingStarted).toContain('fieldComponentMap: createAntDesignVueFields(),')
     expect(gettingStarted).toContain('globalConfigSchema: myGlobalConfigSchema,')
-    expect(gettingStarted).toContain('pnpm add @dragcraft/designer @dragcraft/themes @dragcraft/fields-ant-design-vue vue')
+    expect(gettingStarted).toContain('pnpm add @dragcraft/designer @dragcraft/themes @dragcraft/fields-ant-design-vue ant-design-vue vue')
     expect(gettingStarted).toContain('<DcDesigner :instance="designer" />')
     expect(gettingStarted).toContain('[核心心智模型](/guide/mental-model)')
   })
