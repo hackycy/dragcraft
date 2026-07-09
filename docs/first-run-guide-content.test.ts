@@ -44,6 +44,40 @@ describe('first-run docs content', () => {
     expect(mentalModel).toContain('[Schema 与布局](/guide/schema-and-layout)')
   })
 
+  it('explains schema shape and layout projection for the next concepts guide', () => {
+    const schemaAndLayout = readWorkspaceFile('docs/guide/schema-and-layout.md')
+
+    expect(schemaAndLayout).toContain('# Schema 与布局')
+    expect(schemaAndLayout).toContain('这一页会解释两个问题：schema 长什么样，以及节点为什么会进入内容流、chrome 或浮层。')
+    expect(schemaAndLayout).toContain('dragcraft 目前采用扁平模型，真正参与页面编排的是 `root.children`。')
+    expect(schemaAndLayout).toContain('节点通过 `layout.placement` 表达布局意图。')
+    expect(schemaAndLayout).toContain('`@dragcraft/core` 先把 `root.children` 投影成 `LayoutPlan`。')
+    expect(schemaAndLayout).toContain('[集成设计器](/guide/designer-integration)')
+  })
+
+  it('breaks down the standard createDesigner integration inputs', () => {
+    const designerIntegration = readWorkspaceFile('docs/guide/designer-integration.md')
+
+    expect(designerIntegration).toContain('# 集成设计器')
+    expect(designerIntegration).toContain('这一页会把 `createDesigner()` 的输入项拆开讲清楚。')
+    expect(designerIntegration).toContain('widgetMetas: playgroundWidgetMetas,')
+    expect(designerIntegration).toContain('fieldComponentMap: buildPlaygroundFieldComponentMap(),')
+    expect(designerIntegration).toContain('读取 schema 和交互状态时，优先通过 `engine.state`。')
+    expect(designerIntegration).toContain('如果你要提交 schema 变更，统一通过 `engine.execute()`。')
+    expect(designerIntegration).toContain('[物料与字段](/guide/materials-and-fields)')
+  })
+
+  it('covers schema import export and message merging for i18n', () => {
+    const importExportAndI18n = readWorkspaceFile('docs/guide/import-export-and-i18n.md')
+
+    expect(importExportAndI18n).toContain('# 导入导出与国际化')
+    expect(importExportAndI18n).toContain('这一页会解释 schema 的进出路径，以及语言包是怎么合并进去的。')
+    expect(importExportAndI18n).toContain('const { exportSchema, importSchema, undo, redo } = useDesigner(designer)')
+    expect(importExportAndI18n).toContain('如果 schema 缺少 `root` 或 `version`，core 会直接拒绝导入。')
+    expect(importExportAndI18n).toContain('`createDesigner()` 会先加载 designer 和 renderer 的默认文案，再把你传入的 `messages` 合并进去。')
+    expect(importExportAndI18n).toContain('[参考总览](/reference/overview)')
+  })
+
   it('points the root README docs section at the consumer site and maintainer architecture docs', () => {
     const readme = readWorkspaceFile('README.md')
 
