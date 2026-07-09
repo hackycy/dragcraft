@@ -314,7 +314,6 @@ Vue 组件引用、`wrapper` 和 renderer 侧 action extra 配置不属于 core 
 | `deletable` | `true` | 为 `false` 时隐藏删除按钮 |
 | `creatable` | `true` | 为 `false` 或返回禁止决策时，禁止创建该类型的新实例；拖入、复制等 `ADD_NODE` 入口都会被 core 拦截 |
 | `actions` | 无 | 控制节点工具栏动作 |
-| `wrapper` | 无 | 为该 widget 类型覆盖全局 nodeWrapper |
 
 当行为字段为函数时，renderer 在 `computed` 中求值，schema 变更会触发重新计算。
 
@@ -354,31 +353,18 @@ Core 提供位置锁定工具函数：
 - `getValidDropIndices(children, lockedIndices, sourceNodeId)`。
 - `findNearestValidIndex(rawIndex, validIndices)`。
 
-## WidgetActionConfig
+## CoreWidgetActionConfig
 
 Per-widget 动作配置用于控制节点工具栏：
 
 ```ts
-interface WidgetActionConfig {
+interface CoreWidgetActionConfig {
   only?: string[]
   exclude?: string[]
-  extra?: Array<{
-    key: string
-    label: string
-    icon?: string | Component
-    type: 'button' | 'drag-handle'
-    order: number
-    risk?: 'normal' | 'destructive'
-    metadata?: Record<string, unknown>
-    visible?: (ctx) => boolean
-    available?: (ctx) => boolean
-    disabled?: (ctx) => boolean
-    command?: (ctx, e: MouseEvent) => Command | null | undefined
-    handler?: (ctx, e: MouseEvent) => void
-    className?: string
-  }>
 }
 ```
+
+Renderer 侧 `wrapper` 与 action `extra` 扩展见 [`.github/architecture/03-designer-and-renderer.md`](/Users/qigong-it-1/Workspace/dragcraft-worktrees/architecture-fixes/.github/architecture/03-designer-and-renderer.md)。
 
 ## Core 工具函数
 

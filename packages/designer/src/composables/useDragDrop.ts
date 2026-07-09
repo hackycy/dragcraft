@@ -1,4 +1,5 @@
-import type { CreationBlockReason, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { CreationBlockReason, DesignerEngine, SchemaNode } from '@dragcraft/core'
+import type { RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
 import {
   CommandType,
@@ -29,7 +30,7 @@ export interface UseDragDropReturn {
   /** Valid drop indices for the current drag operation */
   validDropIndices: ComputedRef<ReadonlySet<number> | null>
   /** Start dragging a new widget from the material panel */
-  handleMaterialDragStart: (e: DragEvent, meta: WidgetMeta) => void
+  handleMaterialDragStart: (e: DragEvent, meta: RendererWidgetMeta) => void
   /** Handle dragover on the canvas (event delegation) */
   handleCanvasDragOver: (e: DragEvent) => void
   /** Handle dragleave on the canvas (event delegation) */
@@ -100,7 +101,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   // ── Visual drop index computation ──
 
-  function resolveMetaSortScope(meta: WidgetMeta): string | false {
+  function resolveMetaSortScope(meta: RendererWidgetMeta): string | false {
     const placement = meta.defaultLayout?.placement
     if (!placement || placement.kind === 'flow') {
       const region = placement?.region ?? DEFAULT_LAYOUT_REGION
@@ -164,14 +165,14 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       : findNearestValidIndex(rawIndex, valid)
   }
 
-  function canCreateWidget(meta: WidgetMeta): boolean {
+  function canCreateWidget(meta: RendererWidgetMeta): boolean {
     return resolveCreatable(meta.creatable, {
       widgetType: meta.type,
       schema: engine.state.getSchema(),
     }).allowed
   }
 
-  function createSchemaNode(meta: WidgetMeta): SchemaNode {
+  function createSchemaNode(meta: RendererWidgetMeta): SchemaNode {
     return {
       id: generateShortId(),
       type: meta.type,
@@ -199,7 +200,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   // ── Drag start handlers ──
 
-  function handleMaterialDragStart(e: DragEvent, meta: WidgetMeta): void {
+  function handleMaterialDragStart(e: DragEvent, meta: RendererWidgetMeta): void {
     engine.store.setDragTarget({
       sourceNodeId: null,
       widgetType: meta.type,

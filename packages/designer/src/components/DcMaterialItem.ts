@@ -1,4 +1,4 @@
-import type { WidgetMeta } from '@dragcraft/core'
+import type { RendererWidgetMeta } from '@dragcraft/renderer'
 import type { PropType } from 'vue'
 import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h, ref } from 'vue'
@@ -9,7 +9,7 @@ export default defineComponent({
 
   props: {
     meta: {
-      type: Object as PropType<WidgetMeta>,
+      type: Object as PropType<RendererWidgetMeta>,
       required: true,
     },
   },

@@ -90,6 +90,19 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
+  it('same-index MOVE_NODE does not push history or emit schema changed', () => {
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('a'), makeNode('b')]) })
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    engine.execute({ type: CommandType.MOVE_NODE, payload: { nodeId: 'a', index: 0 } })
+
+    expect(engine.store.schema.value.root.children?.map(node => node.id)).toEqual(['a', 'b'])
+    expect(engine.history.canUndo()).toBe(false)
+    expect(schemaChanged).not.toHaveBeenCalled()
+    engine.dispose()
+  })
+
   it('invalid REMOVE_NODE does not push history or emit schema changed', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })

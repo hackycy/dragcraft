@@ -1,6 +1,6 @@
-import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance, WidgetMeta } from '@dragcraft/core'
+import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
-import type { ActionInterceptor, ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions } from '@dragcraft/renderer'
+import type { ActionInterceptor, ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/utils'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
@@ -34,7 +34,7 @@ export interface DesignerOptions {
   /** Core engine options (initialSchema, maxHistorySize) */
   engineOptions?: EngineOptions
   /** Widget metas to register with the engine */
-  widgetMetas?: WidgetMeta[]
+  widgetMetas?: RendererWidgetMeta[]
   /** Widget type → Vue component map for canvas rendering */
   componentMap?: ComponentMap
   /** Widget group configurations for material panel. If not provided, groups are derived from registered widgets. */
@@ -93,7 +93,7 @@ export interface DesignerExtensions {
   /** Completely replace the right property panel */
   propertyPanelRenderer?: Component
   /** Custom render function for a single material item card */
-  renderWidgetItem?: (meta: WidgetMeta) => Component
+  renderWidgetItem?: (meta: RendererWidgetMeta) => Component
   /** Renderer extensions (dropIndicator) forwarded to @dragcraft/renderer */
   rendererExtensions?: RendererExtensions
   /**
@@ -156,7 +156,7 @@ export interface DesignerContext {
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
   dragOverIndex: Ref<number | null>
-  handleMaterialDragStart: (e: DragEvent, meta: WidgetMeta) => void
+  handleMaterialDragStart: (e: DragEvent, meta: RendererWidgetMeta) => void
   handleDragEnd: (e: DragEvent) => void
   handleCanvasDragOver: (e: DragEvent) => void
   handleCanvasDragLeave: (e: DragEvent) => void

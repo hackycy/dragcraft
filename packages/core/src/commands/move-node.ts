@@ -33,6 +33,9 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
   }
 
   const targetScopeIndex = Math.min(payload.index, scopeEntries.length - 1)
+  if (targetScopeIndex === sourceScopeIndex)
+    return false
+
   const lockedIndices = getLockedIndicesFromEntries(scopeEntries, registry, rawSchema)
   if (lockedIndices.size > 0 && !isMoveAllowed(sourceScopeIndex, targetScopeIndex, lockedIndices)) {
     console.warn(

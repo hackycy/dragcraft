@@ -125,6 +125,9 @@ export type {
   RendererEventHooks,
   RendererExtensions,
   RendererOptions,
+  WidgetActionConfig as RendererWidgetActionConfig,
+  RendererWidgetActionExtra,
+  RendererWidgetMeta,
   ResolvedNodeAction,
   WidgetFallbackProps,
 } from '@dragcraft/renderer'
