@@ -62,8 +62,11 @@ export function resolveFieldBinding(
 }
 
 export function readPath(source: unknown, path: string): unknown {
+  if (!isSafePath(path))
+    return undefined
+
   let current = source
-  for (const segment of safePathSegments(path)) {
+  for (const segment of toPathSegments(path)) {
     if (typeof current !== 'object' || current === null)
       return undefined
     current = (current as Record<string, unknown>)[segment]

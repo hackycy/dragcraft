@@ -44,6 +44,13 @@ describe('field-binding', () => {
     expect(readBindingValue({ scope: 'globalConfig', path: 'theme' }, schema, null)).toBe('light')
   })
 
+  it('returns undefined for unsafe read paths', () => {
+    const schema = makeSchema()
+    const node = makeNode()
+
+    expect(readBindingValue({ scope: 'node', path: 'props.__proto__.polluted' }, schema, node)).toBeUndefined()
+  })
+
   it('creates UPDATE_PROPS commands for node props and styles', () => {
     expect(createBindingCommand({ scope: 'node', path: 'props.title' }, 'World', 'a')).toEqual({
       type: CommandType.UPDATE_PROPS,
