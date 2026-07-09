@@ -1,10 +1,10 @@
-import type { AddNodePayload, CommandContext } from '../types'
+import type { AddNodePayload, CommandContext, CommandResult } from '../types'
 import { resolveCreatable } from '../behavior'
 import { insertNodeIntoTree } from '../helpers'
 import { createLayoutPlan, DEFAULT_SORT_SCOPE, getSortableArrayIndexForInsert, getSortScopeEntries, resolveNodeLayout } from '../layout'
 import { getLockedIndicesFromEntries, isInsertAllowed } from '../sortable'
 
-export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): boolean | void {
+export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): CommandResult {
   const { store, registry } = ctx
   const rawSchema = store.getRawSchema()
   const meta = registry.getWidget(payload.node.type)
