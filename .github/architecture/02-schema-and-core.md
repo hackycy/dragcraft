@@ -206,7 +206,7 @@ engine.execute({ type, payload })
   -> cloneDeep before snapshot
   -> handler(ctx, payload) mutates raw schema or returns false
   -> if false: rollback and stop without history/events
-  -> if changed: push before snapshot to history
+  -> otherwise: push before snapshot to history
   -> store.triggerUpdate()
   -> eventHub.emit()
 ```

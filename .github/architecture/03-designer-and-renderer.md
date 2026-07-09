@@ -184,7 +184,7 @@ const {
 设计边界：
 
 - 不承担业务状态管理。
-- 不直接修改 schema；读取 schema 使用 `engine.state`，写入必须执行 core command。
+- 业务与命令外部读取 schema 时优先使用 `engine.state`；renderer 的响应式渲染可继续消费 store 侧的只读状态；写入必须执行 core command。
 - 选中和 hover 是 store 状态操作，移动、删除等 schema 写入必须执行 core command。
 - 不内置 CSS 样式，只应用 class。
 
