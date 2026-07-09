@@ -146,6 +146,36 @@ describe('createCommandBus', () => {
     expect(nodeAdded).not.toHaveBeenCalled()
   })
 
+  it('execute treats false as an unchanged command', () => {
+    const { commandBus, eventHub, history, store } = setup(
+      makeSchema([{ id: 'a', type: 'text', props: { label: 'original' } }]),
+    )
+    const triggerUpdate = vi.spyOn(store, 'triggerUpdate')
+    const schemaChanged = vi.fn()
+    eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    commandBus.registerHandler('NO_CHANGE', () => false)
+    commandBus.execute({ type: 'NO_CHANGE', payload: null })
+
+    expect(history.canUndo()).toBe(false)
+    expect(triggerUpdate).not.toHaveBeenCalled()
+    expect(schemaChanged).not.toHaveBeenCalled()
+  })
+
+  it('execute records void handlers as changed commands', () => {
+    const { commandBus, eventHub, history, store } = setup()
+    const triggerUpdate = vi.spyOn(store, 'triggerUpdate')
+    const schemaChanged = vi.fn()
+    eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    commandBus.registerHandler('CHANGED', () => {})
+    commandBus.execute({ type: 'CHANGED', payload: null })
+
+    expect(history.canUndo()).toBe(true)
+    expect(triggerUpdate).toHaveBeenCalledTimes(1)
+    expect(schemaChanged).toHaveBeenCalledTimes(1)
+  })
+
   it('execute does not emit events when handler throws', () => {
     const { commandBus, eventHub } = setup()
     const schemaChanged = vi.fn()

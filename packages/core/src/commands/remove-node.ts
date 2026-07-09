@@ -1,15 +1,15 @@
-import type { CommandContext, RemoveNodePayload } from '../types'
+import type { CommandContext, CommandResult, RemoveNodePayload } from '../types'
 import { removeNodeFromTree } from '../helpers'
 import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout } from '../layout'
 import { getLockedIndicesFromEntries, isRemoveAllowed } from '../sortable'
 
-export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayload): void {
+export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayload): CommandResult {
   const { store, registry } = ctx
   const rawSchema = store.getRawSchema()
 
   if (payload.nodeId === rawSchema.root.id) {
     console.warn('[dragcraft/core] REMOVE_NODE: cannot remove root node')
-    return
+    return false
   }
 
   // ── Sortable constraint ──
@@ -27,7 +27,7 @@ export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayloa
             `[dragcraft/core] REMOVE_NODE: blocked by sortable constraint`
             + ` (removing index ${removeIndex} would shift locked widgets)`,
           )
-          return
+          return false
         }
       }
     }
@@ -37,7 +37,7 @@ export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayloa
 
   if (!removed) {
     console.warn(`[dragcraft/core] REMOVE_NODE: node "${payload.nodeId}" not found`)
-    return
+    return false
   }
 
   if (store.selectedNodeId.value === payload.nodeId) {

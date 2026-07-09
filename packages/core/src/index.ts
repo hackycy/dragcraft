@@ -61,6 +61,7 @@ export type {
   Command,
   CommandContext,
   CommandHandler,
+  CommandResult,
   CreatableBehaviorPredicate,
   CreatableBehaviorResult,
   CreatableDecision,

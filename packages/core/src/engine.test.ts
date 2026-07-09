@@ -76,6 +76,51 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
+  it('invalid MOVE_NODE does not push history or emit schema changed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    engine.execute({ type: CommandType.MOVE_NODE, payload: { nodeId: 'missing', index: 0 } })
+
+    expect(engine.history.canUndo()).toBe(false)
+    expect(schemaChanged).not.toHaveBeenCalled()
+    warn.mockRestore()
+    engine.dispose()
+  })
+
+  it('invalid REMOVE_NODE does not push history or emit schema changed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    engine.execute({ type: CommandType.REMOVE_NODE, payload: { nodeId: 'root' } })
+
+    expect(engine.history.canUndo()).toBe(false)
+    expect(schemaChanged).not.toHaveBeenCalled()
+    warn.mockRestore()
+    engine.dispose()
+  })
+
+  it('invalid UPDATE_PROPS does not push history or emit schema changed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    engine.execute({
+      type: CommandType.UPDATE_PROPS,
+      payload: { nodeId: 'missing', props: { label: 'ignored' } },
+    })
+
+    expect(engine.history.canUndo()).toBe(false)
+    expect(schemaChanged).not.toHaveBeenCalled()
+    warn.mockRestore()
+    engine.dispose()
+  })
+
   it('execute REMOVE_NODE removes a node', () => {
     const engine = createEngine({ initialSchema: makeSchema([makeNode('a'), makeNode('b')]) })
     engine.execute({ type: CommandType.REMOVE_NODE, payload: { nodeId: 'a' } })

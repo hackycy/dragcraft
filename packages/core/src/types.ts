@@ -369,10 +369,12 @@ export interface CommandContext {
   registry: RegistryInstance
 }
 
+export type CommandResult = false | void
+
 export type CommandHandler<T = unknown> = (
   ctx: CommandContext,
   payload: T,
-) => boolean | void
+) => CommandResult
 
 // ──────────────────────────────────────────
 // Command payloads (built-in)

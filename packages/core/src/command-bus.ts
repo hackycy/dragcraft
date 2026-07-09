@@ -48,7 +48,7 @@ export function createCommandBus(
     }
 
     const beforeSnapshot = cloneSchemaRef(store.schema)
-    let result: boolean | void
+    let result: false | void
 
     try {
       result = handler(ctx, command.payload)

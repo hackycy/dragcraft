@@ -1,4 +1,4 @@
-import type { CommandContext, UpdatePropsPayload } from '../types'
+import type { CommandContext, CommandResult, UpdatePropsPayload } from '../types'
 import { findNodeById } from '../helpers'
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
@@ -17,14 +17,14 @@ function mergeRecord(target: Record<string, unknown>, patch: Record<string, unkn
   }
 }
 
-export function updatePropsHandler(ctx: CommandContext, payload: UpdatePropsPayload): void {
+export function updatePropsHandler(ctx: CommandContext, payload: UpdatePropsPayload): CommandResult {
   const { store } = ctx
   const rawSchema = store.getRawSchema()
   const node = findNodeById(rawSchema.root, payload.nodeId)
 
   if (!node) {
     console.warn(`[dragcraft/core] UPDATE_PROPS: node "${payload.nodeId}" not found`)
-    return
+    return false
   }
 
   mergeRecord(node.props, payload.props)

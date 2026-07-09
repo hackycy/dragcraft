@@ -1,26 +1,26 @@
-import type { CommandContext, MoveNodePayload } from '../types'
+import type { CommandContext, CommandResult, MoveNodePayload } from '../types'
 import { createLayoutPlan, getSortableArrayIndexForInsert, getSortScopeEntries, resolveNodeLayout } from '../layout'
 import { getLockedIndicesFromEntries, isMoveAllowed } from '../sortable'
 
-export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): void {
+export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): CommandResult {
   const { store, registry } = ctx
   const rawSchema = store.getRawSchema()
   const children = rawSchema.root.children
 
   if (!children)
-    return
+    return false
 
   const currentIndex = children.findIndex(c => c.id === payload.nodeId)
   if (currentIndex === -1) {
     console.warn(`[dragcraft/core] MOVE_NODE: node "${payload.nodeId}" not found`)
-    return
+    return false
   }
 
   // ── Sortable constraint ──
   const sourceLayout = resolveNodeLayout(children[currentIndex], registry)
   if (sourceLayout.sortScope === false) {
     console.warn(`[dragcraft/core] MOVE_NODE: node "${payload.nodeId}" is outside sortable scopes`)
-    return
+    return false
   }
 
   const sortScope = payload.sortScope ?? sourceLayout.sortScope
@@ -29,7 +29,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
   const sourceScopeIndex = scopeEntries.findIndex(entry => entry.node.id === payload.nodeId)
   if (sourceScopeIndex === -1) {
     console.warn(`[dragcraft/core] MOVE_NODE: node "${payload.nodeId}" not found in sort scope "${sortScope}"`)
-    return
+    return false
   }
 
   const targetScopeIndex = Math.min(payload.index, scopeEntries.length - 1)
@@ -39,7 +39,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
       `[dragcraft/core] MOVE_NODE: blocked by sortable constraint`
       + ` (src=${sourceScopeIndex}, target=${targetScopeIndex})`,
     )
-    return
+    return false
   }
 
   // Remove from current position, then insert at target
