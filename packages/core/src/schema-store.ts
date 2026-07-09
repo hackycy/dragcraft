@@ -3,23 +3,8 @@ import type { DesignerSchema, DragTarget, SchemaNode, SchemaStoreInstance } from
 import { ref, shallowRef, toRaw, triggerRef } from 'vue'
 import { DEFAULT_SCHEMA_VERSION } from './constants'
 import { findNodeById as findNode } from './helpers'
+import { mergeRecord } from './merge-record'
 import { cloneRawSchema, cloneSchema } from './schema-utils'
-
-function isPlainRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function mergeRecord(target: Record<string, unknown>, patch: Record<string, unknown>): void {
-  for (const [key, value] of Object.entries(patch)) {
-    const current = target[key]
-    if (isPlainRecord(current) && isPlainRecord(value)) {
-      mergeRecord(current, value)
-    }
-    else {
-      target[key] = value
-    }
-  }
-}
 
 export function createDefaultSchema(): DesignerSchema {
   return {
