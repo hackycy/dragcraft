@@ -62,6 +62,11 @@ describe('reference docs content', () => {
     expect(deviceFrames).toContain('```ts')
     expect(deviceFrames).toContain('import {')
     expect(deviceFrames).toContain('createDeviceFrameContext')
+    expect(deviceFrames).toContain('const extensions = {')
+    expect(deviceFrames).toContain('rendererExtensions: {')
+    expect(deviceFrames).toContain('containerShell: DeviceFrameShell')
+    expect(deviceFrames).toContain('toolbarRenderer: createDeviceToolbarRenderer(deviceCtx)')
+    expect(deviceFrames).not.toContain('const extensions = {\n  containerShell: DeviceFrameShell')
     expect(deviceFrames).toContain('createDeviceToolbarRenderer(deviceCtx)')
     expect(deviceFrames).toContain('[主题与设备框架](/guide/themes-and-device-frames)')
 

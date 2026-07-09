@@ -32,8 +32,8 @@ import { createDesigner, DcDesigner } from '@dragcraft/designer'
 
 ## 文档
 
-- `docs/`: 面向接入者的文档站点
-- `.github/architecture/`: 面向维护者的架构文档
+- [`docs/`](./docs/): 面向接入者的文档站点
+- [`.github/architecture/`](./.github/architecture/): 面向维护者的架构文档
 
 ## Packages
 
