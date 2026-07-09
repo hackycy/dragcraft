@@ -13,25 +13,21 @@ describe('reference docs content', () => {
     const overview = readWorkspaceFile('docs/reference/overview.md')
 
     expect(overview).toContain('# 参考总览')
-    expect(overview).toContain('这一组页面按 package 组织，适合你在知道自己要找哪个入口之后查具体能力。')
     expect(overview).toContain('[快速开始](/guide/getting-started)')
     expect(overview).toContain('`@dragcraft/designer`：标准入口')
     expect(overview).toContain('`@dragcraft/themes` 与 `@dragcraft/utils`：主题和工具函数')
   })
 
-  it('documents the default designer entry points and links back to the integration guide', () => {
+  it('keeps the designer page example-first and points back to the integration guide', () => {
     const designer = readWorkspaceFile('docs/reference/designer.md')
 
     expect(designer).toContain('# @dragcraft/designer')
-    expect(designer).toContain('这是默认入口包。')
+    expect(designer).toContain('```ts')
     expect(designer).toContain('import { createDesigner, DcDesigner, useDesigner } from \'@dragcraft/designer\'')
-    expect(designer).toContain('- `createDesigner`')
-    expect(designer).toContain('- `DcDesigner`')
-    expect(designer).toContain('- `useDesigner`')
     expect(designer).toContain('[集成设计器](/guide/designer-integration)')
   })
 
-  it('keeps the remaining reference pages focused on the real package boundaries', () => {
+  it('makes the package reference pages example-first and gives each one a next step', () => {
     const core = readWorkspaceFile('docs/reference/core.md')
     const renderer = readWorkspaceFile('docs/reference/renderer.md')
     const formGenerator = readWorkspaceFile('docs/reference/form-generator.md')
@@ -39,23 +35,36 @@ describe('reference docs content', () => {
     const widgetsAndFields = readWorkspaceFile('docs/reference/widgets-and-fields.md')
     const themesAndUtils = readWorkspaceFile('docs/reference/themes-and-utils.md')
 
-    expect(core).toContain('这个包负责 schema、命令、历史记录和事件语义。')
-    expect(core).toContain('`createEngine()`、`CommandType`')
+    expect(core).toContain('```ts')
+    expect(core).toContain('import { createEngine, CommandType } from \'@dragcraft/core\'')
+    expect(core).toContain('engine.execute(CommandType.SetGlobalConfig')
+    expect(core).toContain('[Schema 与布局](/guide/schema-and-layout)')
 
-    expect(renderer).toContain('这个包负责把 schema 节点变成真正的 Vue 节点树。')
-    expect(renderer).toContain('node action registry')
+    expect(renderer).toContain('```ts')
+    expect(renderer).toContain('import { RootRenderer, createNodeActionRegistry } from \'@dragcraft/renderer\'')
+    expect(renderer).toContain('createNodeActionRegistry()')
+    expect(renderer).toContain('[集成设计器](/guide/designer-integration)')
 
-    expect(formGenerator).toContain('这个包负责根据 FormSchema 渲染右侧属性面板。')
-    expect(formGenerator).toContain('字段值变化会先通过事件抛出，再由 designer 翻译成对应命令。')
+    expect(formGenerator).toContain('```vue')
+    expect(formGenerator).toContain('import { FormGenerator } from \'@dragcraft/form-generator\'')
+    expect(formGenerator).toContain('@change="handleFieldChange"')
+    expect(formGenerator).toContain('[物料与字段](/guide/materials-and-fields)')
 
-    expect(deviceFrames).toContain('这个包提供设备预览外壳和设备切换工具栏。')
-    expect(deviceFrames).toContain('`DeviceFrameShell`、`createDeviceFrameContext()` 和 `createDeviceToolbarRenderer()`')
+    expect(deviceFrames).toContain('```ts')
+    expect(deviceFrames).toContain('import {')
+    expect(deviceFrames).toContain('createDeviceFrameContext')
+    expect(deviceFrames).toContain('createDeviceToolbarRenderer(deviceCtx)')
+    expect(deviceFrames).toContain('[主题与设备框架](/guide/themes-and-device-frames)')
 
-    expect(widgetsAndFields).toContain('这两个入口分别解决“如何整理物料”和“如何接入字段组件”。')
-    expect(widgetsAndFields).toContain('`@dragcraft/widgets` 更偏协议和整理工具。')
-    expect(widgetsAndFields).toContain('`@dragcraft/fields-ant-design-vue` 则直接提供一份可用的 Ant Design Vue 字段映射。')
+    expect(widgetsAndFields).toContain('```ts')
+    expect(widgetsAndFields).toContain('import { buildComponentMap, getWidgetMetas } from \'@dragcraft/widgets\'')
+    expect(widgetsAndFields).toContain('import { createAntDesignVueFields } from \'@dragcraft/fields-ant-design-vue\'')
+    expect(widgetsAndFields).toContain('fieldComponentMap: createAntDesignVueFields(),')
+    expect(widgetsAndFields).toContain('[物料与字段](/guide/materials-and-fields)')
 
-    expect(themesAndUtils).toContain('`@dragcraft/themes` 负责默认视觉皮肤，`@dragcraft/utils` 负责跨包复用的纯函数。')
-    expect(themesAndUtils).toContain('如果你只是要接入默认样式，看 `@dragcraft/themes`。')
+    expect(themesAndUtils).toContain('```ts')
+    expect(themesAndUtils).toContain('import \'@dragcraft/themes/antd\'')
+    expect(themesAndUtils).toContain('import { createI18n, EventEmitter, generateShortId } from \'@dragcraft/utils\'')
+    expect(themesAndUtils).toContain('[导入导出与国际化](/guide/import-export-and-i18n)')
   })
 })
