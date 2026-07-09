@@ -69,6 +69,7 @@ export type {
   DesignerSchema,
   DragTarget,
   EngineOptions,
+  EngineState,
   FieldSchemaShape,
   FormSchemaShape,
   HistoryEntry,

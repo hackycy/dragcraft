@@ -6,6 +6,7 @@ import type {
   CommandHandler,
   DesignerSchema,
   EngineOptions,
+  EngineState,
   RegistryInstance,
   SchemaMigration,
   SchemaStoreInstance,
@@ -21,12 +22,14 @@ import {
 } from './commands'
 import { CommandType, DEFAULT_MAX_HISTORY_SIZE, EventName } from './constants'
 import { createEventHub } from './event-hub'
+import { findNodeById } from './helpers'
 import { createHistoryManager } from './history-manager'
 import { createRegistry } from './registry'
 import { createSchemaStore } from './schema-store'
 
 export interface DesignerEngine {
   store: SchemaStoreInstance
+  state: EngineState
   commandBus: CommandBusInstance
   history: HistoryManagerInstance
   registry: RegistryInstance
@@ -52,6 +55,19 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   const registry = createRegistry()
   const history = createHistoryManager(store, eventHub, maxHistorySize)
   const commandBus = createCommandBus(store, registry, eventHub, history)
+  const state: EngineState = {
+    getSchema: () => store.getSchema(),
+    getNodeById: (id) => {
+      const schema = store.getSchema()
+      return findNodeById(schema.root, id)
+    },
+    getSelectedNodeId: () => store.selectedNodeId.value,
+    getHoveredNodeId: () => store.hoveredNodeId.value,
+    getDragTarget: () => {
+      const target = store.dragTarget.value
+      return target ? { ...target } : null
+    },
+  }
 
   commandBus.registerHandler(CommandType.ADD_NODE, addNodeHandler)
   commandBus.registerHandler(CommandType.MOVE_NODE, moveNodeHandler)
@@ -121,6 +137,7 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
 
   return {
     store,
+    state,
     commandBus,
     history,
     registry,

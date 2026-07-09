@@ -11,7 +11,7 @@ import { runActionPipeline } from './action-runtime'
  * Schema is already read reactively by the calling computed (in useNodeActions).
  */
 function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
-  return { node: ctx.node, schema: ctx.engine.store.getRawSchema() }
+  return { node: ctx.node, schema: ctx.engine.state.getSchema() }
 }
 
 function canReorder(ctx: NodeActionContext): boolean {
@@ -24,7 +24,7 @@ function canReorder(ctx: NodeActionContext): boolean {
 }
 
 function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
-  const schema = ctx.engine.store.getRawSchema()
+  const schema = ctx.engine.state.getSchema()
   const children = schema.root.children ?? []
   return getLockedIndices(
     children,

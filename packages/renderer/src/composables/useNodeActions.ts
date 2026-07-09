@@ -13,12 +13,11 @@ export interface UseNodeActionsReturn {
 }
 
 /**
- * Reads the raw schema while establishing a reactive dependency on schema.value.
- * Required because getRawSchema() returns toRaw(schema.value) which bypasses dependency tracking.
+ * Reads a safe schema snapshot while establishing a reactive dependency on schema.value.
  */
 function readRawSchema(engine: DesignerEngine) {
   void engine.store.schema.value
-  return engine.store.getRawSchema()
+  return engine.state.getSchema()
 }
 
 /**

@@ -56,15 +56,15 @@ export function useWidgetNode(
 
   const meta = computed(() => engine.registry.getWidget(getNode().type))
   const resolvedComponent = computed(() => componentMap[getNode().type])
-  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, engine.store.getRawSchema()))
+  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, engine.state.getSchema()))
   const inSortScope = computed(() => layout.value.sortScope !== false)
   const isDragging = computed(() => engine.store.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
 
   function readInstanceCtx(): InstanceBehaviorContext {
-    // Read schema.value to establish reactive dependency, then return raw for predicate evaluation
+    // Read schema.value to establish reactive dependency, then return a safe snapshot for predicate evaluation
     void engine.store.schema.value
-    return { node: getNode(), schema: engine.store.getRawSchema() }
+    return { node: getNode(), schema: engine.state.getSchema() }
   }
 
   function resolveMetaBehavior(

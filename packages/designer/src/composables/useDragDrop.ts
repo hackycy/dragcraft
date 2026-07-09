@@ -65,11 +65,12 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   const lockedIndices = computed(() => {
     void engine.store.schema.value
-    const children = engine.store.getRawSchema().root.children ?? []
+    const schema = engine.state.getSchema()
+    const children = schema.root.children ?? []
     const sortScope = getActiveSortScope()
     if (sortScope === false)
       return new Set<number>()
-    return getLockedIndices(children, engine.registry, engine.store.getRawSchema(), sortScope)
+    return getLockedIndices(children, engine.registry, schema, sortScope)
   })
 
   const validDropIndices = computed(() => {
@@ -111,8 +112,9 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function getActiveSortScopeEntries(sortScope: string) {
+    const schema = engine.state.getSchema()
     return getSortScopeEntries(
-      createLayoutPlan(engine.store.getRawSchema(), engine.registry),
+      createLayoutPlan(schema, engine.registry),
       sortScope,
     )
   }
@@ -122,8 +124,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (!target)
       return DEFAULT_SORT_SCOPE
     if (target.sourceNodeId) {
-      const node = engine.store.getNodeById(target.sourceNodeId)
-      return node ? resolveNodeLayout(node, engine.registry, engine.store.getRawSchema()).sortScope : false
+      const node = engine.state.getNodeById(target.sourceNodeId)
+      if (!node)
+        return false
+      return resolveNodeLayout(node, engine.registry, engine.state.getSchema()).sortScope
     }
     if (target.widgetType) {
       const meta = engine.registry.getWidget(target.widgetType)
@@ -163,7 +167,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   function canCreateWidget(meta: WidgetMeta): boolean {
     return resolveCreatable(meta.creatable, {
       widgetType: meta.type,
-      schema: engine.store.getRawSchema(),
+      schema: engine.state.getSchema(),
     }).allowed
   }
 

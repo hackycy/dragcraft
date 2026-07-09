@@ -179,6 +179,40 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
+  it('state.getSchema returns a clone that cannot mutate internal schema', () => {
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+
+    const snapshot = engine.state.getSchema()
+    snapshot.root.children!.push(makeNode('b'))
+
+    expect(engine.store.schema.value.root.children).toHaveLength(1)
+    expect(engine.state.getSchema().root.children).toHaveLength(1)
+    engine.dispose()
+  })
+
+  it('state.getNodeById returns a clone that cannot mutate internal schema', () => {
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+
+    const node = engine.state.getNodeById('a')
+    node!.props.label = 'mutated'
+
+    expect(engine.store.schema.value.root.children![0].props.label).toBeUndefined()
+    engine.dispose()
+  })
+
+  it('state exposes runtime selection, hover, and drag target snapshots', () => {
+    const engine = createEngine()
+
+    engine.store.selectNode('selected')
+    engine.store.hoverNode('hovered')
+    engine.store.setDragTarget({ sourceNodeId: null, widgetType: 'text' })
+
+    expect(engine.state.getSelectedNodeId()).toBe('selected')
+    expect(engine.state.getHoveredNodeId()).toBe('hovered')
+    expect(engine.state.getDragTarget()).toEqual({ sourceNodeId: null, widgetType: 'text' })
+    engine.dispose()
+  })
+
   it('sELECTION_CHANGED event is emitted on selectNode', () => {
     const engine = createEngine()
     const listener = vi.fn()

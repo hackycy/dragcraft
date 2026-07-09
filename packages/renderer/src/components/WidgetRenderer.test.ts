@@ -22,25 +22,29 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
 
 function makeContext(meta: WidgetMeta): RendererContext {
   const selectNode = vi.fn()
+  const schema = {
+    version: '1.0.0',
+    globalConfig: {},
+    root: { id: 'root', type: 'root', props: {}, children: [] },
+  }
   return {
     engine: {
       execute: vi.fn(),
       store: {
-        schema: ref({
-          version: '1.0.0',
-          globalConfig: {},
-          root: { id: 'root', type: 'root', props: {}, children: [] },
-        }),
+        schema: ref(schema),
         selectedNodeId: ref(null),
         hoveredNodeId: ref(null),
         dragTarget: ref(null),
-        getRawSchema: () => ({
-          version: '1.0.0',
-          globalConfig: {},
-          root: { id: 'root', type: 'root', props: {}, children: [] },
-        }),
+        getRawSchema: () => schema,
         selectNode,
         hoverNode: vi.fn(),
+      },
+      state: {
+        getSchema: () => schema,
+        getNodeById: (id: string) => schema.root.children?.find(node => node.id === id) ?? null,
+        getSelectedNodeId: () => null,
+        getHoveredNodeId: () => null,
+        getDragTarget: () => null,
       },
       registry: {
         getWidget: vi.fn(() => meta),

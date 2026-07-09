@@ -32,11 +32,22 @@ function makeNode(overrides?: Partial<SchemaNode>): SchemaNode {
 }
 
 function makeEngine(overrides?: Partial<DesignerEngine>): DesignerEngine {
+  const schema = { version: '1', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }
   return {
     store: {
-      schema: { value: { version: '1', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } } },
-      getRawSchema: () => ({ version: '1', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }),
+      schema: { value: schema },
+      selectedNodeId: { value: null },
+      hoveredNodeId: { value: null },
+      dragTarget: { value: null },
+      getRawSchema: () => schema,
     } as unknown as DesignerEngine['store'],
+    state: {
+      getSchema: () => schema,
+      getNodeById: (id: string) => schema.root.children?.find(node => node.id === id) ?? null,
+      getSelectedNodeId: () => null,
+      getHoveredNodeId: () => null,
+      getDragTarget: () => null,
+    },
     registry: {
       getWidget: vi.fn(() => undefined),
     } as unknown as DesignerEngine['registry'],

@@ -426,6 +426,14 @@ export interface EngineOptions {
   maxHistorySize?: number
 }
 
+export interface EngineState {
+  getSchema: () => DesignerSchema
+  getNodeById: (id: string) => SchemaNode | null
+  getSelectedNodeId: () => string | null
+  getHoveredNodeId: () => string | null
+  getDragTarget: () => DragTarget | null
+}
+
 // ──────────────────────────────────────────
 // Schema migration
 // ──────────────────────────────────────────

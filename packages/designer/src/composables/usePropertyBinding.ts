@@ -130,9 +130,7 @@ export function usePropertyBinding(
     const nodeId = engine.store.selectedNodeId.value
     if (!nodeId)
       return null
-    // Read schema.value to establish reactive dependency on schema changes
-    void engine.store.schema.value
-    return engine.store.getNodeById(nodeId)
+    return engine.state.getNodeById(nodeId)
   })
 
   const selectedWidgetMeta = computed<WidgetMeta | undefined>(() => {
@@ -154,7 +152,7 @@ export function usePropertyBinding(
     const node = selectedNode.value
     if (!node)
       return {}
-    const schema = engine.store.getRawSchema()
+    const schema = engine.state.getSchema()
     const values = { ...node.props }
     for (const section of selectedFormSchema.value?.sections ?? []) {
       for (const field of section.fields) {
@@ -171,8 +169,7 @@ export function usePropertyBinding(
   })
 
   const globalConfigValues = computed<Record<string, unknown>>(() => {
-    void engine.store.schema.value
-    const schema = engine.store.getRawSchema()
+    const schema = engine.state.getSchema()
     const values = { ...schema.globalConfig }
     for (const section of options.globalConfigSchema?.sections ?? []) {
       for (const field of section.fields) {

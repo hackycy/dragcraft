@@ -28,7 +28,7 @@ export default defineComponent({
     const items = computed<StructureItem[]>(() => {
       void engine.store.schema.value
 
-      const schema = engine.store.getRawSchema()
+      const schema = engine.state.getSchema()
       const children = schema.root.children ?? []
       const plan = createLayoutPlan(schema, engine.registry)
 
