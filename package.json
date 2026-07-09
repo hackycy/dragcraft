@@ -7,6 +7,9 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "docs:dev": "pnpm --dir docs dev",
+    "docs:build": "pnpm --dir docs build",
+    "docs:preview": "pnpm --dir docs preview",
     "play": "pnpm -F ./playground dev",
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
