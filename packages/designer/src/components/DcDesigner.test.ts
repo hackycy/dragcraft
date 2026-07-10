@@ -55,6 +55,7 @@ describe('dcDesigner', () => {
       await nextTick()
 
       expect(host.querySelector('[data-dc-canvas-interaction-layer]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-canvas-stage]')).not.toBeNull()
       expect(host.querySelector('.dc-canvas-controls__history[role="toolbar"]')).not.toBeNull()
       expect(host.querySelector('.dc-toolbar')).toBeNull()
       expect(host.querySelector('.dc-left-sidebar__rail')).not.toBeNull()
@@ -64,6 +65,57 @@ describe('dcDesigner', () => {
       expect(host.querySelector('[data-dc-workspace-control="pointer"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="hand"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="center"]')).not.toBeNull()
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it('pans the canvas stage freely and resets it to the center origin', async () => {
+    const designer = createDesigner({ engineOptions: { initialSchema: makeSchema() } })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const viewport = host.querySelector<HTMLElement>('.dc-canvas__viewport')!
+      const stage = host.querySelector<HTMLElement>('[data-dc-canvas-stage]')!
+      const hand = host.querySelector<HTMLButtonElement>('[data-dc-workspace-control="hand"]')!
+      const reset = host.querySelector<HTMLButtonElement>('[data-dc-workspace-control="center"]')!
+
+      hand.click()
+      await nextTick()
+      viewport.dispatchEvent(new PointerEvent('pointerdown', {
+        button: 0,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 100,
+        bubbles: true,
+        cancelable: true,
+      }))
+      viewport.dispatchEvent(new PointerEvent('pointermove', {
+        pointerId: 1,
+        clientX: -120,
+        clientY: 260,
+        bubbles: true,
+        cancelable: true,
+      }))
+      await nextTick()
+
+      expect(stage.style.getPropertyValue('--dc-canvas-pan-x')).toBe('-220px')
+      expect(stage.style.getPropertyValue('--dc-canvas-pan-y')).toBe('160px')
+      expect(viewport.scrollLeft).toBe(0)
+      expect(viewport.scrollTop).toBe(0)
+
+      reset.click()
+      await nextTick()
+
+      expect(stage.style.getPropertyValue('--dc-canvas-pan-x')).toBe('0px')
+      expect(stage.style.getPropertyValue('--dc-canvas-pan-y')).toBe('0px')
     }
     finally {
       app.unmount()

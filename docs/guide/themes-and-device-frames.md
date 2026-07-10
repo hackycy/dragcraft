@@ -64,6 +64,6 @@ const designer = createDesigner({
 <DcDesigner :instance="designer" />
 ```
 
-不渲染 `DevicePicker` 时不会出现设备选择。Designer 画布只保留撤销、重做、指针、抓手和重置位置。
+不渲染 `DevicePicker` 时不会出现设备选择。Designer 画布只保留撤销、重做、指针、抓手和重置位置；frame 会以外框中心对齐画布中心，并通过独立 stage 支持无滚动边界的二维拖动。
 
 关于视觉层，目前知道这些就够了。准备好之后，继续阅读 [编辑器国际化](/guide/i18n)。

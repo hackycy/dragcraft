@@ -139,6 +139,7 @@ export function useToolbarPosition(
     if (!host || !floating || !isActive.value)
       return
     cleanupAutoUpdate = autoUpdate(resolveReference(host), floating, update, {
+      animationFrame: true,
       ancestorResize: true,
       ancestorScroll: true,
       elementResize: true,

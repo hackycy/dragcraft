@@ -25,21 +25,24 @@ describe('useCanvasPan', () => {
     document.body.innerHTML = ''
   })
 
-  it('pans the viewport in hand mode', () => {
-    const { app, viewport, pan } = mountPan()
-    viewport.scrollLeft = 50
-    viewport.scrollTop = 20
+  it('pans the stage without scroll boundaries in hand mode', () => {
+    const { app, pan } = mountPan()
     pan.setMode('hand')
 
     pan.handlePointerDown(new PointerEvent('pointerdown', { button: 0, pointerId: 1, clientX: 100, clientY: 100 }))
     pan.handlePointerMove(new PointerEvent('pointermove', { pointerId: 1, clientX: 80, clientY: 70 }))
 
-    expect(viewport.scrollLeft).toBe(70)
-    expect(viewport.scrollTop).toBe(50)
+    expect(pan.offset.value).toEqual({ x: -20, y: -30 })
     expect(pan.isPanning.value).toBe(true)
+
+    pan.handlePointerMove(new PointerEvent('pointermove', { pointerId: 1, clientX: 180, clientY: 170 }))
+    expect(pan.offset.value).toEqual({ x: 80, y: 70 })
 
     pan.handlePointerUp(new PointerEvent('pointerup', { pointerId: 1 }))
     expect(pan.isPanning.value).toBe(false)
+
+    pan.reset()
+    expect(pan.offset.value).toEqual({ x: 0, y: 0 })
     app.unmount()
   })
 

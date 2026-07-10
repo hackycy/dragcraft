@@ -4,13 +4,6 @@ import { useCanvasPan } from '../composables/useCanvasPan'
 import { useDesignerContext } from '../context'
 import DcCanvasControls from './DcCanvasControls'
 
-export function centerCanvasTarget(viewport: HTMLElement, target: HTMLElement): void {
-  const viewportRect = viewport.getBoundingClientRect()
-  const targetRect = target.getBoundingClientRect()
-  viewport.scrollLeft += targetRect.left + targetRect.width / 2 - (viewportRect.left + viewportRect.width / 2)
-  viewport.scrollTop += targetRect.top + targetRect.height / 2 - (viewportRect.top + viewportRect.height / 2)
-}
-
 export default defineComponent({
   name: 'DcCanvas',
 
@@ -34,10 +27,8 @@ export default defineComponent({
     const viewportRef = ref<HTMLElement | null>(null)
     const contentRef = ref<HTMLElement | null>(null)
     const canvasPan = useCanvasPan(viewportRef)
-    let resizeObserver: ResizeObserver | null = null
     let mutationObserver: MutationObserver | null = null
     let observedTarget: HTMLElement | null = null
-    let centerFrameId: number | null = null
 
     const rendererExtensions = computed(() => ({
       ...(extensions.rendererExtensions ?? {}),
@@ -52,51 +43,24 @@ export default defineComponent({
 
     const isDragging = computed(() => engine.store.dragTarget.value !== null)
 
-    function centerCurrentCanvasTarget(): void {
-      const viewport = viewportRef.value
-      const content = contentRef.value
-      const target = content?.querySelector<HTMLElement>('[data-dc-toolbar-boundary]')
-        ?? content?.querySelector<HTMLElement>('.dc-root-renderer')
-      if (!viewport || !target)
-        return
-
-      centerCanvasTarget(viewport, target)
-    }
-
-    function scheduleCenter(): void {
-      if (centerFrameId != null)
-        cancelAnimationFrame(centerFrameId)
-      centerFrameId = requestAnimationFrame(() => {
-        centerFrameId = null
-        centerCurrentCanvasTarget()
-      })
-    }
-
     function observeCanvasTarget(): void {
       const content = contentRef.value
       const nextTarget = content?.querySelector<HTMLElement>('[data-dc-toolbar-boundary]')
         ?? content?.querySelector<HTMLElement>('.dc-root-renderer')
         ?? null
-      if (nextTarget === observedTarget)
+
+      if (nextTarget && observedTarget && nextTarget !== observedTarget)
+        canvasPan.reset()
+      if (!nextTarget || nextTarget === observedTarget)
         return
-      if (observedTarget)
-        resizeObserver?.unobserve(observedTarget)
       observedTarget = nextTarget
-      if (observedTarget)
-        resizeObserver?.observe(observedTarget)
-      scheduleCenter()
     }
 
     onMounted(() => {
-      const viewport = viewportRef.value
       const content = contentRef.value
-      if (!viewport || !content)
+      if (!content)
         return
 
-      if (typeof ResizeObserver !== 'undefined') {
-        resizeObserver = new ResizeObserver(scheduleCenter)
-        resizeObserver.observe(viewport)
-      }
       if (typeof MutationObserver !== 'undefined') {
         mutationObserver = new MutationObserver(observeCanvasTarget)
         mutationObserver.observe(content, { childList: true, subtree: true })
@@ -105,10 +69,7 @@ export default defineComponent({
     })
 
     onBeforeUnmount(() => {
-      resizeObserver?.disconnect()
       mutationObserver?.disconnect()
-      if (centerFrameId != null)
-        cancelAnimationFrame(centerFrameId)
     })
 
     return () => h('div', {
@@ -122,7 +83,7 @@ export default defineComponent({
       h(DcCanvasControls, {
         interactionMode: canvasPan.mode.value,
         onModeChange: canvasPan.setMode,
-        onResetView: scheduleCenter,
+        onResetView: canvasPan.reset,
       }),
       h('div', {
         'ref': viewportRef,
@@ -140,20 +101,29 @@ export default defineComponent({
         'onPointerupCapture': canvasPan.handlePointerUp,
         'onPointercancelCapture': canvasPan.handlePointerUp,
       }, [
-        h('div', { ref: contentRef, class: 'dc-canvas__content' }, [
-          h(RootRenderer, {
-            engine,
-            componentMap,
-            extensions: rendererExtensions.value,
-            eventHooks,
-            actionInterceptors,
-            actionRegistry,
-            dragOverNodeId,
-            dragOverIndex,
-            isForbidden,
-            forbiddenReason,
-            interactionBoundary: viewportRef,
-          }),
+        h('div', {
+          'class': 'dc-canvas__stage',
+          'data-dc-canvas-stage': '',
+          'style': {
+            '--dc-canvas-pan-x': `${canvasPan.offset.value.x}px`,
+            '--dc-canvas-pan-y': `${canvasPan.offset.value.y}px`,
+          },
+        }, [
+          h('div', { ref: contentRef, class: 'dc-canvas__content' }, [
+            h(RootRenderer, {
+              engine,
+              componentMap,
+              extensions: rendererExtensions.value,
+              eventHooks,
+              actionInterceptors,
+              actionRegistry,
+              dragOverNodeId,
+              dragOverIndex,
+              isForbidden,
+              forbiddenReason,
+              interactionBoundary: viewportRef,
+            }),
+          ]),
         ]),
       ]),
       h('div', {

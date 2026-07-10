@@ -3,11 +3,18 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 export type CanvasInteractionMode = 'pointer' | 'hand'
 
+export interface CanvasPanOffset {
+  x: number
+  y: number
+}
+
 export interface UseCanvasPanReturn {
   mode: Ref<CanvasInteractionMode>
+  offset: Ref<CanvasPanOffset>
   panEnabled: ComputedRef<boolean>
   isPanning: Ref<boolean>
   setMode: (mode: CanvasInteractionMode) => void
+  reset: () => void
   handlePointerEnter: () => void
   handlePointerLeave: () => void
   handlePointerDown: (event: PointerEvent) => void
@@ -24,6 +31,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 export function useCanvasPan(viewportRef: Ref<HTMLElement | null>): UseCanvasPanReturn {
   const mode = ref<CanvasInteractionMode>('pointer')
+  const offset = ref<CanvasPanOffset>({ x: 0, y: 0 })
   const spacePressed = ref(false)
   const isPanning = ref(false)
   const pointerInside = ref(false)
@@ -32,12 +40,16 @@ export function useCanvasPan(viewportRef: Ref<HTMLElement | null>): UseCanvasPan
   let pointerId: number | null = null
   let startX = 0
   let startY = 0
-  let startScrollLeft = 0
-  let startScrollTop = 0
+  let startOffsetX = 0
+  let startOffsetY = 0
   let suppressClick = false
 
   function setMode(nextMode: CanvasInteractionMode): void {
     mode.value = nextMode
+  }
+
+  function reset(): void {
+    offset.value = { x: 0, y: 0 }
   }
 
   function handleWindowKeydown(event: KeyboardEvent): void {
@@ -79,8 +91,8 @@ export function useCanvasPan(viewportRef: Ref<HTMLElement | null>): UseCanvasPan
     pointerId = event.pointerId
     startX = event.clientX
     startY = event.clientY
-    startScrollLeft = viewport.scrollLeft
-    startScrollTop = viewport.scrollTop
+    startOffsetX = offset.value.x
+    startOffsetY = offset.value.y
     suppressClick = true
     isPanning.value = true
     viewport.setPointerCapture?.(event.pointerId)
@@ -93,8 +105,10 @@ export function useCanvasPan(viewportRef: Ref<HTMLElement | null>): UseCanvasPan
 
     event.preventDefault()
     event.stopPropagation()
-    viewport.scrollLeft = startScrollLeft - (event.clientX - startX)
-    viewport.scrollTop = startScrollTop - (event.clientY - startY)
+    offset.value = {
+      x: startOffsetX + event.clientX - startX,
+      y: startOffsetY + event.clientY - startY,
+    }
   }
 
   function handlePointerUp(event: PointerEvent): void {
@@ -131,9 +145,11 @@ export function useCanvasPan(viewportRef: Ref<HTMLElement | null>): UseCanvasPan
 
   return {
     mode,
+    offset,
     panEnabled,
     isPanning,
     setMode,
+    reset,
     handlePointerEnter,
     handlePointerLeave,
     handlePointerDown,
