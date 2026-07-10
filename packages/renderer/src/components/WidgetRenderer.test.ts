@@ -116,7 +116,7 @@ describe('widgetRenderer', () => {
     }
   })
 
-  it('teleports selected node toolbar into the designer portal when available', async () => {
+  it('teleports selected node toolbar into the owning canvas interaction layer', async () => {
     const meta = makeMeta({ mask: false })
     const ctx = makeContext(meta)
     ctx.engine.store.selectedNodeId.value = 'fab'
@@ -138,10 +138,13 @@ describe('widgetRenderer', () => {
     }
 
     const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const canvas = document.createElement('div')
+    canvas.className = 'dc-canvas'
     const host = document.createElement('div')
     const portal = document.createElement('div')
-    portal.setAttribute('data-dc-designer-portal', '')
-    document.body.append(host, portal)
+    portal.setAttribute('data-dc-canvas-interaction-layer', '')
+    canvas.append(host, portal)
+    document.body.append(canvas)
 
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
     HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
@@ -179,8 +182,7 @@ describe('widgetRenderer', () => {
     finally {
       HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
       app.unmount()
-      host.remove()
-      portal.remove()
+      canvas.remove()
     }
   })
 

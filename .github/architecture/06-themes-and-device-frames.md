@@ -91,7 +91,10 @@ import './my-custom-styles.css'
 | `--dc-font-size-sm` | 小字号 |
 | `--dc-font-family` | 字体族 |
 | `--dc-panel-header-height` | 面板头部高度 |
-| `--dc-toolbar-height` | 工具栏高度 |
+| `--dc-workspace-left-width` | 宽屏左侧 Dock 宽度 |
+| `--dc-workspace-right-width` | 宽屏 Inspector 宽度 |
+| `--dc-workspace-rail-width` | 折叠栏宽度 |
+| `--dc-workspace-drawer-width` | compact 抽屉宽度 |
 
 ### 层级
 
@@ -99,8 +102,8 @@ import './my-custom-styles.css'
 | --- | --- |
 | `--dc-z-node-mask` | 节点透明遮罩 |
 | `--dc-z-node-handle` | 非遮罩节点的选中 handle |
-| `--dc-z-designer-portal` | 设计器画布交互层 portal，低于画布顶部工具栏 |
-| `--dc-z-canvas-toolbar` | 画布顶部工具栏 |
+| `--dc-z-designer-portal` | 画布专属交互层 |
+| `--dc-z-canvas-toolbar` | 工作台顶部工具栏 |
 | `--dc-z-canvas-forbidden` | 画布禁止拖入提示 |
 | `--dc-z-node-overlay` | Teleport 后的节点 hover/selected 外框 |
 | `--dc-z-node-toolbar` | Teleport 后的节点浮动工具栏 |
@@ -197,6 +200,8 @@ const designer = createDesigner({
   },
 })
 ```
+
+设备选择不是 Designer 的默认能力。只有宿主配置 `toolbarRenderer` 时，选择器才会出现在画布悬浮扩展区；Playground 使用这段配置演示设备框架。
 
 ## Device Frames 文件结构
 

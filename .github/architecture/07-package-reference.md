@@ -45,7 +45,8 @@
 
 - 标准业务接入入口。
 - 组合 core、renderer、form-generator。
-- 提供三栏设计器 UI Shell。
+- 提供带全宽工具栏、可折叠 Dock、画布和 Inspector 的响应式 UI Shell。
+- 管理基于容器宽度的 wide/compact 模式与互斥抽屉。
 - 管理拖拽、属性绑定、扩展点和事件 hooks 透传。
 - 通过 `bindings/field-binding.ts` 纯函数 helpers 翻译属性面板字段绑定。
 
@@ -54,7 +55,7 @@
 - `createDesigner()`。
 - `DcDesigner`。
 - `useDesigner()`。
-- Designer options、extensions、toolbar API 类型。
+- Designer options、workspace controller、extensions、toolbar API 类型。
 
 依赖与协作：
 
@@ -185,7 +186,7 @@
 依赖与协作：
 
 - 依赖 Vue、`@dragcraft/core` layout/schema 类型和 `@dragcraft/icons`，不依赖 designer 或 renderer。
-- 与 designer 通过 `toolbarRenderer` 集成。
+- 设备选择器是可选宿主控件，通过 `toolbarRenderer` 渲染到画布悬浮扩展区；designer 默认不提供设备选择。
 - 与 renderer 通过 `containerShell` 集成。
 - 样式自包含，不依赖 themes。
 

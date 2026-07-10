@@ -170,7 +170,7 @@ const designer = createDesigner({
   },
 })
 
-const { exportSchema, importSchema, undo, redo, canUndo, canRedo } = useDesigner(designer)
+const { exportSchema, importSchema } = useDesigner(designer)
 
 const templateSwitch = useTemplateSwitch({
   importSchema,
@@ -195,12 +195,8 @@ function toggleLocale() {
     <PlaygroundHeader
       :active-template-id="templateSwitch.activeTemplateId.value"
       :templates="templateSwitch.templates"
-      :can-undo="canUndo()"
-      :can-redo="canRedo()"
       :locale="designer.i18n.locale.value"
       @template-switch="templateSwitch.switchTemplate"
-      @undo="undo()"
-      @redo="redo()"
       @import-open="io.handleImportOpen()"
       @export-open="io.handleExport()"
       @toggle-locale="toggleLocale"

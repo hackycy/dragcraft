@@ -1,6 +1,6 @@
 # @dragcraft/device-frames
 
-`@dragcraft/device-frames` 提供设备预览外壳和设备切换工具栏。
+`@dragcraft/device-frames` 提供设备预览外壳和可选的设备选择器。
 
 先看一个最小示例：
 
@@ -21,6 +21,8 @@ const extensions = {
 }
 ```
 
-这段代码展示了它最常见的接入方式。我们先创建一个设备上下文，再把 `DeviceFrameShell` 放进 `rendererExtensions.containerShell`，把 `createDeviceToolbarRenderer(deviceCtx)` 放在 designer 顶层的 `extensions.toolbarRenderer`。
+这段代码展示了它最常见的接入方式。我们先创建一个设备上下文，再把 `DeviceFrameShell` 放进 `rendererExtensions.containerShell`，最后由宿主选择是否把设备选择器放进画布悬浮扩展区。
+
+不配置 `toolbarRenderer` 时，Designer 不显示任何设备选择。普通页面容器或业务自定义预览可以只使用自己的 `containerShell`。
 
 如果你还没有把主题和设备框架一起接进设计器，下一页会把完整链路串起来。关于这一层，目前知道这些就够了。准备好之后，继续阅读 [主题与设备框架](/guide/themes-and-device-frames)。

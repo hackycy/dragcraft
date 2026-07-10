@@ -8,6 +8,7 @@ import TabletFrame from './components/frames/TabletFrame'
 export const IPHONE_PRESET: DevicePreset = {
   type: 'iphone',
   label: 'iPhone',
+  labelKey: 'device.iphone',
   icon: IconPhone,
   width: 375,
   height: 812,
@@ -17,6 +18,7 @@ export const IPHONE_PRESET: DevicePreset = {
 export const ANDROID_PRESET: DevicePreset = {
   type: 'android',
   label: 'Android',
+  labelKey: 'device.android',
   icon: IconRobot,
   width: 360,
   height: 800,
@@ -26,6 +28,7 @@ export const ANDROID_PRESET: DevicePreset = {
 export const TABLET_PRESET: DevicePreset = {
   type: 'tablet',
   label: 'Tablet',
+  labelKey: 'device.tablet',
   icon: IconLaptop,
   width: 768,
   height: 1024,
@@ -35,6 +38,7 @@ export const TABLET_PRESET: DevicePreset = {
 export const DESKTOP_PRESET: DevicePreset = {
   type: 'desktop',
   label: 'Desktop',
+  labelKey: 'device.desktop',
   icon: IconDesktop,
   width: 1280,
   height: 800,

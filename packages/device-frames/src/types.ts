@@ -21,6 +21,8 @@ export interface DevicePreset {
   type: DeviceType
   /** Human-readable label for toolbar display */
   label: string
+  /** Optional i18n key resolved by a designer toolbar API. */
+  labelKey?: string
   /** Icon character or component for compact toolbar buttons */
   icon: string | Component
   /** Content viewport width in CSS pixels */

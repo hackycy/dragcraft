@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { IconPhone } from './index'
+import { IconChevronDown, IconClose, IconComponent, IconPanelLeft, IconPanelRight, IconPhone, IconSearch, IconSettings } from './index'
 
 describe('icons exports', () => {
   it('exports icon render functions with svg vnode output', () => {
@@ -12,5 +12,12 @@ describe('icons exports', () => {
       stroke: '#111111',
       class: 'phone-icon',
     })
+  })
+
+  it('exports workbench control icons', () => {
+    const icons = [IconPanelLeft, IconPanelRight, IconChevronDown, IconSearch, IconClose, IconSettings, IconComponent]
+
+    for (const icon of icons)
+      expect(icon().type).toBe('svg')
   })
 })

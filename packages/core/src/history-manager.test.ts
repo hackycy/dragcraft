@@ -24,6 +24,12 @@ describe('createHistoryManager', () => {
     const { history } = setup()
     expect(history.canUndo()).toBe(false)
     expect(history.canRedo()).toBe(false)
+    expect(history.state.value).toEqual({
+      canUndo: false,
+      canRedo: false,
+      undoCount: 0,
+      redoCount: 0,
+    })
   })
 
   it('pushSnapshot enables undo', () => {
@@ -45,6 +51,7 @@ describe('createHistoryManager', () => {
     expect(store.schema.value.root.props.label).toBe('initial')
     expect(history.canRedo()).toBe(true)
     expect(history.canUndo()).toBe(false)
+    expect(history.state.value).toMatchObject({ canUndo: false, canRedo: true, undoCount: 0, redoCount: 1 })
   })
 
   it('redo restores undone snapshot', () => {

@@ -17,7 +17,7 @@ export function createRendererContext(options: RendererOptions): RendererContext
     actionInterceptors: options.actionInterceptors ?? [],
     actionRegistry: options.actionRegistry ?? createNodeActionRegistry(),
     dragOverNodeId: options.dragOverNodeId ?? ref(null),
-    toolbarMaxRight: options.toolbarMaxRight,
+    interactionBoundary: options.interactionBoundary,
   }
 }
 

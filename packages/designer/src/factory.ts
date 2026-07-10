@@ -5,6 +5,7 @@ import { createEngine } from '@dragcraft/core'
 import { createDefaultActions, createNodeActionRegistry, rendererMessages } from '@dragcraft/renderer'
 import { createI18n } from '@dragcraft/utils'
 import { designerMessages } from './messages'
+import { createDesignerWorkspace } from './workspace'
 
 function mergeDefaultMessages(): Record<string, MessageTree> {
   const merged: Record<string, MessageTree> = {}
@@ -81,6 +82,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
   // 10. Create i18n instance with package defaults + user messages
   const defaultLocale = options.locale ?? 'zh-CN'
   const i18n = createI18n(defaultLocale, mergeDefaultMessages())
+  const workspace = createDesignerWorkspace(options.workspace)
 
   // Merge user-provided messages
   if (options.messages) {
@@ -112,6 +114,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     actionInterceptors,
     actionRegistry,
     i18n,
+    workspace,
     dispose,
   }
 }

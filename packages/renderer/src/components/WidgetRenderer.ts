@@ -17,15 +17,12 @@ import DefaultWidgetFallback from './DefaultWidgetFallback'
 const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
 const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
 const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
-const DESIGNER_PORTAL_SELECTOR = '[data-dc-designer-portal]'
+const CANVAS_INTERACTION_LAYER_SELECTOR = '[data-dc-canvas-interaction-layer]'
 
-function resolveInteractionLayerTarget(): string {
+function resolveInteractionLayerTarget(host: HTMLElement | null): HTMLElement | string {
   if (typeof document === 'undefined')
     return 'body'
-
-  return document.querySelector(DESIGNER_PORTAL_SELECTOR)
-    ? DESIGNER_PORTAL_SELECTOR
-    : 'body'
+  return host?.closest('.dc-canvas')?.querySelector<HTMLElement>(CANVAS_INTERACTION_LAYER_SELECTOR) ?? 'body'
 }
 
 /**
@@ -57,13 +54,14 @@ export default defineComponent({
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
+    const toolbarElRef = ref<HTMLElement | null>(null)
     const overlayActive = computed(() => widget.state.isSelected.value || widget.state.isHovered.value)
     const { geometry: overlayGeometry } = useBlockOverlayGeometry(nodeElRef, overlayActive, {
       boundarySelector: OVERLAY_BOUNDARY_SELECTOR,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
     })
-    const { position: toolbarPosition } = useToolbarPosition(nodeElRef, widget.state.isSelected, {
-      maxRight: ctx.toolbarMaxRight,
+    const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
+      interactionBoundary: ctx.interactionBoundary,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
     })
@@ -73,7 +71,7 @@ export default defineComponent({
       void ctx.engine.store.schema.value
 
       const node = props.node
-      const interactionLayerTarget = resolveInteractionLayerTarget()
+      const interactionLayerTarget = resolveInteractionLayerTarget(nodeElRef.value)
       const placement = widget.layout.value.placement
       const isSelfPositionedLayer = placement.kind === 'layer' && placement.mode === 'self'
       const usesBlockingMask = widget.useMask.value && !isSelfPositionedLayer
@@ -167,7 +165,7 @@ export default defineComponent({
       // Note: the toolbar must remain visible during drag — hiding it (display:none
       // or removing from DOM) breaks the HTML5 DnD lifecycle because the browser
       // cancels the drag when the source element becomes invisible.
-      if (widget.state.isSelected.value && toolbarPosition.value.visible) {
+      if (widget.state.isSelected.value) {
         const toolbarVNode = h(NodeToolbar, {
           nodeId: node.id,
           nodeType: node.type,
@@ -177,7 +175,21 @@ export default defineComponent({
           onDragStart: drag.handleDragStart,
           onDragEnd: drag.handleDragEnd,
         })
-        wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [toolbarVNode]))
+        wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [
+          h('div', {
+            'ref': toolbarElRef,
+            'class': 'dc-node__toolbar-anchor',
+            'data-placement': toolbarPosition.value.placement,
+            'style': {
+              position: toolbarPosition.value.strategy,
+              top: 0,
+              left: 0,
+              transform: `translate3d(${toolbarPosition.value.x}px, ${toolbarPosition.value.y}px, 0)`,
+              visibility: toolbarPosition.value.visible ? 'visible' : 'hidden',
+              pointerEvents: toolbarPosition.value.visible ? 'auto' : 'none',
+            },
+          }, [toolbarVNode]),
+        ]))
       }
 
       // Build the core wrapper vnode. Container styles control the node's box

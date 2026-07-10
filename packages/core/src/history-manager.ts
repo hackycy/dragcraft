@@ -1,9 +1,19 @@
+import type { Ref } from 'vue'
 import type { EventHub } from './event-hub'
 import type { DesignerSchema, HistoryEntry, SchemaStoreInstance } from './types'
+import { ref } from 'vue'
 import { EventName } from './constants'
 import { cloneSchemaRef } from './schema-utils'
 
+export interface HistoryState {
+  canUndo: boolean
+  canRedo: boolean
+  undoCount: number
+  redoCount: number
+}
+
 export interface HistoryManagerInstance {
+  readonly state: Readonly<Ref<HistoryState>>
   pushSnapshot: (label: string, before: DesignerSchema) => void
   undo: () => void
   redo: () => void
@@ -23,6 +33,12 @@ export function createHistoryManager(
 ): HistoryManagerInstance {
   const undoStack: HistoryEntry[] = []
   const redoStack: HistoryEntry[] = []
+  const state = ref<HistoryState>({
+    canUndo: false,
+    canRedo: false,
+    undoCount: 0,
+    redoCount: 0,
+  })
 
   let inTransaction = false
   let transactionLabel = ''
@@ -46,12 +62,14 @@ export function createHistoryManager(
   }
 
   function emitChange(): void {
-    eventHub.emit(EventName.HISTORY_CHANGED, {
+    const nextState = {
       canUndo: canUndo(),
       canRedo: canRedo(),
       undoCount: undoStack.length,
       redoCount: redoStack.length,
-    })
+    }
+    state.value = nextState
+    eventHub.emit(EventName.HISTORY_CHANGED, nextState)
   }
 
   function pushSnapshot(label: string, before: DesignerSchema): void {
@@ -149,6 +167,7 @@ export function createHistoryManager(
   }
 
   return {
+    state,
     pushSnapshot,
     undo,
     redo,

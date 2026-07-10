@@ -39,7 +39,8 @@
   "dependencies": {
     "@dragcraft/core": "workspace:*",
     "@dragcraft/icons": "workspace:*",
-    "@dragcraft/utils": "workspace:*"
+    "@dragcraft/utils": "workspace:*",
+    "@floating-ui/dom": "catalog:"
   },
   "devDependencies": {
     "happy-dom": "catalog:",

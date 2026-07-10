@@ -37,6 +37,7 @@
     "vue": ">=3.0.0"
   },
   "dependencies": {
+    "@dragcraft/icons": "workspace:*",
     "@dragcraft/utils": "workspace:*"
   },
   "devDependencies": {

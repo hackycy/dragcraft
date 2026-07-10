@@ -8,14 +8,15 @@ export type { FieldBinding, ResolvedFieldBinding } from './bindings/field-bindin
 // ── Components ──────────────────────────
 export {
   DcCanvas,
+  DcCanvasControls,
   DcDesigner,
   DcLeftSidebar,
   DcMaterialGroup,
   DcMaterialItem,
   DcMaterialPanel,
   DcPropertyPanel,
+  DcRightSidebar,
   DcStructurePanel,
-  DcToolbar,
 } from './components'
 
 // ── Composables ─────────────────────────
@@ -26,7 +27,6 @@ export type { UseDragDropReturn, UsePropertyBindingReturn } from './composables'
 export { useDesignerContext } from './context'
 // ── Factory ─────────────────────────────
 export { createDesigner } from './factory'
-
 // ── Material protocol helpers ────────────
 export {
   materialItemMatchesQuery,
@@ -35,13 +35,18 @@ export {
 
 // ── Messages ────────────────────────────
 export { designerMessages } from './messages'
+
 // ── Types ───────────────────────────────
 export type {
   DesignerContext,
   DesignerExtensions,
   DesignerInstance,
   DesignerOptions,
+  DesignerRailSlotAPI,
   DesignerWidgetMeta,
+  DesignerWorkspaceController,
+  DesignerWorkspaceMode,
+  DesignerWorkspaceOptions,
   LeftPanelTabKey,
   MaterialDisplayMeta,
   MaterialItemIcon,
@@ -52,8 +57,9 @@ export type {
   UseDesignerReturn,
   WidgetGroupConfig,
 } from './types'
-
 export { DESIGNER_CONTEXT_KEY } from './types'
+
+export { createDesignerWorkspace } from './workspace'
 // ── Re-exports: @dragcraft/core ─────────
 export {
   CommandType,
@@ -77,6 +83,7 @@ export type {
   DragTarget,
   EngineOptions,
   HistoryEntry,
+  HistoryState,
   InstanceBehaviorContext,
   MoveNodePayload,
   RemoveNodePayload,

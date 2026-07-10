@@ -20,6 +20,8 @@ import '@dragcraft/themes/antd'
 .dc-designer {
   --dc-primary: #0f766e;
   --dc-bg: #ffffff;
+  --dc-workspace-left-width: 280px;
+  --dc-workspace-right-width: 320px;
 }
 
 .dc-material-item {
@@ -56,6 +58,6 @@ const designer = createDesigner({
 })
 ```
 
-`DeviceFrameShell` 接收 renderer 已经分好的内容流、chrome 和浮层节点。它不重新解释 Schema，因此 iPhone、平板和桌面预览可以替换，而不改变页面数据。
+`DeviceFrameShell` 接收 renderer 已经分好的内容流、chrome 和浮层节点。`createDeviceToolbarRenderer()` 是 Playground 采用的可选宿主控件；不配置它时不会出现设备选择。撤销和重做由 designer 的画布悬浮历史区提供。
 
 关于视觉层，目前知道这些就够了。准备好之后，继续阅读 [编辑器国际化](/guide/i18n)。

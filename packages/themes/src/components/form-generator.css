@@ -14,9 +14,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   padding: 8px 0;
+  color: inherit;
+  font-family: var(--dc-font-family);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--dc-radius);
   cursor: pointer;
   user-select: none;
+}
+
+.dc-form-section__header:focus-visible {
+  outline: 2px solid var(--dc-primary);
+  outline-offset: 1px;
 }
 
 .dc-form-section__title {
@@ -26,11 +38,12 @@
 }
 
 .dc-form-section__toggle {
-  font-size: 14px;
   color: var(--dc-text-placeholder);
-  width: 16px;
-  text-align: center;
-  line-height: 1;
+  transition: transform 0.16s ease;
+}
+
+.dc-form-section__toggle--collapsed {
+  transform: rotate(-90deg);
 }
 
 .dc-form-section__body {

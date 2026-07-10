@@ -15,6 +15,8 @@ import { createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
 - `createDesigner`
 - `DcDesigner`
 - `useDesigner`
+- `createDesignerWorkspace`
+- `DesignerWorkspaceController`
 - 常用的 core、renderer、form-generator 类型重导出
 
 准备好之后，继续阅读 [集成设计器](/guide/designer-integration)。

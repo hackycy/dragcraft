@@ -8,9 +8,8 @@ import { defineComponent, h } from 'vue'
  * Renders actions based on the resolved action list from the action registry.
  * Supports both 'button' and 'drag-handle' action types.
  *
- * When `toolbarPosition` is provided, uses `position: fixed` with viewport
- * coordinates to escape all ancestor overflow clipping. Otherwise falls back
- * to the classic `position: absolute` behavior via CSS.
+ * Positioning is owned by WidgetRenderer's measurable floating wrapper. The
+ * resolved placement controls whether actions use a vertical or horizontal row.
  */
 export default defineComponent({
   name: 'DcDefaultNodeToolbar',
@@ -80,20 +79,14 @@ export default defineComponent({
         }, typeof action.icon === 'string' ? action.icon : (action.icon ? h(action.icon) : undefined))
       })
 
-      // Fixed positioning: inline style with viewport coordinates
-      // Absolute positioning (fallback): no inline style, CSS handles it
-      const style = useFixed
-        ? {
-            position: 'fixed' as const,
-            top: `${pos!.top}px`,
-            left: `${pos!.left}px`,
-            display: pos!.visible ? undefined : 'none',
-          }
-        : undefined
-
       return h('div', {
-        class: ['dc-node__toolbar', { 'dc-node__toolbar--floating': useFixed }],
-        style,
+        'class': [
+          'dc-node__toolbar',
+          {
+            'dc-node__toolbar--floating': useFixed,
+          },
+        ],
+        'data-placement': pos?.placement,
       }, actionVNodes)
     }
   },

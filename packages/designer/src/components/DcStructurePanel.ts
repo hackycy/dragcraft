@@ -145,28 +145,24 @@ export default defineComponent({
     const renderItem = (item: StructureItem) => {
       const selected = engine.store.selectedNodeId.value === item.node.id
 
-      const handleRowKeydown = (e: KeyboardEvent) => {
-        if (e.key !== 'Enter' && e.key !== ' ')
-          return
-        e.preventDefault()
-        handleSelect(item.node, e as unknown as MouseEvent)
-      }
-
       return h('div', {
         'class': [
           'dc-structure-panel__item',
           { 'dc-structure-panel__item--selected': selected },
         ],
         'data-node-id': item.node.id,
-        'role': 'button',
-        'tabindex': 0,
-        'onClick': (e: MouseEvent) => handleSelect(item.node, e),
-        'onKeydown': handleRowKeydown,
       }, [
-        h('span', { class: 'dc-structure-panel__branch' }),
-        h('span', { class: 'dc-structure-panel__main' }, [
-          h('span', { class: 'dc-structure-panel__title', title: item.title }, item.title),
-          h('span', { class: 'dc-structure-panel__id', title: item.node.id }, item.node.id),
+        h('button', {
+          'type': 'button',
+          'class': 'dc-structure-panel__select',
+          'aria-pressed': selected,
+          'onClick': (e: MouseEvent) => handleSelect(item.node, e),
+        }, [
+          h('span', { class: 'dc-structure-panel__branch' }),
+          h('span', { class: 'dc-structure-panel__main' }, [
+            h('span', { class: 'dc-structure-panel__title', title: item.title }, item.title),
+            h('span', { class: 'dc-structure-panel__id', title: item.node.id }, item.node.id),
+          ]),
         ]),
         renderDeleteButton(item.deleteAction),
       ])

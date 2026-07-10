@@ -181,9 +181,9 @@ body {
   margin: 4px 0;
 }
 
-/* ── Toolbar Buttons (Canvas Top Bar) ──── */
+/* ── Optional Canvas Extension Buttons ──── */
 
-.dc-toolbar__btn {
+.dc-canvas-toolbar__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -200,17 +200,17 @@ body {
   transition: all 0.2s;
 }
 
-.dc-toolbar__btn:hover:not(:disabled) {
+.dc-canvas-toolbar__btn:hover:not(:disabled) {
   border-color: var(--dc-primary);
   color: var(--dc-primary);
 }
 
-.dc-toolbar__btn:disabled {
+.dc-canvas-toolbar__btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.dc-toolbar__btn--icon {
+.dc-canvas-toolbar__btn--icon {
   width: 28px;
   padding: 0;
   font-size: 14px;

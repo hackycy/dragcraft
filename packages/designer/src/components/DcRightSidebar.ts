@@ -1,0 +1,98 @@
+import type { Component } from 'vue'
+import type { PropertyTabKey } from '../types'
+import { IconChevronLeft, IconChevronRight, IconComponent, IconSettings } from '@dragcraft/icons'
+import { useI18n } from '@dragcraft/utils'
+import { computed, defineComponent, h } from 'vue'
+import { useDesignerContext } from '../context'
+import DcPropertyPanel from './DcPropertyPanel'
+
+interface RightPanelTab {
+  key: PropertyTabKey
+  labelKey: string
+  fallback: string
+  icon: Component
+}
+
+const RIGHT_PANEL_TABS: RightPanelTab[] = [
+  {
+    key: 'global',
+    labelKey: 'panel.tab.global',
+    fallback: '全局配置',
+    icon: IconSettings,
+  },
+  {
+    key: 'widget',
+    labelKey: 'panel.tab.widget',
+    fallback: '组件配置',
+    icon: IconComponent,
+  },
+]
+
+export default defineComponent({
+  name: 'DcRightSidebar',
+
+  setup() {
+    const { t } = useI18n()
+    const { engine, extensions, activeTab, workspace } = useDesignerContext()
+    const hasSelectedNode = computed(() => engine.store.selectedNodeId.value !== null)
+
+    const renderTabButton = (tab: RightPanelTab) => {
+      const label = t(tab.labelKey, tab.fallback)
+      const disabled = tab.key === 'widget' && !hasSelectedNode.value
+      const active = activeTab.value === tab.key && !disabled
+
+      return h('button', {
+        'id': `dc-property-tab-${tab.key}`,
+        'type': 'button',
+        'role': 'tab',
+        'class': [
+          'dc-right-sidebar__tab',
+          { 'dc-right-sidebar__tab--active': active },
+        ],
+        'title': label,
+        'aria-label': label,
+        'aria-selected': active,
+        'aria-controls': `dc-property-panel-${tab.key}`,
+        'disabled': disabled,
+        'onClick': () => workspace.openRight(tab.key),
+      }, [h(tab.icon, { size: 18 })])
+    }
+
+    return () => {
+      const PropertyPanel = extensions.propertyPanelRenderer ?? DcPropertyPanel
+      const open = workspace.rightOpen.value
+      const toggleLabel = open
+        ? t('workspace.right.close', '收起属性栏')
+        : t('workspace.right.open', '展开属性栏')
+      const railExtension = extensions.rightRailRenderer?.({ engine, workspace, t })
+
+      return h('div', { class: 'dc-right-sidebar' }, [
+        h('div', {
+          'class': 'dc-right-sidebar__surface',
+          'aria-hidden': workspace.mode.value === 'compact' && !open,
+          'inert': workspace.mode.value === 'compact' && !open ? '' : undefined,
+        }, [
+          h('div', {
+            'class': 'dc-right-sidebar__rail',
+            'role': 'tablist',
+            'aria-label': t('workspace.right.label', '属性检查器'),
+          }, [
+            ...RIGHT_PANEL_TABS.map(renderTabButton),
+            railExtension ? h('div', { class: 'dc-sidebar-rail__extension' }, [railExtension]) : null,
+          ]),
+          h('div', { class: 'dc-right-sidebar__content' }, [h(PropertyPanel)]),
+        ]),
+        h('button', {
+          'type': 'button',
+          'class': 'dc-sidebar-toggle dc-sidebar-toggle--right',
+          'title': toggleLabel,
+          'aria-label': toggleLabel,
+          'aria-expanded': open,
+          'data-dc-workspace-control': 'right',
+          'onMousedown': (event: MouseEvent) => event.preventDefault(),
+          'onClick': () => workspace.toggleRight(),
+        }, [h(open ? IconChevronRight : IconChevronLeft, { size: 14 })]),
+      ])
+    }
+  },
+})

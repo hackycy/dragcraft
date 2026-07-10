@@ -1,13 +1,13 @@
 {
   "name": "dragcraft-docs",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "vitepress dev",
     "build": "vitepress build",
     "preview": "vitepress preview"
   },
   "devDependencies": {
-    "vitepress": "next"
+    "vitepress": "catalog:"
   }
 }

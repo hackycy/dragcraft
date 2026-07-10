@@ -1,5 +1,6 @@
 import type { PropType } from 'vue'
 import type { DesignerWidgetMeta } from '../types'
+import { IconChevronDown } from '@dragcraft/icons'
 import { defineComponent, h, ref } from 'vue'
 import DcMaterialItem from './DcMaterialItem'
 
@@ -26,18 +27,20 @@ export default defineComponent({
 
     return () => {
       const header = h(
-        'div',
+        'button',
         {
-          class: 'dc-material-group__header',
-          onClick: toggleCollapse,
+          'type': 'button',
+          'class': 'dc-material-group__header',
+          'aria-expanded': !collapsed.value,
+          'onClick': toggleCollapse,
         },
         [
           h('span', { class: 'dc-material-group__title' }, props.title),
-          h('span', {
-            class: [
-              'dc-material-group__toggle',
-              { 'dc-material-group__toggle--collapsed': collapsed.value },
-            ],
+          h(IconChevronDown, {
+            size: 15,
+            class: collapsed.value
+              ? 'dc-material-group__toggle dc-material-group__toggle--collapsed'
+              : 'dc-material-group__toggle',
           }),
         ],
       )

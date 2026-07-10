@@ -16,27 +16,27 @@
   --dc-danger-bg-hover: rgba(211, 47, 47, 0.08);
 
   /* ── Text ──────────────────────────────── */
-  --dc-text: #212121;
-  --dc-text-secondary: #757575;
-  --dc-text-placeholder: #BDBDBD;
+  --dc-text: #20242a;
+  --dc-text-secondary: #606873;
+  --dc-text-placeholder: #98a1ad;
 
   /* ── Border ────────────────────────────── */
-  --dc-border: #E0E0E0;
-  --dc-border-light: #EEEEEE;
+  --dc-border: #d6dae0;
+  --dc-border-light: #e6e9ed;
 
   /* ── Background ────────────────────────── */
   --dc-bg: #FFFFFF;
-  --dc-bg-light: #FAFAFA;
-  --dc-bg-dark: #F5F5F5;
-  --dc-canvas-bg: #ECEFF1;
+  --dc-bg-light: #f7f8fa;
+  --dc-bg-dark: #eef0f3;
+  --dc-canvas-bg: #eceff3;
 
   /* ── Effects ───────────────────────────── */
-  --dc-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --dc-shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.1);
+  --dc-shadow: 0 8px 24px rgba(17, 24, 39, 0.1);
+  --dc-shadow-sm: 0 2px 8px rgba(17, 24, 39, 0.08);
 
   /* ── Shape ─────────────────────────────── */
-  --dc-radius: 8px;
-  --dc-radius-lg: 12px;
+  --dc-radius: 6px;
+  --dc-radius-lg: 8px;
 
   /* ── Typography ────────────────────────── */
   --dc-font-size: 14px;
@@ -45,7 +45,10 @@
 
   /* ── Layout ────────────────────────────── */
   --dc-panel-header-height: 48px;
-  --dc-toolbar-height: 48px;
+  --dc-workspace-left-width: 280px;
+  --dc-workspace-right-width: 320px;
+  --dc-workspace-rail-width: 44px;
+  --dc-workspace-drawer-width: 320px;
 
   /* ── Z-index ────────────────────────────── */
   --dc-z-node-mask: 10;

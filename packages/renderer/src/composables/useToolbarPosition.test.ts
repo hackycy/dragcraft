@@ -27,257 +27,112 @@ describe('useToolbarPosition', () => {
   })
 
   afterEach(() => {
+    document.body.innerHTML = ''
     vi.restoreAllMocks()
   })
 
-  it('initializes with hidden position', () => {
-    const elRef = ref<HTMLElement | null>(null)
+  it('stays hidden until reference, floating element, and active state are present', async () => {
+    const reference = ref<HTMLElement | null>(null)
+    const floating = ref<HTMLElement | null>(null)
     const active = ref(false)
+    const { position, update } = useToolbarPosition(reference, floating, active)
 
-    // onBeforeUnmount will warn outside component, but composable still works
-    const { position } = useToolbarPosition(elRef, active)
-
-    expect(position.value).toEqual({ top: 0, left: 0, visible: false })
-  })
-
-  it('computes position to the right of the element when active', async () => {
-    const el = mockElement({ top: 100, left: 100, right: 200, bottom: 200 })
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32 })
-
-    // Wait for the immediate watcher to fire
-    await nextTick()
-
-    // Manually trigger update to ensure position is computed
-    update()
-
-    expect(position.value.visible).toBe(true)
-    expect(position.value.top).toBe(100)
-    expect(position.value.left).toBe(208) // 200 + gap(8)
-  })
-
-  it('anchors to the configured interaction surface when the host is larger than the widget', async () => {
-    const host = mockElement({ top: 0, left: 0, right: 400, bottom: 600, width: 400, height: 600 })
-    const surface = mockElement({ top: 480, left: 320, right: 372, bottom: 532, width: 52, height: 52 })
-    surface.setAttribute('data-dc-node-surface', '')
-    host.appendChild(surface)
-
-    const elRef = ref<HTMLElement | null>(host)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, {
-      gap: 8,
-      toolbarWidth: 32,
-      targetSelector: '[data-dc-node-surface]',
-    })
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    expect(position.value.top).toBe(480)
-    expect(position.value.left).toBe(380)
-  })
-
-  it('places the toolbar outside the left side of the configured boundary while following the block vertically', async () => {
-    const frame = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
-    frame.setAttribute('data-dc-toolbar-boundary', '')
-    frame.style.overflow = 'hidden'
-    const host = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
-    const surface = mockElement({ top: 520, left: 720, right: 772, bottom: 572, width: 52, height: 52 })
-    surface.setAttribute('data-dc-node-surface', '')
-    frame.appendChild(host)
-    host.appendChild(surface)
-
-    const elRef = ref<HTMLElement | null>(host)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, {
-      gap: 8,
-      toolbarWidth: 32,
-      boundarySelector: '[data-dc-toolbar-boundary]',
-    })
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    expect(position.value.top).toBe(80)
-    expect(position.value.left).toBe(360)
-  })
-
-  it('keeps the toolbar on the left boundary side even when right side has room', async () => {
-    const frame = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
-    frame.setAttribute('data-dc-toolbar-boundary', '')
-    const host = mockElement({ top: 80, left: 400, right: 800, bottom: 700, width: 400, height: 620 })
-    const surface = mockElement({ top: 120, left: 400, right: 800, bottom: 164, width: 400, height: 44 })
-    surface.setAttribute('data-dc-node-surface', '')
-    frame.appendChild(host)
-    host.appendChild(surface)
-
-    const elRef = ref<HTMLElement | null>(host)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, {
-      gap: 8,
-      toolbarWidth: 32,
-      maxRight: ref(820),
-      boundarySelector: '[data-dc-toolbar-boundary]',
-    })
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    expect(position.value.top).toBe(80)
-    expect(position.value.left).toBe(360)
-  })
-
-  it('flips to left side when element is near right edge', async () => {
-    const el = mockElement({ top: 100, left: 900, right: 1000, bottom: 200 })
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32 })
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    // Should flip: left = rect.left - gap - toolbarWidth = 900 - 8 - 32 = 860
-    expect(position.value.left).toBe(860)
-  })
-
-  it('flips to left side when maxRight is exceeded', async () => {
-    const el = mockElement({ top: 100, left: 600, right: 700, bottom: 200 })
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    // maxRight constrains the toolbar to stay within 650px from left
-    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32, maxRight: ref(650) })
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    // left(700) + gap(8) + toolbarWidth(32) = 740 > maxRight(650), so flip
-    // flipped: rect.left(600) - gap(8) - toolbarWidth(32) = 560
-    expect(position.value.left).toBe(560)
-  })
-
-  it('does not flip when maxRight is not exceeded', async () => {
-    const el = mockElement({ top: 100, left: 100, right: 200, bottom: 200 })
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32, maxRight: ref(900) })
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    // left(200) + gap(8) + toolbarWidth(32) = 240 < maxRight(900), no flip
-    expect(position.value.left).toBe(208)
-  })
-
-  it('clamps top to clip bounds', async () => {
-    // Element partially above viewport
-    const el = mockElement({ top: -20, left: 100, right: 200, bottom: 80 })
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active)
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    expect(position.value.top).toBe(0) // clamped to viewport top
-  })
-
-  it('hides when element is fully outside viewport', async () => {
-    const el = mockElement({ top: -200, left: 100, right: 200, bottom: -100 })
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active)
-
-    await nextTick()
-    update()
+    await update()
 
     expect(position.value.visible).toBe(false)
   })
 
-  it('hides when element ref is null', async () => {
-    const elRef = ref<HTMLElement | null>(null)
+  it('positions a measured toolbar on the selected node left edge', async () => {
+    const referenceEl = mockElement()
+    const floatingEl = mockElement({ top: 0, left: 0, right: 36, bottom: 150, width: 36, height: 150 })
+    document.body.append(referenceEl, floatingEl)
+    const reference = ref<HTMLElement | null>(referenceEl)
+    const floating = ref<HTMLElement | null>(floatingEl)
     const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active)
+    const { position, update } = useToolbarPosition(reference, floating, active)
 
     await nextTick()
-    update()
+    await update()
+
+    expect(position.value.visible).toBe(true)
+    expect(position.value).toMatchObject({
+      x: 56,
+      y: 100,
+      placement: 'left-start',
+    })
+  })
+
+  it('anchors to the owning frame edge and only clamps vertically', async () => {
+    const frame = mockElement({ top: 40, left: 80, right: 480, bottom: 640, width: 400, height: 600 })
+    frame.setAttribute('data-dc-toolbar-boundary', '')
+    const referenceEl = mockElement({ top: 260, left: 140, right: 440, bottom: 340, width: 300, height: 80 })
+    const floatingEl = mockElement({ top: 0, left: 0, right: 36, bottom: 150, width: 36, height: 150 })
+    const interactionBoundary = mockElement({ top: 100, left: 0, right: 600, bottom: 400, width: 600, height: 300 })
+    frame.appendChild(referenceEl)
+    document.body.append(interactionBoundary, frame, floatingEl)
+    const { position, update } = useToolbarPosition(
+      ref(referenceEl),
+      ref(floatingEl),
+      ref(true),
+      {
+        boundarySelector: '[data-dc-toolbar-boundary]',
+        interactionBoundary: ref(interactionBoundary),
+      },
+    )
+
+    await nextTick()
+    await update()
+
+    expect(position.value).toMatchObject({
+      x: 36,
+      y: 242,
+      placement: 'left-start',
+      visible: true,
+    })
+  })
+
+  it('hides when the node is outside the provided interaction boundary', async () => {
+    const referenceEl = mockElement({ top: 500, bottom: 600 })
+    const floatingEl = mockElement({ top: 0, left: 0, right: 36, bottom: 150, width: 36, height: 150 })
+    const boundaryEl = mockElement({ top: 0, left: 0, right: 400, bottom: 300, width: 400, height: 300 })
+    document.body.append(boundaryEl, referenceEl, floatingEl)
+    const active = ref(true)
+    const { position, update } = useToolbarPosition(
+      ref(referenceEl),
+      ref(floatingEl),
+      active,
+      { interactionBoundary: ref(boundaryEl) },
+    )
+
+    await nextTick()
+    await update()
 
     expect(position.value.visible).toBe(false)
   })
 
-  it('does not update ref when values are unchanged (avoids unnecessary re-renders)', async () => {
-    const el = mockElement({ top: 100, left: 100, right: 200, bottom: 200 })
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32 })
+  it('uses the configured interaction surface for self-positioned layer hosts', async () => {
+    const host = mockElement({ top: 0, left: 0, right: 500, bottom: 700, width: 500, height: 700 })
+    host.dataset.dcLayerMode = 'self'
+    const surface = mockElement({ top: 120, left: 200, right: 260, bottom: 180, width: 60, height: 60 })
+    surface.setAttribute('data-dc-node-surface', '')
+    const floatingEl = mockElement({ top: 0, left: 0, right: 36, bottom: 100, width: 36, height: 100 })
+    host.appendChild(surface)
+    document.body.append(host, floatingEl)
+    const { position, update } = useToolbarPosition(
+      ref(host),
+      ref(floatingEl),
+      ref(true),
+      { selfTargetSelector: '[data-dc-node-surface]' },
+    )
 
     await nextTick()
-    update()
+    await update()
 
-    const firstPos = position.value
-    update()
-    const secondPos = position.value
-
-    // Same reference means no unnecessary ref update
-    expect(firstPos).toBe(secondPos)
-  })
-
-  it('handles elements inside scrollable containers', async () => {
-    // Create a scrollable parent
-    const parent = document.createElement('div')
-    parent.style.overflow = 'auto'
-    parent.getBoundingClientRect = vi.fn(() => ({
-      top: 50,
-      left: 50,
-      right: 500,
-      bottom: 400,
-      width: 450,
-      height: 350,
-      x: 50,
-      y: 50,
-      toJSON: () => {},
-    }))
-    vi.spyOn(window, 'getComputedStyle').mockImplementation((el) => {
-      if (el === parent) {
-        return { overflowY: 'auto', overflowX: 'visible' } as CSSStyleDeclaration
-      }
-      return { overflowY: 'visible', overflowX: 'visible' } as CSSStyleDeclaration
+    expect(position.value).toMatchObject({
+      x: 156,
+      y: 120,
+      placement: 'left-start',
+      visible: true,
     })
-
-    const el = mockElement({ top: 100, left: 100, right: 200, bottom: 200 })
-    parent.appendChild(el)
-    document.body.appendChild(parent)
-
-    const elRef = ref<HTMLElement | null>(el)
-    const active = ref(true)
-
-    const { position, update } = useToolbarPosition(elRef, active, { gap: 8, toolbarWidth: 32 })
-
-    await nextTick()
-    update()
-
-    expect(position.value.visible).toBe(true)
-    // Top should be clamped to parent's top (50) since parent clips Y
-    expect(position.value.top).toBeGreaterThanOrEqual(50)
-
-    document.body.removeChild(parent)
   })
 })

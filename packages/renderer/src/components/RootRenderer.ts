@@ -54,8 +54,8 @@ export default defineComponent({
       type: Object as PropType<Ref<number | null>>,
       default: undefined,
     },
-    toolbarMaxRight: {
-      type: Object as PropType<Ref<number | undefined>>,
+    interactionBoundary: {
+      type: Object as PropType<Ref<HTMLElement | null>>,
       default: undefined,
     },
     isForbidden: {
@@ -78,7 +78,7 @@ export default defineComponent({
       actionInterceptors: props.actionInterceptors,
       actionRegistry: props.actionRegistry,
       dragOverNodeId: props.dragOverNodeId,
-      toolbarMaxRight: props.toolbarMaxRight,
+      interactionBoundary: props.interactionBoundary,
     })
     provide(RENDERER_CONTEXT_KEY, ctx)
 

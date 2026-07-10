@@ -1,6 +1,6 @@
 # 扩展设计器交互
 
-设计器把外观和业务交互留在显式扩展点中。先从画布工具栏开始：
+设计器把撤销和重做固定在画布左上角。`toolbarRenderer` 用来增加宿主选择提供的预览或设备控制：
 
 ```ts
 import { h } from 'vue'
@@ -9,15 +9,16 @@ const designer = createDesigner({
   widgetMetas,
   componentMap,
   extensions: {
-    toolbarRenderer: ({ undo, redo, canUndo, canRedo }) => [
-      h('button', { disabled: !canUndo(), onClick: undo }, '撤销'),
-      h('button', { disabled: !canRedo(), onClick: redo }, '重做'),
-    ],
+    toolbarRenderer: ({ t }) => h('button', {
+      class: 'dc-canvas-toolbar__btn',
+      title: t('preview.open', '预览'),
+      onClick: openPreview,
+    }, t('preview.open', '预览')),
   },
 })
 ```
 
-工具栏拿到的是稳定的操作 API。保存草稿这类业务动作可以在同一个宿主组件中调用 `exportSchema()`，而不需要修改 core 或画布组件。
+这个扩展区仍能拿到 `undo`、`redo`、`execute`、`workspace` 和 `t`。左右栏通过各自 rail 上的折叠控制开关；保存、发布和模板切换通常放在 designer 外部的应用顶栏。
 
 ## 选择合适的扩展点
 
@@ -26,9 +27,24 @@ const designer = createDesigner({
 | 完整替换左侧物料区或右侧属性区 | `materialPanelRenderer` / `propertyPanelRenderer` |
 | 只定制一张物料卡片 | `materialItemRenderer` |
 | 更换设备外壳、节点工具栏、空状态或节点包裹层 | `rendererExtensions` |
-| 在画布顶部增加历史、预览等 UI | `toolbarRenderer` |
+| 在画布悬浮区增加预览或设备控制 | `toolbarRenderer` |
+| 向左右 Sidebar rail 增加事件、设置等工具 | `leftRailRenderer` / `rightRailRenderer` |
 
 `materialPanelRenderer` 和 `propertyPanelRenderer` 会替换整个区域，适合业务已有成熟面板时使用。只改一个物料项时，优先使用 `materialItemRenderer`，这样可以保留 designer 的搜索、尺寸和拖拽约束。
+
+Rail 扩展不会替换内置 tab。下面的设置入口会追加到右 rail 的独立分区：
+
+```ts
+extensions: {
+  rightRailRenderer: ({ t }) => h('button', {
+    class: 'my-rail-action',
+    title: t('settings.open', '打开设置'),
+    onClick: openSettings,
+  }, h(SettingsIcon)),
+}
+```
+
+`leftRailRenderer` 和 `rightRailRenderer` 都能读取 `engine`、`workspace` 与 `t`，宿主负责扩展按钮的业务状态和样式。
 
 ## 拦截节点动作
 

@@ -217,6 +217,7 @@ engine.execute({ type, payload })
 
 主要能力：
 
+- 响应式只读 `state`，包含 `canUndo`、`canRedo`、`undoCount` 和 `redoCount`。
 - `undo()`、`redo()`。
 - `canUndo()`、`canRedo()`。
 - `beginTransaction(label?)`、`commitTransaction()`、`discardTransaction()`。

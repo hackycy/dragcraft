@@ -40,11 +40,18 @@ src/
     ├── DcMaterialItem.ts
     ├── DcStructurePanel.ts
     ├── DcCanvas.ts
+    ├── DcCanvasControls.ts
     ├── DcPropertyPanel.ts
-    └── DcToolbar.ts
+    └── DcRightSidebar.ts
 ```
 
-## UI Shell 三栏结构
+## UI Shell 工作台结构
+
+`DcDesigner` 由左侧 Dock、画布和右侧 Inspector 组成。根节点只占宿主给出的高度，不读取 `100vh`；历史操作与宿主扩展控件悬浮在画布内，不额外占用布局高度。
+
+工作台通过 `ResizeObserver` 观察自身宽度。默认小于 `1100px` 时进入 compact 模式：左右栏退出布局流，并以互斥抽屉覆盖画布；宽屏模式下两栏可以独立折叠为 `44px` rail。状态保存在 `DesignerInstance.workspace`，不写入浏览器存储。
+
+左右栏各自拥有 rail 和贴近画布边缘的折叠控制。撤销、重做固定在画布悬浮历史区；`toolbarRenderer` 只渲染宿主选择提供的设备、预览等画布控件。
 
 ### 左栏：多 Tab 面板
 
@@ -81,10 +88,10 @@ src/
 - `dragOverNodeId` 与 `dragOverIndex` 传给 renderer，驱动 DropIndicator。
 - 新增 widget 后自动选中。
 - 点击画布空白处取消选中。
-- 支持 `toolbarRenderer` 扩展点，在画布顶部渲染自定义工具栏。
+- 画布只持有一个横纵滚动视口，设备框和长内容不会扩大工作台或页面。
 - 支持 `WidgetMeta.sortable` 位置锁定约束，只显示合法 drop indicator。
 - 支持 `WidgetMeta.creatable` 禁止原因，拖入被拒绝时通过 `forbiddenOverlay` 展示原因。
-- 提供 `data-dc-designer-portal` 交互层出口，renderer 的选区外框和节点工具栏优先 Teleport 到该出口，避免直接散落到 `body` 与应用弹窗、面板层级竞争。
+- 提供当前画布专属的 `data-dc-canvas-interaction-layer`。renderer 的选区外框和节点工具栏只 Teleport 到所属画布，多设计器实例之间不会共享全局 portal。
 
 ### 右栏：配置区
 
@@ -111,6 +118,10 @@ const designer = createDesigner({
   componentMap: getDefaultComponentMap(),
   fieldComponentMap: createAntDesignVueFields(),
   globalConfigSchema: myGlobalFormSchema,
+  workspace: {
+    compactBreakpoint: 1100,
+    keyboardShortcuts: true,
+  },
   extensions: {
     materialPanelRenderer: CustomPanel,
     materialItemRenderer: ({ material }) =>
@@ -160,7 +171,8 @@ const {
 | `propertyPanelRenderer` | 替换右栏配置区渲染 |
 | `materialItemRenderer` | 自定义单个物料项内容渲染 |
 | `rendererExtensions` | 透传给 renderer 的扩展点 |
-| `toolbarRenderer` | 自定义画布内工具栏内容 |
+| `toolbarRenderer` | 在画布悬浮扩展区渲染宿主自定义控件 |
+| `leftRailRenderer` / `rightRailRenderer` | 向左右 Sidebar rail 追加事件、设置等宿主工具 |
 
 `DesignerWidgetMeta.material` 是 designer 层的一等物料展示协议，不进入 core schema，也不影响画布渲染组件：
 
@@ -202,6 +214,8 @@ interface MaterialItemRenderProps {
 | `canUndo` / `canRedo` | 历史状态 |
 | `execute` | 执行 core command |
 | `engine` | 访问 engine 实例 |
+| `workspace` | 打开、关闭左右栏并读取 wide/compact 模式 |
+| `t` | 使用当前 designer i18n 文案 |
 
 ## Renderer 定位
 
@@ -431,15 +445,15 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 
 ## Toolbar 定位
 
-`useToolbarPosition` 计算节点工具栏的视口固定坐标，解决工具栏被父级 overflow 裁剪的问题。
+`useToolbarPosition` 使用 `@floating-ui/dom` 的 `autoUpdate` 跟踪节点工具栏坐标。工具条始终位于所属 frame 的左边缘，用户不需要根据空间猜测动作位置。
 
 策略：
 
-- 检测可滚动祖先容器，计算有效可见区域。
-- 使用 `requestAnimationFrame` 在激活时跟踪滚动、缩放、拖拽重排、CSS 动画和过渡。
-- Widget 不在有效可见区域时隐藏 toolbar。
-- 超出右侧时翻转到左侧，超出上下边界时 clamp。
-- 通过 `Teleport` 将 toolbar 渲染到 `body`，脱离 overflow 裁剪链。
+- `autoUpdate` 跟踪祖先滚动、尺寸变化和布局偏移，只在节点被选中时运行。
+- 工具栏固定使用 `left-start`，横坐标由 `[data-dc-toolbar-boundary]` 的左边缘和工具栏真实宽度决定。
+- 纵坐标跟随当前节点顶部，并按工具栏真实高度限制在画布 viewport 内。
+- Widget 离开画布可见区域时隐藏 toolbar；Renderer 独立使用时退回浏览器 viewport。
+- 工具栏与选区 Teleport 到所属画布 interaction layer，画布面板负责统一层级。
 
 ## CSS Class 层级
 

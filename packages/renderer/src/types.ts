@@ -66,10 +66,14 @@ export interface RendererWidgetMeta extends CoreWidgetMeta {
  * When provided, the toolbar uses position: fixed to escape overflow clipping.
  */
 export interface ToolbarPositionData {
-  /** CSS top in pixels (viewport-relative) */
-  top: number
-  /** CSS left in pixels (viewport-relative) */
-  left: number
+  /** CSS x coordinate in pixels (viewport-relative). */
+  x: number
+  /** CSS y coordinate in pixels (viewport-relative). */
+  y: number
+  /** Stable placement. The default toolbar is anchored to the left edge. */
+  placement: 'left-start'
+  /** Positioning strategy used by the interaction layer. */
+  strategy: 'fixed'
   /** Whether the toolbar should be visible (widget is at least partially in viewport) */
   visible: boolean
 }
@@ -264,11 +268,8 @@ export interface RendererOptions {
    * Managed externally by the designer package.
    */
   dragOverIndex?: Ref<number | null>
-  /**
-   * Optional max right boundary for toolbar positioning (viewport px).
-   * Prevents toolbar from overlapping with the property panel.
-   */
-  toolbarMaxRight?: Ref<number | undefined>
+  /** Optional canvas viewport used as the collision boundary for floating controls. */
+  interactionBoundary?: Ref<HTMLElement | null>
   /**
    * Optional reactive ref indicating the current drag-over is forbidden.
    * When true and dragOverNodeId is 'root', the forbidden overlay is shown
@@ -291,8 +292,8 @@ export interface RendererContext {
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
-  /** Optional max right boundary for toolbar positioning (viewport px). */
-  toolbarMaxRight?: Ref<number | undefined>
+  /** Optional canvas viewport used as the collision boundary for floating controls. */
+  interactionBoundary?: Ref<HTMLElement | null>
 }
 
 /**

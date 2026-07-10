@@ -17,10 +17,12 @@ packages:
   - packages/fields/*
   - examples/*
 catalog:
+  '@floating-ui/dom': ^1.7.4
   '@vitejs/plugin-vue': ^6.0.4
   '@vue/test-utils': ^2.4.11
   ant-design-vue: ^4.2.6
   happy-dom: ^20.10.6
+  vitepress: next
 catalogs:
   cli:
     '@antfu/eslint-config': ^6.2.0

@@ -1,5 +1,6 @@
 import type { PropType } from 'vue'
 import type { SectionSchema } from '../types'
+import { IconChevronDown } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h, ref, watch } from 'vue'
 import FormField from './FormField'
@@ -40,18 +41,21 @@ export default defineComponent({
       const columns = section.columns ?? 1
 
       const header = h(
-        'div',
+        'button',
         {
-          class: 'dc-form-section__header',
-          onClick: toggleCollapse,
+          'type': 'button',
+          'class': 'dc-form-section__header',
+          'aria-expanded': !collapsed.value,
+          'onClick': toggleCollapse,
         },
         [
           h('span', { class: 'dc-form-section__title' }, section.titleKey ? t(section.titleKey, section.title) : section.title),
-          h(
-            'span',
-            { class: 'dc-form-section__toggle' },
-            collapsed.value ? '+' : '-',
-          ),
+          h(IconChevronDown, {
+            size: 15,
+            class: collapsed.value
+              ? 'dc-form-section__toggle dc-form-section__toggle--collapsed'
+              : 'dc-form-section__toggle',
+          }),
         ],
       )
 

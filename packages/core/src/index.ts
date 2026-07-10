@@ -25,7 +25,7 @@ export type { EventListener } from './event-hub'
 // ── Helpers (tree utilities) ──────────────
 export { findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkFlatChildren } from './helpers'
 export { createHistoryManager } from './history-manager'
-export type { HistoryManagerInstance } from './history-manager'
+export type { HistoryManagerInstance, HistoryState } from './history-manager'
 
 // ── Layout protocol ───────────────────────
 export {

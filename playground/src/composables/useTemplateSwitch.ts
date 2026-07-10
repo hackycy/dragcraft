@@ -7,7 +7,7 @@ import { templateRegistry } from '../config/templates'
 export interface UseTemplateSwitchOptions {
   importSchema: (schema: DesignerSchema) => void
   exportSchema: () => DesignerSchema
-  confirmSwitch?: () => boolean
+  confirmSwitch?: () => boolean | Promise<boolean>
 }
 
 export function useTemplateSwitch(options: UseTemplateSwitchOptions) {

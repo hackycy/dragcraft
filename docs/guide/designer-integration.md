@@ -23,10 +23,16 @@ const designer = createDesigner({
       fields: [{ key: 'title', label: '页面标题', component: 'Input' }],
     }],
   },
+  workspace: {
+    compactBreakpoint: 1100,
+    keyboardShortcuts: true,
+  },
 })
 ```
 
-`engineOptions.initialSchema` 决定首次打开时编辑哪份页面。`globalConfigSchema` 显示在右侧的“全局配置”页签；没有选中物料时，它仍然可编辑。
+`engineOptions.initialSchema` 决定首次打开时编辑哪份页面。设计器默认带撤销、重做、左右栏开关和快捷键；`globalConfigSchema` 显示在右侧的“全局配置”页签。
+
+当容器宽度小于 `compactBreakpoint` 时，左右栏自动变成互斥抽屉，画布继续占满工作区。需要从业务代码控制面板时，调用 `designer.workspace.openLeft('structure')`、`openRight('widget')` 或对应的 `close`/`toggle` 方法。
 
 ## 读取与写入的边界
 

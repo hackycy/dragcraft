@@ -4,6 +4,33 @@ import type { ActionInterceptor, ComponentMap, NodeActionDefinition, NodeActionR
 import type { I18nInstance, LocaleMessages } from '@dragcraft/utils'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
+export type DesignerWorkspaceMode = 'wide' | 'compact'
+
+export interface DesignerWorkspaceOptions {
+  compactBreakpoint?: number
+  defaultLeftOpen?: boolean
+  defaultRightOpen?: boolean
+  keyboardShortcuts?: boolean
+}
+
+export interface DesignerWorkspaceController {
+  readonly compactBreakpoint: number
+  readonly keyboardShortcuts: boolean
+  mode: Ref<DesignerWorkspaceMode>
+  leftOpen: Ref<boolean>
+  rightOpen: Ref<boolean>
+  activeLeftPanel: Ref<LeftPanelTabKey>
+  activeRightPanel: Ref<PropertyTabKey>
+  setMode: (mode: DesignerWorkspaceMode) => void
+  openLeft: (panel?: LeftPanelTabKey) => void
+  closeLeft: () => void
+  toggleLeft: (panel?: LeftPanelTabKey) => void
+  openRight: (panel?: PropertyTabKey) => void
+  closeRight: () => void
+  toggleRight: (panel?: PropertyTabKey) => void
+  closeDrawers: () => void
+}
+
 // ──────────────────────────────────────────
 // Widget group config (inline definition to avoid @dragcraft/widgets dependency)
 // ──────────────────────────────────────────
@@ -111,6 +138,8 @@ export interface DesignerOptions {
   locale?: string
   /** Additional/override messages merged on top of designer and renderer defaults */
   messages?: LocaleMessages
+  /** Workbench layout and keyboard behavior. */
+  workspace?: DesignerWorkspaceOptions
 }
 
 // ──────────────────────────────────────────
@@ -118,8 +147,8 @@ export interface DesignerOptions {
 // ──────────────────────────────────────────
 
 /**
- * API object passed to the toolbarRenderer extension function.
- * Provides common operations for toolbar buttons.
+ * API object passed to the optional canvas toolbar renderer.
+ * Provides common operations for host-owned floating controls.
  */
 export interface ToolbarSlotAPI {
   /** Undo the last operation */
@@ -134,6 +163,14 @@ export interface ToolbarSlotAPI {
   execute: DesignerEngine['execute']
   /** The underlying engine instance for advanced use */
   engine: DesignerEngine
+  workspace: DesignerWorkspaceController
+  t: I18nInstance['t']
+}
+
+export interface DesignerRailSlotAPI {
+  engine: DesignerEngine
+  workspace: DesignerWorkspaceController
+  t: I18nInstance['t']
 }
 
 // ──────────────────────────────────────────
@@ -153,11 +190,14 @@ export interface DesignerExtensions {
   /** Renderer extensions (dropIndicator) forwarded to @dragcraft/renderer */
   rendererExtensions?: RendererExtensions
   /**
-   * Custom toolbar content renderer, displayed inside the canvas area.
-   * Receives a ToolbarSlotAPI with undo/redo and engine operations.
-   * Return VNodes to render inside the toolbar container.
+   * Optional host-owned controls rendered in the canvas floating extension area.
+   * Device selection, preview modes, and similar product controls belong here.
    */
   toolbarRenderer?: (api: ToolbarSlotAPI) => VNodeChild
+  /** Optional controls appended to the left sidebar rail. */
+  leftRailRenderer?: (api: DesignerRailSlotAPI) => VNodeChild
+  /** Optional controls appended to the right sidebar rail. */
+  rightRailRenderer?: (api: DesignerRailSlotAPI) => VNodeChild
 }
 
 // ──────────────────────────────────────────
@@ -189,6 +229,7 @@ export interface DesignerInstance {
   actionRegistry: NodeActionRegistry
   /** i18n instance for locale management */
   i18n: I18nInstance
+  workspace: DesignerWorkspaceController
   /** Dispose all resources */
   dispose: () => void
 }
@@ -210,6 +251,7 @@ export interface DesignerContext {
   eventHooks: RendererEventHooks
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
+  workspace: DesignerWorkspaceController
   dragOverNodeId: Ref<string | null>
   dragOverIndex: Ref<number | null>
   handleMaterialDragStart: (e: DragEvent, meta: RendererWidgetMeta) => void

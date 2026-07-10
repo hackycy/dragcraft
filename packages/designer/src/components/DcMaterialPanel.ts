@@ -1,4 +1,5 @@
 import type { DesignerWidgetMeta } from '../types'
+import { IconClose, IconSearch } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
@@ -49,8 +50,11 @@ export default defineComponent({
 
     return () =>
       h('div', { class: 'dc-material-panel' }, [
-        // Search input
+        h('div', { class: 'dc-material-panel__header' }, [
+          h('h2', { class: 'dc-material-panel__heading' }, t('panel.materials.title', '物料')),
+        ]),
         h('div', { class: 'dc-material-panel__search' }, [
+          h(IconSearch, { size: 15, class: 'dc-material-panel__search-icon' }),
           h('input', {
             type: 'text',
             class: 'dc-material-panel__search-input',
@@ -58,6 +62,15 @@ export default defineComponent({
             value: searchQuery.value,
             onInput: handleSearchInput,
           }),
+          searchQuery.value
+            ? h('button', {
+                'type': 'button',
+                'class': 'dc-material-panel__search-clear',
+                'title': t('panel.search.clear', '清除搜索'),
+                'aria-label': t('panel.search.clear', '清除搜索'),
+                'onClick': () => { searchQuery.value = '' },
+              }, [h(IconClose, { size: 14 })])
+            : null,
         ]),
         // Widget groups
         h(

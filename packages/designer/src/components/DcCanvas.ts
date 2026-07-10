@@ -1,7 +1,7 @@
 import { RootRenderer } from '@dragcraft/renderer'
-import { computed, defineComponent, h } from 'vue'
+import { computed, defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
-import DcToolbar from './DcToolbar'
+import DcCanvasControls from './DcCanvasControls'
 
 export default defineComponent({
   name: 'DcCanvas',
@@ -23,41 +23,37 @@ export default defineComponent({
       actionInterceptors,
       actionRegistry,
     } = ctx
+    const viewportRef = ref<HTMLElement | null>(null)
 
     const rendererExtensions = computed(() => ({
       ...(extensions.rendererExtensions ?? {}),
     }))
 
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
       const nodeEl = target.closest('[data-node-id]') as HTMLElement | null
-      if (!nodeEl || nodeEl.dataset.nodeId === 'root') {
+      if (!nodeEl || nodeEl.dataset.nodeId === 'root')
         engine.store.selectNode(null)
-      }
     }
-
-    // Compute right boundary for toolbar: property panel's left edge
-    const toolbarMaxRight = computed(() => {
-      const canvas = document.querySelector('.dc-designer__panel--right') as HTMLElement | null
-      return canvas?.getBoundingClientRect().left
-    })
 
     const isDragging = computed(() => engine.store.dragTarget.value !== null)
 
-    return () => h(
-      'div',
-      {
-        class: ['dc-canvas', {
-          'dc-canvas--dragging': isDragging.value,
-          'dc-canvas--forbidden': isForbidden.value && isDragging.value,
-        }],
-        onDragover: handleCanvasDragOver,
-        onDragleave: handleCanvasDragLeave,
-        onDrop: handleCanvasDrop,
-        onClick: handleClick,
-      },
-      [
-        h(DcToolbar),
+    return () => h('div', {
+      class: ['dc-canvas', {
+        'dc-canvas--dragging': isDragging.value,
+        'dc-canvas--forbidden': isForbidden.value && isDragging.value,
+      }],
+    }, [
+      h(DcCanvasControls),
+      h('div', {
+        'ref': viewportRef,
+        'class': 'dc-canvas__viewport',
+        'data-dc-interaction-boundary': '',
+        'onDragover': handleCanvasDragOver,
+        'onDragleave': handleCanvasDragLeave,
+        'onDrop': handleCanvasDrop,
+        'onClick': handleClick,
+      }, [
         h('div', { class: 'dc-canvas__content' }, [
           h(RootRenderer, {
             engine,
@@ -70,10 +66,14 @@ export default defineComponent({
             dragOverIndex,
             isForbidden,
             forbiddenReason,
-            toolbarMaxRight,
+            interactionBoundary: viewportRef,
           }),
         ]),
-      ],
-    )
+      ]),
+      h('div', {
+        'class': 'dc-canvas__interaction-layer',
+        'data-dc-canvas-interaction-layer': '',
+      }),
+    ])
   },
 })

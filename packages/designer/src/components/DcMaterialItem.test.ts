@@ -34,6 +34,7 @@ function makeContext(instance: DesignerInstance): DesignerContext {
     eventHooks: instance.eventHooks,
     actionInterceptors: instance.actionInterceptors,
     actionRegistry: instance.actionRegistry,
+    workspace: instance.workspace,
     dragOverNodeId: ref(null),
     dragOverIndex: ref(null),
     handleMaterialDragStart: vi.fn(),
@@ -44,8 +45,8 @@ function makeContext(instance: DesignerInstance): DesignerContext {
     isForbidden: ref(false),
     forbiddenReason: ref(null),
     searchQuery: ref(''),
-    activeTab: ref('widget'),
-    leftPanelActiveTab: ref('materials'),
+    activeTab: instance.workspace.activeRightPanel,
+    leftPanelActiveTab: instance.workspace.activeLeftPanel,
   }
 }
 

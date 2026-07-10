@@ -1,7 +1,7 @@
 import type { FieldChangePayload } from '@dragcraft/form-generator'
 import { FormGenerator } from '@dragcraft/form-generator'
 import { useI18n } from '@dragcraft/utils'
-import { computed, defineComponent, h, watch } from 'vue'
+import { defineComponent, h, watch } from 'vue'
 import { usePropertyBinding } from '../composables/usePropertyBinding'
 import { useDesignerContext } from '../context'
 
@@ -21,21 +21,6 @@ export default defineComponent({
       handleGlobalConfigChange,
     } = usePropertyBinding(engine, { globalConfigSchema })
 
-    // Available tabs (Widget tab only when a node is selected)
-    const tabs = computed(() => {
-      const items: Array<{ key: 'global' | 'widget', label: string }> = [
-        { key: 'global', label: t('panel.tab.global', '全局配置') },
-      ]
-      if (selectedNode.value) {
-        items.push({ key: 'widget', label: t('panel.tab.widget', '组件配置') })
-      }
-      return items
-    })
-
-    const handleTabClick = (key: 'global' | 'widget') => {
-      activeTab.value = key
-    }
-
     // Auto-switch to Widget tab when a node is selected
     watch(
       () => engine.store.selectedNodeId.value,
@@ -53,22 +38,6 @@ export default defineComponent({
         ? 'global'
         : currentTab
 
-      // ── Tab bar ──
-      const tabBar = h(
-        'div',
-        { class: 'dc-property-panel__tabs' },
-        tabs.value.map(tab =>
-          h('div', {
-            class: [
-              'dc-property-panel__tab',
-              { 'dc-property-panel__tab--active': effectiveTab === tab.key },
-            ],
-            onClick: () => handleTabClick(tab.key),
-          }, tab.label),
-        ),
-      )
-
-      // ── Tab content ──
       let tabContent = null
 
       if (effectiveTab === 'global' && globalConfigSchema) {
@@ -104,8 +73,12 @@ export default defineComponent({
       }
 
       return h('div', { class: 'dc-property-panel' }, [
-        tabBar,
-        h('div', { class: 'dc-property-panel__content' }, [tabContent]),
+        h('div', {
+          'id': `dc-property-panel-${effectiveTab}`,
+          'class': 'dc-property-panel__content',
+          'role': 'tabpanel',
+          'aria-labelledby': `dc-property-tab-${effectiveTab}`,
+        }, [tabContent]),
       ])
     }
   },
