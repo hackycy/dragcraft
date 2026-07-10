@@ -1,7 +1,7 @@
 import type { PropType } from 'vue'
-import type { FieldSchema, FormContext } from '../types'
+import type { FieldSchema } from '../types'
 import { useI18n } from '@dragcraft/utils'
-import { defineComponent, h } from 'vue'
+import { computed, defineComponent, h } from 'vue'
 import { useFieldDependencies } from '../composables/useFieldDependencies'
 import { useFieldState } from '../composables/useFieldState'
 import { useFormGeneratorContext } from '../context'
@@ -24,44 +24,75 @@ export default defineComponent({
     const { resolvedField } = useFieldDependencies(() => props.field, ctx)
     const { isVisible, isShown, isDisabled } = useFieldState(() => resolvedField.value, ctx)
 
+    const value = computed(() => {
+      const field = resolvedField.value
+      const currentValue = ctx.getFieldValue(field.key)
+      const rawValue = currentValue === undefined ? field.defaultValue : currentValue
+      return field.valueFormat?.(rawValue, createFormContext(ctx.values)) ?? rawValue
+    })
+    const componentProps = computed(() =>
+      resolveFieldComponentProps(resolvedField.value, createFormContext(ctx.values), t),
+    )
+    const validate = (): void => {
+      const field = resolvedField.value
+      ctx.validateField(field.key, field)
+    }
+    const setValue = (value: unknown): void => {
+      const field = resolvedField.value
+      const transformed = field.parseValue?.(value, createFormContext(ctx.values)) ?? value
+      ctx.onFieldChange(field.key, transformed)
+      validate()
+    }
+    const fieldRender = typeof props.field.component === 'function'
+      ? props.field.component({
+          field: resolvedField,
+          values: ctx.values,
+          value,
+          disabled: isDisabled,
+          componentProps,
+          t,
+          setValue,
+          validate,
+        })
+      : undefined
+
+    const renderRegisteredField = (field: FieldSchema, disabled: boolean) => {
+      const definition = typeof field.component === 'string'
+        ? ctx.fieldComponentMap[field.component]
+        : undefined
+      const transformCtx = { field, values: ctx.values }
+      const currentValue = definition?.formatValue?.(value.value, transformCtx) ?? value.value
+      const FieldComponent = definition?.component
+      const fieldContent = definition && FieldComponent
+        ? h(FieldComponent, {
+            ...definition.defaultProps,
+            ...componentProps.value,
+            disabled,
+            [definition.modelPropName ?? 'modelValue']: currentValue,
+            [definition.updateEventName ?? 'onUpdate:modelValue']: (value: unknown) => {
+              const normalized = definition.normalizeValue?.(value, transformCtx) ?? value
+              setValue(normalized)
+            },
+          })
+        : h('div', { class: 'dc-field-unknown' }, `Unknown field: ${String(field.component)}`)
+
+      return [
+        h('label', { class: 'dc-form-field__label' }, field.labelKey ? t(field.labelKey, field.label) : field.label),
+        h('div', { class: 'dc-form-field__control' }, [fieldContent]),
+      ]
+    }
+
     return () => {
       if (!isVisible.value)
         return null
 
       const field = resolvedField.value
-      const formCtx: FormContext = createFormContext(ctx.values)
-
-      // Value transform: model -> component
-      const value = ctx.getFieldValue(field.key)
-      const rawValue = value === undefined ? field.defaultValue : value
-      const schemaValue = field.valueFormat?.(rawValue, formCtx) ?? rawValue
-      const definition = ctx.fieldComponentMap[field.component]
-      const transformCtx = { field, values: ctx.values }
-      const currentValue = definition?.formatValue?.(schemaValue, transformCtx) ?? schemaValue
-
-      const FieldComponent = definition?.component
       const errorMsg = ctx.fieldErrors.value[field.key]
       const disabled = isDisabled.value
 
-      const fieldContent = definition && FieldComponent
-        ? h(FieldComponent, {
-            ...definition.defaultProps,
-            ...resolveFieldComponentProps(field, formCtx, t),
-            disabled,
-            [definition.modelPropName ?? 'modelValue']: currentValue,
-            [definition.updateEventName ?? 'onUpdate:modelValue']: (value: unknown) => {
-              const normalized = definition.normalizeValue?.(value, transformCtx) ?? value
-              const transformed = field.parseValue?.(normalized, formCtx) ?? normalized
-              ctx.onFieldChange(field.key, transformed)
-              ctx.validateField(field.key, field)
-            },
-          })
-        : h('div', { class: 'dc-field-unknown' }, `Unknown field: ${field.component}`)
-
-      const children = [
-        h('label', { class: 'dc-form-field__label' }, field.labelKey ? t(field.labelKey, field.label) : field.label),
-        h('div', { class: 'dc-form-field__control' }, [fieldContent]),
-      ]
+      const children = fieldRender
+        ? [fieldRender()]
+        : renderRegisteredField(field, disabled)
 
       if (field.tooltip) {
         children.push(

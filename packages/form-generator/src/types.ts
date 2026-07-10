@@ -1,4 +1,4 @@
-import type { Component, InjectionKey, Ref } from 'vue'
+import type { Component, ComputedRef, InjectionKey, Ref, VNodeChild } from 'vue'
 
 // ──────────────────────────────────────────
 // Form context (passed to visible/disabled predicates)
@@ -60,6 +60,37 @@ export type FieldComponentProps<Props extends object = Record<string, unknown>>
   = | Props
     | ((ctx: FormContext) => Props)
 
+/**
+ * Reactive form state available to an inline field render factory.
+ */
+export interface FieldRenderContext {
+  /** Dependency-resolved field schema. */
+  field: ComputedRef<FieldSchema>
+  /** Reactive flat key-value map of all form field values. */
+  values: Record<string, unknown>
+  /** Current formatted field value. */
+  value: ComputedRef<unknown>
+  /** Resolved global and field-level disabled state. */
+  disabled: ComputedRef<boolean>
+  /** Resolved static or dynamic component props, including i18n transforms. */
+  componentProps: ComputedRef<Record<string, unknown>>
+  /** Translate a message key, with an optional fallback. */
+  t: (key: string, fallback?: string) => string
+  /** Write a value through the field parse, change, and validation pipeline. */
+  setValue: (value: unknown) => void
+  /** Validate the field against its current resolved schema. */
+  validate: () => void
+}
+
+/**
+ * Creates inline field content from reactive form state.
+ *
+ * Any function assigned to FieldSchema.component is treated as a render
+ * factory. Reusable Vue functional components must be registered under a
+ * string key in FieldComponentMap.
+ */
+export type FieldRenderFactory = (ctx: FieldRenderContext) => () => VNodeChild
+
 export type FieldBindingScope = 'node' | 'schema' | 'globalConfig'
 
 export interface FieldBindingTarget {
@@ -70,7 +101,7 @@ export interface FieldBindingTarget {
 }
 
 export interface FieldSchema<
-  ComponentType extends string = string,
+  ComponentType extends string | FieldRenderFactory = string | FieldRenderFactory,
   ComponentProps extends object = Record<string, unknown>,
 > {
   /** Property key in the values object (e.g., 'text', 'fontSize') */
@@ -87,7 +118,7 @@ export interface FieldSchema<
    * Falls back to the static `option.label` when the key is missing.
    */
   optionKeyPrefix?: string
-  /** Registered field component name (e.g., 'Input', 'Select', 'Color') */
+  /** Registered field component name or an inline field render factory. */
   component: ComponentType
   /** Optional DSL path binding used by host applications such as the designer. */
   bindTo?: string | FieldBindingTarget
@@ -120,7 +151,7 @@ export interface FieldSchema<
 /**
  * Declares dependencies on other fields and how to react when they change.
  */
-export interface FieldDependencies<Field extends FieldSchema<string, object> = FieldSchema> {
+export interface FieldDependencies<Field extends FieldSchema<string | FieldRenderFactory, object> = FieldSchema> {
   /** Field keys this field depends on. */
   fields: string[]
 
@@ -138,7 +169,7 @@ export interface FieldDependencies<Field extends FieldSchema<string, object> = F
 /**
  * A titled group of fields.
  */
-export interface SectionSchema<Field extends FieldSchema<string, object> = FieldSchema> {
+export interface SectionSchema<Field extends FieldSchema<string | FieldRenderFactory, object> = FieldSchema> {
   title: string
   /** i18n message key for title; overrides `title` when i18n is active */
   titleKey?: string
@@ -152,7 +183,7 @@ export interface SectionSchema<Field extends FieldSchema<string, object> = Field
 /**
  * Top-level schema that FormGenerator accepts.
  */
-export interface FormSchema<Field extends FieldSchema<string, object> = FieldSchema> {
+export interface FormSchema<Field extends FieldSchema<string | FieldRenderFactory, object> = FieldSchema> {
   sections: Array<SectionSchema<Field>>
 }
 
@@ -161,7 +192,7 @@ export type TypedFieldSchema<PropsMap extends object> = {
   PropsMap[ComponentType] extends object
     ? FieldSchema<ComponentType, PropsMap[ComponentType]>
     : never
-}[Extract<keyof PropsMap, string>]
+}[Extract<keyof PropsMap, string>] | FieldSchema<FieldRenderFactory>
 
 export type TypedSectionSchema<PropsMap extends object> = SectionSchema<TypedFieldSchema<PropsMap>>
 

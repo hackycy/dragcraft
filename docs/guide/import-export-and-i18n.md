@@ -1,25 +1,43 @@
-# 导入导出与国际化
+# Schema 生命周期
 
-这一页会解释 schema 的进出路径，以及语言包是怎么合并进去的。
-
-先看 playground 里真实存在的几项能力：
+Schema 是设计器和业务服务之间交换的页面快照。使用 `exportSchema()` 导出，使用 `importSchema()` 在打开页面时加载。
 
 ```ts
+import { useDesigner } from '@dragcraft/designer'
+
 const { exportSchema, importSchema, undo, redo } = useDesigner(designer)
+
+const response = await pageApi.getDraft(pageId)
+importSchema(response.schema)
+
+const schema = exportSchema()
+await pageApi.saveDraft({ id: pageId, schema })
 ```
 
-`exportSchema()` 会拿到当前 schema 快照。`importSchema()` 会在导入时先校验基本结构，再经过已注册的 migration。
+导出的 Schema 是深拷贝，业务可以安全序列化或传给 API。导入会替换当前页面并清空本地历史，因此应在用户确认放弃未保存修改后调用。
 
-## 导入时会发生什么
+## Schema 中保存什么
 
-如果 schema 缺少 `root` 或 `version`，core 会直接拒绝导入。
+```ts
+const schema = {
+  version: '1.0.0',
+  globalConfig: { title: '夏日活动' },
+  root: {
+    id: 'root',
+    type: 'root',
+    props: {},
+    children: [{ id: 'notice-1', type: 'notice', props: { text: '限时优惠' } }],
+  },
+}
+```
 
-如果你注册过 migration，`importSchema()` 会按版本顺序依次迁移，最后再写回 store，并清空历史记录。
+`root.children` 保存扁平的物料节点；节点的 `type` 必须能被业务的物料注册表解析。图片、链接、表单选项等业务数据通常放进 `props`，页面级业务数据放进 `globalConfig`。
 
-## 语言包怎么合并
+> [!WARNING]
+> `importSchema()` 只负责最基本的 Schema 入口校验。服务端仍应校验页面归属、允许的物料类型、资源地址和业务字段，不能把客户端 Schema 当成可信输入。
 
-`createDesigner()` 会先加载 designer 和 renderer 的默认文案，再把你传入的 `messages` 合并进去。
+## 区分编辑历史和页面版本
 
-这意味着你可以只覆盖业务需要改写的文案，不必从零写完整语言包。
+`undo()` 与 `redo()` 只服务于当前浏览器中的编辑会话。草稿版本、发布版本、审核记录和并发冲突应由业务服务管理。
 
-关于导入导出和国际化，目前知道这些就够了。准备好之后，继续阅读 [参考总览](/reference/overview)。
+关于 Schema 生命周期，目前知道这些就够了。准备好之后，继续阅读 [保存草稿与发布](/guide/saving-and-publishing)。

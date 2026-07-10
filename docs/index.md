@@ -13,6 +13,9 @@ hero:
       text: 理解心智模型
       link: /guide/mental-model
     - theme: alt
+      text: 保存与发布
+      link: /guide/saving-and-publishing
+    - theme: alt
       text: 查看 API 参考
       link: /reference/overview
 
@@ -102,7 +105,12 @@ dragcraft 的架构边界刻意保持清晰：core 管状态和命令，designer
 | 理解 schema、命令和包分层 | [核心心智模型](/guide/mental-model) |
 | 设计页面结构、chrome 和浮层 | [Schema 与布局](/guide/schema-and-layout) |
 | 接入业务物料和右侧属性表单 | [物料与字段](/guide/materials-and-fields) |
+| 自定义字段 adapter、联动与 Schema 绑定 | [配置表单与字段](/guide/forms-and-fields) |
+| 替换面板、工具栏或节点动作 | [扩展设计器交互](/guide/extending-the-designer) |
 | 增加设备预览和主题皮肤 | [主题与设备框架](/guide/themes-and-device-frames) |
+| 接入编辑器语言包 | [编辑器国际化](/guide/i18n) |
+| 保存草稿、处理版本冲突并发布 | [保存草稿与发布](/guide/saving-and-publishing) |
+| 确认生产运行时的消费边界 | [运行时集成边界](/guide/runtime-integration) |
 | 查某个 package 的入口 API | [参考总览](/reference/overview) |
 
 ## 适合从这里开始的团队

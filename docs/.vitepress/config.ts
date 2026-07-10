@@ -17,15 +17,30 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: '开始使用',
+          text: '开始接入',
           items: [
             { text: '快速开始', link: '/guide/getting-started' },
             { text: '核心心智模型', link: '/guide/mental-model' },
             { text: 'Schema 与布局', link: '/guide/schema-and-layout' },
             { text: '集成设计器', link: '/guide/designer-integration' },
-            { text: '物料与字段', link: '/guide/materials-and-fields' },
+          ],
+        },
+        {
+          text: '扩展设计器',
+          items: [
+            { text: '自定义物料', link: '/guide/materials-and-fields' },
+            { text: '配置表单与字段', link: '/guide/forms-and-fields' },
+            { text: '扩展设计器交互', link: '/guide/extending-the-designer' },
             { text: '主题与设备框架', link: '/guide/themes-and-device-frames' },
-            { text: '导入导出与国际化', link: '/guide/import-export-and-i18n' },
+            { text: '编辑器国际化', link: '/guide/i18n' },
+          ],
+        },
+        {
+          text: '从编辑到上线',
+          items: [
+            { text: 'Schema 生命周期', link: '/guide/import-export-and-i18n' },
+            { text: '保存草稿与发布', link: '/guide/saving-and-publishing' },
+            { text: '运行时集成边界', link: '/guide/runtime-integration' },
           ],
         },
       ],

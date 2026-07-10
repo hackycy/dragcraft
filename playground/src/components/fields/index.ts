@@ -137,7 +137,9 @@ export const ArrayField = defineComponent({
     }
 
     const renderItemField = (item: Record<string, unknown>, index: number, field: FieldSchema) => {
-      const definition = fieldComponentMap.value[field.component]
+      const definition = typeof field.component === 'string'
+        ? fieldComponentMap.value[field.component]
+        : undefined
       const rawValue = item[field.key] ?? field.defaultValue
       const formCtx: FormContext = { values: item }
       const schemaValue = field.valueFormat?.(rawValue, formCtx) ?? rawValue

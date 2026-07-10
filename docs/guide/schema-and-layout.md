@@ -1,38 +1,53 @@
 # Schema 与布局
 
-这一页会解释两个问题：schema 长什么样，以及节点为什么会进入内容流、chrome 或浮层。
+一个页面是一份扁平 Schema。物料都放在 `root.children`，布局系统再把它们投影到内容流、页面 chrome 和浮层。
 
-先看一个最小 schema：
+先看一个同时包含三种区域的页面：
 
 ```ts
 const schema = {
   version: '1.0.0',
-  globalConfig: {},
+  globalConfig: { title: '商品详情' },
   root: {
     id: 'root',
     type: 'root',
     props: {},
+    style: { surface: { backgroundColor: '#f7f7f7' } },
     children: [
       { id: 'hero', type: 'banner', props: {} },
+      {
+        id: 'tabbar', type: 'tab-bar', props: {},
+        layout: { placement: { kind: 'chrome', edge: 'block-end', position: 'fixed' } },
+      },
+      {
+        id: 'help', type: 'floating-button', props: {},
+        layout: { placement: { kind: 'layer', mode: 'self' } },
+      },
     ],
   },
 }
 ```
 
-dragcraft 目前采用扁平模型，真正参与页面编排的是 `root.children`。这意味着设计器不靠嵌套容器树来做拖拽排序。
+`root.children` 不依赖嵌套容器树。`hero` 没有布局声明，因此进入默认内容流；Tab 栏进入固定的页面结构层；浮动按钮进入单独的 layer。
 
-## 节点为什么会去不同区域
+## 三种样式作用域
 
-节点通过 `layout.placement` 表达布局意图。
+Schema 的 style 是跨端 DSL，不绑定浏览器 CSS。设计器预览会把它解释为 inline style，其他运行时可以映射为自己的样式系统。
 
-- `flow`：进入普通内容流
-- `chrome`：进入页面结构层，比如顶部导航或底部标签栏
-- `layer`：进入浮层，比如 FAB 或助手入口
+| 字段 | 作用对象 | 典型内容 |
+| --- | --- | --- |
+| `style.container` | 节点外层布局盒子 | `marginTop`、`width`、`padding` |
+| `style.content` | 物料组件内容 | `color`、`fontSize` |
+| `style.surface` | 页面或承载面的背景 | `backgroundColor`、`backgroundImage` |
 
-## 为什么布局和渲染要分开
+全局表单编辑页面背景时，应显式绑定到 `root.style.surface.*`，而不是把可视样式混入 `globalConfig`。
 
-`@dragcraft/core` 先把 `root.children` 投影成 `LayoutPlan`。`@dragcraft/renderer` 再根据这个 plan 生成真正的 Vue 节点。
+## 为什么布局不是组件自己决定
 
-这样做的结果是，一个 schema 节点只会被布局系统分发一次，不会同时出现在多个区域里。
+core 先从节点和物料默认布局生成 `LayoutPlan`，renderer 再按 plan 渲染。一个节点只会被分发一次，因此不会同时出现在内容区和固定栏中。
 
-关于 schema 的基本形状，目前知道这些就够了。准备好之后，继续阅读 [集成设计器](/guide/designer-integration)。
+- `flow`：普通内容流，可按 `sortScope` 排序。
+- `chrome`：导航栏、Tab 栏等结构节点，可声明固定、sticky 和内容避让。
+- `layer`：悬浮按钮、助手等覆盖层，可由框架或物料自行定位。
+
+关于 Schema 与布局，目前知道这些就够了。准备好之后，继续阅读 [集成设计器](/guide/designer-integration)。

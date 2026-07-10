@@ -18,6 +18,8 @@ export type {
   FieldComponentProps,
   FieldComponentTransformContext,
   FieldDependencies,
+  FieldRenderContext,
+  FieldRenderFactory,
   FieldSchema,
   FormContext,
   FormGeneratorContext,

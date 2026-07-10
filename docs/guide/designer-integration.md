@@ -1,34 +1,58 @@
 # 集成设计器
 
-这一页会把 `createDesigner()` 的输入项拆开讲清楚。
+`createDesigner()` 把 core、renderer 和 form-generator 组装为一个设计器实例。业务应用只需要提供物料、渲染组件和字段 adapter。
 
-先看一个接近 playground 的示例：
+先看一个带初始页面和全局配置的实例：
 
 ```ts
 const designer = createDesigner({
   engineOptions: {
-    initialSchema: templateRegistry[0].schema,
+    initialSchema: {
+      version: '1.0.0',
+      globalConfig: { title: '活动页' },
+      root: { id: 'root', type: 'root', props: {}, children: [] },
+    },
     maxHistorySize: 50,
   },
-  widgetMetas: playgroundWidgetMetas,
-  componentMap: playgroundComponentMap,
-  fieldComponentMap: buildPlaygroundFieldComponentMap(),
-  globalConfigSchema,
+  widgetMetas,
+  componentMap,
+  fieldComponentMap,
+  globalConfigSchema: {
+    sections: [{
+      title: '页面',
+      fields: [{ key: 'title', label: '页面标题', component: 'Input' }],
+    }],
+  },
 })
 ```
 
-上面这几个输入里，最关键的是 `widgetMetas`、`componentMap` 和 `fieldComponentMap`。它们分别决定“能拖什么”“渲染成什么”“右侧表单用什么字段组件”。
+`engineOptions.initialSchema` 决定首次打开时编辑哪份页面。`globalConfigSchema` 显示在右侧的“全局配置”页签；没有选中物料时，它仍然可编辑。
 
-## `createDesigner()` 实际做了什么
+## 读取与写入的边界
 
-它会创建 core engine、注册 widget meta、挂上字段 schema，并创建内置 node action registry。
+业务代码读取页面快照时使用 `designer.engine.state.getSchema()`，或在组件内使用 `useDesigner(designer)`。所有 schema 写入都通过 `execute()` 进入命令系统。
 
-这也是为什么业务侧通常只需要从 `@dragcraft/designer` 开始，而不是手动组装多个底层包。
+```ts
+import { CommandType, useDesigner } from '@dragcraft/designer'
 
-## 什么时候读 `engine.state`
+const { execute, exportSchema } = useDesigner(designer)
 
-读取 schema 和交互状态时，优先通过 `engine.state`。
+execute({
+  type: CommandType.UPDATE_PROPS,
+  payload: { nodeId: 'text-1', props: { content: '新品上线' } },
+})
 
-如果你要提交 schema 变更，统一通过 `engine.execute()`。这条边界在 architecture 文档和 `packages/core/src/engine.ts` 里都已经固定下来了。
+const snapshot = exportSchema()
+```
 
-关于标准集成方式，目前知道这些就够了。准备好之后，继续阅读 [物料与字段](/guide/materials-and-fields)。
+`execute()` 会统一接入约束、历史记录和 `schema:changed` 事件。不要直接改 `engine.store`；那会绕过这条链路。
+
+## 该准备哪些输入
+
+| 输入 | 解决的问题 | 下一步 |
+| --- | --- | --- |
+| `widgetMetas` + `componentMap` | 能创建什么，以及节点怎么渲染 | [自定义物料](/guide/materials-and-fields) |
+| `fieldComponentMap` + `FormSchema` | 右侧如何编辑页面和物料属性 | [配置表单与字段](/guide/forms-and-fields) |
+| `extensions`、hooks、actions | 替换面板、画布外壳与操作行为 | [扩展设计器交互](/guide/extending-the-designer) |
+
+关于标准集成，目前知道这些就够了。准备好之后，继续阅读 [自定义物料](/guide/materials-and-fields)。
