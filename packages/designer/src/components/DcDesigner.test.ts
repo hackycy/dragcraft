@@ -61,6 +61,9 @@ describe('dcDesigner', () => {
       expect(host.querySelector('.dc-right-sidebar__rail')).not.toBeNull()
       expect(host.querySelector('.dc-property-panel__header')).toBeNull()
       expect(host.querySelector('.dc-device-picker')).toBeNull()
+      expect(host.querySelector('[data-dc-workspace-control="pointer"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-workspace-control="hand"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-workspace-control="center"]')).not.toBeNull()
     }
     finally {
       app.unmount()
@@ -69,11 +72,10 @@ describe('dcDesigner', () => {
     }
   })
 
-  it('renders host controls only through the optional canvas extension surface', async () => {
+  it('renders optional host controls only in sidebar rails', async () => {
     const designer = createDesigner({
       engineOptions: { initialSchema: makeSchema() },
       extensions: {
-        toolbarRenderer: () => h('div', { class: 'host-canvas-control' }, 'Preview'),
         leftRailRenderer: () => h('button', { class: 'host-left-rail-control' }, 'Left'),
         rightRailRenderer: () => h('button', { class: 'host-right-rail-control' }, 'Right'),
       },
@@ -86,7 +88,7 @@ describe('dcDesigner', () => {
       app.mount(host)
       await nextTick()
 
-      expect(host.querySelector('.dc-canvas-controls__extension .host-canvas-control')).not.toBeNull()
+      expect(host.querySelector('.dc-canvas-controls__extension')).toBeNull()
       expect(host.querySelector('.dc-left-sidebar__rail .host-left-rail-control')).not.toBeNull()
       expect(host.querySelector('.dc-right-sidebar__rail .host-right-rail-control')).not.toBeNull()
     }

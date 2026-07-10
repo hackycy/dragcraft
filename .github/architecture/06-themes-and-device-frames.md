@@ -164,7 +164,7 @@ src/
 
 - 提供 iPhone、Android、平板、桌面浏览器四种常见设备容器。
 - 支持运行时动态切换设备类型。
-- 提供 toolbar 工厂函数，便于在画布工具栏中集成设备切换按钮。
+- 提供独立 `DevicePicker`，由宿主决定放在应用顶栏或其他产品区域。
 - 不依赖 designer 或 renderer；依赖 Vue、`@dragcraft/core` 的 layout/schema 类型，以及 `@dragcraft/icons` 的设备切换图标。
 
 设计边界：
@@ -181,9 +181,9 @@ src/
 import { createDesigner } from '@dragcraft/designer'
 import {
   createDeviceFrameContext,
-  createDeviceToolbarRenderer,
   DEVICE_FRAME_CONTEXT_KEY,
   DeviceFrameShell,
+  DevicePicker,
 } from '@dragcraft/device-frames'
 import '@dragcraft/device-frames/styles'
 import { provide } from 'vue'
@@ -196,12 +196,11 @@ const designer = createDesigner({
     rendererExtensions: {
       containerShell: DeviceFrameShell,
     },
-    toolbarRenderer: createDeviceToolbarRenderer(deviceCtx),
   },
 })
 ```
 
-设备选择不是 Designer 的默认能力。只有宿主配置 `toolbarRenderer` 时，选择器才会出现在画布悬浮扩展区；Playground 使用这段配置演示设备框架。
+设备选择不是 Designer 的默认能力。宿主可以直接渲染 `<DevicePicker :context="deviceCtx" />`；Playground 把它放在应用顶栏，不占用画布交互区。
 
 ## Device Frames 文件结构
 
@@ -214,13 +213,12 @@ src/
 │   └── useDeviceFrame.ts
 ├── components/
 │   ├── DeviceFrameShell.ts
+│   ├── DevicePicker.ts
 │   └── frames/
 │       ├── IPhoneFrame.ts
 │       ├── AndroidFrame.ts
 │       ├── TabletFrame.ts
 │       └── DesktopFrame.ts
-├── toolbar/
-│   └── createDeviceToolbarRenderer.ts
 ├── styles/
 │   ├── index.css
 │   ├── tokens.css

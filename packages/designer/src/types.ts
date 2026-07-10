@@ -143,29 +143,8 @@ export interface DesignerOptions {
 }
 
 // ──────────────────────────────────────────
-// Toolbar slot API
+// Sidebar rail slot API
 // ──────────────────────────────────────────
-
-/**
- * API object passed to the optional canvas toolbar renderer.
- * Provides common operations for host-owned floating controls.
- */
-export interface ToolbarSlotAPI {
-  /** Undo the last operation */
-  undo: () => void
-  /** Redo the last undone operation */
-  redo: () => void
-  /** Whether undo is available */
-  canUndo: () => boolean
-  /** Whether redo is available */
-  canRedo: () => boolean
-  /** Execute a command through the engine */
-  execute: DesignerEngine['execute']
-  /** The underlying engine instance for advanced use */
-  engine: DesignerEngine
-  workspace: DesignerWorkspaceController
-  t: I18nInstance['t']
-}
 
 export interface DesignerRailSlotAPI {
   engine: DesignerEngine
@@ -189,11 +168,6 @@ export interface DesignerExtensions {
   materialItemRenderer?: (props: MaterialItemRenderProps) => VNodeChild
   /** Renderer extensions (dropIndicator) forwarded to @dragcraft/renderer */
   rendererExtensions?: RendererExtensions
-  /**
-   * Optional host-owned controls rendered in the canvas floating extension area.
-   * Device selection, preview modes, and similar product controls belong here.
-   */
-  toolbarRenderer?: (api: ToolbarSlotAPI) => VNodeChild
   /** Optional controls appended to the left sidebar rail. */
   leftRailRenderer?: (api: DesignerRailSlotAPI) => VNodeChild
   /** Optional controls appended to the right sidebar rail. */

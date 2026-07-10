@@ -5,9 +5,9 @@ import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@d
 import { cloneDeep, generateShortId } from '@dragcraft/utils'
 import {
   createDeviceFrameContext,
-  createDeviceToolbarRenderer,
   DEVICE_FRAME_CONTEXT_KEY,
   DeviceFrameShell,
+  DevicePicker,
 } from '@dragcraft/device-frames'
 import { Modal } from 'ant-design-vue'
 import { defineComponent, h, provide } from 'vue'
@@ -166,7 +166,6 @@ const designer = createDesigner({
       containerShell: DeviceFrameShell,
       emptyState: MiniProgramEmptyState,
     },
-    toolbarRenderer: createDeviceToolbarRenderer(deviceCtx),
   },
 })
 
@@ -200,7 +199,14 @@ function toggleLocale() {
       @import-open="io.handleImportOpen()"
       @export-open="io.handleExport()"
       @toggle-locale="toggleLocale"
-    />
+    >
+      <template #preview-controls>
+        <DevicePicker
+          :context="deviceCtx"
+          :translate="designer.i18n.t"
+        />
+      </template>
+    </PlaygroundHeader>
 
     <DcDesigner :instance="designer" />
 
@@ -226,5 +232,6 @@ function toggleLocale() {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  container-type: inline-size;
 }
 </style>

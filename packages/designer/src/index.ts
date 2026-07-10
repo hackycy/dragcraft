@@ -53,7 +53,6 @@ export type {
   MaterialItemRenderProps,
   PropertyTabKey,
   ResolvedMaterialItem,
-  ToolbarSlotAPI,
   UseDesignerReturn,
   WidgetGroupConfig,
 } from './types'

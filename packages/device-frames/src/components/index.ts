@@ -1,4 +1,5 @@
 export { default as DeviceFrameShell } from './DeviceFrameShell'
+export { default as DevicePicker } from './DevicePicker'
 export { default as AndroidFrame } from './frames/AndroidFrame'
 export { default as DesktopFrame } from './frames/DesktopFrame'
 export { default as IPhoneFrame } from './frames/IPhoneFrame'

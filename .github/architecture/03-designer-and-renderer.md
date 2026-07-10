@@ -47,11 +47,11 @@ src/
 
 ## UI Shell 工作台结构
 
-`DcDesigner` 由左侧 Dock、画布和右侧 Inspector 组成。根节点只占宿主给出的高度，不读取 `100vh`；历史操作与宿主扩展控件悬浮在画布内，不额外占用布局高度。
+`DcDesigner` 由左侧 Dock、画布和右侧 Inspector 组成。根节点只占宿主给出的高度，不读取 `100vh`；历史、指针、抓手和重置位置控件悬浮在画布内，不额外占用布局高度。
 
 工作台通过 `ResizeObserver` 观察自身宽度。默认小于 `1100px` 时进入 compact 模式：左右栏退出布局流，并以互斥抽屉覆盖画布；宽屏模式下两栏可以独立折叠为 `44px` rail。状态保存在 `DesignerInstance.workspace`，不写入浏览器存储。
 
-左右栏各自拥有 rail 和贴近画布边缘的折叠控制。撤销、重做固定在画布悬浮历史区；`toolbarRenderer` 只渲染宿主选择提供的设备、预览等画布控件。
+左右栏各自拥有 rail 和贴近画布边缘的折叠控制。画布悬浮区是 Designer 内部交互面，只包含撤销、重做、指针、抓手和重置位置；设备、预览和发布等产品控件由宿主在 Designer 外部组织。
 
 ### 左栏：多 Tab 面板
 
@@ -126,7 +126,6 @@ const designer = createDesigner({
     materialPanelRenderer: CustomPanel,
     materialItemRenderer: ({ material }) =>
       h('div', { class: 'my-material-content' }, material.title),
-    toolbarRenderer: (api) => [],
   },
   actionInterceptors: [
     createConfirmActionInterceptor({
@@ -171,7 +170,6 @@ const {
 | `propertyPanelRenderer` | 替换右栏配置区渲染 |
 | `materialItemRenderer` | 自定义单个物料项内容渲染 |
 | `rendererExtensions` | 透传给 renderer 的扩展点 |
-| `toolbarRenderer` | 在画布悬浮扩展区渲染宿主自定义控件 |
 | `leftRailRenderer` / `rightRailRenderer` | 向左右 Sidebar rail 追加事件、设置等宿主工具 |
 
 `DesignerWidgetMeta.material` 是 designer 层的一等物料展示协议，不进入 core schema，也不影响画布渲染组件：
@@ -206,16 +204,7 @@ interface MaterialItemRenderProps {
 
 物料栏属于高密度工具区，推荐常驻展示只包含图标、标题和短标签；描述、关键词和更多业务数据优先用于搜索、tooltip 或完整替换 `materialPanelRenderer` 后的详情交互，避免两列栏位出现横向滚动或信息噪声。
 
-`toolbarRenderer` 接收 `ToolbarSlotAPI`：
-
-| 属性 | 说明 |
-| --- | --- |
-| `undo` / `redo` | 历史操作 |
-| `canUndo` / `canRedo` | 历史状态 |
-| `execute` | 执行 core command |
-| `engine` | 访问 engine 实例 |
-| `workspace` | 打开、关闭左右栏并读取 wide/compact 模式 |
-| `t` | 使用当前 designer i18n 文案 |
+画布视口默认让 frame 与可视区域在水平和垂直方向同时居中。frame 大于视口时隐藏原生滚动条，用户可以切换抓手模式拖动视窗、在指针模式下按住空格临时抓取，或点击重置位置恢复二维中心。
 
 ## Renderer 定位
 

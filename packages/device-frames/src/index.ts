@@ -3,6 +3,7 @@ export {
   AndroidFrame,
   DesktopFrame,
   DeviceFrameShell,
+  DevicePicker,
   IPhoneFrame,
   TabletFrame,
 } from './components'
@@ -21,9 +22,6 @@ export {
   IPHONE_PRESET,
   TABLET_PRESET,
 } from './presets'
-
-// ── Toolbar ─────────────────────────────────
-export { createDeviceToolbarRenderer } from './toolbar'
 
 // ── Types ───────────────────────────────────
 export type {

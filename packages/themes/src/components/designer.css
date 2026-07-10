@@ -285,11 +285,3 @@
   border: 0;
   cursor: default;
 }
-
-.dc-designer--compact .dc-device-picker__label {
-  display: none;
-}
-
-.dc-designer--compact .dc-canvas-controls__extension {
-  max-width: calc(100% - 112px);
-}

@@ -34,22 +34,28 @@ const emit = defineEmits<{
       </option>
     </select>
 
+    <div class="playground-header__preview-controls">
+      <slot name="preview-controls" />
+    </div>
+
     <div class="playground-header__spacer" />
 
-    <button class="playground-header__btn" @click="emit('importOpen')">
-      Import
-    </button>
-    <button
-      class="playground-header__btn playground-header__btn--primary"
-      @click="emit('exportOpen')"
-    >
-      Export
-    </button>
+    <div class="playground-header__actions">
+      <button class="playground-header__btn" @click="emit('importOpen')">
+        Import
+      </button>
+      <button
+        class="playground-header__btn playground-header__btn--primary"
+        @click="emit('exportOpen')"
+      >
+        Export
+      </button>
 
-    <div class="playground-header__divider" />
+      <div class="playground-header__divider" />
 
-    <button class="playground-header__btn" @click="emit('toggleLocale')">
-      {{ locale === 'zh-CN' ? 'English' : '中文' }}
-    </button>
+      <button class="playground-header__btn" @click="emit('toggleLocale')">
+        {{ locale === 'zh-CN' ? 'English' : '中文' }}
+      </button>
+    </div>
   </header>
 </template>

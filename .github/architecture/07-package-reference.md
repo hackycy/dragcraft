@@ -45,7 +45,7 @@
 
 - 标准业务接入入口。
 - 组合 core、renderer、form-generator。
-- 提供带全宽工具栏、可折叠 Dock、画布和 Inspector 的响应式 UI Shell。
+- 提供可折叠 Dock、可平移画布和 Inspector 的响应式 UI Shell。
 - 管理基于容器宽度的 wide/compact 模式与互斥抽屉。
 - 管理拖拽、属性绑定、扩展点和事件 hooks 透传。
 - 通过 `bindings/field-binding.ts` 纯函数 helpers 翻译属性面板字段绑定。
@@ -55,7 +55,7 @@
 - `createDesigner()`。
 - `DcDesigner`。
 - `useDesigner()`。
-- Designer options、workspace controller、extensions、toolbar API 类型。
+- Designer options、workspace controller 和 extensions 类型。
 
 依赖与协作：
 
@@ -171,7 +171,7 @@
 职责：
 
 - 提供 iPhone、Android、Tablet、Desktop 画布设备容器。
-- 提供设备上下文和 toolbar 切换器工厂。
+- 提供设备上下文和独立设备选择组件。
 - 作为 renderer `containerShell` 扩展点使用。
 
 主要入口：
@@ -179,14 +179,14 @@
 - `createDeviceFrameContext()`。
 - `DeviceFrameShell`。
 - `DEVICE_FRAME_CONTEXT_KEY`。
-- `createDeviceToolbarRenderer()`。
+- `DevicePicker`。
 - `useDeviceFrame()`。
 - `@dragcraft/device-frames/styles`。
 
 依赖与协作：
 
 - 依赖 Vue、`@dragcraft/core` layout/schema 类型和 `@dragcraft/icons`，不依赖 designer 或 renderer。
-- 设备选择器是可选宿主控件，通过 `toolbarRenderer` 渲染到画布悬浮扩展区；designer 默认不提供设备选择。
+- 设备选择器是可选宿主组件，由业务放在应用顶栏或其他产品区域；designer 默认不提供设备选择。
 - 与 renderer 通过 `containerShell` 集成。
 - 样式自包含，不依赖 themes。
 

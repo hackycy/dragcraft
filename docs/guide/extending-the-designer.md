@@ -1,24 +1,6 @@
 # 扩展设计器交互
 
-设计器把撤销和重做固定在画布左上角。`toolbarRenderer` 用来增加宿主选择提供的预览或设备控制：
-
-```ts
-import { h } from 'vue'
-
-const designer = createDesigner({
-  widgetMetas,
-  componentMap,
-  extensions: {
-    toolbarRenderer: ({ t }) => h('button', {
-      class: 'dc-canvas-toolbar__btn',
-      title: t('preview.open', '预览'),
-      onClick: openPreview,
-    }, t('preview.open', '预览')),
-  },
-})
-```
-
-这个扩展区仍能拿到 `undo`、`redo`、`execute`、`workspace` 和 `t`。左右栏通过各自 rail 上的折叠控制开关；保存、发布和模板切换通常放在 designer 外部的应用顶栏。
+设计器把撤销、重做、指针、抓手和重置位置固定在画布左上角。重置位置会让 frame 在水平和垂直方向重新居中。这个区域不接受业务扩展；设备、预览、保存和发布等产品动作放在 Designer 外部的应用顶栏。
 
 ## 选择合适的扩展点
 
@@ -27,7 +9,6 @@ const designer = createDesigner({
 | 完整替换左侧物料区或右侧属性区 | `materialPanelRenderer` / `propertyPanelRenderer` |
 | 只定制一张物料卡片 | `materialItemRenderer` |
 | 更换设备外壳、节点工具栏、空状态或节点包裹层 | `rendererExtensions` |
-| 在画布悬浮区增加预览或设备控制 | `toolbarRenderer` |
 | 向左右 Sidebar rail 增加事件、设置等工具 | `leftRailRenderer` / `rightRailRenderer` |
 
 `materialPanelRenderer` 和 `propertyPanelRenderer` 会替换整个区域，适合业务已有成熟面板时使用。只改一个物料项时，优先使用 `materialItemRenderer`，这样可以保留 designer 的搜索、尺寸和拖拽约束。

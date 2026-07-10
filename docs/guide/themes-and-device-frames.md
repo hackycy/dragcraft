@@ -39,9 +39,9 @@ import '@dragcraft/themes/antd'
 import '@dragcraft/device-frames/styles'
 import {
   createDeviceFrameContext,
-  createDeviceToolbarRenderer,
   DEVICE_FRAME_CONTEXT_KEY,
   DeviceFrameShell,
+  DevicePicker,
 } from '@dragcraft/device-frames'
 import { provide } from 'vue'
 
@@ -53,11 +53,17 @@ const designer = createDesigner({
   componentMap,
   extensions: {
     rendererExtensions: { containerShell: DeviceFrameShell },
-    toolbarRenderer: createDeviceToolbarRenderer(deviceCtx),
   },
 })
 ```
 
-`DeviceFrameShell` 接收 renderer 已经分好的内容流、chrome 和浮层节点。`createDeviceToolbarRenderer()` 是 Playground 采用的可选宿主控件；不配置它时不会出现设备选择。撤销和重做由 designer 的画布悬浮历史区提供。
+`DeviceFrameShell` 接收 renderer 已经分好的内容流、chrome 和浮层节点。设备选择由宿主单独渲染，Playground 把它放在应用顶栏：
+
+```vue
+<DevicePicker :context="deviceCtx" :translate="designer.i18n.t" />
+<DcDesigner :instance="designer" />
+```
+
+不渲染 `DevicePicker` 时不会出现设备选择。Designer 画布只保留撤销、重做、指针、抓手和重置位置。
 
 关于视觉层，目前知道这些就够了。准备好之后，继续阅读 [编辑器国际化](/guide/i18n)。

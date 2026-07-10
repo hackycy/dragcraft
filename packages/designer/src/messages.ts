@@ -28,6 +28,7 @@ export const designerMessages: Record<string, MessageTree> = {
     },
     workspace: {
       history: { label: '历史操作', undo: '撤销', redo: '重做' },
+      canvas: { controls: '画布工具', pointer: '指针模式', hand: '抓手模式（按住空格）', reset: '重置画布位置' },
       left: { label: '物料与结构', open: '展开左侧栏', close: '收起左侧栏' },
       right: { label: '属性检查器', open: '展开属性栏', close: '收起属性栏' },
       drawer: { close: '关闭面板' },
@@ -61,6 +62,7 @@ export const designerMessages: Record<string, MessageTree> = {
     },
     workspace: {
       history: { label: 'History actions', undo: 'Undo', redo: 'Redo' },
+      canvas: { controls: 'Canvas tools', pointer: 'Pointer mode', hand: 'Hand mode (hold Space)', reset: 'Reset canvas position' },
       left: { label: 'Materials and structure', open: 'Open left panel', close: 'Collapse left panel' },
       right: { label: 'Inspector', open: 'Open inspector', close: 'Collapse inspector' },
       drawer: { close: 'Close panel' },

@@ -1,55 +1,56 @@
-import type { Component, VNodeChild } from 'vue'
-import type { ToolbarSlotAPI } from '../types'
-import { IconRedo, IconUndo } from '@dragcraft/icons'
+import type { Component, PropType, VNodeChild } from 'vue'
+import type { CanvasInteractionMode } from '../composables/useCanvasPan'
+import { IconCenter, IconHand, IconPointer, IconRedo, IconUndo } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 
-interface HistoryButtonOptions {
-  key: 'undo' | 'redo'
+interface ControlButtonOptions {
+  key: 'undo' | 'redo' | 'pointer' | 'hand' | 'center'
   label: string
   icon: Component
-  disabled: boolean
+  disabled?: boolean
+  active?: boolean
   onClick: () => void
 }
 
 export default defineComponent({
   name: 'DcCanvasControls',
 
-  setup() {
+  props: {
+    interactionMode: {
+      type: String as PropType<CanvasInteractionMode>,
+      required: true,
+    },
+  },
+
+  emits: {
+    modeChange: (_mode: CanvasInteractionMode) => true,
+    resetView: () => true,
+  },
+
+  setup(props, { emit }) {
     const { t } = useI18n()
-    const { engine, extensions, workspace } = useDesignerContext()
+    const { engine } = useDesignerContext()
 
-    const api: ToolbarSlotAPI = {
-      undo: () => engine.history.undo(),
-      redo: () => engine.history.redo(),
-      canUndo: () => engine.history.canUndo(),
-      canRedo: () => engine.history.canRedo(),
-      execute: engine.execute,
-      engine,
-      workspace,
-      t,
-    }
-
-    const renderHistoryButton = (options: HistoryButtonOptions): VNodeChild => h('button', {
+    const renderHistoryButton = (options: ControlButtonOptions): VNodeChild => h('button', {
       'type': 'button',
       'class': 'dc-canvas-controls__button',
       'disabled': options.disabled,
       'title': options.label,
       'aria-label': options.label,
+      'aria-pressed': options.active,
       'data-dc-workspace-control': options.key,
       'onClick': options.onClick,
     }, [h(options.icon, { size: 17 })])
 
     return () => {
       const history = engine.history.state.value
-      const extensionContent = extensions.toolbarRenderer?.(api)
-
       return h('div', { class: 'dc-canvas-controls' }, [
         h('div', {
           'class': 'dc-canvas-controls__history',
           'role': 'toolbar',
-          'aria-label': t('workspace.history.label', '历史操作'),
+          'aria-label': t('workspace.canvas.controls', '画布工具'),
         }, [
           renderHistoryButton({
             key: 'undo',
@@ -65,10 +66,29 @@ export default defineComponent({
             disabled: !history.canRedo,
             onClick: () => engine.history.redo(),
           }),
+          h('span', { 'class': 'dc-canvas-controls__divider', 'aria-hidden': 'true' }),
+          renderHistoryButton({
+            key: 'pointer',
+            label: t('workspace.canvas.pointer', '指针模式'),
+            icon: IconPointer,
+            active: props.interactionMode === 'pointer',
+            onClick: () => emit('modeChange', 'pointer'),
+          }),
+          renderHistoryButton({
+            key: 'hand',
+            label: t('workspace.canvas.hand', '抓手模式（按住空格）'),
+            icon: IconHand,
+            active: props.interactionMode === 'hand',
+            onClick: () => emit('modeChange', 'hand'),
+          }),
+          h('span', { 'class': 'dc-canvas-controls__divider', 'aria-hidden': 'true' }),
+          renderHistoryButton({
+            key: 'center',
+            label: t('workspace.canvas.reset', '重置画布位置'),
+            icon: IconCenter,
+            onClick: () => emit('resetView'),
+          }),
         ]),
-        extensionContent
-          ? h('div', { class: 'dc-canvas-controls__extension' }, [extensionContent])
-          : null,
       ])
     }
   },

@@ -1,14 +1,6 @@
 /* ── Material Design Overrides ────────────── */
 /* CSS 变量无法表达的 Material 风格差异 */
 
-/* ── Canvas Extension Buttons: Uppercase + Medium Weight ── */
-
-.dc-canvas-toolbar__btn {
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
-}
-
 /* ── Widget Button: Material Style ───────── */
 
 .dc-widget-button {

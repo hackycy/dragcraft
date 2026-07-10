@@ -19,11 +19,11 @@ export type DeviceType = 'iphone' | 'android' | 'tablet' | 'desktop'
 export interface DevicePreset {
   /** Unique device identifier */
   type: DeviceType
-  /** Human-readable label for toolbar display */
+  /** Human-readable label for host-owned device controls. */
   label: string
-  /** Optional i18n key resolved by a designer toolbar API. */
+  /** Optional i18n key resolved by a host-provided translator. */
   labelKey?: string
-  /** Icon character or component for compact toolbar buttons */
+  /** Icon character or component for compact device buttons. */
   icon: string | Component
   /** Content viewport width in CSS pixels */
   width: number

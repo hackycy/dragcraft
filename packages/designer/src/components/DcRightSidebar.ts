@@ -1,6 +1,6 @@
 import type { Component } from 'vue'
 import type { PropertyTabKey } from '../types'
-import { IconChevronLeft, IconChevronRight, IconComponent, IconSettings } from '@dragcraft/icons'
+import { IconChevronLeft, IconChevronRight, IconGlobalConfig, IconProperties } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
@@ -18,13 +18,13 @@ const RIGHT_PANEL_TABS: RightPanelTab[] = [
     key: 'global',
     labelKey: 'panel.tab.global',
     fallback: '全局配置',
-    icon: IconSettings,
+    icon: IconGlobalConfig,
   },
   {
     key: 'widget',
     labelKey: 'panel.tab.widget',
     fallback: '组件配置',
-    icon: IconComponent,
+    icon: IconProperties,
   },
 ]
 

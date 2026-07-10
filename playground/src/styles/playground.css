@@ -181,41 +181,6 @@ body {
   margin: 4px 0;
 }
 
-/* ── Optional Canvas Extension Buttons ──── */
-
-.dc-canvas-toolbar__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  height: 28px;
-  padding: 0 10px;
-  font-size: 12px;
-  font-family: var(--dc-font-family);
-  border: 1px solid var(--dc-border);
-  border-radius: 4px;
-  background: var(--dc-bg);
-  color: var(--dc-text-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.dc-canvas-toolbar__btn:hover:not(:disabled) {
-  border-color: var(--dc-primary);
-  color: var(--dc-primary);
-}
-
-.dc-canvas-toolbar__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.dc-canvas-toolbar__btn--icon {
-  width: 28px;
-  padding: 0;
-  font-size: 14px;
-}
-
 /* ── JSON Modal ───────────────────────────── */
 
 .playground-modal-overlay {
@@ -314,6 +279,22 @@ body {
   background: var(--dc-bg);
   border-bottom: 1px solid var(--dc-border-light);
   flex-shrink: 0;
+  container-type: inline-size;
+  overflow: hidden;
+}
+
+.playground-header__preview-controls {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.playground-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
 .playground-header__brand {
@@ -407,6 +388,64 @@ body {
   background: var(--dc-primary-dark);
   border-color: var(--dc-primary-dark);
   color: #ffffff;
+}
+
+@container (max-width: 980px) {
+  .playground-header__preview-controls .dc-device-picker__label {
+    display: none;
+  }
+
+  .playground-header__preview-controls .dc-device-picker__btn {
+    width: 28px;
+    padding: 0;
+  }
+}
+
+@container (max-width: 560px) {
+  .playground-header {
+    display: grid;
+    grid-template-columns: minmax(88px, 1fr) auto;
+    grid-template-rows: 40px 40px;
+    gap: 0 8px;
+    height: 88px;
+    padding: 4px 8px;
+  }
+
+  .playground-header__brand,
+  .playground-header__spacer {
+    display: none;
+  }
+
+  .playground-header__select {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 130px;
+    height: 30px;
+  }
+
+  .playground-header__actions {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 4px;
+  }
+
+  .playground-header__actions .playground-header__btn {
+    height: 30px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .playground-header__divider {
+    display: none;
+  }
+
+  .playground-header__preview-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+  }
 }
 
 /* ── Swiper Widget ──────────────────────────── */
