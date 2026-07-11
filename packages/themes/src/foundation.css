@@ -1,0 +1,20 @@
+/* Stable product layout and stacking primitives shared by every theme. */
+
+:root {
+  --dc-panel-header-height: 48px;
+  --dc-workspace-left-width: 280px;
+  --dc-workspace-right-width: 320px;
+  --dc-workspace-rail-width: 44px;
+  --dc-workspace-drawer-width: 320px;
+  --dc-node-toolbar-width: 32px;
+
+  --dc-z-node-mask: 10;
+  --dc-z-node-handle: 20;
+  --dc-z-designer-portal: 90;
+  --dc-z-canvas-toolbar: 100;
+  --dc-z-canvas-forbidden: 120;
+  --dc-z-node-overlay: 10;
+  --dc-z-node-toolbar: 20;
+  --dc-z-designer-panel: 800;
+  --dc-z-app-modal: 1000;
+}

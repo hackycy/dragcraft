@@ -2,13 +2,13 @@
   "name": "@dragcraft/themes",
   "type": "module",
   "version": "0.0.0",
-  "description": "Headless Component Library themes for dragcraft",
+  "description": "Product-grade shadcn and Google Material themes for dragcraft",
   "sideEffects": [
     "**/*.css"
   ],
   "exports": {
-    ".": "./dist/antd.css",
-    "./antd": "./dist/antd.css",
+    ".": "./dist/shadcn.css",
+    "./shadcn": "./dist/shadcn.css",
     "./material": "./dist/material.css",
     "./package.json": "./package.json"
   },
@@ -16,7 +16,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "postcss src/antd/index.css -o dist/antd.css && postcss src/material/index.css -o dist/material.css",
+    "build": "postcss src/shadcn/index.css -o dist/shadcn.css && postcss src/material/index.css -o dist/material.css",
     "dev": "pnpm run build --watch"
   },
   "devDependencies": {

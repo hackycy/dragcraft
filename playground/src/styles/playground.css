@@ -5,9 +5,9 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: var(--dc-font-family);
-  font-size: var(--dc-font-size);
-  color: var(--dc-text);
+  font-family: var(--dc-font-sans);
+  font-size: var(--dc-font-size-md);
+  color: var(--dc-color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -16,23 +16,17 @@ body {
   height: 100%;
 }
 
-/* ── WeChat Mini-Program Theme Override ──── */
+/* ── Mini-program preview brand ──────────── */
 
 :root {
-  --dc-primary: #07C160;
-  --dc-primary-light: #e8f8ef;
-  --dc-primary-dark: #06ad56;
-  --dc-primary-bg-hover: rgba(7, 193, 96, 0.08);
-  --dc-primary-shadow: rgba(7, 193, 96, 0.2);
+  --pg-brand: #07c160;
+  --pg-brand-hover: #06ad56;
+  --pg-brand-subtle: rgba(7, 193, 96, 0.08);
+  --pg-brand-ring: rgba(7, 193, 96, 0.2);
 }
 
 .dc-root-renderer {
   background: transparent;
-}
-
-/* Override the canvas center panel to use neutral background for device frames */
-.dc-designer__panel--center {
-  background: #f0f2f5 !important;
 }
 
 /* ── Mini-Program Empty State ─────────────── */
@@ -48,8 +42,8 @@ body {
 }
 
 .mp-empty-state--drag-over {
-  color: var(--dc-primary);
-  background: var(--dc-primary-bg-hover);
+  color: var(--pg-brand);
+  background: var(--pg-brand-subtle);
 }
 
 .mp-empty-state__icon {
@@ -89,8 +83,8 @@ body {
   width: 26px;
   height: 26px;
   border-radius: 7px;
-  background: rgba(7, 193, 96, 0.08);
-  color: rgba(7, 193, 96, 0.58);
+  color: var(--dc-color-on-accent-subtle);
+  background: var(--dc-color-accent-subtle);
   font-size: 13px;
   font-weight: 400;
   line-height: 1;
@@ -101,7 +95,7 @@ body {
   width: 100%;
   min-width: 0;
   overflow: hidden;
-  color: #6b7280;
+  color: var(--dc-color-text-muted);
   font-size: 11px;
   font-weight: 400;
   line-height: 1.25;
@@ -120,7 +114,7 @@ body {
   font-weight: 500;
   letter-spacing: 0.5px;
   border: none;
-  background: var(--dc-primary);
+  background: var(--pg-brand);
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -158,7 +152,7 @@ body {
 .dc-node--widget input:focus,
 .dc-node--widget textarea:focus,
 .dc-node--widget select:focus {
-  border-color: var(--dc-primary);
+  border-color: var(--pg-brand);
   background: #ffffff;
 }
 
@@ -184,7 +178,7 @@ body {
 }
 
 .playground-modal {
-  background: var(--dc-bg);
+  background: var(--dc-color-surface);
   border-radius: 12px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
   width: 600px;
@@ -199,7 +193,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--dc-border-light);
+  border-bottom: 1px solid var(--dc-color-border-subtle);
   font-weight: 600;
   font-size: 15px;
 }
@@ -214,13 +208,13 @@ body {
   background: none;
   cursor: pointer;
   font-size: 18px;
-  color: var(--dc-text-secondary);
+  color: var(--dc-color-text-muted);
   border-radius: 6px;
   transition: background 0.15s;
 }
 
 .playground-modal__close:hover {
-  background: var(--dc-bg-dark);
+  background: var(--dc-color-surface-muted);
 }
 
 .playground-modal__body {
@@ -236,7 +230,7 @@ body {
   font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
   font-size: 12px;
   line-height: 1.6;
-  border: 1px solid var(--dc-border);
+  border: 1px solid var(--dc-color-border);
   border-radius: 8px;
   outline: none;
   resize: vertical;
@@ -245,7 +239,7 @@ body {
 }
 
 .playground-modal__textarea:focus {
-  border-color: var(--dc-primary);
+  border-color: var(--dc-color-accent);
   background: #ffffff;
 }
 
@@ -254,7 +248,7 @@ body {
   justify-content: flex-end;
   gap: 8px;
   padding: 16px 20px;
-  border-top: 1px solid var(--dc-border-light);
+  border-top: 1px solid var(--dc-color-border-subtle);
 }
 
 /* ── Playground Header ───────────────────── */
@@ -265,8 +259,8 @@ body {
   gap: 8px;
   height: 48px;
   padding: 0 16px;
-  background: var(--dc-bg);
-  border-bottom: 1px solid var(--dc-border-light);
+  background: var(--dc-color-surface);
+  border-bottom: 1px solid var(--dc-color-border-subtle);
   flex-shrink: 0;
   container-type: inline-size;
   overflow: hidden;
@@ -289,7 +283,7 @@ body {
 .playground-header__brand {
   font-size: 14px;
   font-weight: 600;
-  color: var(--dc-text);
+  color: var(--dc-color-text);
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
@@ -298,11 +292,11 @@ body {
   height: 32px;
   padding: 0 28px 0 12px;
   font-size: 13px;
-  font-family: var(--dc-font-family);
-  border: 1px solid var(--dc-border);
+  font-family: var(--dc-font-sans);
+  border: 1px solid var(--dc-color-border);
   border-radius: 6px;
-  background: var(--dc-bg);
-  color: var(--dc-text);
+  background: var(--dc-color-surface);
+  color: var(--dc-color-text);
   cursor: pointer;
   outline: none;
   appearance: none;
@@ -313,12 +307,12 @@ body {
 }
 
 .playground-header__select:hover {
-  border-color: var(--dc-primary);
+  border-color: var(--dc-color-accent);
 }
 
 .playground-header__select:focus {
-  border-color: var(--dc-primary);
-  box-shadow: 0 0 0 2px var(--dc-primary-shadow);
+  border-color: var(--dc-color-accent);
+  box-shadow: 0 0 0 2px var(--dc-color-accent-ring);
 }
 
 .playground-header__spacer {
@@ -328,7 +322,7 @@ body {
 .playground-header__divider {
   width: 1px;
   height: 20px;
-  background: var(--dc-border-light);
+  background: var(--dc-color-border-subtle);
   flex-shrink: 0;
 }
 
@@ -340,11 +334,11 @@ body {
   height: 32px;
   padding: 0 14px;
   font-size: 13px;
-  font-family: var(--dc-font-family);
-  border: 1px solid var(--dc-border);
+  font-family: var(--dc-font-sans);
+  border: 1px solid var(--dc-color-border);
   border-radius: 6px;
-  background: var(--dc-bg);
-  color: var(--dc-text);
+  background: var(--dc-color-surface);
+  color: var(--dc-color-text);
   cursor: pointer;
   transition: all 0.2s;
   font-weight: 500;
@@ -352,8 +346,8 @@ body {
 }
 
 .playground-header__btn:hover:not(:disabled) {
-  border-color: var(--dc-primary);
-  color: var(--dc-primary);
+  border-color: var(--dc-color-accent);
+  color: var(--dc-color-accent);
 }
 
 .playground-header__btn:disabled {
@@ -368,14 +362,14 @@ body {
 }
 
 .playground-header__btn--primary {
-  background: var(--dc-primary);
-  border-color: var(--dc-primary);
+  background: var(--dc-color-accent);
+  border-color: var(--dc-color-accent);
   color: #ffffff;
 }
 
 .playground-header__btn--primary:hover {
-  background: var(--dc-primary-dark);
-  border-color: var(--dc-primary-dark);
+  background: var(--dc-color-accent-hover);
+  border-color: var(--dc-color-accent-hover);
   color: #ffffff;
 }
 

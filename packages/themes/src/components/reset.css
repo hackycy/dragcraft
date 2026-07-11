@@ -1,7 +1,12 @@
 /* ── Reset ────────────────────────────────── */
 
-*,
-*::before,
-*::after {
+:where(.dc-designer, .dc-designer *, .dc-root-renderer, .dc-root-renderer *),
+:where(.dc-designer, .dc-designer *, .dc-root-renderer, .dc-root-renderer *)::before,
+:where(.dc-designer, .dc-designer *, .dc-root-renderer, .dc-root-renderer *)::after {
   box-sizing: border-box;
+}
+
+:where(.dc-designer, .dc-root-renderer) {
+  color: var(--dc-color-text);
+  font-family: var(--dc-font-sans);
 }

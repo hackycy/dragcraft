@@ -1,12 +1,11 @@
-/* ── Material Design Overrides ────────────── */
-/* CSS 变量无法表达的 Material 风格差异 */
+/* Google Material 3 component expression beyond semantic tokens. */
 
 /* ── Widget Button: Material Style ───────── */
 
 .dc-widget-button {
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  border-radius: var(--dc-radius-full);
+  font-weight: var(--dc-font-weight-medium);
+  letter-spacing: 0.1px;
 }
 
 /* ── Material Item: Built-in Elevation ───── */
@@ -16,19 +15,19 @@
 }
 
 .dc-material-item:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--dc-shadow-md);
 }
 
 /* ── Node Selected: Material Elevation ───── */
 
-.dc-node--selected {
-  box-shadow: 0 0 0 2px var(--dc-primary), 0 2px 8px var(--dc-primary-shadow);
+.dc-node__block-overlay--selected {
+  box-shadow: 0 0 0 2px var(--dc-color-accent), var(--dc-shadow-md);
 }
 
 /* ── Search Input: Taller ────────────────── */
 
 .dc-material-panel__search-input {
-  height: 36px;
+  border-radius: var(--dc-radius-full);
 }
 
 /* ── Material Group Title: Sentence Case ─── */
@@ -41,7 +40,7 @@
 /* ── Empty State: Material Elevation ─────── */
 
 .dc-empty-state {
-  font-weight: 500;
+  font-weight: var(--dc-font-weight-medium);
   letter-spacing: 0.25px;
 }
 

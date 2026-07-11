@@ -29,7 +29,7 @@
   /* ── Device Picker ────────────────────── */
   --dc-device-picker-gap: 2px;
   --dc-device-picker-btn-bg: transparent;
-  --dc-device-picker-btn-color: var(--dc-text-secondary, #8c8c8c);
-  --dc-device-picker-btn-active-bg: var(--dc-primary, #1890ff);
+  --dc-device-picker-btn-color: var(--dc-color-text-muted, #52525b);
+  --dc-device-picker-btn-active-bg: var(--dc-color-accent, #18181b);
   --dc-device-picker-btn-active-color: #ffffff;
 }

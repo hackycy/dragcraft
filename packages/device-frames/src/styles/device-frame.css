@@ -197,10 +197,10 @@
   display: inline-flex;
   align-items: center;
   gap: var(--dc-device-picker-gap);
-  border: 1px solid var(--dc-border, #e8e8e8);
-  border-radius: 6px;
+  border: 1px solid var(--dc-color-border, #d4d4d8);
+  border-radius: var(--dc-radius-md, 6px);
   padding: 2px;
-  background: var(--dc-bg, #ffffff);
+  background: var(--dc-color-surface, #ffffff);
 }
 
 .dc-device-picker__btn {
@@ -211,19 +211,19 @@
   height: 24px;
   padding: 0 8px;
   font-size: 12px;
-  font-family: var(--dc-font-family, inherit);
+  font-family: var(--dc-font-sans, inherit);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--dc-radius-sm, 4px);
   background: var(--dc-device-picker-btn-bg);
   color: var(--dc-device-picker-btn-color);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--dc-duration-normal, 180ms);
   white-space: nowrap;
 }
 
 .dc-device-picker__btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--dc-text, #1a1a1a);
+  background: var(--dc-color-surface-muted, #f4f4f5);
+  color: var(--dc-color-text, #09090b);
 }
 
 .dc-device-picker__btn--active {

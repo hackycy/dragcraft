@@ -1,66 +1,62 @@
-/* ── Material Design Tokens ───────────────── */
+/* Google Material 3: expressive color, comfortable density and elevation. */
 
 :root {
-  /* ── Primary ───────────────────────────── */
-  --dc-primary: #1976D2;
-  --dc-primary-light: #E3F2FD;
-  --dc-primary-dark: #1565C0;
-  --dc-primary-bg-hover: rgba(25, 118, 210, 0.08);
-  --dc-primary-shadow: rgba(25, 118, 210, 0.2);
-  --dc-on-primary: #ffffff;
+  color-scheme: light;
 
-  /* ── Semantic ──────────────────────────── */
-  --dc-success: #2E7D32;
-  --dc-warning: #F9A825;
-  --dc-danger: #D32F2F;
-  --dc-danger-bg-hover: rgba(211, 47, 47, 0.08);
+  /* Color roles */
+  --dc-color-accent: #6750a4;
+  --dc-color-accent-hover: #5b4595;
+  --dc-color-accent-active: #4f378b;
+  --dc-color-accent-subtle: #eaddff;
+  --dc-color-accent-border: #c4a7e7;
+  --dc-color-accent-ring: rgba(103, 80, 164, 0.24);
+  --dc-color-on-accent: #ffffff;
+  --dc-color-on-accent-subtle: #21005d;
+  --dc-color-success: #386a20;
+  --dc-color-warning: #7d5700;
+  --dc-color-danger: #ba1a1a;
+  --dc-color-danger-subtle: #ffdad6;
 
-  /* ── Text ──────────────────────────────── */
-  --dc-text: #20242a;
-  --dc-text-secondary: #606873;
-  --dc-text-placeholder: #98a1ad;
+  /* Content and surfaces */
+  --dc-color-text: #1d1b20;
+  --dc-color-text-muted: #49454f;
+  --dc-color-text-subtle: #79747e;
+  --dc-color-surface: #fffbfe;
+  --dc-color-surface-subtle: #f7f2fa;
+  --dc-color-surface-muted: #f3edf7;
+  --dc-color-surface-raised: #fffbfe;
+  --dc-color-canvas: #eee8f2;
+  --dc-color-border: #79747e;
+  --dc-color-border-subtle: #cac4d0;
+  --dc-color-focus-ring: #6750a4;
+  --dc-color-backdrop: rgba(29, 27, 32, 0.32);
+  --dc-color-sidebar-handle: #cac4d0;
+  --dc-color-sidebar-handle-hover: #938f99;
 
-  /* ── Border ────────────────────────────── */
-  --dc-border: #d6dae0;
-  --dc-border-light: #e6e9ed;
-
-  /* ── Background ────────────────────────── */
-  --dc-bg: #FFFFFF;
-  --dc-bg-light: #f7f8fa;
-  --dc-bg-dark: #eef0f3;
-  --dc-canvas-bg: #eceff3;
-
-  /* ── Effects ───────────────────────────── */
-  --dc-shadow: 0 8px 24px rgba(17, 24, 39, 0.1);
-  --dc-shadow-sm: 0 2px 8px rgba(17, 24, 39, 0.08);
-
-  /* ── Shape ─────────────────────────────── */
-  --dc-radius: 6px;
-  --dc-radius-lg: 8px;
-
-  /* ── Typography ────────────────────────── */
-  --dc-font-size: 14px;
+  /* Typography */
+  --dc-font-sans: Roboto, 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --dc-font-size-xs: 11px;
   --dc-font-size-sm: 12px;
-  --dc-font-family: 'Roboto', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --dc-font-size-md: 14px;
+  --dc-font-size-lg: 16px;
+  --dc-font-weight-regular: 400;
+  --dc-font-weight-medium: 500;
+  --dc-font-weight-semibold: 600;
 
-  /* ── Layout ────────────────────────────── */
-  --dc-panel-header-height: 48px;
-  --dc-workspace-left-width: 280px;
-  --dc-workspace-right-width: 320px;
-  --dc-workspace-rail-width: 44px;
-  --dc-workspace-drawer-width: 320px;
+  /* Shape and density */
+  --dc-radius-sm: 8px;
+  --dc-radius-md: 12px;
+  --dc-radius-lg: 16px;
+  --dc-radius-full: 999px;
+  --dc-control-height-sm: 32px;
+  --dc-control-height-md: 40px;
+  --dc-control-height-lg: 48px;
 
-  /* ── Z-index ────────────────────────────── */
-  --dc-z-node-mask: 10;
-  --dc-z-node-handle: 20;
-  --dc-z-designer-portal: 90;
-  --dc-z-canvas-toolbar: 100;
-  --dc-z-canvas-forbidden: 120;
-  --dc-z-node-overlay: 10;
-  --dc-z-node-toolbar: 20;
-  --dc-z-designer-panel: 800;
-  --dc-z-app-modal: 1000;
-
-  /* ── Node Toolbar ───────────────────────── */
-  --dc-node-toolbar-width: 32px;
+  /* Elevation and motion */
+  --dc-shadow-sm: 0 1px 2px rgba(29, 27, 32, 0.16), 0 1px 3px 1px rgba(29, 27, 32, 0.08);
+  --dc-shadow-md: 0 2px 6px 2px rgba(29, 27, 32, 0.12), 0 1px 2px rgba(29, 27, 32, 0.18);
+  --dc-shadow-lg: 0 8px 24px 4px rgba(29, 27, 32, 0.16);
+  --dc-duration-fast: 100ms;
+  --dc-duration-normal: 200ms;
+  --dc-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }

@@ -16,13 +16,13 @@ dragcraft 的 UI 包采用 Headless Component 模式：
 
 | 皮肤 | 导入路径 | 风格描述 |
 | --- | --- | --- |
-| Ant Design | `@dragcraft/themes/antd` | 蓝色主调，4px 圆角，轻柔阴影，系统字体 |
-| Material Design | `@dragcraft/themes/material` | 蓝色主调，8px 圆角，Material 分层阴影，Roboto 字体 |
+| shadcn | `@dragcraft/themes` 或 `@dragcraft/themes/shadcn` | 中性色、紧凑密度、低阴影，适合高信息密度工作台 |
+| Google Material 3 | `@dragcraft/themes/material` | Material 3 色彩角色、舒适密度、圆润形状与分层阴影 |
 
 使用方式：
 
 ```ts
-import '@dragcraft/themes/antd'
+import '@dragcraft/themes/shadcn'
 // 或
 import '@dragcraft/themes/material'
 ```
@@ -38,58 +38,49 @@ import './my-custom-styles.css'
 
 ```css
 :root {
-  --dc-primary: #722ed1;
-  --dc-radius: 12px;
+  --dc-color-accent: #0f766e;
+  --dc-color-accent-hover: #115e59;
+  --dc-radius-md: 12px;
 }
 ```
 
 ## Design Tokens
 
-### 主色
+主题令牌按产品语义分层。组件只读取语义角色，不读取 shadcn 或 Material 的原始品牌色值。
+
+### 颜色角色
 
 | 变量 | 说明 |
 | --- | --- |
-| `--dc-primary` | 主色 |
-| `--dc-primary-light` | 主色浅色 |
-| `--dc-primary-dark` | 主色深色 |
-| `--dc-primary-bg-hover` | 主色 hover 背景 |
-| `--dc-primary-shadow` | 主色阴影 |
-| `--dc-on-primary` | 主色上的文字 |
+| `--dc-color-accent` | 主操作与选中态 |
+| `--dc-color-accent-hover` | 主操作 hover |
+| `--dc-color-accent-subtle` | 低强调选中背景 |
+| `--dc-color-on-accent` | 主色表面的内容 |
+| `--dc-color-success` / `warning` / `danger` | 状态反馈 |
+| `--dc-color-text` / `text-muted` / `text-subtle` | 三级内容色 |
+| `--dc-color-surface` / `surface-subtle` / `surface-muted` | 表面层级 |
+| `--dc-color-canvas` | 画布工作区背景 |
+| `--dc-color-border` / `border-subtle` | 标准与弱边界 |
+| `--dc-color-focus-ring` | 键盘焦点环 |
+| `--dc-color-backdrop` | 抽屉遮罩 |
 
-### 语义色
-
-| 变量 | 说明 |
-| --- | --- |
-| `--dc-success` | 成功 |
-| `--dc-warning` | 警告 |
-| `--dc-danger` | 危险 |
-| `--dc-danger-bg-hover` | 危险 hover 背景 |
-
-### 文字、边框与背景
+### 排版、形状、密度与动效
 
 | 变量 | 说明 |
 | --- | --- |
-| `--dc-text` | 主文本 |
-| `--dc-text-secondary` | 次级文本 |
-| `--dc-text-placeholder` | 占位文本 |
-| `--dc-border` | 标准边框 |
-| `--dc-border-light` | 浅边框 |
-| `--dc-bg` | 标准背景 |
-| `--dc-bg-light` | 浅背景 |
-| `--dc-bg-dark` | 深背景 |
-| `--dc-canvas-bg` | 画布背景 |
+| `--dc-font-sans` | UI 字体族 |
+| `--dc-font-size-xs` / `sm` / `md` / `lg` | 字号阶梯 |
+| `--dc-font-weight-regular` / `medium` / `semibold` | 字重阶梯 |
+| `--dc-radius-sm` / `md` / `lg` / `full` | 圆角阶梯 |
+| `--dc-control-height-sm` / `md` / `lg` | 控件密度阶梯 |
+| `--dc-shadow-sm` / `md` / `lg` | 表面层级 |
+| `--dc-duration-fast` / `normal` | 动效时长 |
+| `--dc-ease-standard` | 标准缓动 |
 
-### 效果、形状与排版
+### 工作台布局
 
 | 变量 | 说明 |
 | --- | --- |
-| `--dc-shadow` | 标准阴影 |
-| `--dc-shadow-sm` | 小阴影 |
-| `--dc-radius` | 标准圆角 |
-| `--dc-radius-lg` | 大圆角 |
-| `--dc-font-size` | 标准字号 |
-| `--dc-font-size-sm` | 小字号 |
-| `--dc-font-family` | 字体族 |
 | `--dc-panel-header-height` | 面板头部高度 |
 | `--dc-workspace-left-width` | 宽屏左侧 Dock 宽度 |
 | `--dc-workspace-right-width` | 宽屏 Inspector 宽度 |
@@ -114,6 +105,8 @@ import './my-custom-styles.css'
 
 ```plaintext
 src/
+├── base.css
+├── foundation.css
 ├── components/
 │   ├── reset.css
 │   ├── designer.css
@@ -122,8 +115,9 @@ src/
 │   ├── property-panel.css
 │   ├── form-generator.css
 │   └── widgets.css
-├── antd/
+├── shadcn/
 │   ├── tokens.css
+│   ├── overrides.css
 │   └── index.css
 └── material/
     ├── tokens.css

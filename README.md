@@ -14,8 +14,8 @@
 
 ```typescript
 // 1. 导入皮肤（二选一）
-import '@dragcraft/themes/antd'       // Ant Design 风格
-// import '@dragcraft/themes/material' // Material Design 风格
+import '@dragcraft/themes/shadcn'       // 默认：紧凑、中性的产品工作台
+// import '@dragcraft/themes/material'  // Google Material 3
 
 // 2. 导入设计器
 import { createDesigner, DcDesigner } from '@dragcraft/designer'

@@ -15,7 +15,7 @@
   background: #07c160;
   color: #ffffff;
   cursor: pointer;
-  font-family: var(--dc-font-family);
+  font-family: var(--dc-font-sans);
   font-weight: 600;
   line-height: 1;
   transition: opacity 0.16s ease;
@@ -132,7 +132,7 @@
   background: #f8faf9;
   border: 1px solid #dfe8e2;
   box-sizing: border-box;
-  font-family: var(--dc-font-family);
+  font-family: var(--dc-font-sans);
   font-size: 14px;
   outline: none;
   transition: border-color 0.16s ease, background 0.16s ease;
