@@ -364,19 +364,16 @@
 .dc-node__block-overlay {
   position: fixed;
   box-sizing: border-box;
+  background: transparent;
   border-radius: var(--dc-radius-sm);
   pointer-events: none;
   z-index: var(--dc-z-node-overlay);
 }
 
-.dc-node__block-overlay--hovered {
-  background: transparent;
-  outline: 1px dashed var(--dc-color-accent);
-}
-
+.dc-node__block-overlay--hovered,
 .dc-node__block-overlay--selected {
-  border: 2px solid var(--dc-color-accent);
-  box-shadow: 0 0 0 3px var(--dc-color-accent-ring);
+  outline: 1px dashed var(--dc-color-accent);
+  outline-offset: -1px;
 }
 
 /* ── Interaction States ──────────────────── */

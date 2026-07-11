@@ -8,8 +8,3 @@
 .dc-material-item {
   box-shadow: none;
 }
-
-.dc-node__block-overlay--selected {
-  border-width: 1px;
-  box-shadow: 0 0 0 2px var(--dc-color-surface), 0 0 0 4px var(--dc-color-accent-ring);
-}

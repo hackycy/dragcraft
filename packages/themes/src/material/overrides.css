@@ -18,12 +18,6 @@
   box-shadow: var(--dc-shadow-md);
 }
 
-/* ── Node Selected: Material Elevation ───── */
-
-.dc-node__block-overlay--selected {
-  box-shadow: 0 0 0 2px var(--dc-color-accent), var(--dc-shadow-md);
-}
-
 /* ── Search Input: Taller ────────────────── */
 
 .dc-material-panel__search-input {
