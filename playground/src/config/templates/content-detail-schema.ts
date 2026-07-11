@@ -10,7 +10,6 @@ export const contentDetailSchema: DesignerSchema = {
     title: '精选文章',
     description: '内容详情页',
     backgroundColor: '#ffffff',
-    padding: 0,
     maxWidth: 375,
   },
   root: {
@@ -21,7 +20,6 @@ export const contentDetailSchema: DesignerSchema = {
       surface: {
         backgroundColor: '#ffffff',
         backgroundSize: 'cover',
-        padding: 0,
         maxWidth: 375,
       },
     },
@@ -62,7 +60,6 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: { container: { padding: '20px 16px 8px' } },
       },
       // Author info
       {
@@ -75,7 +72,6 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { container: { padding: '0 16px 16px' } },
       },
       // Divider
       {
@@ -95,7 +91,7 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#333333',
           textAlign: 'left',
         },
-        style: { container: { padding: '16px 16px 8px' }, content: { lineHeight: '1.8' } },
+        style: { content: { lineHeight: '1.8' } },
       },
       // Inline image
       {
@@ -106,7 +102,7 @@ export const contentDetailSchema: DesignerSchema = {
           alt: '架构示意图',
           objectFit: 'cover',
         },
-        style: { container: { padding: '8px 16px' }, content: { width: '100%', height: '180px' } },
+        style: { content: { width: '100%', height: '180px' } },
       },
       // Body paragraph 2
       {
@@ -119,7 +115,7 @@ export const contentDetailSchema: DesignerSchema = {
           color: '#333333',
           textAlign: 'left',
         },
-        style: { container: { padding: '8px 16px 16px' }, content: { lineHeight: '1.8' } },
+        style: { content: { lineHeight: '1.8' } },
       },
       // Divider
       {
@@ -133,13 +129,12 @@ export const contentDetailSchema: DesignerSchema = {
         id: 'follow-btn',
         type: 'button',
         props: { text: '关注作者', type: 'button', disabled: false, size: 'medium' },
-        style: { container: { padding: '16px 16px 8px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
       {
         id: 'share-link',
         type: 'link',
         props: { text: '分享给朋友', href: '#', target: '_self', color: '#07C160' },
-        style: { container: { padding: '8px 16px 24px' } },
       },
     ],
   },

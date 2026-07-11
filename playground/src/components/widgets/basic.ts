@@ -341,7 +341,6 @@ export const dividerWidgetMeta: DesignerWidgetMeta = {
     thickness: 1,
   },
   defaultStyle: {
-    container: { margin: '8px 0' },
     content: { width: '100%' },
   },
   formSchema: {

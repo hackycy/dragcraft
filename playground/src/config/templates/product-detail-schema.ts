@@ -10,7 +10,6 @@ export const productDetailSchema: DesignerSchema = {
     title: '商品详情',
     description: '商品详情页',
     backgroundColor: '#ffffff',
-    padding: 0,
     maxWidth: 375,
   },
   root: {
@@ -21,7 +20,6 @@ export const productDetailSchema: DesignerSchema = {
       surface: {
         backgroundColor: '#ffffff',
         backgroundSize: 'cover',
-        padding: 0,
         maxWidth: 375,
       },
     },
@@ -62,7 +60,6 @@ export const productDetailSchema: DesignerSchema = {
           color: '#e64340',
           textAlign: 'left',
         },
-        style: { container: { padding: '16px 16px 0' } },
       },
       {
         id: 'price-original',
@@ -74,7 +71,7 @@ export const productDetailSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { container: { padding: '4px 16px 8px' }, content: { textDecoration: 'line-through' } },
+        style: { content: { textDecoration: 'line-through' } },
       },
       // Product name
       {
@@ -87,7 +84,6 @@ export const productDetailSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: { container: { padding: '8px 16px 4px' } },
       },
       // Product description
       {
@@ -100,7 +96,6 @@ export const productDetailSchema: DesignerSchema = {
           color: '#666666',
           textAlign: 'left',
         },
-        style: { container: { padding: '0 16px 12px' } },
       },
       // Divider
       {
@@ -125,7 +120,7 @@ export const productDetailSchema: DesignerSchema = {
           required: false,
           disabled: false,
         },
-        style: { container: { padding: '12px 16px 0' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
       // Size spec
       {
@@ -143,7 +138,7 @@ export const productDetailSchema: DesignerSchema = {
           required: false,
           disabled: false,
         },
-        style: { container: { padding: '8px 16px 12px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
       // Divider
       {
@@ -163,7 +158,6 @@ export const productDetailSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { container: { padding: '12px 16px' } },
       },
       // Divider
       {
@@ -177,13 +171,13 @@ export const productDetailSchema: DesignerSchema = {
         id: 'cart-btn',
         type: 'button',
         props: { text: '加入购物车', type: 'button', disabled: false, size: 'large' },
-        style: { container: { padding: '16px 16px 8px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
       {
         id: 'buy-btn',
         type: 'button',
         props: { text: '立即购买', type: 'button', disabled: false, size: 'large' },
-        style: { container: { padding: '8px 16px 24px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
     ],
   },

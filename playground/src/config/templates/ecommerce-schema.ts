@@ -10,7 +10,6 @@ export const ecommerceSchema: DesignerSchema = {
     title: '好物精选',
     description: '小程序商城首页',
     backgroundColor: '#ffffff',
-    padding: 0,
     maxWidth: 375,
   },
   root: {
@@ -21,7 +20,6 @@ export const ecommerceSchema: DesignerSchema = {
       surface: {
         backgroundColor: '#ffffff',
         backgroundSize: 'cover',
-        padding: 0,
         maxWidth: 375,
       },
     },
@@ -105,7 +103,6 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: { container: { padding: '16px 16px 4px' } },
       },
 
       // ── Shop Description ──────────────────
@@ -119,7 +116,6 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { container: { padding: '0 16px 12px' } },
       },
 
       // ── Divider ───────────────────────────
@@ -143,7 +139,7 @@ export const ecommerceSchema: DesignerSchema = {
           alt: '热销商品',
           objectFit: 'cover',
         },
-        style: { container: { padding: '12px 16px 0' }, content: { width: '100%', height: '200px' } },
+        style: { content: { width: '100%', height: '200px' } },
       },
 
       // ── Product Name ──────────────────────
@@ -157,7 +153,6 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: { container: { padding: '12px 16px 4px' } },
       },
 
       // ── Product Price ─────────────────────
@@ -171,7 +166,6 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#e64340',
           textAlign: 'left',
         },
-        style: { container: { padding: '0 16px 12px' } },
       },
 
       // ── Buy Button ────────────────────────
@@ -184,7 +178,7 @@ export const ecommerceSchema: DesignerSchema = {
           disabled: false,
           size: 'large',
         },
-        style: { container: { padding: '0 16px 16px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
 
       // ── Divider 2 ─────────────────────────
@@ -210,7 +204,6 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#1a1a1a',
           textAlign: 'left',
         },
-        style: { container: { padding: '16px 16px 4px' } },
       },
       {
         id: 'member-desc',
@@ -222,7 +215,6 @@ export const ecommerceSchema: DesignerSchema = {
           color: '#999999',
           textAlign: 'left',
         },
-        style: { container: { padding: '0 16px 12px' } },
       },
 
       // ── Form: Name ────────────────────────
@@ -236,7 +228,7 @@ export const ecommerceSchema: DesignerSchema = {
           required: true,
           disabled: false,
         },
-        style: { container: { padding: '0 16px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
 
       // ── Form: Phone ───────────────────────
@@ -250,7 +242,7 @@ export const ecommerceSchema: DesignerSchema = {
           required: true,
           disabled: false,
         },
-        style: { container: { padding: '0 16px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
 
       // ── Form: Gender ──────────────────────
@@ -266,7 +258,7 @@ export const ecommerceSchema: DesignerSchema = {
           ],
           disabled: false,
         },
-        style: { container: { padding: '0 16px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
 
       // ── Form: Agreement ───────────────────
@@ -278,7 +270,6 @@ export const ecommerceSchema: DesignerSchema = {
           checked: false,
           disabled: false,
         },
-        style: { container: { padding: '4px 16px' } },
       },
 
       // ── Submit Button ─────────────────────
@@ -291,7 +282,7 @@ export const ecommerceSchema: DesignerSchema = {
           disabled: false,
           size: 'large',
         },
-        style: { container: { padding: '8px 16px 24px' }, content: { width: '100%' } },
+        style: { content: { width: '100%' } },
       },
     ],
   },

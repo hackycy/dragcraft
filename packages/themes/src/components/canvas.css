@@ -200,13 +200,6 @@
   outline-offset: -1px;
 }
 
-/* ── Widget Node ─────────────────────────── */
-
-.dc-node--widget {
-  margin: 4px 0;
-  padding: 2px;
-}
-
 /* ── Mask Overlay (mask=true, default) ───── */
 
 .dc-node--masked {
