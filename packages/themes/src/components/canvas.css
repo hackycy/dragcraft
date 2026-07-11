@@ -370,8 +370,8 @@
 }
 
 .dc-node__block-overlay--hovered {
-  border: 1px dashed var(--dc-color-accent);
-  background: var(--dc-color-accent-subtle);
+  background: transparent;
+  outline: 1px dashed var(--dc-color-accent);
 }
 
 .dc-node__block-overlay--selected {
