@@ -87,7 +87,6 @@ export const ecommerceSchema: DesignerSchema = {
           ],
           showIndicator: true,
           height: 180,
-          borderRadius: 0,
         },
         style: { content: { width: '100%' } },
       },

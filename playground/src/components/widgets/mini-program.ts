@@ -400,7 +400,6 @@ export const swiperWidgetMeta: DesignerWidgetMeta = {
     images: DEFAULT_IMAGES,
     showIndicator: true,
     height: 180,
-    borderRadius: 0,
   },
   defaultStyle: { content: { width: '100%' } },
   formSchema: {
@@ -424,7 +423,7 @@ export const swiperWidgetMeta: DesignerWidgetMeta = {
         fields: [
           { key: 'showIndicator', label: '显示指示器', component: 'Switch', defaultValue: true },
           { key: 'height', label: '高度 (px)', component: 'InputNumber', defaultValue: 180, componentProps: { min: 80, max: 500 } },
-          { key: 'borderRadius', label: '圆角 (px)', component: 'InputNumber', defaultValue: 0, componentProps: { min: 0, max: 50 } },
+          { key: 'borderRadius', label: '圆角 (px)', component: 'InputNumber', componentProps: { min: 0, max: 50 } },
         ],
       },
     ],
@@ -437,14 +436,17 @@ export const SwiperWidget = defineComponent({
     images: { type: [Array, String] as PropType<string[] | string>, default: () => DEFAULT_IMAGES },
     showIndicator: { type: Boolean as PropType<boolean>, default: true },
     height: { type: Number as PropType<number>, default: 180 },
-    borderRadius: { type: Number as PropType<number>, default: 0 },
+    borderRadius: Number as PropType<number | undefined>,
   },
   setup(props) {
     return () => {
       const images = normalizeImages(props.images)
       return h('div', {
         class: 'pg-widget-swiper',
-        style: { height: `${props.height}px`, borderRadius: `${props.borderRadius}px` },
+        style: {
+          height: `${props.height}px`,
+          ...(props.borderRadius === undefined ? {} : { borderRadius: `${props.borderRadius}px` }),
+        },
       }, [
         images[0]
           ? h('img', { src: images[0], alt: 'carousel item', class: 'pg-widget-swiper__image' })

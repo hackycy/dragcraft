@@ -14,7 +14,6 @@
   width: 100%;
   font-family: var(--dc-font-family);
   border: 1px solid var(--dc-primary);
-  border-radius: var(--dc-radius);
   background: var(--dc-primary);
   color: var(--dc-on-primary);
   cursor: pointer;
@@ -116,7 +115,6 @@
   font-size: var(--dc-font-size);
   font-family: var(--dc-font-family);
   border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius);
   outline: none;
   transition: border-color 0.2s;
 }
@@ -149,7 +147,6 @@
   font-size: var(--dc-font-size);
   font-family: var(--dc-font-family);
   border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius);
   outline: none;
   resize: vertical;
   transition: border-color 0.2s;
@@ -184,7 +181,6 @@
   font-size: var(--dc-font-size);
   font-family: var(--dc-font-family);
   border: 1px solid var(--dc-border);
-  border-radius: var(--dc-radius);
   outline: none;
   transition: border-color 0.2s;
   background: var(--dc-bg);

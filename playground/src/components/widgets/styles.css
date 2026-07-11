@@ -12,20 +12,13 @@
   width: 100%;
   min-width: 112px;
   border: 0;
-  border-radius: 999px;
   background: #07c160;
   color: #ffffff;
-  box-shadow: 0 8px 18px rgba(7, 193, 96, 0.18);
   cursor: pointer;
   font-family: var(--dc-font-family);
   font-weight: 600;
   line-height: 1;
-  transition: transform 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
-}
-
-.pg-widget-button:hover:not(:disabled) {
-  box-shadow: 0 10px 24px rgba(7, 193, 96, 0.24);
-  transform: translateY(-1px);
+  transition: opacity 0.16s ease;
 }
 
 .pg-widget-button:disabled {
@@ -67,7 +60,6 @@
   min-height: 120px;
   color: #8a8f98;
   border: 1px dashed #d9e2dc;
-  border-radius: 10px;
 }
 
 .pg-widget-image--empty span {
@@ -139,18 +131,16 @@
   color: #1f2937;
   background: #f8faf9;
   border: 1px solid #dfe8e2;
-  border-radius: 10px;
   box-sizing: border-box;
   font-family: var(--dc-font-family);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
 .pg-widget-form__control:focus {
   background: #ffffff;
   border-color: #07c160;
-  box-shadow: 0 0 0 3px rgba(7, 193, 96, 0.12);
 }
 
 .pg-widget-form__control::placeholder {
@@ -210,7 +200,6 @@
   width: 18px;
   height: 18px;
   border: 1px solid #cfd8d2;
-  border-radius: 5px;
   background: #ffffff;
   box-sizing: border-box;
 }
@@ -350,7 +339,6 @@
   height: 50px;
   padding-bottom: 4px;
   border-top: 1px solid rgba(31, 41, 55, 0.08);
-  box-shadow: 0 -8px 20px rgba(31, 41, 55, 0.04);
   box-sizing: border-box;
 }
 
@@ -384,7 +372,6 @@
   width: 20px;
   height: 20px;
   border: 1px solid currentColor;
-  border-radius: 6px;
   font-size: 8px;
   line-height: 1;
 }
@@ -404,7 +391,6 @@
   justify-content: center;
   border: 0;
   border-radius: 50%;
-  box-shadow: 0 14px 30px rgba(7, 193, 96, 0.32), 0 4px 10px rgba(0, 0, 0, 0.16);
   cursor: pointer;
 }
 
@@ -444,7 +430,6 @@
   gap: 5px;
   padding: 4px 6px;
   background: rgba(0, 0, 0, 0.18);
-  border-radius: 999px;
 }
 
 .pg-widget-swiper__dot {
@@ -456,6 +441,5 @@
 
 .pg-widget-swiper__dot--active {
   width: 12px;
-  border-radius: 999px;
   background: #ffffff;
 }

@@ -125,8 +125,6 @@
   position: relative;
   min-height: 100%;
   background: var(--dc-bg);
-  border-radius: var(--dc-radius-lg);
-  box-shadow: var(--dc-shadow);
 }
 
 .dc-canvas__content > .dc-root-renderer {
@@ -188,7 +186,6 @@
 .dc-node {
   position: relative;
   border: 1px solid transparent;
-  border-radius: var(--dc-radius);
   cursor: default;
 }
 
