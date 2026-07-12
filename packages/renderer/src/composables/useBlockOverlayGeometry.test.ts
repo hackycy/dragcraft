@@ -74,6 +74,52 @@ describe('useBlockOverlayGeometry', () => {
     expect(geometry.value.height).toBe(30)
   })
 
+  it('insets the paint rect so the interaction stroke remains inside the visible boundary', async () => {
+    const viewport = mockElement({ top: 120, left: 410, right: 790, bottom: 700, width: 380, height: 580 })
+    viewport.setAttribute('data-dc-overlay-boundary', '')
+    const host = mockElement({ top: 220, left: 420, right: 780, bottom: 278, width: 360, height: 58 })
+    viewport.appendChild(host)
+
+    const { geometry, update } = useBlockOverlayGeometry(ref(host), ref(true), {
+      boundarySelector: '[data-dc-overlay-boundary]',
+      paintInset: 1,
+    })
+
+    await nextTick()
+    update()
+
+    expect(geometry.value).toEqual({
+      top: 221,
+      left: 411,
+      width: 378,
+      height: 56,
+      visible: true,
+    })
+  })
+
+  it('preserves a drawable rect when the visible target is thinner than twice the paint inset', async () => {
+    const host = mockElement({ top: 100, left: 100, right: 101, bottom: 101, width: 1, height: 1 })
+    document.body.appendChild(host)
+
+    try {
+      const { geometry, update } = useBlockOverlayGeometry(ref(host), ref(true), { paintInset: 1 })
+
+      await nextTick()
+      update()
+
+      expect(geometry.value).toEqual({
+        top: 100,
+        left: 100,
+        width: 1,
+        height: 1,
+        visible: true,
+      })
+    }
+    finally {
+      host.remove()
+    }
+  })
+
   it('uses the surface only for self-positioned layer planes', async () => {
     const viewport = mockElement({ top: 120, left: 410, right: 790, bottom: 700, width: 380, height: 580 })
     viewport.setAttribute('data-dc-overlay-boundary', '')

@@ -370,10 +370,12 @@
   z-index: var(--dc-z-node-overlay);
 }
 
-.dc-node__block-overlay--hovered,
+.dc-node__block-overlay--hovered {
+  outline: var(--dc-node-overlay-stroke-width, 1px) dashed var(--dc-color-accent);
+}
+
 .dc-node__block-overlay--selected {
-  outline: 1px dashed var(--dc-color-accent);
-  outline-offset: -1px;
+  outline: var(--dc-node-overlay-stroke-width, 1px) solid var(--dc-color-accent);
 }
 
 /* ── Interaction States ──────────────────── */

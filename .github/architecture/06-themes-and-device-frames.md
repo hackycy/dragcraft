@@ -150,6 +150,21 @@ src/
 | `.dc-drop-indicator` | 拖拽指示器 |
 | `.dc-widget-fallback` | 未知 widget fallback |
 
+### 节点交互轮廓
+
+节点轮廓由 renderer 计算安全绘制区域，主题只决定颜色。固定交互契约如下：
+
+```text
+visible rect
+  -> 四边按 1px 描边宽度生成 paint rect
+  -> hover: 1px dashed
+  -> selected: 1px solid
+```
+
+`useBlockOverlayGeometry()` 先求节点与裁剪边界的可见交集，再通过 `paintInset` 生成 paint rect。常规节点四边各收进 1px；极小节点会限制 inset，始终保留至少 1px 的可绘制宽高。
+
+`WidgetRenderer` 是描边宽度的唯一来源，并通过 `--dc-node-overlay-stroke-width` 传给 CSS。主题不得改变描边宽度、线型、透明背景或几何 inset，只能设置 `--dc-color-accent`。
+
 ## Device Frames 定位
 
 `@dragcraft/device-frames` 提供设备容器框架组件，用于 renderer 的 `containerShell` 扩展点。

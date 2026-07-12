@@ -18,6 +18,8 @@ const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
 const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
 const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
 const CANVAS_INTERACTION_LAYER_SELECTOR = '[data-dc-canvas-interaction-layer]'
+const NODE_OVERLAY_STROKE_WIDTH = 1
+const NODE_OVERLAY_STROKE_WIDTH_PROPERTY = '--dc-node-overlay-stroke-width'
 
 function resolveInteractionLayerTarget(host: HTMLElement | null): HTMLElement | string {
   if (typeof document === 'undefined')
@@ -58,6 +60,7 @@ export default defineComponent({
     const overlayActive = computed(() => widget.state.isSelected.value || widget.state.isHovered.value)
     const { geometry: overlayGeometry } = useBlockOverlayGeometry(nodeElRef, overlayActive, {
       boundarySelector: OVERLAY_BOUNDARY_SELECTOR,
+      paintInset: NODE_OVERLAY_STROKE_WIDTH,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
     })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
@@ -130,6 +133,7 @@ export default defineComponent({
               left: `${overlayGeometry.value.left}px`,
               width: `${overlayGeometry.value.width}px`,
               height: `${overlayGeometry.value.height}px`,
+              [NODE_OVERLAY_STROKE_WIDTH_PROPERTY]: `${NODE_OVERLAY_STROKE_WIDTH}px`,
             },
           }),
         ]))

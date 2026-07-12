@@ -13,6 +13,7 @@ export interface BlockOverlayGeometry {
 
 export interface UseBlockOverlayGeometryOptions {
   boundarySelector?: string
+  paintInset?: number
   selfTargetSelector?: string
 }
 
@@ -71,6 +72,10 @@ function resolveBoundaryElement(hostEl: HTMLElement, targetEl: HTMLElement, boun
     ?? targetEl.closest<HTMLElement>(boundarySelector)
 }
 
+function resolvePaintInset(size: number, requestedInset: number): number {
+  return Math.min(requestedInset, Math.max(0, (size - 1) / 2))
+}
+
 export function useBlockOverlayGeometry(
   elRef: Ref<HTMLElement | null>,
   isActive: Ref<boolean>,
@@ -126,12 +131,15 @@ export function useBlockOverlayGeometry(
     const overlayRight = boundaryRect ? Math.min(boundaryRect.right, clipRight) : visibleRight
     const overlayWidth = Math.max(0, overlayRight - overlayLeft)
     const visible = visibleHeight > 0 && visibleWidth > 0 && overlayWidth > 0
+    const requestedPaintInset = Math.max(0, options.paintInset ?? 0)
+    const inlinePaintInset = resolvePaintInset(overlayWidth, requestedPaintInset)
+    const blockPaintInset = resolvePaintInset(visibleHeight, requestedPaintInset)
 
     applyGeometry({
-      top: visibleTop,
-      left: overlayLeft,
-      width: overlayWidth,
-      height: visibleHeight,
+      top: visibleTop + blockPaintInset,
+      left: overlayLeft + inlinePaintInset,
+      width: overlayWidth - inlinePaintInset * 2,
+      height: visibleHeight - blockPaintInset * 2,
       visible,
     })
   }
