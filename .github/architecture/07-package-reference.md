@@ -153,12 +153,12 @@
 职责：
 
 - 为 Headless UI 包提供 CSS 皮肤。
-- 基于 CSS 变量提供 antd 与 material 两套 light 主题。
+- 基于 CSS 变量提供 shadcn 与 Google Material 3 两套 light 主题。
 - 覆盖 designer、renderer、form-generator、widgets 等 class。
 
 主要入口：
 
-- `@dragcraft/themes/antd`。
+- `@dragcraft/themes` 或 `@dragcraft/themes/shadcn`。
 - `@dragcraft/themes/material`。
 
 依赖与协作：

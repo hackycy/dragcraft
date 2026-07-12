@@ -5,7 +5,7 @@
 先看一个最小示例：
 
 ```ts
-import '@dragcraft/themes/shadcn'
+import '@dragcraft/themes'
 import { createI18n, EventEmitter, generateShortId } from '@dragcraft/utils'
 
 const i18n = createI18n('zh-CN', {

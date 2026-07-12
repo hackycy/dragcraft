@@ -75,6 +75,62 @@ describe('widgetRenderer', () => {
     document.body.innerHTML = ''
   })
 
+  it('owns the hover and selected outline styles at runtime', async () => {
+    const meta = makeMeta()
+    const ctx = makeContext(meta)
+    const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      if (this instanceof HTMLElement && this.classList.contains('dc-node')) {
+        return {
+          top: 10,
+          right: 110,
+          bottom: 60,
+          left: 10,
+          width: 100,
+          height: 50,
+          x: 10,
+          y: 10,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+
+    ctx.engine.store.hoveredNodeId.value = 'fab'
+
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, { node })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+      await new Promise(resolve => requestAnimationFrame(resolve))
+
+      const hoveredOverlay = document.querySelector<HTMLElement>('.dc-node__block-overlay--hovered')
+      expect(hoveredOverlay?.style.outlineStyle).toBe('dashed')
+
+      ctx.engine.store.selectedNodeId.value = 'fab'
+      await nextTick()
+
+      const selectedOverlay = document.querySelector<HTMLElement>('.dc-node__block-overlay--selected')
+      expect(selectedOverlay?.style.outlineStyle).toBe('solid')
+      expect(document.querySelector('.dc-node__block-overlay--hovered')).toBeNull()
+    }
+    finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      app.unmount()
+      host.remove()
+    }
+  })
+
   it('keeps self-positioned layer empty space transparent to canvas events', async () => {
     const meta = makeMeta({
       defaultLayout: {

@@ -62,6 +62,8 @@ import { designer } from './designer'
 </template>
 ```
 
+这里的 `ant-design-vue/dist/reset.css` 只用于示例中的 Ant Design Vue 字段 adapter；它不是 shadcn 主题的依赖。
+
 现在你可以从左侧拖入文本，选中它后在右侧修改 `content`。设计器把修改写进 Schema；它不会替你把页面保存到服务端。
 
 > [!TIP]

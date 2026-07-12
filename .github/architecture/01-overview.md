@@ -68,13 +68,13 @@ root
 
 - 所有 UI 包输出 `dc-*` BEM 类名。
 - 皮肤包基于 CSS 变量和共享组件样式实现视觉表现。
-- 内置 `antd` 与 `material` 两套 light 皮肤。
+- 内置 shadcn 与 Google Material 3 两套 light 皮肤。
 - 业务可不导入皮肤进入无头模式，也可覆盖 CSS 变量快速换肤。
 
 ## 标准接入模式
 
 ```ts
-import '@dragcraft/themes/antd'
+import '@dragcraft/themes'
 import { createDesigner, DcDesigner } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 

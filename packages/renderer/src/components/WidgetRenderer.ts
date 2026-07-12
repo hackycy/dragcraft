@@ -133,6 +133,7 @@ export default defineComponent({
               left: `${overlayGeometry.value.left}px`,
               width: `${overlayGeometry.value.width}px`,
               height: `${overlayGeometry.value.height}px`,
+              outlineStyle: widget.state.isSelected.value ? 'solid' : 'dashed',
               [NODE_OVERLAY_STROKE_WIDTH_PROPERTY]: `${NODE_OVERLAY_STROKE_WIDTH}px`,
             },
           }),

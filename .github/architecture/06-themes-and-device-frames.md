@@ -163,7 +163,7 @@ visible rect
 
 `useBlockOverlayGeometry()` 先求节点与裁剪边界的可见交集，再通过 `paintInset` 生成 paint rect。常规节点四边各收进 1px；极小节点会限制 inset，始终保留至少 1px 的可绘制宽高。
 
-`WidgetRenderer` 是描边宽度的唯一来源，并通过 `--dc-node-overlay-stroke-width` 传给 CSS。主题不得改变描边宽度、线型、透明背景或几何 inset，只能设置 `--dc-color-accent`。
+`WidgetRenderer` 是描边宽度与线型的唯一来源：它通过 `--dc-node-overlay-stroke-width` 传递宽度，并按运行时状态设置 `outline-style`。主题不得改变描边宽度、线型、透明背景或几何 inset，只能设置 `--dc-color-accent`。
 
 ## Device Frames 定位
 
