@@ -16,7 +16,7 @@ dragcraft 的 UI 包采用 Headless Component 模式：
 
 | 皮肤 | 导入路径 | 风格描述 |
 | --- | --- | --- |
-| shadcn | `@dragcraft/themes` 或 `@dragcraft/themes/shadcn` | 中性色、紧凑密度、低阴影，适合高信息密度工作台 |
+| shadcn | `@dragcraft/themes` 或 `@dragcraft/themes/shadcn` | 企业蓝主色、紧凑密度、低阴影，适合高信息密度工作台 |
 | Google Material 3 | `@dragcraft/themes/material` | Material 3 色彩角色、舒适密度、圆润形状与分层阴影 |
 
 使用方式：

@@ -14,7 +14,7 @@
 
 ```typescript
 // 1. 导入皮肤（二选一）
-import '@dragcraft/themes/shadcn'       // 默认：紧凑、中性的产品工作台
+import '@dragcraft/themes/shadcn'       // 默认：紧凑、企业蓝调的产品工作台
 // import '@dragcraft/themes/material'  // Google Material 3
 
 // 2. 导入设计器
