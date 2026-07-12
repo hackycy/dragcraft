@@ -4,7 +4,7 @@ import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 import { FORM_GENERATOR_CONTEXT_KEY, resolveFieldComponentProps } from '@dragcraft/form-generator'
 import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
-import { Button, Input, Select, Slider } from 'ant-design-vue'
+import { Button, Input, InputNumber, Select, Slider } from 'ant-design-vue'
 import { computed, defineComponent, h, inject, ref } from 'vue'
 
 interface ArrayFieldConfig {
@@ -23,10 +23,22 @@ interface NavbarTitleConfig {
   titleFontWeight?: string
 }
 
+type SpacingType = 'margin' | 'padding'
+
+type SpacingEdge = 'Top' | 'Right' | 'Bottom' | 'Left'
+
 const AButton = Button as unknown as Component
 const AInput = Input as unknown as Component
+const AInputNumber = InputNumber as unknown as Component
 const ASelect = Select as unknown as Component
 const ASlider = Slider as unknown as Component
+
+const SPACING_EDGES: Array<{ edge: SpacingEdge, labelKey: string, label: string }> = [
+  { edge: 'Top', labelKey: 'field.spacing.top', label: '上' },
+  { edge: 'Right', labelKey: 'field.spacing.right', label: '右' },
+  { edge: 'Bottom', labelKey: 'field.spacing.bottom', label: '下' },
+  { edge: 'Left', labelKey: 'field.spacing.left', label: '左' },
+]
 
 export const ColorField = defineComponent({
   name: 'PlaygroundColorField',
@@ -52,6 +64,76 @@ export const ColorField = defineComponent({
           'onUpdate:value': (value: string) => emit('update:modelValue', value),
         }),
       ])
+  },
+})
+
+export const SpacingField = defineComponent({
+  name: 'PlaygroundSpacingField',
+  props: {
+    modelValue: { type: Object as PropType<Record<string, unknown>>, default: () => ({}) },
+    disabled: { type: Boolean, default: false },
+    type: { type: String as PropType<SpacingType>, default: 'margin' },
+    min: { type: Number, default: 0 },
+    max: { type: Number, default: 120 },
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit }) {
+    const { t } = useI18n()
+    const linked = ref(true)
+    const style = computed(() => props.modelValue ?? {})
+    const styleKey = (edge: SpacingEdge) => `${props.type}${edge}`
+    const getValue = (edge: SpacingEdge) => {
+      const value = style.value[styleKey(edge)]
+      if (typeof value === 'number')
+        return value
+      if (typeof value === 'string') {
+        const parsed = Number.parseFloat(value)
+        return Number.isNaN(parsed) ? 0 : parsed
+      }
+      return 0
+    }
+    const updateEdge = (edge: SpacingEdge, value: number | null) => {
+      const nextValue = value ?? 0
+      const patch = linked.value
+        ? Object.fromEntries(SPACING_EDGES.map(item => [styleKey(item.edge), nextValue]))
+        : { [styleKey(edge)]: nextValue }
+      emit('update:modelValue', { ...style.value, ...patch })
+    }
+
+    return () => h('div', { class: 'playground-spacing-field' }, [
+      h('div', { class: 'playground-spacing-field__inputs' }, SPACING_EDGES.map(({ edge, labelKey, label }) =>
+        h('label', { class: 'playground-spacing-field__input', key: edge }, [
+          h('span', null, t(labelKey, label)),
+          h(AInputNumber, {
+            'value': getValue(edge),
+            'disabled': props.disabled,
+            'min': props.min,
+            'max': props.max,
+            'precision': 0,
+            'size': 'small',
+            'onUpdate:value': (value: number | null) => updateEdge(edge, value),
+          }),
+        ]),
+      )),
+      h(AButton, {
+        'aria-label': linked.value
+          ? t('field.spacing.unlink', '取消联动')
+          : t('field.spacing.link', '启用联动'),
+        'class': [
+          'playground-spacing-field__link',
+          { 'playground-spacing-field__link--active': linked.value },
+        ],
+        'disabled': props.disabled,
+        'size': 'small',
+        'title': linked.value
+          ? t('field.spacing.unlink', '取消联动')
+          : t('field.spacing.link', '启用联动'),
+        'type': linked.value ? 'primary' : 'default',
+        'onClick': () => {
+          linked.value = !linked.value
+        },
+      }, () => t('field.spacing.linked', '联动')),
+    ])
   },
 })
 
@@ -355,6 +437,7 @@ export function buildPlaygroundFieldComponentMap(): FieldComponentMap {
   return {
     ...createAntDesignVueFields(),
     Color: { component: ColorField },
+    Spacing: { component: SpacingField },
     Array: { component: ArrayField },
     NavbarTitle: { component: NavbarTitleField },
   }

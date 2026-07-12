@@ -133,7 +133,7 @@ playground 作为本仓库的产品级示例，在 `playground/src/components/wi
 - 内置 `Input`、`InputNumber`、`Textarea`、`Select`、`Switch`、`Slider`、`Radio`、`RadioGroup`、`Checkbox`、`CheckboxGroup`、`Cascader`、`DatePicker`、`RangePicker`、`TimePicker`、`TreeSelect`、`Rate`、`AutoComplete`、`Mentions`。
 - 导出 `AntDesignVueFieldComponentPropsMap`，可与 `TypedFormSchema<PropsMap>` 联动获得 `componentProps` 类型提示。
 
-playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueFields()` 与本地业务字段，业务字段包括 `Color`、`Array`、`NavbarTitle`。
+playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueFields()` 与本地业务字段，业务字段包括 `Color`、`Spacing`、`Array`、`NavbarTitle`。`Spacing` 通过 `bindTo` 直接编辑节点容器的四边 margin 或 padding，并支持四边值联动。
 
 字段多语言辅助仍由 form-generator 处理：
 

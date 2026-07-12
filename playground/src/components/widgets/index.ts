@@ -10,7 +10,42 @@ export const playgroundWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[]
   ...basicWidgetDefinitions,
   ...formWidgetDefinitions,
   ...miniProgramWidgetDefinitions,
-]
+].map(definition => ({
+  ...definition,
+  meta: {
+    ...definition.meta,
+    formSchema: {
+      ...definition.meta.formSchema,
+      sections: [
+        ...definition.meta.formSchema.sections,
+        {
+          title: '容器边距',
+          titleKey: 'field.spacing.sectionTitle',
+          fields: [
+            {
+              key: 'containerMargin',
+              label: '外边距',
+              labelKey: 'field.spacing.margin',
+              component: 'Spacing',
+              bindTo: { scope: 'node', path: 'style.container' },
+              defaultValue: {},
+              componentProps: { type: 'margin', min: -120, max: 120 },
+            },
+            {
+              key: 'containerPadding',
+              label: '内边距',
+              labelKey: 'field.spacing.padding',
+              component: 'Spacing',
+              bindTo: { scope: 'node', path: 'style.container' },
+              defaultValue: {},
+              componentProps: { type: 'padding', min: 0, max: 120 },
+            },
+          ],
+        },
+      ],
+    },
+  },
+}))
 
 export const playgroundWidgetGroups: WidgetGroupConfig[] = [
   { name: 'basic', title: '基础展示', titleKey: 'group.basic' },

@@ -79,19 +79,6 @@ export const textWidgetMeta: DesignerWidgetMeta = {
           },
         ],
       },
-      {
-        title: '容器样式',
-        fields: [
-          {
-            key: 'marginTop',
-            label: '上外边距',
-            component: 'InputNumber',
-            defaultValue: 0,
-            bindTo: { scope: 'node', path: 'style.container.marginTop' },
-            componentProps: { min: -120, max: 120 },
-          },
-        ],
-      },
     ],
   },
 }

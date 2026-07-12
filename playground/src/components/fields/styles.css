@@ -28,6 +28,49 @@
   cursor: pointer;
 }
 
+.playground-spacing-field {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.playground-spacing-field__inputs {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  min-width: 0;
+}
+
+.playground-spacing-field__input {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: var(--dc-color-text-secondary, #6b7280);
+  font-size: 11px;
+  text-align: center;
+}
+
+.playground-spacing-field__input .ant-input-number {
+  width: 100%;
+  min-width: 0;
+}
+
+.playground-spacing-field__input .ant-input-number-input {
+  padding-inline: 5px;
+  text-align: center;
+}
+
+.playground-spacing-field__link {
+  flex: none;
+  padding-inline: 7px;
+  font-size: 11px;
+}
+
+.playground-spacing-field__link--active {
+  font-weight: 600;
+}
+
 .playground-array-field {
   display: flex;
   flex-direction: column;
