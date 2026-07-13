@@ -1,4 +1,6 @@
 export { addNodeHandler } from './add-node'
+export { changeContainerVariantHandler } from './change-container-variant'
+export { duplicateNodeHandler } from './duplicate-node'
 export { moveNodeHandler } from './move-node'
 export { removeNodeHandler } from './remove-node'
 export { setGlobalConfigHandler } from './set-global-config'

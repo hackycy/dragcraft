@@ -581,6 +581,15 @@ export interface RemoveNodePayload {
   nodeId: string
 }
 
+export interface DuplicateNodePayload {
+  nodeId: string
+}
+
+export interface ChangeContainerVariantPayload {
+  containerId: string
+  variant: ContainerVariantId
+}
+
 export interface UpdatePropsPayload {
   nodeId: string
   props: Record<string, unknown>

@@ -1,4 +1,4 @@
-import type { DesignerSchema, SchemaNode } from './types'
+import type { ContainerDefinition, DesignerSchema, SchemaNode } from './types'
 import { describe, expect, it, vi } from 'vitest'
 import { CommandType, EventName } from './constants'
 import { createEngine } from './engine'
@@ -9,6 +9,41 @@ function makeNode(id: string): SchemaNode {
 
 function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
+}
+
+function makeVariantEngine(migrateVariant: ContainerDefinition['migrateVariant']) {
+  const container: SchemaNode = {
+    id: 'layout',
+    type: 'variant-layout',
+    props: {},
+    container: {
+      variant: 'split',
+      regions: { left: [makeNode('left')], right: [makeNode('right')] },
+    },
+  }
+  const engine = createEngine({ initialSchema: makeSchema([container]) })
+  engine.registerWidget({
+    type: 'variant-layout',
+    title: 'Variant',
+    group: 'g',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    container: {
+      defaultVariant: 'split',
+      variants: {
+        split: {
+          title: 'Split',
+          regions: [{ id: 'left', title: 'Left' }, { id: 'right', title: 'Right' }],
+        },
+        stacked: {
+          title: 'Stacked',
+          regions: [{ id: 'body', title: 'Body' }],
+        },
+      },
+      migrateVariant,
+    },
+  })
+  return engine
 }
 
 describe('createEngine', () => {
@@ -153,6 +188,66 @@ describe('createEngine', () => {
     engine.execute({ type: CommandType.REMOVE_NODE, payload: { nodeId: 'a' } })
     expect(engine.store.schema.value.root.children).toHaveLength(1)
     expect(engine.store.schema.value.root.children![0].id).toBe('b')
+    engine.dispose()
+  })
+
+  it('executes one container variant migration with one history and event entry', () => {
+    const engine = makeVariantEngine(({ state }) => ({
+      allowed: true,
+      state: {
+        variant: 'stacked',
+        regions: { body: [...state.regions.left, ...state.regions.right] },
+      },
+    }))
+    const variantChanged = vi.fn()
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.CONTAINER_VARIANT_CHANGED, variantChanged)
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    const result = engine.execute({
+      type: CommandType.CHANGE_CONTAINER_VARIANT,
+      payload: { containerId: 'layout', variant: 'stacked' },
+    })
+
+    expect(result).toEqual({
+      ok: true,
+      eventPayload: {
+        containerId: 'layout',
+        fromVariant: 'split',
+        toVariant: 'stacked',
+      },
+    })
+    expect(engine.exportSchema().root.children![0].container!.variant).toBe('stacked')
+    expect(engine.history.canUndo()).toBe(true)
+    expect(variantChanged).toHaveBeenCalledOnce()
+    if (!result.ok)
+      throw new Error('expected variant migration to succeed')
+    expect(variantChanged).toHaveBeenCalledWith(result.eventPayload)
+    expect(schemaChanged).toHaveBeenCalledOnce()
+
+    engine.history.undo()
+    expect(engine.exportSchema().root.children![0].container!.variant).toBe('split')
+    engine.dispose()
+  })
+
+  it('rejects invalid variant migration output without history or mutation events', () => {
+    const engine = makeVariantEngine(() => undefined as never)
+    const before = engine.exportSchema()
+    const variantChanged = vi.fn()
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.CONTAINER_VARIANT_CHANGED, variantChanged)
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    const result = engine.execute({
+      type: CommandType.CHANGE_CONTAINER_VARIANT,
+      payload: { containerId: 'layout', variant: 'stacked' },
+    })
+
+    expect(result).toMatchObject({ ok: false, code: 'CONTAINER_VARIANT_MIGRATION_INVALID' })
+    expect(engine.exportSchema()).toEqual(before)
+    expect(engine.history.canUndo()).toBe(false)
+    expect(variantChanged).not.toHaveBeenCalled()
+    expect(schemaChanged).not.toHaveBeenCalled()
     engine.dispose()
   })
 

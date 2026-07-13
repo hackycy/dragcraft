@@ -99,16 +99,17 @@ describe('createDefaultActions', () => {
     vi.mocked(resolveBehavior).mockReturnValue(true)
   })
 
-  it('returns 4 built-in actions sorted by order', () => {
+  it('returns 5 built-in actions sorted by order', () => {
     const actions = createDefaultActions()
-    expect(actions).toHaveLength(4)
+    expect(actions).toHaveLength(5)
     expect(actions.map(a => a.key)).toEqual([
       ActionKey.DRAG,
       ActionKey.MOVE_UP,
       ActionKey.MOVE_DOWN,
+      ActionKey.DUPLICATE,
       ActionKey.DELETE,
     ])
-    expect(actions.map(a => a.order)).toEqual([100, 200, 300, 400])
+    expect(actions.map(a => a.order)).toEqual([100, 200, 300, 350, 400])
   })
 
   it('built-in actions have available predicate instead of visible for capability checks', async () => {
@@ -136,7 +137,7 @@ describe('createDefaultActions', () => {
 describe('createNodeActionRegistry', () => {
   it('registers default actions on creation', () => {
     const registry = createNodeActionRegistry()
-    expect(registry.getActions()).toHaveLength(4)
+    expect(registry.getActions()).toHaveLength(5)
   })
 
   it('accepts custom initial actions', () => {
@@ -149,7 +150,7 @@ describe('createNodeActionRegistry', () => {
   it('register adds a new action', () => {
     const registry = createNodeActionRegistry()
     registry.register({ key: 'extra', label: 'Extra', type: 'button', order: 500 })
-    expect(registry.getActions()).toHaveLength(5)
+    expect(registry.getActions()).toHaveLength(6)
   })
 
   it('unregister removes an action', () => {
@@ -186,8 +187,8 @@ describe('resolve', () => {
     const ctx = makeCtx(engine)
 
     const resolved = registry.resolve(ctx, emptyInterceptors)
-    // All 4 default actions visible by default (resolveBehavior mocked to return true)
-    expect(resolved).toHaveLength(4)
+    // All 5 default actions visible by default (resolveBehavior mocked to return true)
+    expect(resolved).toHaveLength(5)
     expect(resolved.every(a => a.visible)).toBe(true)
   })
 
@@ -215,7 +216,7 @@ describe('resolve', () => {
 
   it('applies widgetActions.exclude filter', () => {
     const registry = createNodeActionRegistry()
-    const meta = makeMeta({ actions: { exclude: [ActionKey.DRAG, ActionKey.MOVE_UP, ActionKey.MOVE_DOWN] } })
+    const meta = makeMeta({ actions: { exclude: [ActionKey.DRAG, ActionKey.MOVE_UP, ActionKey.MOVE_DOWN, ActionKey.DUPLICATE] } })
     const ctx = makeCtx(engine, { meta })
 
     const resolved = registry.resolve(ctx, emptyInterceptors)
@@ -235,7 +236,7 @@ describe('resolve', () => {
     const ctx = makeCtx(engine, { meta })
 
     const resolved = registry.resolve(ctx, emptyInterceptors)
-    expect(resolved).toHaveLength(5)
+    expect(resolved).toHaveLength(6)
     expect(resolved[0].key).toBe('custom') // order 50 comes first
   })
 
@@ -303,6 +304,20 @@ describe('resolve', () => {
 
     expect(engine.execute).toHaveBeenCalledWith({
       type: 'REMOVE_NODE',
+      payload: { nodeId: 'node-1' },
+    })
+  })
+
+  it('duplicate handler calls engine.execute with correct payload', () => {
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine)
+
+    const resolved = registry.resolve(ctx, emptyInterceptors)
+    const duplicate = resolved.find(a => a.key === ActionKey.DUPLICATE)!
+    duplicate.handler(mockEvent())
+
+    expect(engine.execute).toHaveBeenCalledWith({
+      type: 'DUPLICATE_NODE',
       payload: { nodeId: 'node-1' },
     })
   })

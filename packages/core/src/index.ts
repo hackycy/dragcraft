@@ -7,6 +7,8 @@ export type { CommandBusInstance } from './command-bus'
 // ── Built-in command handlers ─────────────
 export {
   addNodeHandler,
+  changeContainerVariantHandler,
+  duplicateNodeHandler,
   moveNodeHandler,
   removeNodeHandler,
   setGlobalConfigHandler,
@@ -31,7 +33,7 @@ export type { DesignerEngine } from './engine'
 export { createEventHub, EventHub } from './event-hub'
 export type { EventListener } from './event-hub'
 // ── Helpers (tree utilities) ──────────────
-export { findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkFlatChildren } from './helpers'
+export { cloneNodeSubtree, collectSubtreeIds, findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkFlatChildren } from './helpers'
 export { createHistoryManager } from './history-manager'
 export type { HistoryManagerInstance, HistoryState } from './history-manager'
 
@@ -75,6 +77,7 @@ export { commandFailure } from './types'
 export type {
   AddNodePayload,
   BehaviorPredicate,
+  ChangeContainerVariantPayload,
   Command,
   CommandContext,
   CommandExecutionResult,
@@ -107,6 +110,7 @@ export type {
   CreationBlockReason,
   DesignerSchema,
   DragTarget,
+  DuplicateNodePayload,
   EngineOptions,
   EngineState,
   FieldSchemaShape,

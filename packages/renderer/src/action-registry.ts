@@ -4,7 +4,7 @@ import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
 import type { RendererWidgetMeta } from './types'
 import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
-import { IconArrowDown, IconArrowUp, IconDelete, IconDrag } from '@dragcraft/icons'
+import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
 
 /**
@@ -166,6 +166,7 @@ export const ActionKey = {
   DRAG: 'drag',
   MOVE_UP: 'move-up',
   MOVE_DOWN: 'move-down',
+  DUPLICATE: 'duplicate',
   DELETE: 'delete',
 } as const
 
@@ -233,6 +234,17 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           payload: { nodeId: ctx.node.id, destination: { ...ctx.owner, index: ctx.index + 2 } },
         }
       },
+    },
+    {
+      key: ActionKey.DUPLICATE,
+      label: _t('action.duplicate', '复制'),
+      icon: IconCopy,
+      type: 'button',
+      order: 350,
+      command: ctx => ({
+        type: CommandType.DUPLICATE_NODE,
+        payload: { nodeId: ctx.node.id },
+      }),
     },
     {
       key: ActionKey.DELETE,

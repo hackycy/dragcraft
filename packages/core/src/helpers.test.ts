@@ -1,6 +1,6 @@
 import type { SchemaNode } from './types'
 import { describe, expect, it } from 'vitest'
-import { findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkFlatChildren } from './helpers'
+import { cloneNodeSubtree, collectSubtreeIds, findNodeById, findParentNode, insertNodeIntoTree, removeNodeFromTree, walkFlatChildren } from './helpers'
 
 function makeRoot(children: SchemaNode[] = []): SchemaNode {
   return { id: 'root', type: 'root', props: {}, children }
@@ -111,6 +111,39 @@ describe('removeNodeFromTree', () => {
     }).not.toThrow()
     expect(removed).toBeNull()
     expect(container.container!.regions.left).toEqual([nested])
+  })
+})
+
+describe('container subtree helpers', () => {
+  it('deep-clones every ID in a container subtree', () => {
+    const source = makeContainer('layout', {
+      left: [makeNode('left-child')],
+      right: [makeContainer('nested-layout', { body: [makeNode('nested-child')] })],
+    })
+    const ids = ['copy-layout', 'copy-left', 'copy-nested', 'copy-nested-child'][Symbol.iterator]()
+
+    const clone = cloneNodeSubtree(source, () => ids.next().value!)
+
+    expect(clone.id).toBe('copy-layout')
+    expect(clone.container!.regions.left[0].id).toBe('copy-left')
+    expect(clone.container!.regions.right[0].id).toBe('copy-nested')
+    expect(clone.container!.regions.right[0].container!.regions.body[0].id).toBe('copy-nested-child')
+    expect(clone).not.toBe(source)
+    expect(clone.container!.regions.left).not.toBe(source.container!.regions.left)
+  })
+
+  it('collects every ID in a container subtree', () => {
+    const source = makeContainer('layout', {
+      left: [makeNode('left-child')],
+      right: [makeContainer('nested-layout', { body: [makeNode('nested-child')] })],
+    })
+
+    expect(collectSubtreeIds(source)).toEqual(new Set([
+      'layout',
+      'left-child',
+      'nested-layout',
+      'nested-child',
+    ]))
   })
 })
 

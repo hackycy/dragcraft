@@ -1,4 +1,4 @@
-import type { CommandContext, DesignerSchema, SchemaNode } from '../types'
+import type { CommandContext, ContainerDefinition, DesignerSchema, SchemaNode } from '../types'
 import { describe, expect, it, vi } from 'vitest'
 import { createRegistry } from '../registry'
 import { createSchemaStore } from '../schema-store'
@@ -17,6 +17,48 @@ function setup(children: SchemaNode[]) {
   const registry = createRegistry()
   const ctx: CommandContext = { store, registry }
   return { store, registry, ctx }
+}
+
+const containerDefinition: ContainerDefinition = {
+  defaultVariant: 'split',
+  variants: {
+    split: {
+      title: 'Split',
+      regions: [
+        { id: 'required', title: 'Required', constraints: { minItems: 1 } },
+        { id: 'open', title: 'Open' },
+      ],
+    },
+  },
+}
+
+function makeContainer(regions: Record<string, SchemaNode[]>): SchemaNode {
+  return {
+    id: 'layout',
+    type: 'split-layout',
+    props: {},
+    container: { variant: 'split', regions },
+  }
+}
+
+function setupWithContainer(container: SchemaNode) {
+  const result = setup([container])
+  result.registry.registerWidget({
+    type: 'text',
+    title: 'Text',
+    group: 'g',
+    defaultProps: {},
+    formSchema: { sections: [] },
+  })
+  result.registry.registerWidget({
+    type: 'split-layout',
+    title: 'Split',
+    group: 'g',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    container: containerDefinition,
+  })
+  return result
 }
 
 describe('removeNodeHandler', () => {
@@ -82,5 +124,100 @@ describe('removeNodeHandler', () => {
 
     const ids = store.getRawSchema().root.children!.map(c => c.id)
     expect(ids).toEqual(['locked', 'free'])
+  })
+
+  it('removes a container subtree and clears descendant interaction state', () => {
+    const container = makeContainer({ required: [makeNode('required')], open: [makeNode('child')] })
+    const { ctx, store } = setupWithContainer(container)
+    store.selectNode('child')
+    store.hoverNode('required')
+
+    expect(removeNodeHandler(ctx, { nodeId: 'layout' })).toEqual({
+      ok: true,
+      eventPayload: {
+        nodeId: 'layout',
+        source: { kind: 'root', index: 0 },
+      },
+    })
+    expect(store.getRawSchema().root.children).toEqual([])
+    expect(store.selectedNodeId.value).toBeNull()
+    expect(store.hoveredNodeId.value).toBeNull()
+  })
+
+  it('removes a region-owned child and clears its interaction state', () => {
+    const container = makeContainer({
+      required: [makeNode('required')],
+      open: [makeNode('first'), makeNode('child')],
+    })
+    const { ctx, store } = setupWithContainer(container)
+    store.selectNode('child')
+    store.hoverNode('child')
+
+    expect(removeNodeHandler(ctx, { nodeId: 'child' })).toMatchObject({ ok: true })
+    expect(store.getRawSchema().root.children![0].container!.regions.open.map(node => node.id)).toEqual(['first'])
+    expect(store.selectedNodeId.value).toBeNull()
+    expect(store.hoveredNodeId.value).toBeNull()
+  })
+
+  it('rejects region removal that would violate minItems', () => {
+    const container = makeContainer({ required: [makeNode('required')], open: [] })
+    const { ctx, store } = setupWithContainer(container)
+    const before = store.getSchema()
+
+    expect(removeNodeHandler(ctx, { nodeId: 'required' })).toEqual({
+      ok: false,
+      code: 'CONTAINER_REGION_MIN_ITEMS',
+    })
+    expect(store.getSchema()).toEqual(before)
+  })
+
+  it.each([
+    ['definition', (container: SchemaNode) => { container.type = 'missing-layout' }],
+    ['variant', (container: SchemaNode) => { container.container!.variant = 'missing' }],
+    ['region', (container: SchemaNode) => {
+      container.container!.regions.legacy = container.container!.regions.open
+      delete container.container!.regions.open
+    }],
+  ])('rejects removal from an unresolved source %s without mutation', (_, makeUnresolved) => {
+    const container = makeContainer({ required: [makeNode('required')], open: [makeNode('child')] })
+    const { ctx, store } = setupWithContainer(container)
+    makeUnresolved(store.getRawSchema().root.children![0])
+    const before = store.getSchema()
+
+    expect(removeNodeHandler(ctx, { nodeId: 'child' })).toEqual({
+      ok: false,
+      code: 'UNRESOLVED_CONTAINER_READ_ONLY',
+    })
+    expect(store.getSchema()).toEqual(before)
+  })
+
+  it('rejects removing a container whose external definition is unresolved', () => {
+    const container = makeContainer({ required: [makeNode('required')], open: [] })
+    const { ctx, store } = setup([container])
+    const before = store.getSchema()
+
+    expect(removeNodeHandler(ctx, { nodeId: 'layout' })).toEqual({
+      ok: false,
+      code: 'UNRESOLVED_CONTAINER_READ_ONLY',
+    })
+    expect(store.getSchema()).toEqual(before)
+  })
+
+  it('honors deletable behavior before removing a node', () => {
+    const { ctx, registry, store } = setup([makeNode('fixed')])
+    registry.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      deletable: false,
+    })
+
+    expect(removeNodeHandler(ctx, { nodeId: 'fixed' })).toEqual({
+      ok: false,
+      code: 'NODE_NOT_DELETABLE',
+    })
+    expect(store.getRawSchema().root.children!.map(node => node.id)).toEqual(['fixed'])
   })
 })

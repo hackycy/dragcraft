@@ -16,6 +16,8 @@ const COMMAND_EVENT_MAP: Record<string, string> = {
   [CommandType.ADD_NODE]: EventName.NODE_ADDED,
   [CommandType.MOVE_NODE]: EventName.NODE_MOVED,
   [CommandType.REMOVE_NODE]: EventName.NODE_REMOVED,
+  [CommandType.DUPLICATE_NODE]: EventName.NODE_DUPLICATED,
+  [CommandType.CHANGE_CONTAINER_VARIANT]: EventName.CONTAINER_VARIANT_CHANGED,
   [CommandType.UPDATE_PROPS]: EventName.NODE_UPDATED,
   [CommandType.SET_GLOBAL_CONFIG]: EventName.GLOBAL_CONFIG_CHANGED,
 }

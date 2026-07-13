@@ -6,6 +6,8 @@ export const CommandType = {
   ADD_NODE: 'ADD_NODE',
   MOVE_NODE: 'MOVE_NODE',
   REMOVE_NODE: 'REMOVE_NODE',
+  DUPLICATE_NODE: 'DUPLICATE_NODE',
+  CHANGE_CONTAINER_VARIANT: 'CHANGE_CONTAINER_VARIANT',
   UPDATE_PROPS: 'UPDATE_PROPS',
   SET_GLOBAL_CONFIG: 'SET_GLOBAL_CONFIG',
 } as const
@@ -26,7 +28,9 @@ export const EventName = {
   HISTORY_CHANGED: 'history:changed',
   NODE_ADDED: 'node:added',
   NODE_REMOVED: 'node:removed',
+  NODE_DUPLICATED: 'node:duplicated',
   NODE_MOVED: 'node:moved',
+  CONTAINER_VARIANT_CHANGED: 'container:variant-changed',
   NODE_UPDATED: 'node:updated',
   GLOBAL_CONFIG_CHANGED: 'global-config:changed',
 } as const

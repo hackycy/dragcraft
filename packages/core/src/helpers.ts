@@ -1,5 +1,27 @@
 import type { DesignerSchema, SchemaNode } from './types'
+import { cloneDeep } from '@dragcraft/utils'
 import { buildSchemaIndex } from './schema-index'
+
+export function cloneNodeSubtree(node: SchemaNode, createId: () => string): SchemaNode {
+  const clone = cloneDeep(node)
+  clone.id = createId()
+  for (const children of Object.values(clone.container?.regions ?? {})) {
+    for (let index = 0; index < children.length; index++)
+      children[index] = cloneNodeSubtree(children[index], createId)
+  }
+  return clone
+}
+
+export function collectSubtreeIds(node: SchemaNode): Set<string> {
+  const ids = new Set([node.id])
+  for (const children of Object.values(node.container?.regions ?? {})) {
+    for (const child of children) {
+      for (const id of collectSubtreeIds(child))
+        ids.add(id)
+    }
+  }
+  return ids
+}
 
 /**
  * Find a node by ID in the shallow ownership structure.

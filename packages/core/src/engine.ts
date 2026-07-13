@@ -16,6 +16,8 @@ import type {
 import { createCommandBus } from './command-bus'
 import {
   addNodeHandler,
+  changeContainerVariantHandler,
+  duplicateNodeHandler,
   moveNodeHandler,
   removeNodeHandler,
   setGlobalConfigHandler,
@@ -71,6 +73,8 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   }
 
   commandBus.registerHandler(CommandType.ADD_NODE, addNodeHandler)
+  commandBus.registerHandler(CommandType.CHANGE_CONTAINER_VARIANT, changeContainerVariantHandler)
+  commandBus.registerHandler(CommandType.DUPLICATE_NODE, duplicateNodeHandler)
   commandBus.registerHandler(CommandType.MOVE_NODE, moveNodeHandler)
   commandBus.registerHandler(CommandType.REMOVE_NODE, removeNodeHandler)
   commandBus.registerHandler(CommandType.UPDATE_PROPS, updatePropsHandler)
