@@ -5,7 +5,6 @@ import { resolvePlacementDecision } from '../container-placement'
 import {
   clampInsertIndex,
   createLayoutPlan,
-  DEFAULT_SORT_SCOPE,
   getSortableArrayIndexForInsert,
   getSortScopeEntries,
   resolveDestination,
@@ -53,8 +52,10 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
       return { ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' }
     const variant = owner?.container && definition.variants[owner.container.variant]
     const region = variant?.regions.find(item => item.id === sourceRegionId)
+    if (!variant || !region)
+      return { ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' }
     const sameRegion = target.children === source.children
-    const minItems = region?.constraints?.minItems ?? 0
+    const minItems = region.constraints?.minItems ?? 0
     if (!sameRegion && source.children.length - 1 < minItems)
       return { ok: false, code: 'CONTAINER_REGION_MIN_ITEMS' }
   }
@@ -109,15 +110,19 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
     : undefined
   const targetScope = payload.destination.kind === 'root'
     ? (payload.destination.sortScope
-      ?? (sourceScope === false
-        ? DEFAULT_SORT_SCOPE
-        : sourceScope ?? resolveNodeLayout(node, registry).sortScope))
+      ?? sourceScope
+      ?? resolveNodeLayout(node, registry).sortScope)
     : undefined
-  const targetEntriesBefore = payload.destination.kind === 'root'
-    ? getSortScopeEntries(createLayoutPlan(rawSchema, registry), targetScope || DEFAULT_SORT_SCOPE)
+  const targetUsesSortScope = typeof targetScope === 'string'
+  const targetEntriesBefore = payload.destination.kind === 'root' && targetUsesSortScope
+    ? getSortScopeEntries(createLayoutPlan(rawSchema, registry), targetScope)
     : []
-  if (payload.destination.kind === 'root')
-    requestedIndex = clampInsertIndex(payload.destination.index, targetEntriesBefore.length)
+  if (payload.destination.kind === 'root') {
+    requestedIndex = clampInsertIndex(
+      payload.destination.index,
+      targetUsesSortScope ? targetEntriesBefore.length : target.children.length,
+    )
+  }
 
   if (source.destination.kind === 'root') {
     if (sourceScope === false && payload.destination.kind === 'root')
@@ -139,7 +144,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
       return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
     }
   }
-  if (payload.destination.kind === 'root' && targetScope !== sourceScope) {
+  if (payload.destination.kind === 'root' && targetUsesSortScope && targetScope !== sourceScope) {
     const targetLocks = getLockedIndicesFromEntries(targetEntriesBefore, registry, rawSchema)
     if (!isInsertAllowed(requestedIndex, targetLocks))
       return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
@@ -150,11 +155,13 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
     ? stripPageLayout(removed)
     : cloneDeep(removed)
   const insertedIndex = payload.destination.kind === 'root'
-    ? getSortableArrayIndexForInsert(
-        getSortScopeEntries(createLayoutPlan(rawSchema, registry), targetScope || DEFAULT_SORT_SCOPE),
-        target.children,
-        requestedIndex,
-      )
+    ? (targetUsesSortScope
+        ? getSortableArrayIndexForInsert(
+            getSortScopeEntries(createLayoutPlan(rawSchema, registry), targetScope),
+            target.children,
+            requestedIndex,
+          )
+        : clampInsertIndex(requestedIndex, target.children.length))
     : clampInsertIndex(requestedIndex, target.children.length)
   target.children.splice(insertedIndex, 0, inserted)
   return {

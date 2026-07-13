@@ -223,4 +223,73 @@ describe('moveNodeHandler', () => {
     expect(store.getRawSchema().root.children!.map(node => node.id)).toEqual(['layout', 'child'])
     expect(store.getRawSchema().root.children![0].container!.regions.open).toEqual([])
   })
+
+  it('moves an unsorted region widget to a raw root index without content locks', () => {
+    const child = makeNode('child', { placement: { kind: 'chrome', edge: 'block-end' } })
+    const container = makeContainer({
+      required: [makeNode('required')],
+      full: [],
+      open: [child],
+    })
+    const locked = { ...makeNode('locked'), type: 'locked' }
+    const { ctx, registry, store } = setupWithContainer([locked, container])
+    registry.registerWidget({
+      type: 'locked',
+      title: 'Locked',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      sortable: false,
+    })
+
+    const result = moveNodeHandler(ctx, {
+      nodeId: 'child',
+      destination: { kind: 'root', index: 0 },
+    })
+
+    expect(result).toMatchObject({ ok: true })
+    expect(store.getRawSchema().root.children!.map(node => node.id)).toEqual(['child', 'locked', 'layout'])
+    expect(store.getRawSchema().root.children![0].layout?.placement).toEqual({
+      kind: 'chrome',
+      edge: 'block-end',
+    })
+  })
+
+  it('rejects moving from an unresolved source variant without mutation', () => {
+    const container = makeContainer({
+      required: [],
+      full: [],
+      open: [makeNode('child')],
+    })
+    container.container!.variant = 'missing'
+    const { ctx, store } = setupWithContainer([container])
+    const before = store.getSchema()
+
+    const result = moveNodeHandler(ctx, {
+      nodeId: 'child',
+      destination: { kind: 'root', index: 1 },
+    })
+
+    expect(result).toEqual({ ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' })
+    expect(store.getSchema()).toEqual(before)
+  })
+
+  it('rejects moving from an unresolved source region without mutation', () => {
+    const container = makeContainer({
+      required: [],
+      full: [],
+      open: [],
+      legacy: [makeNode('child')],
+    })
+    const { ctx, store } = setupWithContainer([container])
+    const before = store.getSchema()
+
+    const result = moveNodeHandler(ctx, {
+      nodeId: 'child',
+      destination: { kind: 'root', index: 1 },
+    })
+
+    expect(result).toEqual({ ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' })
+    expect(store.getSchema()).toEqual(before)
+  })
 })

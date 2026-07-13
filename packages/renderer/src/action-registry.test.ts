@@ -2,7 +2,7 @@ import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core
 import type { NodeActionContext } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererWidgetMeta } from './types'
-import { resolveBehavior } from '@dragcraft/core'
+import { getLockedIndices, isMoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
 
@@ -173,6 +173,8 @@ describe('resolve', () => {
   beforeEach(() => {
     engine = makeEngine()
     emptyInterceptors = []
+    vi.mocked(getLockedIndices).mockReset().mockReturnValue(new Set<number>())
+    vi.mocked(isMoveAllowed).mockReset().mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -266,6 +268,9 @@ describe('resolve', () => {
   })
 
   it('allows reordering container-owned siblings without a page sort scope', () => {
+    engine.state.getSchema().root.children = [makeNode({ id: 'root-lock', type: 'locked' })]
+    vi.mocked(getLockedIndices).mockReturnValue(new Set([0]))
+    vi.mocked(isMoveAllowed).mockReturnValue(false)
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, {
       owner: { kind: 'container', containerId: 'layout', regionId: 'left' },
@@ -278,6 +283,7 @@ describe('resolve', () => {
     moveUp.handler(mockEvent())
 
     expect(moveUp.disabled).toBe(false)
+    expect(getLockedIndices).not.toHaveBeenCalled()
     expect(engine.execute).toHaveBeenCalledWith({
       type: 'MOVE_NODE',
       payload: {

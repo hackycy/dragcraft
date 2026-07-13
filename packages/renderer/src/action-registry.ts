@@ -25,6 +25,9 @@ function canReorder(ctx: NodeActionContext): boolean {
 }
 
 function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
+  if (ctx.owner.kind === 'container')
+    return new Set()
+
   const schema = ctx.engine.state.getSchema()
   const children = schema.root.children ?? []
   return getLockedIndices(
