@@ -99,6 +99,19 @@ describe('removeNodeFromTree', () => {
     const root = makeRoot([makeNode('a')])
     expect(removeNodeFromTree(root, 'root')).toBeNull()
   })
+
+  it('rejects a region-owned child without mutating its region', () => {
+    const nested = makeNode('nested')
+    const container = makeContainer('layout', { left: [nested] })
+    const root = makeRoot([container])
+    let removed: SchemaNode | null | undefined
+
+    expect(() => {
+      removed = removeNodeFromTree(root, 'nested')
+    }).not.toThrow()
+    expect(removed).toBeNull()
+    expect(container.container!.regions.left).toEqual([nested])
+  })
 })
 
 describe('insertNodeIntoTree', () => {

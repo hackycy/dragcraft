@@ -44,7 +44,7 @@ export function removeNodeFromTree(
   nodeId: string,
 ): SchemaNode | null {
   const result = findParentNode(root, nodeId)
-  if (!result)
+  if (!result || result.regionId)
     return null
   const { parent, index } = result
   return parent.children!.splice(index, 1)[0]
