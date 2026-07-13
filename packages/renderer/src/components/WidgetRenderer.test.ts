@@ -1,12 +1,15 @@
-// @vitest-environment happy-dom
 import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
+// @vitest-environment happy-dom
+import type { Component } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
-import { CommandType } from '@dragcraft/core'
+import { CommandType, createEngine } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import { useWidgetRuntime } from '../widget-runtime'
+import ContainerRegionOutlet from './ContainerRegionOutlet'
+import RootRenderer from './RootRenderer'
 import WidgetRenderer from './WidgetRenderer'
 
 function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
@@ -320,4 +323,119 @@ describe('widgetRenderer', () => {
       host.remove()
     }
   })
+
+  it('renders a resolved external container without a blocking mask or page attributes on its children', () => {
+    const child: SchemaNode = {
+      id: 'preserved-child',
+      type: 'text',
+      props: {},
+      layout: { placement: { kind: 'layer', layer: 'float' }, order: 12 },
+    }
+    const engine = createEngineWithContainer([child])
+    const ExternalContainer = defineComponent({
+      setup() {
+        return () => h('div', { class: 'external-container' }, [
+          h(ContainerRegionOutlet, { regionId: 'left' }),
+          h(ContainerRegionOutlet, { regionId: 'right' }),
+        ])
+      },
+    })
+    const { app, host } = mountRoot(engine, {
+      'split-layout': ExternalContainer,
+      'text': defineComponent({ setup: () => () => h('span', 'child') }),
+    })
+
+    try {
+      expect(host.querySelectorAll('[data-node-id="preserved-child"]')).toHaveLength(1)
+      expect(host.querySelector('[data-node-id="layout"] .dc-node__mask')).toBeNull()
+      const childWrapper = host.querySelector<HTMLElement>('[data-node-id="preserved-child"]')
+      expect(childWrapper?.hasAttribute('data-dc-layout-placement')).toBe(false)
+      expect(childWrapper?.hasAttribute('data-dc-layer-mode')).toBe(false)
+      expect(childWrapper?.hasAttribute('data-dc-layout-region')).toBe(false)
+      expect(childWrapper?.hasAttribute('data-dc-sort-scope')).toBe(false)
+      expect(childWrapper?.hasAttribute('data-dc-page-order')).toBe(false)
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('renders unresolved persisted children in a recovery fallback exactly once', () => {
+    const preservedChild: SchemaNode = { id: 'preserved-child', type: 'text', props: {} }
+    const engine = createEngineWithContainer([preservedChild], false)
+    const { app, host } = mountRoot(engine, {
+      text: defineComponent({ setup: () => () => h('span', 'preserved') }),
+    })
+
+    try {
+      expect(host.querySelector('[data-dc-unresolved-container="layout"]')).not.toBeNull()
+      expect(host.querySelectorAll('[data-node-id="preserved-child"]')).toHaveLength(1)
+      expect(host.querySelector('[data-dc-container-region="left"]')).not.toBeNull()
+    }
+    finally {
+      app.unmount()
+    }
+  })
 })
+
+function createEngineWithContainer(left: SchemaNode[], registerContainer = true) {
+  const engine = createEngine({
+    initialSchema: {
+      version: '1.0.0',
+      globalConfig: {},
+      root: {
+        id: 'root',
+        type: 'root',
+        props: {},
+        children: [{
+          id: 'layout',
+          type: 'split-layout',
+          props: {},
+          container: { variant: 'split', regions: { left, right: [] } },
+        }],
+      },
+    },
+  })
+  if (registerContainer) {
+    engine.registerWidget({
+      type: 'split-layout',
+      title: 'Split layout',
+      group: 'layout',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      container: {
+        defaultVariant: 'split',
+        variants: {
+          split: {
+            title: 'Split',
+            regions: [
+              { id: 'left', title: 'Left' },
+              { id: 'right', title: 'Right' },
+            ],
+          },
+        },
+      },
+    })
+  }
+  engine.registerWidget({
+    type: 'text',
+    title: 'Text',
+    group: 'content',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    mask: false,
+  })
+  return engine
+}
+
+function mountRoot(engine: DesignerEngine, componentMap: Record<string, Component>) {
+  const host = document.createElement('div')
+  document.body.appendChild(host)
+  const app = createApp(defineComponent({
+    setup() {
+      return () => h(RootRenderer, { engine, componentMap })
+    },
+  }))
+  app.mount(host)
+  return { app, host }
+}

@@ -1,14 +1,17 @@
-import type { SchemaNode } from '@dragcraft/core'
+import type { NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
+import { createContainerPlan } from '@dragcraft/core'
 import { computed, defineComponent, h, provide, ref, Teleport } from 'vue'
 import { useBlockOverlayGeometry } from '../composables/useBlockOverlayGeometry'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
 import { useToolbarPosition } from '../composables/useToolbarPosition'
 import { useWidgetNode } from '../composables/useWidgetNode'
+import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from '../container-runtime'
 import { useRendererContext } from '../context'
 import { normalizeStyle } from '../style-utils'
 import { createWidgetRuntimeContext, WIDGET_RUNTIME_CONTEXT_KEY } from '../widget-runtime'
+import DefaultContainerFallback from './DefaultContainerFallback'
 import DefaultNodeHandle from './DefaultNodeHandle'
 import DefaultNodeMask from './DefaultNodeMask'
 import DefaultNodeToolbar from './DefaultNodeToolbar'
@@ -20,6 +23,20 @@ const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
 const CANVAS_INTERACTION_LAYER_SELECTOR = '[data-dc-canvas-interaction-layer]'
 const NODE_OVERLAY_STROKE_WIDTH = 1
 const NODE_OVERLAY_STROKE_WIDTH_PROPERTY = '--dc-node-overlay-stroke-width'
+
+const ContainerRuntimeProvider = defineComponent({
+  name: 'DcContainerRuntimeProvider',
+  props: {
+    runtime: {
+      type: Object as PropType<ReturnType<typeof createContainerRuntime>>,
+      required: true,
+    },
+  },
+  setup(props, { slots }) {
+    provide(CONTAINER_RUNTIME_CONTEXT_KEY, props.runtime)
+    return () => slots.default?.()
+  },
+})
 
 function resolveInteractionLayerTarget(host: HTMLElement | null): HTMLElement | string {
   if (typeof document === 'undefined')
@@ -42,16 +59,21 @@ export default defineComponent({
       type: Object as PropType<SchemaNode>,
       required: true,
     },
+    owner: {
+      type: Object as PropType<NodeOwner>,
+      default: () => ({ kind: 'root' }),
+    },
   },
 
   setup(props) {
     const ctx = useRendererContext()
     const { extensions } = ctx
     provide(WIDGET_RUNTIME_CONTEXT_KEY, createWidgetRuntimeContext(() => props.node))
+    const containerRuntime = createContainerRuntime(() => props.node, ctx)
 
     // Composables extract all logic
     const widget = useWidgetNode(() => props.node, ctx)
-    const { actions } = useNodeActions(() => props.node, ctx)
+    const { actions } = useNodeActions(() => props.node, ctx, () => props.owner)
     const drag = useNodeDrag(() => props.node, ctx)
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
@@ -76,8 +98,13 @@ export default defineComponent({
       const node = props.node
       const interactionLayerTarget = resolveInteractionLayerTarget(nodeElRef.value)
       const placement = widget.layout.value.placement
-      const isSelfPositionedLayer = placement.kind === 'layer' && placement.mode === 'self'
-      const usesBlockingMask = widget.useMask.value && !isSelfPositionedLayer
+      const isContainerOwned = props.owner.kind === 'container'
+      const isSelfPositionedLayer = !isContainerOwned && placement.kind === 'layer' && placement.mode === 'self'
+      const containerPlan = node.container
+        ? createContainerPlan(node, ctx.engine.registry)
+        : null
+      const isResolvedContainer = containerPlan?.ok === true
+      const usesBlockingMask = widget.useMask.value && !isSelfPositionedLayer && !isResolvedContainer
       const usesSelectionHandle = !usesBlockingMask && widget.selectable.value && !isSelfPositionedLayer
 
       // Resolve extension components with defaults
@@ -101,17 +128,27 @@ export default defineComponent({
         contentStyle.pointerEvents = 'none'
       }
 
-      const innerContent = widget.resolvedComponent.value
-        ? h(widget.resolvedComponent.value, {
-            ...widgetProps,
-            'style': contentStyle,
-            'data-dc-node-surface': '',
-          })
-        : h(WidgetFallback, {
-            'nodeId': node.id,
-            'nodeType': node.type,
-            'data-dc-node-surface': '',
-          })
+      let innerContent: VNode
+      if (node.container && !isResolvedContainer) {
+        innerContent = h(DefaultContainerFallback, { node })
+      }
+      else if (widget.resolvedComponent.value) {
+        const material = h(widget.resolvedComponent.value, {
+          ...widgetProps,
+          'style': contentStyle,
+          'data-dc-node-surface': '',
+        })
+        innerContent = isResolvedContainer
+          ? h(ContainerRuntimeProvider, { runtime: containerRuntime }, { default: () => material })
+          : material
+      }
+      else {
+        innerContent = h(WidgetFallback, {
+          'nodeId': node.id,
+          'nodeType': node.type,
+          'data-dc-node-surface': '',
+        })
+      }
 
       // Assemble children
       const wrapperChildren: VNode[] = [innerContent]
@@ -207,10 +244,12 @@ export default defineComponent({
           'style': wrapperStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
-          'data-dc-layout-placement': placement.kind,
-          'data-dc-layer-mode': placement.kind === 'layer' ? placement.mode : undefined,
-          'data-dc-layout-region': widget.layout.value.region,
-          'data-dc-sort-scope': widget.layout.value.sortScope === false ? undefined : widget.layout.value.sortScope,
+          'data-dc-layout-placement': isContainerOwned ? undefined : placement.kind,
+          'data-dc-layer-mode': !isContainerOwned && placement.kind === 'layer' ? placement.mode : undefined,
+          'data-dc-layout-region': isContainerOwned ? undefined : widget.layout.value.region,
+          'data-dc-sort-scope': isContainerOwned || widget.layout.value.sortScope === false
+            ? undefined
+            : widget.layout.value.sortScope,
           'data-dc-visible': widget.visible.value ? undefined : 'false',
           'onMouseenter': widget.handleMouseEnter,
           'onMouseleave': widget.handleMouseLeave,

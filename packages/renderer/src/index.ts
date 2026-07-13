@@ -18,6 +18,8 @@ export type {
 } from './action-runtime'
 // ── Components ───────────────────────────
 export {
+  ContainerRegionOutlet,
+  DefaultContainerFallback,
   DefaultContainerShell,
   DefaultDropIndicator,
   DefaultEmptyState,
@@ -37,6 +39,10 @@ export type { UseNodeActionsReturn } from './composables'
 export type { UseNodeDragReturn } from './composables'
 export type { UseToolbarPositionReturn } from './composables'
 export type { UseWidgetNodeReturn } from './composables'
+// ── Container Runtime ────────────────────
+export { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime, useContainerRuntime } from './container-runtime'
+
+export type { ContainerRuntime } from './container-runtime'
 // ── Context ──────────────────────────────
 export { createRendererContext, useRendererContext } from './context'
 
@@ -56,6 +62,7 @@ export { rendererMessages } from './messages'
 // ── Types ────────────────────────────────
 export type {
   ComponentMap,
+  ContainerRegionOutletProps,
   EmptyStateProps,
   ForbiddenOverlayProps,
   NodeHandleProps,
@@ -71,6 +78,7 @@ export type {
   ToolbarPositionData,
   WidgetActionConfig,
   WidgetFallbackProps,
+  WidgetRendererProps,
 } from './types'
 export { RENDERER_CONTEXT_KEY } from './types'
 

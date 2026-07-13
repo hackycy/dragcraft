@@ -1,3 +1,5 @@
+export { default as ContainerRegionOutlet } from './ContainerRegionOutlet'
+export { default as DefaultContainerFallback } from './DefaultContainerFallback'
 export { default as DefaultContainerShell } from './DefaultContainerShell'
 export { default as DefaultDropIndicator } from './DefaultDropIndicator'
 export { default as DefaultEmptyState } from './DefaultEmptyState'

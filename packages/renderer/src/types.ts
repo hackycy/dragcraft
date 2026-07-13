@@ -1,4 +1,4 @@
-import type { Command, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, RegistryInstance } from '@dragcraft/core'
+import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeOwner, RegistryInstance, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
@@ -14,6 +14,16 @@ import type { MaybePromise, RendererEventHooks } from './event-hooks'
  * Example: { button: ButtonWidget, text: TextWidget }
  */
 export type ComponentMap = Record<string, Component>
+
+export interface WidgetRendererProps {
+  node: SchemaNode
+  owner?: NodeOwner
+}
+
+export interface ContainerRegionOutletProps {
+  regionId: ContainerRegionId
+  as?: string | Component
+}
 
 // ──────────────────────────────────────────
 // Extension component prop interfaces

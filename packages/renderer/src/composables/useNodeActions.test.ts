@@ -1,5 +1,6 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core'
 import type { RendererContext } from '../types'
+import { findNodeById } from '@dragcraft/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createNodeActionRegistry } from '../action-registry'
 import { useNodeActions } from './useNodeActions'
@@ -20,7 +21,10 @@ function makeContext(schema: DesignerSchema): RendererContext {
   } as unknown as DesignerEngine['registry']
   const engine = {
     store: { schema: { value: schema } },
-    state: { getSchema: () => schema },
+    state: {
+      getSchema: () => schema,
+      getNodeById: (id: string) => findNodeById(schema.root, id),
+    },
     registry,
   } as unknown as DesignerEngine
   return {
@@ -60,7 +64,8 @@ describe('useNodeActions', () => {
       root: { id: 'root', type: 'root', props: {}, children: [container] },
     }
 
-    const { actionContext } = useNodeActions(() => child, makeContext(schema))
+    const owner = { kind: 'container' as const, containerId: 'layout', regionId: 'left' }
+    const { actionContext } = useNodeActions(() => child, makeContext(schema), () => owner)
 
     expect(actionContext.value.owner).toEqual({
       kind: 'container',
