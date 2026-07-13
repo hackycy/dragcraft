@@ -1,4 +1,5 @@
 import type { FormSchemaShape, RegistryInstance, WidgetMeta } from './types'
+import { validateContainerDefinition } from './container-definition'
 
 export function createRegistry(): RegistryInstance {
   const widgets = new Map<string, WidgetMeta>()
@@ -12,6 +13,14 @@ export function createRegistry(): RegistryInstance {
     if (!meta.title || typeof meta.title !== 'string') {
       console.warn(`[dragcraft/core] registerWidget: widget "${meta.type}" must have a non-empty "title" string`)
       return
+    }
+    if (meta.container) {
+      const validation = validateContainerDefinition(meta.container)
+      if (!validation.valid) {
+        const codes = validation.errors.map(error => error.code).join(', ')
+        console.warn(`[dragcraft/core] registerWidget: widget "${meta.type}" has an invalid container definition: ${codes}`)
+        return
+      }
     }
     if (widgets.has(meta.type)) {
       console.warn(`[dragcraft/core] Widget type "${meta.type}" is already registered, overwriting.`)

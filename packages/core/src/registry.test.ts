@@ -59,6 +59,29 @@ describe('createRegistry', () => {
     warn.mockRestore()
   })
 
+  it('warns once and skips an invalid container definition', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const reg = createRegistry()
+    reg.registerWidget(makeMeta('container', {
+      container: {
+        defaultVariant: 'missing',
+        variants: {
+          single: {
+            title: 'Single',
+            regions: [{ id: '__proto__', title: 'Bad' }],
+          },
+        },
+      },
+    }))
+
+    expect(reg.getWidget('container')).toBeUndefined()
+    expect(warn).toHaveBeenCalledTimes(1)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('container'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('CONTAINER_DEFAULT_VARIANT_MISSING'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('CONTAINER_REGION_ID_RESERVED'))
+    warn.mockRestore()
+  })
+
   it('getAllWidgets returns all registered', () => {
     const reg = createRegistry()
     reg.registerWidget(makeMeta('a'))

@@ -17,6 +17,8 @@ export {
 export { CommandType, DEFAULT_MAX_HISTORY_SIZE, DEFAULT_SCHEMA_VERSION, EventName } from './constants'
 
 export type { CommandTypeValue, EventNameValue } from './constants'
+// ── Container material protocol ───────────
+export { validateContainerDefinition } from './container-definition'
 // ── Engine (main entry point) ─────────────
 export { createEngine } from './engine'
 export type { DesignerEngine } from './engine'
@@ -62,6 +64,20 @@ export type {
   CommandContext,
   CommandHandler,
   CommandResult,
+  ContainerDefinition,
+  ContainerDefinitionValidationCode,
+  ContainerDefinitionValidationError,
+  ContainerDefinitionValidationResult,
+  ContainerInitContext,
+  ContainerPlacementContext,
+  ContainerRegionConstraints,
+  ContainerRegionDefinition,
+  ContainerRegionId,
+  ContainerState,
+  ContainerVariantDefinition,
+  ContainerVariantId,
+  ContainerVariantMigrationContext,
+  ContainerVariantMigrationResult,
   CoreWidgetActionConfig,
   CoreWidgetMeta,
   CreatableBehaviorPredicate,
@@ -94,6 +110,7 @@ export type {
   NodeLayout,
   NodePlacement,
   NodeStyle,
+  PlacementDecision,
   RegistryInstance,
   RemoveNodePayload,
   ResolvedChromePlacement,

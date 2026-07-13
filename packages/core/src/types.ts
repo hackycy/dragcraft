@@ -10,6 +10,7 @@ export interface SchemaNode {
   props: Record<string, unknown>
   style?: NodeStyle
   layout?: NodeLayout
+  container?: ContainerState
   /** Only used on the root node to hold the flat widget list */
   children?: SchemaNode[]
 }
@@ -231,6 +232,102 @@ export type CreatableBehaviorResult = boolean | CreatableDecision
 export type CreatableBehaviorPredicate = CreatableBehaviorResult | ((ctx: TypeBehaviorContext) => CreatableBehaviorResult)
 
 // ──────────────────────────────────────────
+// Container material protocol
+// ──────────────────────────────────────────
+
+export type ContainerVariantId = string
+export type ContainerRegionId = string
+
+export interface ContainerState {
+  variant: ContainerVariantId
+  regions: Record<ContainerRegionId, SchemaNode[]>
+}
+
+export interface ContainerRegionConstraints {
+  includeTypes?: string[]
+  excludeTypes?: string[]
+  minItems?: number
+  maxItems?: number
+}
+
+export interface ContainerRegionDefinition {
+  id: ContainerRegionId
+  title: string
+  titleKey?: string
+  constraints?: ContainerRegionConstraints
+}
+
+export interface ContainerVariantDefinition {
+  title: string
+  titleKey?: string
+  regions: ContainerRegionDefinition[]
+}
+
+export interface PlacementDecision extends CreationBlockReason {
+  allowed: boolean
+  details?: Record<string, unknown>
+}
+
+export interface ContainerDefinition {
+  defaultVariant: ContainerVariantId
+  variants: Record<ContainerVariantId, ContainerVariantDefinition>
+  createInitialState?: (ctx: ContainerInitContext) => ContainerState
+  canPlace?: (ctx: ContainerPlacementContext) => PlacementDecision
+  migrateVariant?: (ctx: ContainerVariantMigrationContext) => ContainerVariantMigrationResult
+}
+
+export interface ContainerInitContext {
+  containerNode: Readonly<SchemaNode>
+  schema: Readonly<DesignerSchema>
+  createNode: (
+    type: string,
+    overrides?: Partial<Pick<SchemaNode, 'props' | 'style' | 'layout'>>,
+  ) => SchemaNode
+}
+
+export interface ContainerPlacementContext {
+  operation: 'add' | 'move'
+  schema: Readonly<DesignerSchema>
+  container: Readonly<SchemaNode>
+  variant: Readonly<ContainerVariantDefinition>
+  region: Readonly<ContainerRegionDefinition>
+  child: Readonly<SchemaNode>
+  targetIndex: number
+}
+
+export interface ContainerVariantMigrationContext {
+  schema: Readonly<DesignerSchema>
+  container: Readonly<SchemaNode>
+  fromVariantId: ContainerVariantId
+  toVariantId: ContainerVariantId
+  fromVariant: Readonly<ContainerVariantDefinition>
+  toVariant: Readonly<ContainerVariantDefinition>
+  state: Readonly<ContainerState>
+}
+
+export type ContainerVariantMigrationResult
+  = | { allowed: true, state: ContainerState }
+    | ({ allowed: false } & Omit<PlacementDecision, 'allowed'>)
+
+export type ContainerDefinitionValidationCode
+  = | 'CONTAINER_DEFAULT_VARIANT_MISSING'
+    | 'CONTAINER_VARIANT_ID_RESERVED'
+    | 'CONTAINER_REGION_ID_RESERVED'
+    | 'CONTAINER_REGION_ID_DUPLICATE'
+    | 'CONTAINER_CARDINALITY_INVALID'
+    | 'CONTAINER_TYPE_ID_INVALID'
+
+export interface ContainerDefinitionValidationError {
+  code: ContainerDefinitionValidationCode
+  path: string
+}
+
+export interface ContainerDefinitionValidationResult {
+  valid: boolean
+  errors: ContainerDefinitionValidationError[]
+}
+
+// ──────────────────────────────────────────
 // Form schema shape (minimal, for WidgetMeta.formSchema typing)
 // ──────────────────────────────────────────
 
@@ -294,6 +391,8 @@ export interface CoreWidgetMeta {
   defaultStyle?: NodeStyle
   /** Form schema for the property panel */
   formSchema: FormSchemaShape
+  /** Structural container capabilities for this widget type. */
+  container?: ContainerDefinition
 
   // ── Renderer behavior controls ──
 
