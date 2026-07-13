@@ -37,6 +37,7 @@ export type { HistoryManagerInstance, HistoryState } from './history-manager'
 
 // ── Layout protocol ───────────────────────
 export {
+  clampInsertIndex,
   createLayoutPlan,
   DEFAULT_LAYER,
   DEFAULT_LAYOUT_REGION,
@@ -45,7 +46,10 @@ export {
   getSortableArrayIndexForInsert,
   getSortScopeEntries,
   getSortScopeNodes,
+  resolveDestination,
   resolveNodeLayout,
+  resolveNodeSource,
+  stripPageLayout,
 } from './layout'
 
 export { createRegistry } from './registry'
@@ -125,9 +129,12 @@ export type {
   LayoutReserveMode,
   LayoutReserveSpec,
   MoveNodePayload,
+  NodeDestination,
   NodeLayout,
+  NodeOwner,
   NodePlacement,
   NodeStyle,
+  OwnerResolutionResult,
   PlacementDecision,
   RegistryInstance,
   RemoveNodePayload,
@@ -135,8 +142,10 @@ export type {
   ResolvedFlowPlacement,
   ResolvedLayerPlacement,
   ResolvedLayoutReserveSpec,
+  ResolvedNodeDestination,
   ResolvedNodeLayout,
   ResolvedNodePlacement,
+  ResolvedNodeSource,
   ResolvePlacementContext,
   SchemaDiagnostic,
   SchemaDiagnosticSeverity,

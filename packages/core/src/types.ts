@@ -61,6 +61,34 @@ export interface SchemaIndexResult {
   diagnostics: SchemaDiagnostic[]
 }
 
+export type NodeOwner
+  = | { kind: 'root', sortScope?: string }
+    | { kind: 'container', containerId: string, regionId: string }
+
+export type NodeDestination
+  = | ({ kind: 'root', sortScope?: string } & { index?: number })
+    | ({ kind: 'container', containerId: string, regionId: string } & { index?: number })
+
+export interface ResolvedNodeSource {
+  location: IndexedNodeLocation
+  children: SchemaNode[]
+  index: number
+  destination: NodeDestination
+}
+
+export interface ResolvedNodeDestination {
+  children: SchemaNode[]
+  destination: NodeDestination
+  container?: SchemaNode
+  definition?: ContainerDefinition
+  variant?: ContainerVariantDefinition
+  region?: ContainerRegionDefinition
+}
+
+export type OwnerResolutionResult<T>
+  = | { ok: true, value: T }
+    | { ok: false, code: string, message?: string }
+
 export interface SchemaValidationResult {
   valid: boolean
   schema: DesignerSchema
@@ -541,16 +569,12 @@ export type CommandHandler<T = unknown> = (
 
 export interface AddNodePayload {
   node: SchemaNode
-  /** Sort-scope insertion index. Defaults to the node's resolved sort scope. */
-  index?: number
-  sortScope?: string
+  destination?: NodeDestination
 }
 
 export interface MoveNodePayload {
   nodeId: string
-  /** Post-removal insertion index inside the node's sort scope. */
-  index: number
-  sortScope?: string
+  destination: NodeDestination
 }
 
 export interface RemoveNodePayload {

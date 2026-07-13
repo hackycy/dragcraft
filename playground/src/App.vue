@@ -153,8 +153,7 @@ const designer = createDesigner({
           type: CommandType.ADD_NODE,
           payload: {
             node: clonedNode,
-            index: ctx.index + 1,
-            sortScope: ctx.sortScope || undefined,
+            destination: { ...ctx.owner, index: ctx.index + 1 },
           },
         }
       },

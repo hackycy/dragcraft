@@ -267,20 +267,11 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (sortScope === false)
       return
 
-    const scopeEntries = getActiveSortScopeEntries(sortScope)
-    const srcIdx = scopeEntries.findIndex(entry => entry.node.id === nodeId)
-
-    let targetIdx = visualIndex
-    if (srcIdx !== -1 && targetIdx > srcIdx) {
-      targetIdx = targetIdx - 1
-    }
-
     engine.execute({
       type: CommandType.MOVE_NODE,
       payload: {
         nodeId,
-        index: targetIdx,
-        sortScope,
+        destination: { kind: 'root', index: visualIndex, sortScope },
       },
     })
   }
@@ -299,8 +290,11 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       type: CommandType.ADD_NODE,
       payload: {
         node: newNode,
-        index: sortScope === false ? undefined : visualIndex,
-        sortScope: sortScope === false ? undefined : sortScope,
+        destination: {
+          kind: 'root',
+          index: sortScope === false ? undefined : visualIndex,
+          sortScope: sortScope === false ? undefined : sortScope,
+        },
       },
     })
 

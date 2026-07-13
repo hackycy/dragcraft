@@ -40,6 +40,10 @@ export default defineComponent({
           : getSortScopeEntries(plan, layout.sortScope)
         const actionCtx: NodeActionContext = {
           node,
+          owner: {
+            kind: 'root',
+            sortScope: layout.sortScope === false ? undefined : layout.sortScope,
+          },
           index: scopeEntries.findIndex(entry => entry.node.id === node.id),
           siblingCount: scopeEntries.length,
           sortScope: layout.sortScope,

@@ -32,7 +32,13 @@ describe('createEngine', () => {
       type: CommandType.ADD_NODE,
       payload: { node: makeNode('a') },
     })
-    expect(result).toEqual({ ok: true })
+    expect(result).toEqual({
+      ok: true,
+      eventPayload: {
+        nodeId: 'a',
+        destination: { kind: 'root', sortScope: 'content', index: 0 },
+      },
+    })
     expect(engine.store.schema.value.root.children).toHaveLength(1)
     expect(engine.store.schema.value.root.children![0].id).toBe('a')
     engine.dispose()
@@ -59,7 +65,7 @@ describe('createEngine', () => {
       payload: { node: makeNode('a') },
     })
 
-    expect(result).toEqual({ ok: false, code: 'COMMAND_REJECTED' })
+    expect(result).toEqual({ ok: false, code: 'NODE_NOT_CREATABLE' })
     expect(engine.store.schema.value.root.children).toHaveLength(0)
     expect(engine.history.canUndo()).toBe(false)
     expect(nodeAdded).not.toHaveBeenCalled()
@@ -84,7 +90,10 @@ describe('createEngine', () => {
     const schemaChanged = vi.fn()
     engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
-    engine.execute({ type: CommandType.MOVE_NODE, payload: { nodeId: 'missing', index: 0 } })
+    engine.execute({
+      type: CommandType.MOVE_NODE,
+      payload: { nodeId: 'missing', destination: { kind: 'root', index: 0 } },
+    })
 
     expect(engine.history.canUndo()).toBe(false)
     expect(schemaChanged).not.toHaveBeenCalled()
@@ -97,7 +106,10 @@ describe('createEngine', () => {
     const schemaChanged = vi.fn()
     engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
-    engine.execute({ type: CommandType.MOVE_NODE, payload: { nodeId: 'a', index: 0 } })
+    engine.execute({
+      type: CommandType.MOVE_NODE,
+      payload: { nodeId: 'a', destination: { kind: 'root', index: 0 } },
+    })
 
     expect(engine.store.schema.value.root.children?.map(node => node.id)).toEqual(['a', 'b'])
     expect(engine.history.canUndo()).toBe(false)

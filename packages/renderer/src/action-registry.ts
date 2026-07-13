@@ -1,4 +1,4 @@
-import type { Command, DesignerEngine, InstanceBehaviorContext, SchemaNode } from '@dragcraft/core'
+import type { Command, DesignerEngine, InstanceBehaviorContext, NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
@@ -16,7 +16,7 @@ function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
 }
 
 function canReorder(ctx: NodeActionContext): boolean {
-  if (ctx.sortScope === false)
+  if (ctx.owner.kind === 'root' && ctx.sortScope === false)
     return false
 
   const instanceCtx = toInstanceCtx(ctx)
@@ -45,6 +45,8 @@ function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
 export interface NodeActionContext {
   /** The schema node this action applies to */
   node: SchemaNode
+  /** Structural owner whose child array defines sibling ordering. */
+  owner: NodeOwner
   /** The node's index among siblings */
   index: number
   /** Total sibling count */
@@ -200,7 +202,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return null
         return {
           type: CommandType.MOVE_NODE,
-          payload: { nodeId: ctx.node.id, index: ctx.index - 1, sortScope: ctx.sortScope || undefined },
+          payload: { nodeId: ctx.node.id, destination: { ...ctx.owner, index: ctx.index - 1 } },
         }
       },
     },
@@ -225,7 +227,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return null
         return {
           type: CommandType.MOVE_NODE,
-          payload: { nodeId: ctx.node.id, index: ctx.index + 1, sortScope: ctx.sortScope || undefined },
+          payload: { nodeId: ctx.node.id, destination: { ...ctx.owner, index: ctx.index + 2 } },
         }
       },
     },

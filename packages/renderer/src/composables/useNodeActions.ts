@@ -2,7 +2,7 @@ import type { DesignerEngine, SchemaNode } from '@dragcraft/core'
 import type { ComputedRef } from 'vue'
 import type { NodeActionContext, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
-import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout } from '@dragcraft/core'
+import { buildSchemaIndex, createLayoutPlan, getSortScopeEntries, resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
 
 export interface UseNodeActionsReturn {
@@ -37,17 +37,31 @@ export function useNodeActions(
     const node = getNode()
     const schema = readRawSchema(engine)
     const layout = resolveNodeLayout(node, engine.registry, schema)
-    const scopeEntries = layout.sortScope === false
-      ? []
-      : getSortScopeEntries(createLayoutPlan(schema, engine.registry), layout.sortScope)
-    const index = scopeEntries.findIndex(entry => entry.node.id === node.id)
+    const location = buildSchemaIndex(schema).index.get(node.id)
+    const owner = location?.owner === 'root'
+      ? {
+          kind: 'root' as const,
+          sortScope: layout.sortScope === false ? undefined : layout.sortScope,
+        }
+      : {
+          kind: 'container' as const,
+          containerId: location?.owner ?? '',
+          regionId: location?.regionId ?? '',
+        }
+    const siblings = owner.kind === 'root'
+      ? (layout.sortScope === false
+          ? []
+          : getSortScopeEntries(createLayoutPlan(schema, engine.registry), layout.sortScope).map(entry => entry.node))
+      : (buildSchemaIndex(schema).index.get(owner.containerId)?.node.container?.regions[owner.regionId] ?? [])
+    const index = siblings.findIndex(sibling => sibling.id === node.id)
     const meta = engine.registry.getWidget(node.type)
 
     return {
       node,
+      owner,
       index,
-      siblingCount: scopeEntries.length,
-      sortScope: layout.sortScope,
+      siblingCount: siblings.length,
+      sortScope: owner.kind === 'root' ? layout.sortScope : false,
       meta,
       engine,
     }

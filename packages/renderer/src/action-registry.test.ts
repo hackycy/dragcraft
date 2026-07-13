@@ -71,6 +71,7 @@ function makeMeta(overrides?: Partial<RendererWidgetMeta>): RendererWidgetMeta {
 function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>): NodeActionContext {
   return {
     node: makeNode(),
+    owner: { kind: 'root', sortScope: 'content' },
     index: 0,
     siblingCount: 3,
     sortScope: 'content',
@@ -246,7 +247,7 @@ describe('resolve', () => {
 
     expect(engine.execute).toHaveBeenCalledWith({
       type: 'MOVE_NODE',
-      payload: { nodeId: 'node-1', index: 0, sortScope: 'content' },
+      payload: { nodeId: 'node-1', destination: { kind: 'root', index: 0, sortScope: 'content' } },
     })
   })
 
@@ -260,7 +261,29 @@ describe('resolve', () => {
 
     expect(engine.execute).toHaveBeenCalledWith({
       type: 'MOVE_NODE',
-      payload: { nodeId: 'node-1', index: 2, sortScope: 'content' },
+      payload: { nodeId: 'node-1', destination: { kind: 'root', index: 3, sortScope: 'content' } },
+    })
+  })
+
+  it('allows reordering container-owned siblings without a page sort scope', () => {
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine, {
+      owner: { kind: 'container', containerId: 'layout', regionId: 'left' },
+      index: 1,
+      sortScope: false,
+    })
+
+    const resolved = registry.resolve(ctx, emptyInterceptors)
+    const moveUp = resolved.find(action => action.key === ActionKey.MOVE_UP)!
+    moveUp.handler(mockEvent())
+
+    expect(moveUp.disabled).toBe(false)
+    expect(engine.execute).toHaveBeenCalledWith({
+      type: 'MOVE_NODE',
+      payload: {
+        nodeId: 'node-1',
+        destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+      },
     })
   })
 
@@ -405,7 +428,10 @@ describe('resolve', () => {
       risk: 'normal',
       command: {
         type: 'MOVE_NODE',
-        payload: { nodeId: 'node-1', index: 0, sortScope: 'content' },
+        payload: {
+          nodeId: 'node-1',
+          destination: { kind: 'root', index: 0, sortScope: 'content' },
+        },
       },
       event: expect.anything(),
     }))

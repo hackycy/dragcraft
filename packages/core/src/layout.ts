@@ -3,16 +3,23 @@ import type {
   LayoutEdge,
   LayoutNodeEntry,
   LayoutPlan,
+  NodeDestination,
   NodeLayout,
   NodePlacement,
+  OwnerResolutionResult,
   RegistryInstance,
   ResolvedChromePlacement,
   ResolvedFlowPlacement,
   ResolvedLayerPlacement,
+  ResolvedNodeDestination,
   ResolvedNodeLayout,
   ResolvedNodePlacement,
+  ResolvedNodeSource,
+  SchemaIndexResult,
   SchemaNode,
 } from './types'
+import { cloneDeep } from '@dragcraft/utils'
+import { buildSchemaIndex } from './schema-index'
 
 export const DEFAULT_LAYOUT_REGION = 'content'
 export const DEFAULT_SORT_SCOPE = 'content'
@@ -222,4 +229,83 @@ export function getSortableArrayIndexForInsert(
   if (visualIndex >= scopeEntries.length)
     return scopeEntries[scopeEntries.length - 1].arrayIndex + 1
   return scopeEntries[visualIndex].arrayIndex
+}
+
+export function resolveNodeSource(
+  schema: DesignerSchema,
+  indexed: SchemaIndexResult,
+  nodeId: string,
+): OwnerResolutionResult<ResolvedNodeSource> {
+  const location = indexed.index.get(nodeId)
+  if (!location)
+    return { ok: false, code: 'NODE_NOT_FOUND' }
+
+  if (location.owner === 'root') {
+    return {
+      ok: true,
+      value: {
+        location,
+        children: schema.root.children ?? [],
+        index: location.index,
+        destination: { kind: 'root', index: location.index },
+      },
+    }
+  }
+
+  const owner = indexed.index.get(location.owner)?.node
+  const regionId = location.regionId
+  const children = regionId ? owner?.container?.regions[regionId] : undefined
+  if (!owner || !regionId || !children)
+    return { ok: false, code: 'CONTAINER_OWNER_INVALID' }
+
+  return {
+    ok: true,
+    value: {
+      location,
+      children,
+      index: location.index,
+      destination: {
+        kind: 'container',
+        containerId: owner.id,
+        regionId,
+        index: location.index,
+      },
+    },
+  }
+}
+
+export function resolveDestination(
+  schema: DesignerSchema,
+  registry: RegistryInstance,
+  destination: NodeDestination,
+): OwnerResolutionResult<ResolvedNodeDestination> {
+  if (destination.kind === 'root') {
+    schema.root.children ??= []
+    return { ok: true, value: { children: schema.root.children, destination } }
+  }
+
+  const location = buildSchemaIndex(schema).index.get(destination.containerId)
+  const container = location?.owner === 'root' ? location.node : undefined
+  const definition = container && registry.getWidget(container.type)?.container
+  const variant = container?.container && definition?.variants[container.container.variant]
+  const region = variant?.regions.find(item => item.id === destination.regionId)
+  const children = container?.container?.regions[destination.regionId]
+  if (!container || !definition || !variant)
+    return { ok: false, code: 'CONTAINER_UNRESOLVED' }
+  if (!region || !children)
+    return { ok: false, code: 'CONTAINER_REGION_UNKNOWN' }
+  return { ok: true, value: { children, destination, container, definition, variant, region } }
+}
+
+export function clampInsertIndex(index: number | undefined, length: number): number {
+  return Math.max(0, Math.min(index ?? length, length))
+}
+
+export function stripPageLayout(node: SchemaNode): SchemaNode {
+  const clone = cloneDeep(node)
+  if (clone.layout) {
+    delete clone.layout.placement
+    delete clone.layout.order
+  }
+  return clone
 }

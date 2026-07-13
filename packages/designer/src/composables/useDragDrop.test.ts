@@ -75,6 +75,7 @@ describe('useDragDrop', () => {
 
   it('handleCanvasDrop adds new widget from material panel', () => {
     const dd = useDragDrop(engine)
+    const execute = vi.spyOn(engine, 'execute')
     const meta = makeMeta('image')
     engine.registerWidget(meta)
     const e = mockDragEvent()
@@ -92,11 +93,18 @@ describe('useDragDrop', () => {
     expect(children).toHaveLength(3)
     expect(children[0].type).toBe('image')
     expect(children[0].props).toEqual({ content: 'default' })
+    expect(execute).toHaveBeenCalledWith(expect.objectContaining({
+      type: CommandType.ADD_NODE,
+      payload: expect.objectContaining({
+        destination: { kind: 'root', sortScope: 'content', index: 0 },
+      }),
+    }))
     expect(engine.store.dragTarget.value).toBeNull()
   })
 
   it('handleCanvasDrop moves existing node', () => {
     const dd = useDragDrop(engine)
+    const execute = vi.spyOn(engine, 'execute')
     const e = mockDragEvent()
 
     // Existing node drag starts in renderer and shares the same dragTarget store.
@@ -113,6 +121,13 @@ describe('useDragDrop', () => {
     // 'a' moved after 'b'
     expect(children[0].id).toBe('b')
     expect(children[1].id).toBe('a')
+    expect(execute).toHaveBeenCalledWith({
+      type: CommandType.MOVE_NODE,
+      payload: {
+        nodeId: 'a',
+        destination: { kind: 'root', sortScope: 'content', index: 2 },
+      },
+    })
   })
 
   it('handleCanvasDrop does nothing when no dragTarget', () => {

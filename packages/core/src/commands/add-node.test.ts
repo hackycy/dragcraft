@@ -1,4 +1,4 @@
-import type { CommandContext, DesignerSchema, SchemaNode } from '../types'
+import type { CommandContext, ContainerDefinition, DesignerSchema, SchemaNode } from '../types'
 import { describe, expect, it, vi } from 'vitest'
 import { createRegistry } from '../registry'
 import { createSchemaStore } from '../schema-store'
@@ -19,6 +19,52 @@ function setup(initial?: DesignerSchema) {
   return { store, registry, ctx }
 }
 
+const splitDefinition: ContainerDefinition = {
+  defaultVariant: 'split',
+  variants: {
+    split: {
+      title: 'Split',
+      regions: [
+        { id: 'left', title: 'Left' },
+        { id: 'right', title: 'Right', constraints: { maxItems: 1 } },
+      ],
+    },
+  },
+}
+
+function registerTextAndSplit(
+  ctx: ReturnType<typeof setup>,
+  definition: ContainerDefinition = splitDefinition,
+) {
+  ctx.registry.registerWidget({
+    type: 'text',
+    title: 'Text',
+    group: 'g',
+    defaultProps: {},
+    formSchema: { sections: [] },
+  })
+  ctx.registry.registerWidget({
+    type: 'split-layout',
+    title: 'Split',
+    group: 'g',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    container: definition,
+  })
+}
+
+function makeSplitContainer(id: string): SchemaNode {
+  return {
+    id,
+    type: 'split-layout',
+    props: {},
+    container: {
+      variant: 'split',
+      regions: { left: [], right: [] },
+    },
+  }
+}
+
 describe('addNodeHandler', () => {
   it('appends node to root.children', () => {
     const { ctx, store } = setup()
@@ -30,7 +76,7 @@ describe('addNodeHandler', () => {
 
   it('inserts node at specific index', () => {
     const { ctx, store } = setup(makeSchema([makeNode('a'), makeNode('c')]))
-    addNodeHandler(ctx, { node: makeNode('b'), index: 1 })
+    addNodeHandler(ctx, { node: makeNode('b'), destination: { kind: 'root', index: 1 } })
     const children = store.getRawSchema().root.children!
     expect(children).toHaveLength(3)
     expect(children[1].id).toBe('b')
@@ -52,7 +98,7 @@ describe('addNodeHandler', () => {
     ]))
     registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] }, sortable: false })
 
-    addNodeHandler(ctx, { node: makeNode('new'), index: 0 })
+    addNodeHandler(ctx, { node: makeNode('new'), destination: { kind: 'root', index: 0 } })
     // Insert at 0 would shift locked widget at index 0 -> blocked
     expect(store.getRawSchema().root.children).toHaveLength(1)
     expect(store.getRawSchema().root.children![0].id).toBe('locked')
@@ -134,7 +180,7 @@ describe('addNodeHandler', () => {
     ]))
     registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] } })
 
-    addNodeHandler(ctx, { node: makeNode('new'), index: 1 })
+    addNodeHandler(ctx, { node: makeNode('new'), destination: { kind: 'root', index: 1 } })
     const children = store.getRawSchema().root.children!
     expect(children).toHaveLength(3)
     expect(children[1].id).toBe('new')
@@ -147,8 +193,99 @@ describe('addNodeHandler', () => {
     ]))
     registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] }, sortable: false })
 
-    addNodeHandler(ctx, { node: makeNode('new'), index: 1 })
+    addNodeHandler(ctx, { node: makeNode('new'), destination: { kind: 'root', index: 1 } })
     expect(store.getRawSchema().root.children).toHaveLength(2)
     expect(store.getRawSchema().root.children![1].id).toBe('new')
+  })
+
+  it('adds a container at root and initializes every default region', () => {
+    const setupResult = setup()
+    registerTextAndSplit(setupResult)
+
+    const result = addNodeHandler(setupResult.ctx, {
+      node: { id: 'layout', type: 'split-layout', props: {} },
+      destination: { kind: 'root', index: 0 },
+    })
+
+    expect(result).toEqual({
+      ok: true,
+      eventPayload: {
+        nodeId: 'layout',
+        destination: { kind: 'root', sortScope: 'content', index: 0 },
+      },
+    })
+    expect(setupResult.store.getRawSchema().root.children![0].container).toEqual({
+      variant: 'split',
+      regions: { left: [], right: [] },
+    })
+  })
+
+  it('adds a widget into a container region and strips page placement', () => {
+    const setupResult = setup(makeSchema([makeSplitContainer('layout')]))
+    registerTextAndSplit(setupResult)
+    const node = makeNode('text', { placement: { kind: 'flow', region: 'hero' }, order: 3 })
+
+    const result = addNodeHandler(setupResult.ctx, {
+      node,
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    expect(result).toEqual({
+      ok: true,
+      eventPayload: {
+        nodeId: 'text',
+        destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+      },
+    })
+    expect(setupResult.store.getRawSchema().root.children![0].container!.regions.left[0]).toMatchObject({
+      id: 'text',
+      layout: {},
+    })
+    expect(node.layout).toEqual({ placement: { kind: 'flow', region: 'hero' }, order: 3 })
+  })
+
+  it('rejects a nested container without mutating either owner', () => {
+    const setupResult = setup(makeSchema([makeSplitContainer('layout')]))
+    registerTextAndSplit(setupResult)
+    const before = setupResult.store.getSchema()
+
+    const result = addNodeHandler(setupResult.ctx, {
+      node: { id: 'nested', type: 'split-layout', props: {} },
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left' },
+    })
+
+    expect(result).toMatchObject({ ok: false, code: 'CONTAINER_NESTING_FORBIDDEN' })
+    expect(setupResult.store.getSchema()).toEqual(before)
+  })
+
+  it('honors region maxItems before mutating the destination', () => {
+    const container = makeSplitContainer('layout')
+    container.container!.regions.right.push(makeNode('existing'))
+    const setupResult = setup(makeSchema([container]))
+    registerTextAndSplit(setupResult)
+    const before = setupResult.store.getSchema()
+
+    const result = addNodeHandler(setupResult.ctx, {
+      node: makeNode('new'),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'right' },
+    })
+
+    expect(result).toMatchObject({ ok: false, code: 'CONTAINER_REGION_MAX_ITEMS' })
+    expect(setupResult.store.getSchema()).toEqual(before)
+  })
+
+  it('normalizes a placement denial without a material-defined code', () => {
+    const setupResult = setup(makeSchema([makeSplitContainer('layout')]))
+    registerTextAndSplit(setupResult, {
+      ...splitDefinition,
+      canPlace: () => ({ allowed: false }),
+    })
+
+    const result = addNodeHandler(setupResult.ctx, {
+      node: makeNode('new'),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left' },
+    })
+
+    expect(result).toEqual({ ok: false, code: 'CONTAINER_PLACEMENT_DENIED' })
   })
 })
