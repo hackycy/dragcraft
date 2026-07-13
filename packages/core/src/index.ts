@@ -19,6 +19,12 @@ export { CommandType, DEFAULT_MAX_HISTORY_SIZE, DEFAULT_SCHEMA_VERSION, EventNam
 export type { CommandTypeValue, EventNameValue } from './constants'
 // ── Container material protocol ───────────
 export { validateContainerDefinition } from './container-definition'
+export {
+  createContainerState,
+  createRegisteredNode,
+  resolvePlacementDecision,
+} from './container-placement'
+export { createContainerPlan } from './container-plan'
 // ── Engine (main entry point) ─────────────
 export { createEngine } from './engine'
 export type { DesignerEngine } from './engine'
@@ -74,10 +80,14 @@ export type {
   ContainerDefinitionValidationResult,
   ContainerInitContext,
   ContainerPlacementContext,
+  ContainerPlan,
+  ContainerPlanRegion,
+  ContainerPlanResult,
   ContainerRegionConstraints,
   ContainerRegionDefinition,
   ContainerRegionId,
   ContainerState,
+  ContainerStateCreationResult,
   ContainerVariantDefinition,
   ContainerVariantId,
   ContainerVariantMigrationContext,
@@ -87,6 +97,7 @@ export type {
   CreatableBehaviorPredicate,
   CreatableBehaviorResult,
   CreatableDecision,
+  CreateRegisteredNode,
   CreationBlockReason,
   DesignerSchema,
   DragTarget,
@@ -124,6 +135,7 @@ export type {
   ResolvedLayoutReserveSpec,
   ResolvedNodeLayout,
   ResolvedNodePlacement,
+  ResolvePlacementContext,
   SchemaDiagnostic,
   SchemaDiagnosticSeverity,
   SchemaIndexResult,

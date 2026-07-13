@@ -358,6 +358,46 @@ export interface ContainerDefinitionValidationResult {
   errors: ContainerDefinitionValidationError[]
 }
 
+export interface ContainerPlanRegion {
+  definition: ContainerRegionDefinition
+  nodes: SchemaNode[]
+  isEmpty: boolean
+}
+
+export interface ContainerPlan {
+  containerId: string
+  variant: ContainerVariantDefinition
+  regions: ContainerPlanRegion[]
+}
+
+export type ContainerPlanResult
+  = | { ok: true, plan: ContainerPlan }
+    | {
+      ok: false
+      code: 'CONTAINER_UNRESOLVED' | 'CONTAINER_VARIANT_UNKNOWN'
+      containerId: string
+    }
+
+export type CreateRegisteredNode = ContainerInitContext['createNode']
+
+export type ContainerStateCreationResult
+  = | { ok: true, state: ContainerState }
+    | {
+      ok: false
+      code: string
+      message?: string
+      details?: Record<string, unknown>
+    }
+
+export interface ResolvePlacementContext {
+  definition: ContainerDefinition
+  region: ContainerRegionDefinition
+  child: SchemaNode
+  childHasContainerCapability: boolean
+  targetCount: number
+  callbackContext: ContainerPlacementContext
+}
+
 // ──────────────────────────────────────────
 // Form schema shape (minimal, for WidgetMeta.formSchema typing)
 // ──────────────────────────────────────────
