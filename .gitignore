@@ -14,4 +14,5 @@ cache
 .turbo
 .claude
 .agents
+.worktrees
 skills-lock.json
