@@ -24,19 +24,22 @@ function sameRegionIds(
     && leftIds.every((id, index) => id === rightIds[index])
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value))
+    return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
 }
 
 function isSchemaNode(value: unknown): value is SchemaNode {
-  return isRecord(value)
+  return isPlainRecord(value)
     && typeof value.id === 'string'
     && typeof value.type === 'string'
-    && isRecord(value.props)
+    && isPlainRecord(value.props)
 }
 
 function isContainerState(value: unknown): value is ContainerState {
-  if (!isRecord(value) || typeof value.variant !== 'string' || !isRecord(value.regions))
+  if (!isPlainRecord(value) || typeof value.variant !== 'string' || !isPlainRecord(value.regions))
     return false
   return Object.values(value.regions).every(children =>
     Array.isArray(children) && children.every(isSchemaNode),
@@ -63,7 +66,7 @@ function safelyMigrateVariant(
     return { allowed: false, code: 'CONTAINER_VARIANT_MIGRATION_REQUIRED' }
   try {
     const result: unknown = cloneDeep(definition.migrateVariant(cloneDeep(ctx)))
-    if (!isRecord(result) || typeof result.allowed !== 'boolean')
+    if (!isPlainRecord(result) || typeof result.allowed !== 'boolean')
       return invalidMigrationResult(ctx.container.id)
     if (result.allowed) {
       if (!isContainerState(result.state))
@@ -73,7 +76,7 @@ function safelyMigrateVariant(
     if (!isOptionalString(result.code)
       || !isOptionalString(result.messageKey)
       || !isOptionalString(result.message)
-      || (result.details !== undefined && !isRecord(result.details))) {
+      || (result.details !== undefined && !isPlainRecord(result.details))) {
       return invalidMigrationResult(ctx.container.id)
     }
     return {

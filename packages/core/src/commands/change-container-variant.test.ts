@@ -182,12 +182,40 @@ describe('changeContainerVariantHandler', () => {
     expect(store.getSchema()).toEqual(before)
   })
 
-  it('preserves a denial with valid string code and message', () => {
+  it.each([
+    ['Date', new Date('2026-07-14T00:00:00.000Z')],
+    ['Map', new Map([['reason', 'incompatible']])],
+    ['Set', new Set(['incompatible'])],
+    ['Promise', Promise.resolve('incompatible')],
+    ['custom class', new (class MigrationDetails {})()],
+  ])('normalizes a denial with non-plain %s details', (_, details) => {
+    const { ctx, store } = setup(makeDefinition({
+      migrateVariant: () => ({
+        allowed: false,
+        code: 'MIGRATION_DENIED',
+        details,
+      }) as never,
+    }))
+    const before = store.getSchema()
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'stacked',
+    })).toEqual({
+      ok: false,
+      code: 'CONTAINER_VARIANT_MIGRATION_INVALID',
+      message: undefined,
+    })
+    expect(store.getSchema()).toEqual(before)
+  })
+
+  it('preserves a denial with valid object-literal details and string metadata', () => {
     const { ctx, store } = setup(makeDefinition({
       migrateVariant: () => ({
         allowed: false,
         code: 'MIGRATION_DENIED',
         message: 'Choose a compatible layout first.',
+        details: { fromVariant: 'split', toVariant: 'stacked' },
       }),
     }))
     const before = store.getSchema()
