@@ -1,8 +1,8 @@
-import type { SchemaNode } from './types'
+import type { DesignerSchema, SchemaNode } from './types'
+import { buildSchemaIndex } from './schema-index'
 
 /**
- * Find a node by ID in the flat structure.
- * Only searches root and root.children (one level deep).
+ * Find a node by ID in the shallow ownership structure.
  */
 export function findNodeById(
   root: SchemaNode,
@@ -10,30 +10,29 @@ export function findNodeById(
 ): SchemaNode | null {
   if (root.id === id)
     return root
-  if (root.children) {
-    for (const child of root.children) {
-      if (child.id === id)
-        return child
-    }
-  }
-  return null
+  const schema: DesignerSchema = { version: '', globalConfig: {}, root }
+  return buildSchemaIndex(schema).index.get(id)?.node ?? null
 }
 
 /**
  * Find the parent node of a given node ID.
- * In the flat model, the parent is always root.
- * Returns { parent, index } or null if node is root or not found.
+ * Returns the owning root or container location, or null if not found.
  */
 export function findParentNode(
   root: SchemaNode,
   targetId: string,
-): { parent: SchemaNode, index: number } | null {
-  if (root.children) {
-    const index = root.children.findIndex(c => c.id === targetId)
-    if (index >= 0)
-      return { parent: root, index }
-  }
-  return null
+): { parent: SchemaNode, regionId?: string, index: number } | null {
+  const schema: DesignerSchema = { version: '', globalConfig: {}, root }
+  const indexed = buildSchemaIndex(schema)
+  const location = indexed.index.get(targetId)
+  if (!location)
+    return null
+  if (location.owner === 'root')
+    return { parent: root, index: location.index }
+  const parent = indexed.index.get(location.owner)?.node
+  return parent && location.regionId
+    ? { parent, regionId: location.regionId, index: location.index }
+    : null
 }
 
 /**

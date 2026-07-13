@@ -36,6 +36,37 @@ export interface DesignerSchema {
   root: SchemaNode
 }
 
+export type SchemaDiagnosticSeverity = 'warning' | 'error'
+
+export interface SchemaDiagnostic {
+  code: string
+  severity: SchemaDiagnosticSeverity
+  nodeId?: string
+  ownerId?: string
+  regionId?: string
+  path?: string
+  details?: Record<string, unknown>
+}
+
+export interface IndexedNodeLocation {
+  node: SchemaNode
+  owner: 'root' | string
+  regionId?: string
+  index: number
+  depth: 1 | 2
+}
+
+export interface SchemaIndexResult {
+  index: Map<string, IndexedNodeLocation>
+  diagnostics: SchemaDiagnostic[]
+}
+
+export interface SchemaValidationResult {
+  valid: boolean
+  schema: DesignerSchema
+  diagnostics: SchemaDiagnostic[]
+}
+
 // ──────────────────────────────────────────
 // Layout protocol
 // ──────────────────────────────────────────

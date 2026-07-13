@@ -10,6 +10,13 @@ function makeNode(id: string, type = 'text'): SchemaNode {
   return { id, type, props: {} }
 }
 
+function makeContainer(id: string, regions: Record<string, SchemaNode[]>): SchemaNode {
+  return {
+    ...makeNode(id, 'layout'),
+    container: { variant: 'default', regions },
+  }
+}
+
 describe('findNodeById', () => {
   it('returns root when id matches', () => {
     const root = makeRoot()
@@ -20,6 +27,13 @@ describe('findNodeById', () => {
     const child = makeNode('a')
     const root = makeRoot([child])
     expect(findNodeById(root, 'a')).toBe(child)
+  })
+
+  it('returns a region-owned child', () => {
+    const nested = makeNode('nested')
+    const root = makeRoot([makeContainer('layout', { left: [nested] })])
+
+    expect(findNodeById(root, 'nested')).toBe(nested)
   })
 
   it('returns null for missing id', () => {
@@ -40,6 +54,19 @@ describe('findParentNode', () => {
     const root = makeRoot([makeNode('x'), child])
     const result = findParentNode(root, 'a')
     expect(result).toEqual({ parent: root, index: 1 })
+  })
+
+  it('returns container, region, and index for a region-owned child', () => {
+    const container = makeContainer('layout', {
+      left: [makeNode('first'), makeNode('nested')],
+    })
+    const root = makeRoot([container])
+
+    expect(findParentNode(root, 'nested')).toEqual({
+      parent: container,
+      regionId: 'left',
+      index: 1,
+    })
   })
 
   it('returns null for root id', () => {

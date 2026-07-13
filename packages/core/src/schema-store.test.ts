@@ -101,6 +101,19 @@ describe('createSchemaStore', () => {
     expect(store.getNodeById('missing')).toBeNull()
   })
 
+  it('getNodeById finds a region-owned child', () => {
+    const nested: SchemaNode = { id: 'nested', type: 'text', props: {} }
+    const container: SchemaNode = {
+      id: 'layout',
+      type: 'layout',
+      props: {},
+      container: { variant: 'default', regions: { left: [nested] } },
+    }
+    const store = createSchemaStore(makeSchema([container]))
+
+    expect(store.getNodeById('nested')?.id).toBe('nested')
+  })
+
   it('applyTransientPatch updates props', () => {
     const store = createSchemaStore(makeSchema([{ id: 'a', type: 'text', props: { label: 'old' } }]))
     store.applyTransientPatch('a', { props: { label: 'new' } })

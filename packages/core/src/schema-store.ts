@@ -2,8 +2,8 @@ import type { Ref, ShallowRef } from 'vue'
 import type { DesignerSchema, DragTarget, SchemaNode, SchemaStoreInstance } from './types'
 import { ref, shallowRef, toRaw, triggerRef } from 'vue'
 import { DEFAULT_SCHEMA_VERSION } from './constants'
-import { findNodeById as findNode } from './helpers'
 import { mergeRecord } from './merge-record'
+import { buildSchemaIndex } from './schema-index'
 import { cloneRawSchema, cloneSchema } from './schema-utils'
 
 export function createDefaultSchema(): DesignerSchema {
@@ -64,7 +64,9 @@ export function createSchemaStore(
   }
 
   function getNodeById(id: string): SchemaNode | null {
-    return findNode(toRaw(schema.value).root, id)
+    if (schema.value.root.id === id)
+      return schema.value.root
+    return buildSchemaIndex(schema.value).index.get(id)?.node ?? null
   }
 
   /**

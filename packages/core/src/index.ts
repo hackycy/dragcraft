@@ -44,8 +44,12 @@ export {
 
 export { createRegistry } from './registry'
 
+// ── Schema ownership ─────────────────────
+export { buildSchemaIndex, findIndexedNode } from './schema-index'
+
 // ── Subsystem factories ───────────────────
 export { createDefaultSchema, createSchemaStore } from './schema-store'
+export { validateSchema } from './schema-validation'
 
 // ── Sortable constraints ─────────────────
 export {
@@ -91,6 +95,7 @@ export type {
   FieldSchemaShape,
   FormSchemaShape,
   HistoryEntry,
+  IndexedNodeLocation,
   InstanceBehaviorContext,
   LayoutAnchor,
   LayoutAnchorSpec,
@@ -119,9 +124,13 @@ export type {
   ResolvedLayoutReserveSpec,
   ResolvedNodeLayout,
   ResolvedNodePlacement,
+  SchemaDiagnostic,
+  SchemaDiagnosticSeverity,
+  SchemaIndexResult,
   SchemaMigration,
   SchemaNode,
   SchemaStoreInstance,
+  SchemaValidationResult,
   SetGlobalConfigPayload,
   StyleValueMap,
   TypeBehaviorContext,
