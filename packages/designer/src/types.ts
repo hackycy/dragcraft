@@ -1,6 +1,6 @@
-import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, SchemaStoreInstance } from '@dragcraft/core'
+import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, NodeDestination, PlacementDecision, SchemaStoreInstance } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
-import type { ActionInterceptor, ComponentMap, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
+import type { ActionInterceptor, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/utils'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
@@ -226,17 +226,22 @@ export interface DesignerContext {
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
   workspace: DesignerWorkspaceController
+  activeDestination: Ref<NodeDestination | null>
+  containerDropDecision: Ref<PlacementDecision | null>
   dragOverNodeId: Ref<string | null>
   dragOverIndex: Ref<number | null>
   handleMaterialDragStart: (e: DragEvent, meta: RendererWidgetMeta) => void
   handleDragEnd: (e: DragEvent) => void
   handleCanvasDragOver: (e: DragEvent) => void
   handleCanvasDragLeave: (e: DragEvent) => void
-  handleCanvasDrop: (e: DragEvent) => void
+  handleCanvasDrop: (e: DragEvent) => CommandExecutionResult
+  handleContainerDragOver: (payload: ContainerDropTarget | ContainerDropRejection) => void
+  handleContainerDragLeave: (e: DragEvent) => void
+  handleContainerDrop: (e: DragEvent) => CommandExecutionResult
   /** Whether the current drag-over is forbidden */
   isForbidden: Ref<boolean>
   /** User-facing reason for the current forbidden drag-over state */
-  forbiddenReason: Ref<CreationBlockReason | null>
+  forbiddenReason: Ref<(CreationBlockReason & { details?: Record<string, unknown> }) | null>
   searchQuery: Ref<string>
   activeTab: Ref<PropertyTabKey>
   leftPanelActiveTab: Ref<LeftPanelTabKey>

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { ContainerDefinition, DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useDragDrop } from './useDragDrop'
@@ -21,6 +21,45 @@ function makeMeta(type: string, overrides?: Partial<WidgetMeta>): WidgetMeta {
 
 function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
+}
+
+const splitDefinition: ContainerDefinition = {
+  defaultVariant: 'split',
+  variants: {
+    split: {
+      title: 'Split',
+      regions: [
+        { id: 'left', title: 'Left' },
+        { id: 'right', title: 'Right' },
+      ],
+    },
+  },
+}
+
+function makeContainer(
+  id = 'layout',
+  regions: Record<string, SchemaNode[]> = { left: [], right: [] },
+): SchemaNode {
+  return {
+    id,
+    type: 'split-layout',
+    props: {},
+    container: { variant: 'split', regions },
+  }
+}
+
+function makeContainerEngine(
+  regions: Record<string, SchemaNode[]> = { left: [], right: [] },
+  definition: ContainerDefinition = splitDefinition,
+  extraRootNodes: SchemaNode[] = [],
+): DesignerEngine {
+  const result = createEngine({
+    initialSchema: makeSchema([makeContainer('layout', regions), ...extraRootNodes]),
+  })
+  result.registerWidget(makeMeta('text'))
+  result.registerWidget(makeMeta('image'))
+  result.registerWidget(makeMeta('split-layout', { container: definition }))
+  return result
 }
 
 function mockDragEvent(overrides?: Partial<DragEvent>): DragEvent {
@@ -284,5 +323,265 @@ describe('useDragDrop', () => {
     const children = engine.store.schema.value.root.children!
     expect(children).toHaveLength(4)
     expect(children.map(c => c.type)).toEqual(['text', 'button', 'image', 'tabbar'])
+  })
+
+  it('adds a material to the active container destination without mutating during preflight', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+    const event = mockDragEvent()
+    const schemaBefore = engine.exportSchema()
+
+    dd.handleMaterialDragStart(event, makeMeta('image'))
+    dd.handleContainerDragOver({
+      event,
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    expect(dd.activeDestination.value).toEqual({
+      kind: 'container',
+      containerId: 'layout',
+      regionId: 'left',
+      index: 0,
+    })
+    expect(dd.containerDropDecision.value).toEqual({ allowed: true })
+    expect(engine.exportSchema()).toEqual(schemaBefore)
+
+    const result = dd.handleContainerDrop(event)
+    expect(result.ok).toBe(true)
+    expect(engine.state.getNodeById('layout')!.container!.regions.left[0]).toMatchObject({
+      type: 'image',
+      props: { content: 'default' },
+    })
+  })
+
+  it('moves a nested node back to the active root destination', () => {
+    engine = makeContainerEngine({ left: [makeNode('nested')], right: [] })
+    const dd = useDragDrop(engine)
+    engine.store.setDragTarget({ sourceNodeId: 'nested', widgetType: null })
+    dd.activeDestination.value = { kind: 'root', sortScope: 'content', index: 0 }
+
+    const result = dd.handleCanvasDrop(mockDragEvent())
+
+    expect(result.ok).toBe(true)
+    expect(engine.state.getSchema().root.children![0].id).toBe('nested')
+    expect(engine.state.getNodeById('layout')!.container!.regions.left).toEqual([])
+  })
+
+  it('moves a nested node between container regions using the resolved index', () => {
+    engine = makeContainerEngine({ left: [makeNode('nested')], right: [makeNode('right')] })
+    const dd = useDragDrop(engine)
+    engine.store.setDragTarget({ sourceNodeId: 'nested', widgetType: null })
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'right', index: 1 },
+    })
+
+    const result = dd.commitDrop()
+
+    expect(result.ok).toBe(true)
+    expect(engine.state.getNodeById('layout')!.container!.regions).toMatchObject({
+      left: [],
+      right: [{ id: 'right' }, { id: 'nested' }],
+    })
+  })
+
+  it('reorders a nested node within the same region using Core index adjustment', () => {
+    engine = makeContainerEngine({ left: [makeNode('nested'), makeNode('second')], right: [] })
+    const dd = useDragDrop(engine)
+    engine.store.setDragTarget({ sourceNodeId: 'nested', widgetType: null })
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 2 },
+    })
+
+    const result = dd.commitDrop()
+
+    expect(result.ok).toBe(true)
+    expect(engine.state.getNodeById('layout')!.container!.regions.left.map(node => node.id))
+      .toEqual(['second', 'nested'])
+  })
+
+  it('surfaces a container adapter rejection', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      containerId: 'layout',
+      regionId: 'left',
+      allowed: false,
+      code: 'CONTAINER_DROP_ADAPTER_FAILED',
+      message: 'Adapter failed',
+    })
+
+    expect(dd.containerDropDecision.value).toEqual({
+      allowed: false,
+      code: 'CONTAINER_DROP_ADAPTER_FAILED',
+      message: 'Adapter failed',
+    })
+    expect(dd.isForbidden.value).toBe(true)
+    expect(dd.forbiddenReason.value).toMatchObject({
+      code: 'CONTAINER_DROP_ADAPTER_FAILED',
+      message: 'Adapter failed',
+    })
+  })
+
+  it.each([
+    {
+      name: 'region cardinality',
+      definition: {
+        ...splitDefinition,
+        variants: {
+          split: {
+            title: 'Split',
+            regions: [
+              { id: 'left', title: 'Left', constraints: { maxItems: 1 } },
+              { id: 'right', title: 'Right' },
+            ],
+          },
+        },
+      } satisfies ContainerDefinition,
+      regions: { left: [makeNode('full')], right: [] },
+      source: { sourceNodeId: null, widgetType: 'image' },
+      code: 'CONTAINER_REGION_MAX_ITEMS',
+    },
+    {
+      name: 'placement predicate',
+      definition: {
+        ...splitDefinition,
+        canPlace: () => ({
+          allowed: false,
+          code: 'CUSTOM_PLACEMENT_DENIED',
+          message: 'Not here',
+          details: { policy: 'editorial' },
+        }),
+      } satisfies ContainerDefinition,
+      regions: { left: [], right: [] },
+      source: { sourceNodeId: null, widgetType: 'image' },
+      code: 'CUSTOM_PLACEMENT_DENIED',
+    },
+    {
+      name: 'container nesting',
+      definition: splitDefinition,
+      regions: { left: [], right: [] },
+      source: { sourceNodeId: 'other-layout', widgetType: null },
+      code: 'CONTAINER_NESTING_FORBIDDEN',
+    },
+  ])('preflights $name rejection without changing schema', ({ definition, regions, source, code }) => {
+    engine = makeContainerEngine(regions, definition, [makeContainer('other-layout')])
+    const dd = useDragDrop(engine)
+    const schemaBefore = engine.exportSchema()
+    engine.store.setDragTarget(source)
+
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    expect(dd.containerDropDecision.value).toMatchObject({ allowed: false, code })
+    expect(dd.forbiddenReason.value).toMatchObject({ code })
+    expect(engine.exportSchema()).toEqual(schemaBefore)
+  })
+
+  it('surfaces the final Core rejection even after a successful preflight', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+    dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+    vi.spyOn(engine, 'execute').mockReturnValue({
+      ok: false,
+      code: 'CONTAINER_REGION_MAX_ITEMS',
+      message: 'Full',
+      details: { maxItems: 0 },
+    })
+
+    const result = dd.commitDrop()
+
+    expect(result).toMatchObject({ ok: false, code: 'CONTAINER_REGION_MAX_ITEMS' })
+    expect(dd.isForbidden.value).toBe(true)
+    expect(dd.forbiddenReason.value).toMatchObject({
+      code: 'CONTAINER_REGION_MAX_ITEMS',
+      message: 'Full',
+      details: { maxItems: 0 },
+    })
+    expect(dd.containerDropDecision.value).toMatchObject({
+      allowed: false,
+      code: 'CONTAINER_REGION_MAX_ITEMS',
+      message: 'Full',
+      details: { maxItems: 0 },
+    })
+    expect(dd.activeDestination.value).not.toBeNull()
+  })
+
+  it('keeps the active container destination while moving within its region', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+    dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
+    const region = document.createElement('section')
+    const child = document.createElement('span')
+    region.appendChild(child)
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    dd.handleContainerDragLeave(mockDragEvent({ currentTarget: region, relatedTarget: child }))
+
+    expect(dd.activeDestination.value).toMatchObject({ kind: 'container', regionId: 'left' })
+  })
+
+  it('clears container state when leaving its region and at drag end', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+    dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
+    const region = document.createElement('section')
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    dd.handleContainerDragLeave(mockDragEvent({
+      currentTarget: region,
+      relatedTarget: document.createElement('div'),
+    }))
+    expect(dd.activeDestination.value).toBeNull()
+    expect(dd.containerDropDecision.value).toBeNull()
+
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+    dd.handleDragEnd(mockDragEvent())
+    expect(dd.activeDestination.value).toBeNull()
+    expect(dd.containerDropDecision.value).toBeNull()
+    expect(engine.store.dragTarget.value).toBeNull()
+  })
+
+  it('does not let a nested outlet dragover replace its container destination with root', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+    dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+    const canvas = document.createElement('div')
+    const region = document.createElement('section')
+    region.dataset.dcContainerRegion = 'left'
+    const child = document.createElement('span')
+    region.appendChild(child)
+    canvas.appendChild(region)
+
+    dd.handleCanvasDragOver(mockDragEvent({ currentTarget: canvas, target: child }))
+
+    expect(dd.activeDestination.value).toMatchObject({
+      kind: 'container',
+      containerId: 'layout',
+      regionId: 'left',
+      index: 0,
+    })
   })
 })

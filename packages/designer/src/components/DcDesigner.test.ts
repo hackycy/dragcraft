@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
-import type { DesignerSchema, WidgetMeta } from '..'
+import type { Component } from 'vue'
+import type { DesignerSchema, DesignerWidgetMeta, WidgetMeta } from '..'
+import { ContainerRegionOutlet } from '@dragcraft/renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, h, nextTick } from 'vue'
+import { createApp, defineComponent, h, nextTick } from 'vue'
 import { createDesigner } from '..'
 import DcDesigner from './DcDesigner'
 
@@ -32,6 +34,19 @@ async function flushFocus(): Promise<void> {
   await nextTick()
   await nextTick()
   await new Promise(resolve => setTimeout(resolve, 10))
+}
+
+function dispatchDragEvent(target: Element, type: string): void {
+  const event = new Event(type, { bubbles: true, cancelable: true }) as DragEvent
+  Object.defineProperty(event, 'dataTransfer', {
+    value: {
+      effectAllowed: '',
+      dropEffect: '',
+      setData: vi.fn(),
+      setDragImage: vi.fn(),
+    },
+  })
+  target.dispatchEvent(event)
 }
 
 describe('dcDesigner', () => {
@@ -65,6 +80,88 @@ describe('dcDesigner', () => {
       expect(host.querySelector('[data-dc-workspace-control="pointer"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="hand"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="center"]')).not.toBeNull()
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it('wires container outlet destinations through the designer canvas', async () => {
+    const splitMeta: DesignerWidgetMeta = {
+      type: 'split-layout',
+      title: 'Split',
+      group: 'layout',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      container: {
+        defaultVariant: 'split',
+        variants: {
+          split: {
+            title: 'Split',
+            regions: [{ id: 'left', title: 'Left' }],
+          },
+        },
+      },
+      containerAdapter: { resolveDropIndex: () => 0 },
+    }
+    const imageMeta: DesignerWidgetMeta = {
+      type: 'image',
+      title: 'Image',
+      group: 'content',
+      defaultProps: { src: 'test.png' },
+      formSchema: { sections: [] },
+    }
+    const SplitComponent = defineComponent({
+      setup: () => () => h(ContainerRegionOutlet, {
+        regionId: 'left',
+        class: 'designer-test-region',
+      }),
+    })
+    const componentMap: Record<string, Component> = {
+      'split-layout': SplitComponent,
+      'image': defineComponent({ setup: () => () => h('img') }),
+    }
+    const designer = createDesigner({
+      engineOptions: {
+        initialSchema: {
+          version: '1.0.0',
+          globalConfig: {},
+          root: {
+            id: 'root',
+            type: 'root',
+            props: {},
+            children: [{
+              id: 'layout',
+              type: 'split-layout',
+              props: {},
+              container: { variant: 'split', regions: { left: [] } },
+            }],
+          },
+        },
+      },
+      widgetMetas: [splitMeta, imageMeta],
+      componentMap,
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const material = Array.from(host.querySelectorAll<HTMLElement>('.dc-material-item'))
+        .find(item => item.textContent?.includes('Image'))!
+      const region = host.querySelector<HTMLElement>('.designer-test-region')!
+
+      dispatchDragEvent(material, 'dragstart')
+      dispatchDragEvent(region, 'dragover')
+      dispatchDragEvent(region, 'drop')
+      await nextTick()
+
+      expect(designer.engine.state.getNodeById('layout')!.container!.regions.left[0])
+        .toMatchObject({ type: 'image', props: { src: 'test.png' } })
     }
     finally {
       app.unmount()

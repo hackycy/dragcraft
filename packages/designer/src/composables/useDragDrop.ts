@@ -1,7 +1,9 @@
-import type { CreationBlockReason, DesignerEngine, SchemaNode } from '@dragcraft/core'
-import type { RendererWidgetMeta } from '@dragcraft/renderer'
+import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
 import {
+  buildSchemaIndex,
+  clampInsertIndex,
   CommandType,
   createLayoutPlan,
   DEFAULT_LAYOUT_REGION,
@@ -11,7 +13,9 @@ import {
   getSortScopeEntries,
   getValidDropIndices,
   resolveCreatable,
+  resolveDestination,
   resolveNodeLayout,
+  resolvePlacementDecision,
 } from '@dragcraft/core'
 import { generateShortId, hideNativeDragImage } from '@dragcraft/utils'
 import { computed, ref, watch } from 'vue'
@@ -21,9 +25,15 @@ import { computed, ref, watch } from 'vue'
 // ──────────────────────────────────────────
 
 export interface UseDragDropReturn {
-  /** Reactive ref tracking drag-over state (always 'root' or null in flat model) */
+  /** Unified root/container destination selected during drag-over. */
+  dragOverDestination: Ref<NodeDestination | null>
+  /** Alias used by renderer container outlets. */
+  activeDestination: Ref<NodeDestination | null>
+  /** Advisory placement decision for the active container destination. */
+  containerDropDecision: Ref<PlacementDecision | null>
+  /** Compatibility projection for renderer extensions. */
   dragOverNodeId: Ref<string | null>
-  /** Visual insertion index computed during dragover (0..n for n widgets) */
+  /** Compatibility projection for renderer extensions. */
   dragOverIndex: Ref<number | null>
   /** Cached locked indices (recomputed only when schema changes) */
   lockedIndices: ComputedRef<ReadonlySet<number>>
@@ -36,14 +46,24 @@ export interface UseDragDropReturn {
   /** Handle dragleave on the canvas (event delegation) */
   handleCanvasDragLeave: (e: DragEvent) => void
   /** Handle drop on the canvas (event delegation) */
-  handleCanvasDrop: (e: DragEvent) => void
+  handleCanvasDrop: (e: DragEvent) => CommandExecutionResult
+  /** Handle a material-resolved container destination or adapter rejection. */
+  handleContainerDragOver: (payload: ContainerDropTarget | ContainerDropRejection) => void
+  /** Clear container feedback after leaving the active region. */
+  handleContainerDragLeave: (e: DragEvent) => void
+  /** Commit the active container destination. */
+  handleContainerDrop: (e: DragEvent) => CommandExecutionResult
+  /** Commit the current drag target to the current destination. */
+  commitDrop: () => CommandExecutionResult
   /** Handle drag end (cleanup) */
   handleDragEnd: (e: DragEvent) => void
   /** Whether the current drag-over is forbidden */
   isForbidden: Ref<boolean>
   /** User-facing reason for the current forbidden drag-over state */
-  forbiddenReason: Ref<CreationBlockReason | null>
+  forbiddenReason: Ref<DropRejectionReason | null>
 }
+
+export type DropRejectionReason = CreationBlockReason & { details?: Record<string, unknown> }
 
 // ──────────────────────────────────────────
 // Composable
@@ -57,10 +77,43 @@ export interface UseDragDropReturn {
  * and sortable constraint validation.
  */
 export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
-  const dragOverNodeId = ref<string | null>(null)
-  const dragOverIndex = ref<number | null>(null)
+  const dragOverDestination = ref<NodeDestination | null>(null)
+  const activeDestination = dragOverDestination
+  const containerDropDecision = ref<PlacementDecision | null>(null)
+  const dragOverNodeId = computed({
+    get: () => {
+      const destination = dragOverDestination.value
+      return destination?.kind === 'container'
+        ? destination.containerId
+        : destination ? 'root' : null
+    },
+    set: (nodeId: string | null) => {
+      if (nodeId === null)
+        dragOverDestination.value = null
+      else if (nodeId === 'root' && dragOverDestination.value?.kind !== 'root')
+        dragOverDestination.value = { kind: 'root' }
+    },
+  })
+  const dragOverIndex = computed({
+    get: () => dragOverDestination.value?.index ?? null,
+    set: (index: number | null) => {
+      const current = dragOverDestination.value
+      if (current) {
+        dragOverDestination.value = index === null
+          ? { ...current, index: undefined }
+          : { ...current, index }
+        return
+      }
+      const sortScope = getActiveSortScope()
+      dragOverDestination.value = {
+        kind: 'root',
+        sortScope: sortScope === false ? undefined : sortScope,
+        index: index ?? undefined,
+      }
+    },
+  })
   const isForbidden = ref(false)
-  const forbiddenReason = ref<CreationBlockReason | null>(null)
+  const forbiddenReason = ref<DropRejectionReason | null>(null)
 
   // ── Sortable constraint computeds ──
 
@@ -138,8 +191,8 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function clearDragOverState(): void {
-    dragOverNodeId.value = null
-    dragOverIndex.value = null
+    dragOverDestination.value = null
+    containerDropDecision.value = null
     isForbidden.value = false
     forbiddenReason.value = null
   }
@@ -165,11 +218,17 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       : findNearestValidIndex(rawIndex, valid)
   }
 
-  function canCreateWidget(meta: RendererWidgetMeta): boolean {
-    return resolveCreatable(meta.creatable, {
-      widgetType: meta.type,
-      schema: engine.state.getSchema(),
-    }).allowed
+  function setForbidden(reason: Extract<CommandExecutionResult, { ok: false }>): void {
+    isForbidden.value = true
+    const rejection: DropRejectionReason = {
+      code: reason.code,
+      messageKey: reason.messageKey,
+      message: reason.message,
+      details: reason.details,
+    }
+    forbiddenReason.value = rejection
+    if (dragOverDestination.value?.kind === 'container')
+      containerDropDecision.value = { allowed: false, ...rejection }
   }
 
   function createSchemaNode(meta: RendererWidgetMeta): SchemaNode {
@@ -215,24 +274,30 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   // ── Canvas drag event handlers (event delegation) ──
 
   function handleCanvasDragOver(e: DragEvent): void {
+    const target = e.target
+    if (target instanceof Element && target.closest('[data-dc-container-region]'))
+      return
     e.preventDefault()
-    // Flat model: always drop into root
-    dragOverNodeId.value = 'root'
     const dragTarget = engine.store.dragTarget.value
     if (e.dataTransfer) {
       e.dataTransfer.dropEffect = dragTarget?.sourceNodeId ? 'move' : 'copy'
     }
 
-    // Check if drop is allowed by creatable predicate
+    const sortScope = getActiveSortScope()
+    dragOverDestination.value = {
+      kind: 'root',
+      sortScope: sortScope === false ? undefined : sortScope,
+    }
+    containerDropDecision.value = null
+
     const decision = createDecision.value
     if (!decision.allowed) {
-      isForbidden.value = true
-      forbiddenReason.value = {
-        code: decision.code,
+      setForbidden({
+        ok: false,
+        code: decision.code ?? 'NODE_NOT_CREATABLE',
         messageKey: decision.messageKey,
         message: decision.message,
-      }
-      dragOverIndex.value = null
+      })
       if (e.dataTransfer)
         e.dataTransfer.dropEffect = 'none'
       return
@@ -240,14 +305,16 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     isForbidden.value = false
     forbiddenReason.value = null
 
-    const sortScope = getActiveSortScope()
-    if (sortScope === false) {
-      dragOverIndex.value = null
+    if (sortScope === false)
       return
-    }
 
     const rawIndex = computeDropIndex(e, sortScope)
-    dragOverIndex.value = resolveVisualDropIndex(rawIndex)
+    const index = resolveVisualDropIndex(rawIndex)
+    dragOverDestination.value = {
+      kind: 'root',
+      sortScope,
+      index: index ?? undefined,
+    }
   }
 
   function handleCanvasDragLeave(e: DragEvent): void {
@@ -259,71 +326,157 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
   }
 
-  function dropExistingNode(nodeId: string, visualIndex: number | null): void {
-    if (visualIndex === null)
-      return
+  function commitDrop(): CommandExecutionResult {
+    const destination = dragOverDestination.value
+    const dragTarget = engine.store.dragTarget.value
+    if (!destination || !dragTarget)
+      return { ok: false, code: 'DROP_TARGET_MISSING' }
 
-    const sortScope = getActiveSortScope()
-    if (sortScope === false)
-      return
+    let result: CommandExecutionResult
+    let selectedNodeId: string | null = null
+    if (dragTarget.sourceNodeId) {
+      result = engine.execute({
+        type: CommandType.MOVE_NODE,
+        payload: { nodeId: dragTarget.sourceNodeId, destination },
+      })
+    }
+    else {
+      const meta = dragTarget.widgetType
+        ? engine.registry.getWidget(dragTarget.widgetType) as RendererWidgetMeta | undefined
+        : undefined
+      if (!meta) {
+        result = { ok: false, code: 'DRAGGED_WIDGET_META_MISSING' }
+      }
+      else if (destination.kind === 'root'
+        && resolveMetaSortScope(meta) !== false
+        && destination.index === undefined) {
+        result = { ok: false, code: 'DROP_TARGET_MISSING' }
+      }
+      else {
+        const node = createSchemaNode(meta)
+        result = engine.execute({
+          type: CommandType.ADD_NODE,
+          payload: { node, destination },
+        })
+        selectedNodeId = node.id
+      }
+    }
 
-    engine.execute({
-      type: CommandType.MOVE_NODE,
-      payload: {
-        nodeId,
-        destination: { kind: 'root', index: visualIndex, sortScope },
-      },
-    })
+    if (!result.ok) {
+      setForbidden(result)
+    }
+    else {
+      if (selectedNodeId)
+        engine.store.selectNode(selectedNodeId)
+      resetDragState()
+    }
+    return result
   }
 
-  function dropNewWidget(widgetType: string, visualIndex: number | null): void {
-    const meta = engine.registry.getWidget(widgetType)
-    if (!meta || !canCreateWidget(meta))
-      return
-
-    const sortScope = resolveMetaSortScope(meta)
-    if (sortScope !== false && visualIndex === null)
-      return
-
-    const newNode = createSchemaNode(meta)
-    engine.execute({
-      type: CommandType.ADD_NODE,
-      payload: {
-        node: newNode,
-        destination: {
-          kind: 'root',
-          index: sortScope === false ? undefined : visualIndex,
-          sortScope: sortScope === false ? undefined : sortScope,
-        },
-      },
-    })
-
-    engine.store.selectNode(newNode.id)
-  }
-
-  function handleCanvasDrop(e: DragEvent): void {
+  function handleCanvasDrop(e: DragEvent): CommandExecutionResult {
     e.preventDefault()
-    const visualIndex = dragOverIndex.value
-    clearDragOverState()
+    if (!createDecision.value.allowed) {
+      const decision = createDecision.value
+      const result: Extract<CommandExecutionResult, { ok: false }> = {
+        ok: false,
+        code: decision.code ?? 'NODE_NOT_CREATABLE',
+        messageKey: decision.messageKey,
+        message: decision.message,
+      }
+      resetDragState()
+      return result
+    }
+    return commitDrop()
+  }
 
+  function preflightContainerDestination(
+    destination: Extract<NodeDestination, { kind: 'container' }>,
+  ): PlacementDecision {
+    const schema = engine.state.getSchema()
     const dragTarget = engine.store.dragTarget.value
     if (!dragTarget)
+      return { allowed: false, code: 'DROP_SOURCE_MISSING' }
+    const child = dragTarget.sourceNodeId
+      ? engine.state.getNodeById(dragTarget.sourceNodeId)
+      : (() => {
+          const meta = dragTarget.widgetType
+            ? engine.registry.getWidget(dragTarget.widgetType) as RendererWidgetMeta | undefined
+            : undefined
+          return meta ? createSchemaNode(meta) : null
+        })()
+    if (!child)
+      return { allowed: false, code: 'DROP_SOURCE_MISSING' }
+    const targetResult = resolveDestination(schema, engine.registry, destination)
+    if (!targetResult.ok)
+      return { allowed: false, code: targetResult.code, message: targetResult.message }
+    const target = targetResult.value
+    if (!target.container || !target.definition || !target.variant || !target.region)
+      return { allowed: false, code: 'CONTAINER_DESTINATION_REQUIRED' }
+    const source = dragTarget.sourceNodeId
+      ? buildSchemaIndex(schema).index.get(dragTarget.sourceNodeId)
+      : undefined
+    const sameRegion = source?.owner === destination.containerId
+      && source.regionId === destination.regionId
+    return resolvePlacementDecision({
+      definition: target.definition,
+      region: target.region,
+      child,
+      childHasContainerCapability: Boolean(engine.registry.getWidget(child.type)?.container),
+      targetCount: target.children.length - (sameRegion ? 1 : 0),
+      callbackContext: {
+        operation: dragTarget.sourceNodeId ? 'move' : 'add',
+        schema,
+        container: target.container,
+        variant: target.variant,
+        region: target.region,
+        child,
+        targetIndex: clampInsertIndex(destination.index, target.children.length),
+      },
+    })
+  }
+
+  function handleContainerDragOver(payload: ContainerDropTarget | ContainerDropRejection): void {
+    if ('allowed' in payload) {
+      containerDropDecision.value = {
+        allowed: false,
+        code: payload.code,
+        message: payload.message,
+      }
+      setForbidden({ ok: false, code: payload.code, message: payload.message })
       return
+    }
 
-    // Forbidden drop (creatable predicate returned false)
-    if (!createDecision.value.allowed) {
-      engine.store.setDragTarget(null)
+    dragOverDestination.value = payload.destination
+    const decision = preflightContainerDestination(payload.destination)
+    containerDropDecision.value = decision
+    if (!decision.allowed) {
+      setForbidden({
+        ok: false,
+        code: decision.code ?? 'CONTAINER_PLACEMENT_REJECTED',
+        messageKey: decision.messageKey,
+        message: decision.message,
+        details: decision.details,
+      })
+      if (payload.event.dataTransfer)
+        payload.event.dataTransfer.dropEffect = 'none'
+    }
+    else {
+      isForbidden.value = false
+      forbiddenReason.value = null
+    }
+  }
+
+  function handleContainerDragLeave(e: DragEvent): void {
+    const current = e.currentTarget as HTMLElement | null
+    if (current && e.relatedTarget instanceof Node && current.contains(e.relatedTarget))
       return
-    }
+    clearDragOverState()
+  }
 
-    if (dragTarget.sourceNodeId) {
-      dropExistingNode(dragTarget.sourceNodeId, visualIndex)
-    }
-    else if (dragTarget.widgetType) {
-      dropNewWidget(dragTarget.widgetType, visualIndex)
-    }
-
-    engine.store.setDragTarget(null)
+  function handleContainerDrop(e: DragEvent): CommandExecutionResult {
+    e.preventDefault()
+    e.stopPropagation()
+    return commitDrop()
   }
 
   function handleDragEnd(_e: DragEvent): void {
@@ -331,6 +484,9 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   return {
+    dragOverDestination,
+    activeDestination,
+    containerDropDecision,
     dragOverNodeId,
     dragOverIndex,
     lockedIndices,
@@ -339,6 +495,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     handleCanvasDragOver,
     handleCanvasDragLeave,
     handleCanvasDrop,
+    handleContainerDragOver,
+    handleContainerDragLeave,
+    handleContainerDrop,
+    commitDrop,
     handleDragEnd,
     isForbidden,
     forbiddenReason,
