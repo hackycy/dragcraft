@@ -11,6 +11,37 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
 }
 
+function registerSingleRegionContainer(engine: ReturnType<typeof createEngine>): void {
+  engine.registerWidget({
+    type: 'single-layout',
+    title: 'Single layout',
+    group: 'layout',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    container: {
+      defaultVariant: 'single',
+      variants: {
+        single: {
+          title: 'Single',
+          regions: [{ id: 'content', title: 'Content' }],
+        },
+      },
+    },
+  })
+}
+
+function makeContainerNode(type = 'single-layout'): SchemaNode {
+  return {
+    id: 'layout',
+    type,
+    props: {},
+    container: {
+      variant: 'single',
+      regions: { content: [] },
+    },
+  }
+}
+
 function makeVariantEngine(migrateVariant: ContainerDefinition['migrateVariant']) {
   const container: SchemaNode = {
     id: 'layout',
@@ -286,16 +317,86 @@ describe('createEngine', () => {
     expect(engine.history.canUndo()).toBe(true)
 
     const newSchema = makeSchema([makeNode('x'), makeNode('y')])
-    engine.importSchema(newSchema)
+    const result = engine.importSchema(newSchema)
+    expect(result).toEqual({ ok: true, diagnostics: [] })
     expect(engine.store.schema.value.root.children).toHaveLength(2)
+    expect(engine.store.schema.value.version).toBe('1.0.0')
     expect(engine.history.canUndo()).toBe(false)
+    engine.dispose()
+  })
+
+  it('rejects an invalid import without replacing state, history, or emitting schema changes', () => {
+    const engine = createEngine()
+    registerSingleRegionContainer(engine)
+    engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('current') } })
+    const before = engine.exportSchema()
+    const historyBefore = engine.history.state.value
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+    const invalid = makeContainerNode()
+    invalid.container!.regions.unknown = []
+
+    const result = engine.importSchema(makeSchema([invalid]))
+
+    expect(result).toMatchObject({
+      ok: false,
+      diagnostics: [expect.objectContaining({ code: 'CONTAINER_REGION_UNKNOWN', severity: 'error' })],
+    })
+    expect(engine.exportSchema()).toEqual(before)
+    expect(engine.history.state.value).toEqual(historyBefore)
+    expect(engine.history.canUndo()).toBe(true)
+    expect(schemaChanged).not.toHaveBeenCalled()
+    engine.dispose()
+  })
+
+  it('imports unresolved containers with warning diagnostics', () => {
+    const engine = createEngine()
+    const schema = makeSchema([makeContainerNode('external-layout')])
+
+    const result = engine.importSchema(schema)
+
+    expect(result).toEqual({
+      ok: true,
+      diagnostics: [expect.objectContaining({
+        code: 'UNRESOLVED_CONTAINER_TYPE',
+        severity: 'warning',
+        nodeId: 'layout',
+      })],
+    })
+    expect(engine.exportSchema()).toEqual(schema)
+    expect(engine.exportSchema().version).toBe('1.0.0')
+    engine.dispose()
+  })
+
+  it('clones before migration and validation', () => {
+    const engine = createEngine()
+    const input = makeSchema()
+    engine.registerMigration({
+      fromVersion: '1.0.0',
+      toVersion: '1.1.0',
+      migrate: (schema) => {
+        schema.version = '1.1.0'
+        schema.globalConfig.migrated = true
+        return schema
+      },
+    })
+
+    const result = engine.importSchema(input)
+
+    expect(result.ok).toBe(true)
+    expect(input).toEqual(makeSchema())
+    expect(engine.exportSchema().version).toBe('1.1.0')
     engine.dispose()
   })
 
   it('importSchema warns on invalid schema', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const engine = createEngine()
-    engine.importSchema({ version: '1.0.0', globalConfig: {}, root: null as any })
+    const result = engine.importSchema({ version: '1.0.0', globalConfig: {}, root: null as any })
+    expect(result).toEqual({
+      ok: false,
+      diagnostics: [{ code: 'SCHEMA_ENVELOPE_INVALID', severity: 'error' }],
+    })
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('invalid schema'))
     warn.mockRestore()
     engine.dispose()

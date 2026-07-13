@@ -29,7 +29,7 @@ export {
 export { createContainerPlan } from './container-plan'
 // ── Engine (main entry point) ─────────────
 export { createEngine } from './engine'
-export type { DesignerEngine } from './engine'
+export type { DesignerEngine, SchemaImportResult } from './engine'
 export { createEventHub, EventHub } from './event-hub'
 export type { EventListener } from './event-hub'
 // ── Helpers (tree utilities) ──────────────

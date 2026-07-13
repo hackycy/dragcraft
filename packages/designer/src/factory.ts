@@ -42,13 +42,20 @@ function mergeDefaultMessages(): Record<string, MessageTree> {
  */
 export function createDesigner(options: DesignerOptions = {}): DesignerInstance {
   // 1. Create core engine
-  const engine = createEngine(options.engineOptions)
+  const { initialSchema, ...engineOptions } = options.engineOptions ?? {}
+  const engine = createEngine(engineOptions)
 
   // 2. Register user-provided widget metas
   if (options.widgetMetas) {
     for (const meta of options.widgetMetas) {
       engine.registerWidget(meta)
     }
+  }
+
+  if (initialSchema) {
+    const result = engine.importSchema(initialSchema)
+    if (!result.ok)
+      console.warn('[dragcraft/designer] initial schema rejected', result.diagnostics)
   }
 
   // 3. Use user-provided component map

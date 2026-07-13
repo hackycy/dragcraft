@@ -1,10 +1,16 @@
-import type { DesignerEngine, WidgetMeta } from '@dragcraft/core'
+import type { ContainerDefinition, DesignerEngine, WidgetMeta } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { WidgetDefinition } from './types'
 
 // ──────────────────────────────────────────
 // Generic helper functions
 // ──────────────────────────────────────────
+
+export function defineContainerWidget<Meta extends WidgetMeta & { container: ContainerDefinition }>(
+  definition: WidgetDefinition<Meta>,
+): WidgetDefinition<Meta> {
+  return definition
+}
 
 /**
  * Registers a list of widget definitions with the given DesignerEngine.

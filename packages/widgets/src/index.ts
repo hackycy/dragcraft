@@ -1,6 +1,7 @@
 // ── Helper Functions ─────────────────────
 export {
   buildComponentMap,
+  defineContainerWidget,
   filterByGroup,
   getWidgetMetas,
   registerWidgets,

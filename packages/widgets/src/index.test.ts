@@ -1,6 +1,7 @@
+import type { ContainerDefinition } from '@dragcraft/core'
 import type { WidgetDefinition } from './types'
-import { describe, expect, it, vi } from 'vitest'
-import { buildComponentMap, filterByGroup, getWidgetMetas, registerWidgets } from './index'
+import { describe, expect, expectTypeOf, it, vi } from 'vitest'
+import { buildComponentMap, defineContainerWidget, filterByGroup, getWidgetMetas, registerWidgets } from './index'
 
 const componentA = { name: 'WidgetA' }
 const componentB = { name: 'WidgetB' }
@@ -29,6 +30,32 @@ const definitions: WidgetDefinition[] = [
 ]
 
 describe('widgets helpers', () => {
+  it('preserves metadata inference through defineContainerWidget', () => {
+    const definition = defineContainerWidget({
+      meta: {
+        type: 'single-layout',
+        title: 'Single layout',
+        group: 'layout',
+        defaultProps: {},
+        formSchema: { sections: [] },
+        container: {
+          defaultVariant: 'single',
+          variants: {
+            single: {
+              title: 'Single',
+              regions: [{ id: 'content', title: 'Content' }],
+            },
+          },
+        } satisfies ContainerDefinition,
+        designTime: { nested: true },
+      },
+      component: componentA,
+    })
+
+    expect(definition.meta.container.defaultVariant).toBe('single')
+    expectTypeOf(definition.meta.designTime).toEqualTypeOf<{ nested: boolean }>()
+  })
+
   it('accepts widget definitions with core-compatible extended metadata', () => {
     type ExtendedMeta = WidgetDefinition['meta'] & {
       actions: { extra: [{ key: 'inspect', label: 'Inspect', type: 'button', order: 10 }] }

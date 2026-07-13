@@ -9,6 +9,7 @@ import type {
   EngineOptions,
   EngineState,
   RegistryInstance,
+  SchemaDiagnostic,
   SchemaMigration,
   SchemaStoreInstance,
   WidgetMeta,
@@ -29,6 +30,12 @@ import { findNodeById } from './helpers'
 import { createHistoryManager } from './history-manager'
 import { createRegistry } from './registry'
 import { createSchemaStore } from './schema-store'
+import { cloneSchema } from './schema-utils'
+import { validateSchema } from './schema-validation'
+
+export type SchemaImportResult
+  = | { ok: true, diagnostics: SchemaDiagnostic[] }
+    | { ok: false, diagnostics: SchemaDiagnostic[] }
 
 export interface DesignerEngine {
   store: SchemaStoreInstance
@@ -44,7 +51,7 @@ export interface DesignerEngine {
   registerMigration: (migration: SchemaMigration) => void
   migrateSchema: (schema: DesignerSchema) => DesignerSchema
   exportSchema: () => DesignerSchema
-  importSchema: (schema: DesignerSchema) => void
+  importSchema: (schema: DesignerSchema) => SchemaImportResult
   dispose: () => void
 }
 
@@ -121,15 +128,23 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
     return store.getSchema()
   }
 
-  function importSchema(schema: DesignerSchema): void {
+  function importSchema(schema: DesignerSchema): SchemaImportResult {
     if (!schema?.root || !schema.version) {
       console.warn('[dragcraft/core] importSchema: invalid schema, missing root or version')
-      return
+      return {
+        ok: false,
+        diagnostics: [{ code: 'SCHEMA_ENVELOPE_INVALID', severity: 'error' }],
+      }
     }
-    const migrated = migrateSchema(schema)
-    store.setSchema(migrated)
+    const migrated = migrateSchema(cloneSchema(schema))
+    const validation = validateSchema(migrated, registry)
+    if (!validation.valid)
+      return { ok: false, diagnostics: validation.diagnostics }
+
+    store.setSchema(validation.schema)
     history.clear()
     eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
+    return { ok: true, diagnostics: validation.diagnostics }
   }
 
   function dispose(): void {
