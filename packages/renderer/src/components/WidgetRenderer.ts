@@ -103,7 +103,14 @@ export default defineComponent({
       const containerPlan = node.container
         ? createContainerPlan(node, ctx.engine.registry)
         : null
+      const declaredRegionIds = containerPlan?.ok === true
+        ? new Set(containerPlan.plan.variant.regions.map(region => region.id))
+        : null
+      const hasOnlyDeclaredRegions = declaredRegionIds !== null
+        && Object.keys(node.container?.regions ?? {}).every(regionId => declaredRegionIds.has(regionId))
       const isResolvedContainer = containerPlan?.ok === true
+        && Boolean(widget.resolvedComponent.value)
+        && hasOnlyDeclaredRegions
       const usesBlockingMask = widget.useMask.value && !isSelfPositionedLayer && !isResolvedContainer
       const usesSelectionHandle = !usesBlockingMask && widget.selectable.value && !isSelfPositionedLayer
 

@@ -376,9 +376,64 @@ describe('widgetRenderer', () => {
       app.unmount()
     }
   })
+
+  it('recovers every persisted child when a valid container has no external material', () => {
+    const leftChild: SchemaNode = { id: 'left-child', type: 'text', props: {} }
+    const rightChild: SchemaNode = { id: 'right-child', type: 'text', props: {} }
+    const engine = createEngineWithContainer([leftChild], true, { right: [rightChild] })
+    const { app, host } = mountRoot(engine, {
+      text: defineComponent({ setup: () => () => h('span', 'preserved') }),
+    })
+
+    try {
+      expect(host.querySelector('[data-dc-unresolved-container="layout"]')).not.toBeNull()
+      expect(host.querySelectorAll('[data-node-id="left-child"]')).toHaveLength(1)
+      expect(host.querySelectorAll('[data-node-id="right-child"]')).toHaveLength(1)
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('recovers the whole container when persisted regions exceed the active variant', () => {
+    const leftChild: SchemaNode = { id: 'left-child', type: 'text', props: {} }
+    const rightChild: SchemaNode = { id: 'right-child', type: 'text', props: {} }
+    const legacyChild: SchemaNode = { id: 'legacy-child', type: 'text', props: {} }
+    const engine = createEngineWithContainer([leftChild], true, {
+      right: [rightChild],
+      legacy: [legacyChild],
+    })
+    const ExternalContainer = defineComponent({
+      setup() {
+        return () => h('div', { class: 'external-container' }, [
+          h(ContainerRegionOutlet, { regionId: 'left' }),
+          h(ContainerRegionOutlet, { regionId: 'right' }),
+        ])
+      },
+    })
+    const { app, host } = mountRoot(engine, {
+      'split-layout': ExternalContainer,
+      'text': defineComponent({ setup: () => () => h('span', 'preserved') }),
+    })
+
+    try {
+      expect(host.querySelector('[data-dc-unresolved-container="layout"]')).not.toBeNull()
+      expect(host.querySelector('.external-container')).toBeNull()
+      expect(host.querySelectorAll('[data-node-id="left-child"]')).toHaveLength(1)
+      expect(host.querySelectorAll('[data-node-id="right-child"]')).toHaveLength(1)
+      expect(host.querySelectorAll('[data-node-id="legacy-child"]')).toHaveLength(1)
+    }
+    finally {
+      app.unmount()
+    }
+  })
 })
 
-function createEngineWithContainer(left: SchemaNode[], registerContainer = true) {
+function createEngineWithContainer(
+  left: SchemaNode[],
+  registerContainer = true,
+  otherRegions: Record<string, SchemaNode[]> = {},
+) {
   const engine = createEngine({
     initialSchema: {
       version: '1.0.0',
@@ -391,7 +446,7 @@ function createEngineWithContainer(left: SchemaNode[], registerContainer = true)
           id: 'layout',
           type: 'split-layout',
           props: {},
-          container: { variant: 'split', regions: { left, right: [] } },
+          container: { variant: 'split', regions: { left, right: [], ...otherRegions } },
         }],
       },
     },
