@@ -17,6 +17,11 @@ export function createRendererContext(options: RendererOptions): RendererContext
     actionInterceptors: options.actionInterceptors ?? [],
     actionRegistry: options.actionRegistry ?? createNodeActionRegistry(),
     dragOverNodeId: options.dragOverNodeId ?? ref(null),
+    activeDestination: options.activeDestination ?? ref(null),
+    containerDropDecision: options.containerDropDecision ?? ref(null),
+    onContainerDragOver: options.onContainerDragOver,
+    onContainerDragLeave: options.onContainerDragLeave,
+    onContainerDrop: options.onContainerDrop,
     interactionBoundary: options.interactionBoundary,
   }
 }

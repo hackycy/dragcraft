@@ -1,4 +1,4 @@
-import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeOwner, RegistryInstance, SchemaNode } from '@dragcraft/core'
+import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeDestination, NodeOwner, PlacementDecision, RegistryInstance, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
@@ -23,6 +23,33 @@ export interface WidgetRendererProps {
 export interface ContainerRegionOutletProps {
   regionId: ContainerRegionId
   as?: string | Component
+}
+
+export interface ResolveContainerDropIndexContext {
+  event: DragEvent
+  regionElement: HTMLElement
+  itemElements: readonly HTMLElement[]
+  nodes: readonly SchemaNode[]
+}
+
+export type ResolveContainerDropIndex = (ctx: ResolveContainerDropIndexContext) => number | null
+
+export interface ContainerRegionOutletDropProps extends ContainerRegionOutletProps {
+  resolveDropIndex?: ResolveContainerDropIndex
+}
+
+export interface ContainerDropTarget {
+  event: DragEvent
+  destination: Extract<NodeDestination, { kind: 'container' }>
+}
+
+export interface ContainerDropRejection {
+  event: DragEvent
+  containerId: string
+  regionId: string
+  allowed: false
+  code: 'CONTAINER_DROP_ADAPTER_MISSING' | 'CONTAINER_DROP_ADAPTER_FAILED' | 'CONTAINER_DROP_ADAPTER_INVALID'
+  message?: string
 }
 
 // ──────────────────────────────────────────
@@ -66,9 +93,14 @@ export interface WidgetActionConfig {
   extra?: RendererWidgetActionExtra[]
 }
 
+export interface RendererContainerAdapter {
+  resolveDropIndex?: ResolveContainerDropIndex
+}
+
 export interface RendererWidgetMeta extends CoreWidgetMeta {
   actions?: WidgetActionConfig
   wrapper?: Component
+  containerAdapter?: RendererContainerAdapter
 }
 
 /**
@@ -245,6 +277,14 @@ export interface RendererExtensions {
 // Renderer options and context
 // ──────────────────────────────────────────
 
+export interface ContainerDropRendererOptions {
+  activeDestination?: Ref<NodeDestination | null>
+  containerDropDecision?: Ref<PlacementDecision | null>
+  onContainerDragOver?: (target: ContainerDropTarget | ContainerDropRejection) => void
+  onContainerDragLeave?: (event: DragEvent) => void
+  onContainerDrop?: (event: DragEvent) => void
+}
+
 /**
  * Options accepted by RootRenderer as props.
  *
@@ -253,7 +293,7 @@ export interface RendererExtensions {
  * the initial render has no effect on the running renderer. If you need to swap
  * extensions or hooks, remount RootRenderer with a different `key`.
  */
-export interface RendererOptions {
+export interface RendererOptions extends ContainerDropRendererOptions {
   /** The core engine instance (read-only consumption) */
   engine: DesignerEngine
   /** Maps node.type -> Vue component for rendering */
@@ -294,7 +334,7 @@ export interface RendererOptions {
 /**
  * Internal context provided to all renderer descendants via provide/inject.
  */
-export interface RendererContext {
+export interface RendererContext extends ContainerDropRendererOptions {
   engine: DesignerEngine
   componentMap: ComponentMap
   extensions: RendererExtensions
@@ -302,6 +342,8 @@ export interface RendererContext {
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
   dragOverNodeId: Ref<string | null>
+  activeDestination: Ref<NodeDestination | null>
+  containerDropDecision: Ref<PlacementDecision | null>
   /** Optional canvas viewport used as the collision boundary for floating controls. */
   interactionBoundary?: Ref<HTMLElement | null>
 }

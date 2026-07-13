@@ -1,9 +1,9 @@
-import type { CreationBlockReason, DesignerEngine } from '@dragcraft/core'
+import type { CreationBlockReason, DesignerEngine, NodeDestination, PlacementDecision } from '@dragcraft/core'
 import type { Component, PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
 import type { ActionInterceptor } from '../action-runtime'
 import type { RendererEventHooks } from '../event-hooks'
-import type { ComponentMap, RendererExtensions } from '../types'
+import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions } from '../types'
 import { createLayoutPlan, DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE } from '@dragcraft/core'
 import { computed, defineComponent, h, provide } from 'vue'
 import { createRendererContext } from '../context'
@@ -54,6 +54,26 @@ export default defineComponent({
       type: Object as PropType<Ref<number | null>>,
       default: undefined,
     },
+    activeDestination: {
+      type: Object as PropType<Ref<NodeDestination | null>>,
+      default: undefined,
+    },
+    containerDropDecision: {
+      type: Object as PropType<Ref<PlacementDecision | null>>,
+      default: undefined,
+    },
+    onContainerDragOver: {
+      type: Function as PropType<(target: ContainerDropTarget | ContainerDropRejection) => void>,
+      default: undefined,
+    },
+    onContainerDragLeave: {
+      type: Function as PropType<(event: DragEvent) => void>,
+      default: undefined,
+    },
+    onContainerDrop: {
+      type: Function as PropType<(event: DragEvent) => void>,
+      default: undefined,
+    },
     interactionBoundary: {
       type: Object as PropType<Ref<HTMLElement | null>>,
       default: undefined,
@@ -78,6 +98,11 @@ export default defineComponent({
       actionInterceptors: props.actionInterceptors,
       actionRegistry: props.actionRegistry,
       dragOverNodeId: props.dragOverNodeId,
+      activeDestination: props.activeDestination,
+      containerDropDecision: props.containerDropDecision,
+      onContainerDragOver: props.onContainerDragOver,
+      onContainerDragLeave: props.onContainerDragLeave,
+      onContainerDrop: props.onContainerDrop,
       interactionBoundary: props.interactionBoundary,
     })
     provide(RENDERER_CONTEXT_KEY, ctx)

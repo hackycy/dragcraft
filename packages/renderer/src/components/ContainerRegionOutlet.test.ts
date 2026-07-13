@@ -1,28 +1,37 @@
 // @vitest-environment happy-dom
-import type { Component } from 'vue'
+import type { NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { Component, Ref } from 'vue'
+import type { RendererWidgetMeta, ResolveContainerDropIndex } from '../types'
 import { createEngine } from '@dragcraft/core'
-import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, defineComponent, h, nextTick } from 'vue'
+import { createI18n, I18N_KEY } from '@dragcraft/utils'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { rendererMessages } from '../messages'
 import ContainerRegionOutlet from './ContainerRegionOutlet'
 import RootRenderer from './RootRenderer'
 
-const SplitMaterial = defineComponent({
-  setup() {
-    return () => h('section', { class: 'external-split' }, [
-      h(ContainerRegionOutlet, {
-        'regionId': 'left',
-        'class': 'material-left',
-        'style': { minHeight: '24px' },
-        'aria-label': 'Custom left region',
-      }),
-      h(ContainerRegionOutlet, { regionId: 'right', as: 'aside' }),
-    ])
-  },
-})
+interface MountOptions {
+  nodes?: SchemaNode[]
+  resolveDropIndex?: ResolveContainerDropIndex
+  registeredResolveDropIndex?: ResolveContainerDropIndex
+  activeDestination?: Ref<NodeDestination | null>
+  containerDropDecision?: Ref<PlacementDecision | null>
+  onContainerDragOver?: (...args: any[]) => void
+  onContainerDragLeave?: (...args: any[]) => void
+  onContainerDrop?: (...args: any[]) => void
+  extensions?: Record<string, Component>
+}
 
-function mountExternalSplit() {
-  const left = { id: 'left-child', type: 'text', props: { text: 'Left' } }
-  const right = { id: 'right-child', type: 'text', props: { text: 'Right' } }
+function makeNode(id: string): SchemaNode {
+  return { id, type: 'text', props: { text: id } }
+}
+
+function mountExternalSplit(options: MountOptions = {}) {
+  const nodes = options.nodes ?? [makeNode('left-child')]
+  const right = makeNode('right-child')
+  const onContainerDragOver = options.onContainerDragOver ?? vi.fn()
+  const onContainerDragLeave = options.onContainerDragLeave ?? vi.fn()
+  const onContainerDrop = options.onContainerDrop ?? vi.fn()
   const engine = createEngine({
     initialSchema: {
       version: '1.0.0',
@@ -35,7 +44,7 @@ function mountExternalSplit() {
           id: 'layout',
           type: 'split-layout',
           props: {},
-          container: { variant: 'split', regions: { left: [left], right: [right] } },
+          container: { variant: 'split', regions: { left: nodes, right: [right] } },
         }],
       },
     },
@@ -58,7 +67,10 @@ function mountExternalSplit() {
         },
       },
     },
-  })
+    containerAdapter: options.registeredResolveDropIndex
+      ? { resolveDropIndex: options.registeredResolveDropIndex }
+      : undefined,
+  } as RendererWidgetMeta)
   engine.registerWidget({
     type: 'text',
     title: 'Text',
@@ -68,6 +80,20 @@ function mountExternalSplit() {
     mask: false,
   })
 
+  const SplitMaterial = defineComponent({
+    setup() {
+      return () => h('section', { class: 'external-split' }, [
+        h(ContainerRegionOutlet, {
+          'regionId': 'left',
+          'resolveDropIndex': options.resolveDropIndex,
+          'class': 'material-left',
+          'style': { minHeight: '24px' },
+          'aria-label': 'Custom left region',
+        }),
+        h(ContainerRegionOutlet, { regionId: 'right', as: 'aside' }),
+      ])
+    },
+  })
   const TextMaterial = defineComponent({
     props: { text: String },
     setup(props) {
@@ -82,11 +108,30 @@ function mountExternalSplit() {
   document.body.appendChild(host)
   const app = createApp(defineComponent({
     setup() {
-      return () => h(RootRenderer, { engine, componentMap })
+      provide(I18N_KEY, createI18n('zh-CN', rendererMessages))
+      return () => h(RootRenderer, {
+        engine,
+        componentMap,
+        extensions: options.extensions,
+        activeDestination: options.activeDestination,
+        containerDropDecision: options.containerDropDecision,
+        onContainerDragOver,
+        onContainerDragLeave,
+        onContainerDrop,
+      })
     },
   }))
   app.mount(host)
-  return { app, engine, host }
+  const region = host.querySelector<HTMLElement>('[data-dc-container-region="left"]')!
+  return {
+    app,
+    engine,
+    host,
+    region,
+    onContainerDragOver,
+    onContainerDragLeave,
+    onContainerDrop,
+  }
 }
 
 describe('containerRegionOutlet', () => {
@@ -110,21 +155,244 @@ describe('containerRegionOutlet', () => {
   })
 
   it('forwards material-owned DOM attributes without adding layout styles', () => {
-    const { app, host } = mountExternalSplit()
+    const { app, region } = mountExternalSplit()
     try {
-      const outlet = host.querySelector<HTMLElement>('[data-dc-container-region="left"]')
-      expect(outlet?.classList.contains('dc-container-region')).toBe(true)
-      expect(outlet?.classList.contains('material-left')).toBe(true)
-      expect(outlet?.style.minHeight).toBe('24px')
-      expect(outlet?.getAttribute('data-dc-container-id')).toBe('layout')
-      expect(outlet?.getAttribute('role')).toBe('group')
-      expect(outlet?.getAttribute('aria-label')).toBe('Custom left region')
-      expect(outlet?.style.display).toBe('')
-      expect(outlet?.style.flexDirection).toBe('')
-      expect(outlet?.style.gridTemplateColumns).toBe('')
-      expect(outlet?.style.gap).toBe('')
-      expect(outlet?.style.width).toBe('')
-      expect(outlet?.style.height).toBe('')
+      expect(region.classList.contains('dc-container-region')).toBe(true)
+      expect(region.classList.contains('material-left')).toBe(true)
+      expect(region.style.minHeight).toBe('24px')
+      expect(region.getAttribute('data-dc-container-id')).toBe('layout')
+      expect(region.getAttribute('role')).toBe('group')
+      expect(region.getAttribute('aria-label')).toBe('Custom left region')
+      expect(region.style.display).toBe('')
+      expect(region.style.flexDirection).toBe('')
+      expect(region.style.gridTemplateColumns).toBe('')
+      expect(region.style.gap).toBe('')
+      expect(region.style.width).toBe('')
+      expect(region.style.height).toBe('')
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('uses the outlet resolver and publishes the resulting destination', () => {
+    const registeredResolveDropIndex = vi.fn(() => 0)
+    const resolveDropIndex = vi.fn<ResolveContainerDropIndex>(() => 1)
+    const { app, region, onContainerDragOver } = mountExternalSplit({
+      registeredResolveDropIndex,
+      resolveDropIndex,
+    })
+    try {
+      const event = new DragEvent('dragover', { bubbles: true, cancelable: true, clientX: 20, clientY: 30 })
+      region.dispatchEvent(event)
+
+      expect(resolveDropIndex).toHaveBeenCalledWith(expect.objectContaining({
+        event,
+        regionElement: region,
+        itemElements: expect.any(Array),
+        nodes: expect.any(Array),
+      }))
+      expect(resolveDropIndex.mock.calls[0]![0].itemElements).toHaveLength(1)
+      expect(registeredResolveDropIndex).not.toHaveBeenCalled()
+      expect(onContainerDragOver).toHaveBeenCalledWith({
+        event,
+        destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 1 },
+      })
+      expect(event.defaultPrevented).toBe(true)
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('uses the registered widget adapter when the outlet has no override', () => {
+    const registeredResolveDropIndex = vi.fn(() => 0)
+    const { app, region, onContainerDragOver } = mountExternalSplit({ registeredResolveDropIndex })
+    try {
+      const event = new DragEvent('dragover', { bubbles: true, cancelable: true })
+      region.dispatchEvent(event)
+
+      expect(registeredResolveDropIndex).toHaveBeenCalledOnce()
+      expect(onContainerDragOver).toHaveBeenCalledWith({
+        event,
+        destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+      })
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('blocks drop when no resolver exists and does not guess append', () => {
+    const { app, region, onContainerDragOver } = mountExternalSplit()
+    try {
+      const event = new DragEvent('dragover', { bubbles: true, cancelable: true })
+      region.dispatchEvent(event)
+
+      expect(onContainerDragOver).toHaveBeenCalledWith({
+        event,
+        containerId: 'layout',
+        regionId: 'left',
+        allowed: false,
+        code: 'CONTAINER_DROP_ADAPTER_MISSING',
+      })
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it.each([1.5, -1, 2])('rejects invalid material index %s', (index) => {
+    const { app, region, onContainerDragOver } = mountExternalSplit({ resolveDropIndex: () => index })
+    try {
+      const event = new DragEvent('dragover', { bubbles: true, cancelable: true })
+      region.dispatchEvent(event)
+
+      expect(onContainerDragOver).toHaveBeenCalledWith({
+        event,
+        containerId: 'layout',
+        regionId: 'left',
+        allowed: false,
+        code: 'CONTAINER_DROP_ADAPTER_INVALID',
+      })
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('reports a resolver failure without throwing from the DOM event', () => {
+    const { app, region, onContainerDragOver } = mountExternalSplit({
+      resolveDropIndex: () => { throw new Error('geometry unavailable') },
+    })
+    try {
+      const event = new DragEvent('dragover', { bubbles: true, cancelable: true })
+      expect(() => region.dispatchEvent(event)).not.toThrow()
+      expect(onContainerDragOver).toHaveBeenCalledWith({
+        event,
+        containerId: 'layout',
+        regionId: 'left',
+        allowed: false,
+        code: 'CONTAINER_DROP_ADAPTER_FAILED',
+        message: 'geometry unavailable',
+      })
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('publishes nothing when the material resolver returns null', () => {
+    const { app, region, onContainerDragOver } = mountExternalSplit({ resolveDropIndex: () => null })
+    try {
+      region.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
+      expect(onContainerDragOver).not.toHaveBeenCalled()
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('isolates nested region drag events from parent region callbacks', () => {
+    const resolveDropIndex = vi.fn(() => 0)
+    const {
+      app,
+      region,
+      onContainerDragOver,
+      onContainerDragLeave,
+      onContainerDrop,
+    } = mountExternalSplit({ resolveDropIndex })
+    try {
+      const nested = document.createElement('div')
+      nested.dataset.dcContainerRegion = 'nested'
+      region.appendChild(nested)
+      nested.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
+      nested.dispatchEvent(new DragEvent('dragleave', { bubbles: true }))
+      nested.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true }))
+
+      expect(resolveDropIndex).not.toHaveBeenCalled()
+      expect(onContainerDragOver).not.toHaveBeenCalled()
+      expect(onContainerDragLeave).not.toHaveBeenCalled()
+      expect(onContainerDrop).not.toHaveBeenCalled()
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('forwards isolated dragleave and drop events to the renderer callbacks', () => {
+    const { app, region, onContainerDragLeave, onContainerDrop } = mountExternalSplit()
+    try {
+      const dragleave = new DragEvent('dragleave', { bubbles: true })
+      const drop = new DragEvent('drop', { bubbles: true, cancelable: true })
+      region.dispatchEvent(dragleave)
+      region.dispatchEvent(drop)
+
+      expect(onContainerDragLeave).toHaveBeenCalledWith(dragleave)
+      expect(onContainerDrop).toHaveBeenCalledWith(drop)
+      expect(drop.defaultPrevented).toBe(true)
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('renders empty, active, and forbidden region feedback without layout styles', () => {
+    const activeDestination = ref<NodeDestination | null>({
+      kind: 'container',
+      containerId: 'layout',
+      regionId: 'left',
+      index: 0,
+    })
+    const containerDropDecision = ref<PlacementDecision | null>({
+      allowed: false,
+      code: 'CONTAINER_REGION_MAX_ITEMS',
+      message: 'Region is full',
+    })
+    const EmptyState = defineComponent({ setup: () => () => h('i', { class: 'custom-empty' }) })
+    const DropIndicator = defineComponent({ setup: () => () => h('i', { class: 'custom-indicator' }) })
+    const Forbidden = defineComponent({ setup: () => () => h('i', { class: 'custom-forbidden' }) })
+    const { app, region } = mountExternalSplit({
+      nodes: [],
+      activeDestination,
+      containerDropDecision,
+      extensions: { emptyState: EmptyState, dropIndicator: DropIndicator, forbiddenOverlay: Forbidden },
+    })
+    try {
+      expect(region.classList).toContain('dc-container-region--empty')
+      expect(region.classList).toContain('dc-container-region--active')
+      expect(region.classList).toContain('dc-container-region--forbidden')
+      expect(region.getAttribute('aria-disabled')).toBe('true')
+      expect(region.querySelector('.custom-empty')).not.toBeNull()
+      expect(region.querySelector('.custom-forbidden')).not.toBeNull()
+      expect(region.querySelector('.custom-indicator')).toBeNull()
+      expect(region.style.display).toBe('')
+      expect(region.style.flexDirection).toBe('')
+      expect(region.style.gridTemplateColumns).toBe('')
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('renders active allowed feedback at the destination index', () => {
+    const activeDestination = ref<NodeDestination | null>({
+      kind: 'container',
+      containerId: 'layout',
+      regionId: 'left',
+      index: 0,
+    })
+    const containerDropDecision = ref<PlacementDecision | null>({ allowed: true })
+    const DropIndicator = defineComponent({ setup: () => () => h('i', { class: 'custom-indicator' }) })
+    const { app, region } = mountExternalSplit({
+      activeDestination,
+      containerDropDecision,
+      extensions: { dropIndicator: DropIndicator },
+    })
+    try {
+      expect(region.classList).toContain('dc-container-region--active')
+      expect(region.classList).not.toContain('dc-container-region--forbidden')
+      expect(region.firstElementChild?.classList).toContain('custom-indicator')
     }
     finally {
       app.unmount()
