@@ -3,6 +3,7 @@ import type { EventHub } from './event-hub'
 import type { HistoryManagerInstance } from './history-manager'
 import type {
   Command,
+  CommandExecutionResult,
   CommandHandler,
   DesignerSchema,
   EngineOptions,
@@ -35,7 +36,7 @@ export interface DesignerEngine {
   registry: RegistryInstance
   eventHub: EventHub
 
-  execute: <T = unknown>(command: Command<T>) => void
+  execute: <T = unknown>(command: Command<T>) => CommandExecutionResult
   registerHandler: <T = unknown>(type: string, handler: CommandHandler<T>) => void
   registerWidget: (meta: WidgetMeta) => void
   registerMigration: (migration: SchemaMigration) => void
@@ -75,8 +76,8 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   commandBus.registerHandler(CommandType.UPDATE_PROPS, updatePropsHandler)
   commandBus.registerHandler(CommandType.SET_GLOBAL_CONFIG, setGlobalConfigHandler)
 
-  function execute<T = unknown>(command: Command<T>): void {
-    commandBus.execute(command)
+  function execute<T = unknown>(command: Command<T>): CommandExecutionResult {
+    return commandBus.execute(command)
   }
 
   function registerHandler<T = unknown>(type: string, handler: CommandHandler<T>): void {

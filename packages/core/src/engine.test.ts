@@ -28,10 +28,11 @@ describe('createEngine', () => {
 
   it('execute ADD_NODE adds a node', () => {
     const engine = createEngine()
-    engine.execute({
+    const result = engine.execute({
       type: CommandType.ADD_NODE,
       payload: { node: makeNode('a') },
     })
+    expect(result).toEqual({ ok: true })
     expect(engine.store.schema.value.root.children).toHaveLength(1)
     expect(engine.store.schema.value.root.children![0].id).toBe('a')
     engine.dispose()
@@ -53,11 +54,12 @@ describe('createEngine', () => {
     engine.eventHub.on(EventName.NODE_ADDED, nodeAdded)
     engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
-    engine.execute({
+    const result = engine.execute({
       type: CommandType.ADD_NODE,
       payload: { node: makeNode('a') },
     })
 
+    expect(result).toEqual({ ok: false, code: 'COMMAND_REJECTED' })
     expect(engine.store.schema.value.root.children).toHaveLength(0)
     expect(engine.history.canUndo()).toBe(false)
     expect(nodeAdded).not.toHaveBeenCalled()

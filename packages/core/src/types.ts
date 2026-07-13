@@ -517,7 +517,18 @@ export interface CommandContext {
   registry: RegistryInstance
 }
 
-export type CommandResult = false | void
+export type CommandExecutionResult
+  = | { ok: true, eventPayload?: unknown }
+    | ({ ok: false, code: string } & CreationBlockReason & { details?: Record<string, unknown> })
+
+export type CommandResult = false | void | CommandExecutionResult
+
+export function commandFailure(
+  code: string,
+  reason: Omit<Extract<CommandExecutionResult, { ok: false }>, 'ok' | 'code'> = {},
+): Extract<CommandExecutionResult, { ok: false }> {
+  return { ok: false, code, ...reason }
+}
 
 export type CommandHandler<T = unknown> = (
   ctx: CommandContext,

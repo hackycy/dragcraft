@@ -3,7 +3,9 @@ import type { HistoryManagerInstance } from './history-manager'
 import type {
   Command,
   CommandContext,
+  CommandExecutionResult,
   CommandHandler,
+  CommandResult,
   RegistryInstance,
   SchemaStoreInstance,
 } from './types'
@@ -19,8 +21,16 @@ const COMMAND_EVENT_MAP: Record<string, string> = {
 }
 
 export interface CommandBusInstance {
-  execute: <T = unknown>(command: Command<T>) => void
+  execute: <T = unknown>(command: Command<T>) => CommandExecutionResult
   registerHandler: <T = unknown>(type: string, handler: CommandHandler<T>) => void
+}
+
+function normalizeHandlerResult(result: CommandResult): CommandExecutionResult {
+  if (result === false)
+    return { ok: false, code: 'COMMAND_REJECTED' }
+  if (result)
+    return result
+  return { ok: true }
 }
 
 export function createCommandBus(
@@ -40,15 +50,15 @@ export function createCommandBus(
     handlers.set(type, handler)
   }
 
-  function execute<T = unknown>(command: Command<T>): void {
+  function execute<T = unknown>(command: Command<T>): CommandExecutionResult {
     const handler = handlers.get(command.type)
     if (!handler) {
       console.warn(`[dragcraft/core] No handler registered for command type: "${command.type}"`)
-      return
+      return { ok: false, code: 'COMMAND_HANDLER_MISSING' }
     }
 
     const beforeSnapshot = cloneSchemaRef(store.schema)
-    let result: false | void
+    let result: CommandResult
 
     try {
       result = handler(ctx, command.payload)
@@ -56,12 +66,17 @@ export function createCommandBus(
     catch (error) {
       store.setSchema(beforeSnapshot)
       console.error(`[dragcraft/core] Command "${command.type}" failed, rolling back:`, error)
-      return
+      return {
+        ok: false,
+        code: 'COMMAND_HANDLER_FAILED',
+        message: error instanceof Error ? error.message : String(error),
+      }
     }
 
-    if (result === false) {
+    const normalized = normalizeHandlerResult(result)
+    if (!normalized.ok) {
       store.setSchema(beforeSnapshot)
-      return
+      return normalized
     }
 
     history.pushSnapshot(command.type, beforeSnapshot)
@@ -69,9 +84,10 @@ export function createCommandBus(
 
     const specificEvent = COMMAND_EVENT_MAP[command.type]
     if (specificEvent) {
-      eventHub.emit(specificEvent, command.payload)
+      eventHub.emit(specificEvent, normalized.eventPayload ?? command.payload)
     }
     eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
+    return normalized
   }
 
   return {

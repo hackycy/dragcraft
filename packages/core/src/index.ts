@@ -67,11 +67,13 @@ export {
   isRemoveAllowed,
 } from './sortable'
 // ── Types ─────────────────────────────────
+export { commandFailure } from './types'
 export type {
   AddNodePayload,
   BehaviorPredicate,
   Command,
   CommandContext,
+  CommandExecutionResult,
   CommandHandler,
   CommandResult,
   ContainerDefinition,
