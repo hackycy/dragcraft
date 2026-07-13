@@ -250,6 +250,61 @@ describe('createRegisteredNode', () => {
 })
 
 describe('createContainerState', () => {
+  it('rejects a candidate container ID that collides with the document root ID', () => {
+    const registry = makeRegistry()
+
+    const result = createContainerState(
+      makeNode('root', 'split-layout'),
+      makeSchema(),
+      registry,
+      createRegisteredNode(registry),
+    )
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'CONTAINER_INITIAL_STATE_INVALID',
+      details: {
+        nodeId: 'root',
+        containerId: 'root',
+        diagnostics: [expect.objectContaining({
+          code: 'SCHEMA_NODE_ID_DUPLICATE',
+          nodeId: 'root',
+        })],
+      },
+    })
+  })
+
+  it('rejects an initial child ID that collides with the document root ID', () => {
+    const registry = makeRegistry({
+      createInitialState: () => ({
+        variant: 'split',
+        regions: { left: [makeNode('root')], right: [] },
+      }),
+    })
+
+    const result = createContainerState(
+      makeNode('layout', 'split-layout'),
+      makeSchema(),
+      registry,
+      createRegisteredNode(registry),
+    )
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'CONTAINER_INITIAL_STATE_INVALID',
+      details: {
+        nodeId: 'layout',
+        containerId: 'layout',
+        diagnostics: [expect.objectContaining({
+          code: 'SCHEMA_NODE_ID_DUPLICATE',
+          nodeId: 'root',
+          ownerId: 'layout',
+          regionId: 'left',
+        })],
+      },
+    })
+  })
+
   it('creates the default variant with every registered region', () => {
     const result = createContainerState(
       makeNode('layout', 'split-layout'),

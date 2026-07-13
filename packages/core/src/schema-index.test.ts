@@ -52,4 +52,26 @@ describe('buildSchemaIndex', () => {
       'SCHEMA_CONTAINER_NESTED',
     ]))
   })
+
+  it('reports a document root ID collision without changing the indexed location', () => {
+    const schema = makeSchema([
+      makeContainer('layout', { left: [makeNode('root')] }),
+    ])
+
+    const result = buildSchemaIndex(schema)
+
+    expect(result.diagnostics).toContainEqual({
+      code: 'SCHEMA_NODE_ID_DUPLICATE',
+      severity: 'error',
+      nodeId: 'root',
+      ownerId: 'layout',
+      regionId: 'left',
+    })
+    expect(result.index.get('root')).toMatchObject({
+      owner: 'layout',
+      regionId: 'left',
+      index: 0,
+      depth: 2,
+    })
+  })
 })

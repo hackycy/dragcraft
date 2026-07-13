@@ -11,6 +11,16 @@ export function buildSchemaIndex(schema: DesignerSchema): SchemaIndexResult {
   const diagnostics: SchemaDiagnostic[] = []
 
   const add = (node: SchemaNode, location: Omit<IndexedNodeLocation, 'node'>) => {
+    if (node.id === schema.root.id) {
+      diagnostics.push({
+        code: 'SCHEMA_NODE_ID_DUPLICATE',
+        severity: 'error',
+        nodeId: node.id,
+        ...(location.owner === 'root'
+          ? {}
+          : { ownerId: location.owner, regionId: location.regionId }),
+      })
+    }
     if (index.has(node.id)) {
       diagnostics.push({
         code: 'SCHEMA_NODE_ID_DUPLICATE',

@@ -58,6 +58,17 @@ function makeRegistryWithSplitContainer() {
 }
 
 describe('validateSchema', () => {
+  it('rejects a page node ID that collides with the document root ID', () => {
+    const result = validateSchema(makeSchema([makeNode('root')]), createRegistry())
+
+    expect(result.valid).toBe(false)
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({
+      code: 'SCHEMA_NODE_ID_DUPLICATE',
+      severity: 'error',
+      nodeId: 'root',
+    }))
+  })
+
   it('canonicalizes only missing empty regions on a cloned schema', () => {
     const registry = makeRegistryWithSplitContainer()
     const schema = makeSchema([
