@@ -80,6 +80,13 @@ function mockDragEvent(overrides?: Partial<DragEvent>): DragEvent {
   } as unknown as DragEvent
 }
 
+function mockContainerDropEvent(containerId: string, regionId: string): DragEvent {
+  const region = document.createElement('div')
+  region.dataset.dcContainerId = containerId
+  region.dataset.dcContainerRegion = regionId
+  return mockDragEvent({ currentTarget: region })
+}
+
 describe('useDragDrop', () => {
   let engine: DesignerEngine
 
@@ -328,7 +335,7 @@ describe('useDragDrop', () => {
   it('adds a material to the active container destination without mutating during preflight', () => {
     engine = makeContainerEngine()
     const dd = useDragDrop(engine)
-    const event = mockDragEvent()
+    const event = mockContainerDropEvent('layout', 'left')
     const schemaBefore = engine.exportSchema()
 
     dd.handleMaterialDragStart(event, makeMeta('image'))
@@ -426,6 +433,66 @@ describe('useDragDrop', () => {
     })
   })
 
+  it('does not commit a stale root destination after a container adapter rejection', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+    const execute = vi.spyOn(engine, 'execute')
+    const schemaBefore = engine.exportSchema()
+    dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
+    dd.activeDestination.value = { kind: 'root', sortScope: 'content', index: 0 }
+
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      containerId: 'layout',
+      regionId: 'left',
+      allowed: false,
+      code: 'CONTAINER_DROP_ADAPTER_FAILED',
+      message: 'Adapter failed',
+    })
+
+    expect(dd.activeDestination.value).toBeNull()
+    const dropEvent = mockContainerDropEvent('layout', 'left')
+    const result = dd.handleContainerDrop(dropEvent)
+    expect(result).toEqual({ ok: false, code: 'DROP_TARGET_MISSING' })
+    expect(execute).not.toHaveBeenCalled()
+    expect(engine.exportSchema()).toEqual(schemaBefore)
+    expect(dropEvent.preventDefault).toHaveBeenCalled()
+    expect(dropEvent.stopPropagation).toHaveBeenCalled()
+    expect(dd.forbiddenReason.value).toMatchObject({
+      code: 'CONTAINER_DROP_ADAPTER_FAILED',
+      message: 'Adapter failed',
+    })
+  })
+
+  it.each([
+    { name: 'region', containerId: 'layout', regionId: 'right' },
+    { name: 'container', containerId: 'other-layout', regionId: 'left' },
+  ])('does not move to a stale destination when the current $name publishes no new target', ({ containerId, regionId }) => {
+    engine = makeContainerEngine(
+      { left: [], right: [] },
+      splitDefinition,
+      [makeContainer('other-layout'), makeNode('source')],
+    )
+    const dd = useDragDrop(engine)
+    const execute = vi.spyOn(engine, 'execute')
+    const schemaBefore = engine.exportSchema()
+    engine.store.setDragTarget({ sourceNodeId: 'source', widgetType: null })
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    const dropEvent = mockContainerDropEvent(containerId, regionId)
+    const result = dd.handleContainerDrop(dropEvent)
+
+    expect(result).toEqual({ ok: false, code: 'DROP_TARGET_MISSING' })
+    expect(execute).not.toHaveBeenCalled()
+    expect(engine.exportSchema()).toEqual(schemaBefore)
+    expect(dd.activeDestination.value).toBeNull()
+    expect(dd.isForbidden.value).toBe(true)
+    expect(dd.forbiddenReason.value).toMatchObject({ code: 'DROP_TARGET_MISSING' })
+  })
+
   it.each([
     {
       name: 'region cardinality',
@@ -498,7 +565,7 @@ describe('useDragDrop', () => {
       details: { maxItems: 0 },
     })
 
-    const result = dd.commitDrop()
+    const result = dd.handleContainerDrop(mockContainerDropEvent('layout', 'left'))
 
     expect(result).toMatchObject({ ok: false, code: 'CONTAINER_REGION_MAX_ITEMS' })
     expect(dd.isForbidden.value).toBe(true)

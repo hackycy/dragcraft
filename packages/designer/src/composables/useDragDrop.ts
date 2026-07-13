@@ -437,6 +437,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   function handleContainerDragOver(payload: ContainerDropTarget | ContainerDropRejection): void {
     if ('allowed' in payload) {
+      dragOverDestination.value = null
       containerDropDecision.value = {
         allowed: false,
         code: payload.code,
@@ -476,6 +477,24 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   function handleContainerDrop(e: DragEvent): CommandExecutionResult {
     e.preventDefault()
     e.stopPropagation()
+    const destination = dragOverDestination.value
+    const currentTarget = e.currentTarget
+    const matchesCurrentRegion = destination?.kind === 'container'
+      && currentTarget instanceof Element
+      && currentTarget.getAttribute('data-dc-container-id') === destination.containerId
+      && currentTarget.getAttribute('data-dc-container-region') === destination.regionId
+    if (!matchesCurrentRegion) {
+      dragOverDestination.value = null
+      const result: Extract<CommandExecutionResult, { ok: false }> = {
+        ok: false,
+        code: 'DROP_TARGET_MISSING',
+      }
+      if (!isForbidden.value) {
+        containerDropDecision.value = null
+        setForbidden(result)
+      }
+      return result
+    }
     return commitDrop()
   }
 
