@@ -160,6 +160,49 @@ describe('changeContainerVariantHandler', () => {
     expect(store.getSchema()).toEqual(before)
   })
 
+  it.each([
+    ['code', { allowed: false, code: 123 }],
+    ['message', { allowed: false, code: 'MIGRATION_DENIED', message: {} }],
+    ['messageKey', { allowed: false, code: 'MIGRATION_DENIED', messageKey: [] }],
+    ['details', { allowed: false, code: 'MIGRATION_DENIED', details: [] }],
+  ])('normalizes a denial with malformed %s metadata', (_, migrationResult) => {
+    const { ctx, store } = setup(makeDefinition({
+      migrateVariant: () => migrationResult as never,
+    }))
+    const before = store.getSchema()
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'stacked',
+    })).toEqual({
+      ok: false,
+      code: 'CONTAINER_VARIANT_MIGRATION_INVALID',
+      message: undefined,
+    })
+    expect(store.getSchema()).toEqual(before)
+  })
+
+  it('preserves a denial with valid string code and message', () => {
+    const { ctx, store } = setup(makeDefinition({
+      migrateVariant: () => ({
+        allowed: false,
+        code: 'MIGRATION_DENIED',
+        message: 'Choose a compatible layout first.',
+      }),
+    }))
+    const before = store.getSchema()
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'stacked',
+    })).toEqual({
+      ok: false,
+      code: 'MIGRATION_DENIED',
+      message: 'Choose a compatible layout first.',
+    })
+    expect(store.getSchema()).toEqual(before)
+  })
+
   it('rejects migrated state for a different target variant', () => {
     const { ctx, store } = setup(makeDefinition({
       migrateVariant: () => ({

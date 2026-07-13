@@ -43,6 +43,10 @@ function isContainerState(value: unknown): value is ContainerState {
   )
 }
 
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string'
+}
+
 function invalidMigrationResult(containerId: string): ContainerVariantMigrationResult {
   return {
     allowed: false,
@@ -61,9 +65,24 @@ function safelyMigrateVariant(
     const result: unknown = cloneDeep(definition.migrateVariant(cloneDeep(ctx)))
     if (!isRecord(result) || typeof result.allowed !== 'boolean')
       return invalidMigrationResult(ctx.container.id)
-    if (result.allowed && !isContainerState(result.state))
+    if (result.allowed) {
+      if (!isContainerState(result.state))
+        return invalidMigrationResult(ctx.container.id)
+      return { allowed: true, state: result.state }
+    }
+    if (!isOptionalString(result.code)
+      || !isOptionalString(result.messageKey)
+      || !isOptionalString(result.message)
+      || (result.details !== undefined && !isRecord(result.details))) {
       return invalidMigrationResult(ctx.container.id)
-    return result as unknown as ContainerVariantMigrationResult
+    }
+    return {
+      allowed: false,
+      code: result.code,
+      messageKey: result.messageKey,
+      message: result.message,
+      details: result.details,
+    }
   }
   catch (error) {
     return {
