@@ -19,7 +19,7 @@ export default defineComponent({
       globalConfigValues,
       handlePropertyChange,
       handleGlobalConfigChange,
-    } = usePropertyBinding(engine, { globalConfigSchema })
+    } = usePropertyBinding(engine, { globalConfigSchema, t })
 
     // Auto-switch to Widget tab when a node is selected
     watch(

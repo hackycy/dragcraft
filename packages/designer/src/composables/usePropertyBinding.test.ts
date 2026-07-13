@@ -16,6 +16,30 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: { theme: 'light' }, root: { id: 'root', type: 'root', props: {}, children } }
 }
 
+function makeContainerMeta(componentProps?: Record<string, unknown> | ((ctx: { values: Record<string, unknown> }) => Record<string, unknown>)): WidgetMeta {
+  return {
+    ...makeMeta('layout', {
+      sections: [{
+        title: 'Layout',
+        fields: [{
+          key: 'variant',
+          label: 'Variant',
+          component: 'Select',
+          bindTo: { scope: 'container', path: 'variant' },
+          componentProps,
+        }],
+      }],
+    }),
+    container: {
+      defaultVariant: 'split',
+      variants: {
+        split: { title: 'Split fallback', titleKey: 'variant.split', regions: [{ id: 'left', title: 'Left' }] },
+        stacked: { title: 'Stacked', regions: [{ id: 'body', title: 'Body' }] },
+      },
+    },
+  }
+}
+
 describe('usePropertyBinding', () => {
   let engine: DesignerEngine
 
@@ -61,6 +85,86 @@ describe('usePropertyBinding', () => {
     expect(selectedFormSchema.value!.sections).toHaveLength(1)
   })
 
+  it('reads container variant and derives registered options for the property form', () => {
+    engine.registerWidget(makeContainerMeta({ clearable: true, options: [{ label: 'Stale', value: 'stale' }] }))
+    engine.importSchema(makeSchema([{
+      id: 'layout',
+      type: 'layout',
+      props: {},
+      container: { variant: 'split', regions: { left: [] } },
+    }]))
+    engine.store.selectNode('layout')
+
+    const binding = usePropertyBinding(engine, {
+      t: (key, fallback) => key === 'variant.split' ? 'Split' : fallback ?? key,
+    })
+
+    expect(binding.selectedNodeProps.value.variant).toBe('split')
+    const field = binding.selectedFormSchema.value!.sections[0].fields[0]
+    expect(typeof field.componentProps).toBe('function')
+    const resolveProps = field.componentProps as (
+      ctx: { values: Record<string, unknown> },
+    ) => Record<string, unknown>
+    expect(resolveProps({ values: {} })).toEqual({
+      clearable: true,
+      options: [
+        { label: 'Split', value: 'split' },
+        { label: 'Stacked', value: 'stacked' },
+      ],
+    })
+  })
+
+  it('merges dynamic component props without mutating the registered form schema', () => {
+    const originalProps = vi.fn(({ values }: { values: Record<string, unknown> }) => ({
+      disabled: values.locked === true,
+      options: [{ label: 'Original', value: 'original' }],
+    }))
+    const meta = makeContainerMeta(originalProps)
+    engine.registerWidget(meta)
+    engine.importSchema(makeSchema([{
+      id: 'layout',
+      type: 'layout',
+      props: {},
+      container: { variant: 'split', regions: { left: [] } },
+    }]))
+    engine.store.selectNode('layout')
+
+    const { selectedFormSchema } = usePropertyBinding(engine)
+    const field = selectedFormSchema.value!.sections[0].fields[0]
+    const ctx = { values: { locked: true } }
+
+    const resolveProps = field.componentProps as (
+      ctx: { values: Record<string, unknown> },
+    ) => Record<string, unknown>
+    expect(resolveProps(ctx)).toEqual({
+      disabled: true,
+      options: [
+        { label: 'Split fallback', value: 'split' },
+        { label: 'Stacked', value: 'stacked' },
+      ],
+    })
+    expect(originalProps).toHaveBeenCalledWith(ctx)
+    expect(meta.formSchema.sections[0].fields[0].componentProps).toBe(originalProps)
+  })
+
+  it('leaves non-container form fields unchanged', () => {
+    const componentProps = { placeholder: 'Title' }
+    const meta = makeMeta('plain', {
+      sections: [{
+        title: 'Basic',
+        fields: [{ key: 'title', label: 'Title', component: 'Input', componentProps }],
+      }],
+    })
+    engine.registerWidget(meta)
+    engine.importSchema(makeSchema([makeNode('plain', 'plain', { title: 'Hello' })]))
+    engine.store.selectNode('plain')
+
+    const { selectedFormSchema } = usePropertyBinding(engine)
+
+    expect(selectedFormSchema.value).toEqual(meta.formSchema)
+    expect(selectedFormSchema.value!.sections[0].fields[0].componentProps).toEqual(componentProps)
+  })
+
   it('selectedNodeProps returns node props', () => {
     const { selectedNodeProps } = usePropertyBinding(engine)
     engine.store.selectNode('a')
@@ -103,6 +207,26 @@ describe('usePropertyBinding', () => {
     expect(spy).toHaveBeenCalledWith({
       type: CommandType.UPDATE_PROPS,
       payload: { nodeId: 'a', props: { label: 'World' } },
+    })
+  })
+
+  it('handlePropertyChange dispatches CHANGE_CONTAINER_VARIANT for bound variant fields', () => {
+    engine.registerWidget(makeContainerMeta())
+    engine.importSchema(makeSchema([{
+      id: 'layout',
+      type: 'layout',
+      props: {},
+      container: { variant: 'split', regions: { left: [] } },
+    }]))
+    const spy = vi.spyOn(engine, 'execute')
+    engine.store.selectNode('layout')
+    const { handlePropertyChange } = usePropertyBinding(engine)
+
+    handlePropertyChange('variant', 'stacked')
+
+    expect(spy).toHaveBeenCalledWith({
+      type: CommandType.CHANGE_CONTAINER_VARIANT,
+      payload: { containerId: 'layout', variant: 'stacked' },
     })
   })
 

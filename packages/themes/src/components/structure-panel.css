@@ -98,7 +98,13 @@
 .dc-structure-panel__title { color: var(--dc-color-text); font-size: var(--dc-font-size-sm); font-weight: var(--dc-font-weight-medium); }
 .dc-structure-panel__id { color: var(--dc-color-text-subtle); font-size: var(--dc-font-size-xs); }
 
-.dc-structure-panel__delete {
+.dc-structure-panel__actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.dc-structure-panel__action {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -115,13 +121,47 @@
   transition: color var(--dc-duration-fast), background-color var(--dc-duration-fast), opacity var(--dc-duration-fast);
 }
 
-.dc-structure-panel__item:hover .dc-structure-panel__delete,
-.dc-structure-panel__item:focus-within .dc-structure-panel__delete,
-.dc-structure-panel__item--selected .dc-structure-panel__delete { opacity: 1; }
+.dc-structure-panel__item:hover .dc-structure-panel__action,
+.dc-structure-panel__item:focus-within .dc-structure-panel__action,
+.dc-structure-panel__item--selected .dc-structure-panel__action { opacity: 1; }
 
+.dc-structure-panel__action:hover:not(:disabled) { color: var(--dc-color-text); background: var(--dc-color-surface-subtle); }
 .dc-structure-panel__delete:hover:not(:disabled) { color: var(--dc-color-danger); background: var(--dc-color-danger-subtle); }
-.dc-structure-panel__delete:focus-visible { outline: 2px solid var(--dc-color-focus-ring); outline-offset: 1px; opacity: 1; }
-.dc-structure-panel__delete:disabled { cursor: not-allowed; opacity: 0.35; }
+.dc-structure-panel__action:focus-visible { outline: 2px solid var(--dc-color-focus-ring); outline-offset: 1px; opacity: 1; }
+.dc-structure-panel__action:disabled { cursor: not-allowed; opacity: 0.35; }
+
+.dc-structure-panel__region {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 28px;
+  padding-inline: 20px 8px;
+  color: var(--dc-color-text-subtle);
+  font-size: var(--dc-font-size-xs);
+}
+
+.dc-structure-panel__region-branch-mark {
+  width: 9px;
+  height: 14px;
+  border-bottom: 1px solid var(--dc-color-border);
+  border-left: 1px solid var(--dc-color-border);
+  border-bottom-left-radius: 3px;
+}
+
+.dc-structure-panel__region-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dc-structure-panel__region-count {
+  min-width: 16px;
+  text-align: end;
+}
+
+.dc-structure-panel__children {
+  padding-inline-start: 16px;
+}
 
 .dc-structure-panel__empty {
   display: flex;

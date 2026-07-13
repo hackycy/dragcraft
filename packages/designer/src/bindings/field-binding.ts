@@ -79,6 +79,8 @@ export function readBindingValue(
   schema: DesignerSchema,
   node: SchemaNode | null,
 ): unknown {
+  if (binding.scope === 'container')
+    return node && binding.path === 'variant' ? node.container?.variant : undefined
   if (binding.scope === 'globalConfig')
     return readPath(schema.globalConfig, binding.path)
   if (binding.scope === 'schema')
@@ -110,6 +112,15 @@ export function createBindingCommand(
 ): Command | null {
   if (!isSafePath(binding.path))
     return null
+
+  if (binding.scope === 'container') {
+    if (!nodeId || binding.path !== 'variant' || typeof value !== 'string')
+      return null
+    return {
+      type: CommandType.CHANGE_CONTAINER_VARIANT,
+      payload: { containerId: nodeId, variant: value },
+    }
+  }
 
   if (binding.scope === 'globalConfig') {
     const config = setPatchPath(binding.path, value)

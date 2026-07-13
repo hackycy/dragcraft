@@ -91,7 +91,7 @@ export interface FieldRenderContext {
  */
 export type FieldRenderFactory = (ctx: FieldRenderContext) => () => VNodeChild
 
-export type FieldBindingScope = 'node' | 'schema' | 'globalConfig'
+export type FieldBindingScope = 'node' | 'schema' | 'globalConfig' | 'container'
 
 export interface FieldBindingTarget {
   /** The document area this field writes to. Defaults depend on the host form. */

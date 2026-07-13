@@ -23,6 +23,7 @@ function makeNode(): SchemaNode {
     type: 'text',
     props: { title: 'Hello' },
     style: { container: { marginTop: 8 } },
+    container: { variant: 'split', regions: { left: [] } },
   }
 }
 
@@ -42,6 +43,15 @@ describe('field-binding', () => {
     expect(readBindingValue({ scope: 'node', path: 'style.container.marginTop' }, schema, node)).toBe(8)
     expect(readBindingValue({ scope: 'schema', path: 'root.style.surface.backgroundColor' }, schema, null)).toBe('#fff')
     expect(readBindingValue({ scope: 'globalConfig', path: 'theme' }, schema, null)).toBe('light')
+  })
+
+  it('reads only the container variant from container bindings', () => {
+    const schema = makeSchema()
+    const node = makeNode()
+
+    expect(readBindingValue({ scope: 'container', path: 'variant' }, schema, node)).toBe('split')
+    expect(readBindingValue({ scope: 'container', path: 'regions.left' }, schema, node)).toBeUndefined()
+    expect(readBindingValue({ scope: 'container', path: 'variant' }, schema, null)).toBeUndefined()
   })
 
   it('returns undefined for unsafe read paths', () => {
@@ -73,6 +83,19 @@ describe('field-binding', () => {
       type: CommandType.SET_GLOBAL_CONFIG,
       payload: { config: { theme: 'dark' } },
     })
+  })
+
+  it('translates container.variant binding into the dedicated command', () => {
+    expect(createBindingCommand({ scope: 'container', path: 'variant' }, 'stacked', 'layout')).toEqual({
+      type: CommandType.CHANGE_CONTAINER_VARIANT,
+      payload: { containerId: 'layout', variant: 'stacked' },
+    })
+  })
+
+  it('rejects arbitrary container writes and invalid variant values', () => {
+    expect(createBindingCommand({ scope: 'container', path: 'regions.left' }, [], 'layout')).toBeNull()
+    expect(createBindingCommand({ scope: 'container', path: 'variant' }, 1, 'layout')).toBeNull()
+    expect(createBindingCommand({ scope: 'container', path: 'variant' }, 'stacked')).toBeNull()
   })
 
   it('returns null for unsupported or unsafe paths', () => {

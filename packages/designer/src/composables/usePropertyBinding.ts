@@ -2,11 +2,13 @@ import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
+import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
 import { createBindingCommand, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
 
-interface UsePropertyBindingOptions {
+export interface UsePropertyBindingOptions {
   globalConfigSchema?: FormSchema | null
+  t?: (key: string, fallback?: string) => string
 }
 
 // ──────────────────────────────────────────
@@ -57,6 +59,8 @@ export function usePropertyBinding(
   engine: DesignerEngine,
   options: UsePropertyBindingOptions = {},
 ): UsePropertyBindingReturn {
+  const translate = options.t ?? ((key: string, fallback?: string) => fallback ?? key)
+
   const selectedNode = computed<SchemaNode | null>(() => {
     const nodeId = engine.store.selectedNodeId.value
     if (!nodeId)
@@ -75,8 +79,36 @@ export function usePropertyBinding(
     const meta = selectedWidgetMeta.value
     if (!meta)
       return null
-    // WidgetMeta.formSchema is Record<string, unknown> but structured as FormSchema
-    return meta.formSchema as FormSchema
+    // WidgetMeta.formSchema is Record<string, unknown> but structured as FormSchema.
+    const schema = cloneDeep(meta.formSchema as FormSchema)
+    if (!meta.container)
+      return schema
+
+    const variantOptions = Object.entries(meta.container.variants).map(([value, variant]) => ({
+      value,
+      label: variant.titleKey
+        ? translate(variant.titleKey, variant.title)
+        : variant.title,
+    }))
+
+    for (const section of schema.sections) {
+      for (const field of section.fields) {
+        const binding = resolveFieldBinding(
+          getFieldBinding(field),
+          { scope: 'node', path: `props.${field.key}` },
+        )
+        if (binding.scope !== 'container' || binding.path !== 'variant')
+          continue
+
+        const original = field.componentProps
+        field.componentProps = ctx => ({
+          ...(typeof original === 'function' ? original(ctx) : original ?? {}),
+          options: variantOptions,
+        })
+      }
+    }
+
+    return schema
   })
 
   const selectedNodeProps = computed<Record<string, unknown>>(() => {

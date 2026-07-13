@@ -34,6 +34,56 @@ function makeSchema(): DesignerSchema {
   }
 }
 
+function makeStructureSchema(): DesignerSchema {
+  return {
+    version: '1.0.0',
+    globalConfig: {},
+    root: {
+      id: 'root',
+      type: 'root',
+      props: {},
+      children: [{
+        id: 'layout',
+        type: 'layout',
+        props: {},
+        container: {
+          variant: 'split',
+          regions: {
+            right: [{ id: 'nested-right', type: 'text', props: {} }],
+            left: [
+              { id: 'nested-a', type: 'button', props: {} },
+              { id: 'nested-b', type: 'text', props: {} },
+            ],
+          },
+        },
+      }],
+    },
+  }
+}
+
+function makeStructureMetas(): WidgetMeta[] {
+  return [
+    makeMeta({
+      type: 'layout',
+      title: 'Layout',
+      container: {
+        defaultVariant: 'split',
+        variants: {
+          split: {
+            title: 'Split',
+            regions: [
+              { id: 'left', title: 'Left fallback', titleKey: 'region.left' },
+              { id: 'right', title: 'Right' },
+            ],
+          },
+        },
+      },
+    }),
+    makeMeta({ type: 'button', title: 'Button' }),
+    makeMeta({ type: 'text', title: 'Text' }),
+  ]
+}
+
 function makeContext(instance: DesignerInstance): DesignerContext {
   return {
     engine: instance.engine,
@@ -106,6 +156,104 @@ describe('dcStructurePanel', () => {
       expect(host.textContent).toContain('node-a')
       expect(host.textContent).toContain('文本')
       expect(host.textContent).toContain('node-b')
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
+  it('renders translated virtual regions with counts and nested widgets in registration order', async () => {
+    const designer = createDesigner({
+      engineOptions: { initialSchema: makeStructureSchema() },
+      widgetMetas: makeStructureMetas(),
+      locale: 'en',
+      messages: { en: { region: { left: 'Left translated' } } },
+    })
+    const { app, host } = mountPanel(designer)
+
+    try {
+      await nextTick()
+      const regions = Array.from(host.querySelectorAll('[data-dc-region-id]'))
+      expect(regions.map(el => el.getAttribute('data-dc-region-id'))).toEqual(['left', 'right'])
+      expect(regions[0].textContent).toContain('Left translated')
+      expect(regions[0].textContent).toContain('2')
+      expect(regions[1].textContent).toContain('Right')
+      expect(regions[1].textContent).toContain('1')
+
+      const nodeIds = Array.from(host.querySelectorAll('[data-node-id]'))
+        .map(el => el.getAttribute('data-node-id'))
+      expect(nodeIds).toEqual(['layout', 'nested-a', 'nested-b', 'nested-right'])
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
+  it('keeps region rows unselectable while nested widgets use selection hooks', async () => {
+    const onAfterSelect = vi.fn()
+    const designer = createDesigner({
+      engineOptions: { initialSchema: makeStructureSchema() },
+      widgetMetas: makeStructureMetas(),
+      eventHooks: { onAfterSelect },
+    })
+    const { app, host } = mountPanel(designer)
+
+    try {
+      await nextTick()
+      const region = host.querySelector('[data-dc-region-id="left"]')!
+      expect(region.querySelector('button')).toBeNull()
+      click(region)
+      expect(designer.engine.store.selectedNodeId.value).toBeNull()
+
+      click(host.querySelector('[data-node-id="nested-a"] .dc-structure-panel__select')!)
+      await nextTick()
+      expect(designer.engine.store.selectedNodeId.value).toBe('nested-a')
+      expect(onAfterSelect).toHaveBeenCalledWith({ nodeId: 'nested-a' })
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
+  it('uses container ownership and local indices for nested actions', async () => {
+    const designer = createDesigner({
+      engineOptions: { initialSchema: makeStructureSchema() },
+      widgetMetas: makeStructureMetas(),
+    })
+    const execute = vi.spyOn(designer.engine, 'execute')
+    const { app, host } = mountPanel(designer)
+
+    try {
+      await nextTick()
+      const nested = host.querySelector('[data-node-id="nested-a"]')!
+
+      click(nested.querySelector('[data-dc-action-key="move-down"]')!)
+      click(nested.querySelector('[data-dc-action-key="duplicate"]')!)
+      click(nested.querySelector('[data-dc-action-key="delete"]')!)
+
+      expect(execute).toHaveBeenNthCalledWith(1, {
+        type: CommandType.MOVE_NODE,
+        payload: {
+          nodeId: 'nested-a',
+          destination: {
+            kind: 'container',
+            containerId: 'layout',
+            regionId: 'left',
+            index: 2,
+          },
+        },
+      })
+      expect(execute).toHaveBeenNthCalledWith(2, {
+        type: CommandType.DUPLICATE_NODE,
+        payload: { nodeId: 'nested-a' },
+      })
+      expect(execute).toHaveBeenNthCalledWith(3, {
+        type: CommandType.REMOVE_NODE,
+        payload: { nodeId: 'nested-a' },
+      })
     }
     finally {
       app.unmount()
