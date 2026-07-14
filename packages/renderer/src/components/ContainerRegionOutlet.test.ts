@@ -2,7 +2,7 @@
 import type { NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
 import type { Component, Ref } from 'vue'
 import type { RendererWidgetMeta, ResolveContainerDropIndex } from '../types'
-import { createEngine } from '@dragcraft/core'
+import { CommandType, createEngine } from '@dragcraft/core'
 import { createI18n, I18N_KEY } from '@dragcraft/utils'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
@@ -148,6 +148,33 @@ describe('containerRegionOutlet', () => {
       expect(host.querySelectorAll('[data-node-id="right-child"]')).toHaveLength(1)
       expect(host.querySelector('[data-dc-container-region="left"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-container-region="right"]')?.tagName).toBe('ASIDE')
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('reacts when ADD_NODE inserts a widget into its region', async () => {
+    const { app, engine, host } = mountExternalSplit({ nodes: [] })
+    try {
+      expect(host.querySelectorAll('[data-node-id="added-child"]')).toHaveLength(0)
+
+      const result = engine.execute({
+        type: CommandType.ADD_NODE,
+        payload: {
+          node: makeNode('added-child'),
+          destination: {
+            kind: 'container',
+            containerId: 'layout',
+            regionId: 'left',
+          },
+        },
+      })
+      expect(result.ok).toBe(true)
+
+      await nextTick()
+
+      expect(host.querySelectorAll('[data-node-id="added-child"]')).toHaveLength(1)
     }
     finally {
       app.unmount()

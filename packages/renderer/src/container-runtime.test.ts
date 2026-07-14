@@ -48,6 +48,7 @@ function makeContext(): RendererContext {
     engine: {
       execute: vi.fn(() => ({ ok: true })),
       registry: { getWidget: vi.fn(() => meta) },
+      store: { schema: ref({}) },
     } as unknown as DesignerEngine,
   } as unknown as RendererContext
 }

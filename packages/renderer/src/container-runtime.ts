@@ -34,16 +34,20 @@ export function createContainerRuntime(
   getNode: () => SchemaNode,
   ctx: RendererContext,
 ): ContainerRuntime {
-  const plan = computed(() => createContainerPlan(getNode(), ctx.engine.registry))
+  const resolveNode = (): SchemaNode => {
+    void ctx.engine.store.schema.value
+    return getNode()
+  }
+  const plan = computed(() => createContainerPlan(resolveNode(), ctx.engine.registry))
 
   return {
-    nodeId: computed(() => getNode().id),
-    variant: computed(() => getNode().container?.variant ?? ''),
+    nodeId: computed(() => resolveNode().id),
+    variant: computed(() => resolveNode().container?.variant ?? ''),
     regionDefinitions: computed(() => deepFreeze(cloneDeep(
       plan.value.ok ? plan.value.plan.variant.regions : [],
     ))),
     getRegionNodes: regionId => deepFreeze(cloneDeep(
-      getNode().container?.regions[regionId] ?? [],
+      resolveNode().container?.regions[regionId] ?? [],
     )),
     requestVariantChange: variant => ctx.engine.execute({
       type: CommandType.CHANGE_CONTAINER_VARIANT,
