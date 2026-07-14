@@ -2,10 +2,12 @@ import type { AddNodePayload, CommandContext, CommandResult } from '../types'
 import { cloneDeep } from '@dragcraft/utils'
 import { resolveCreatable } from '../behavior'
 import { createContainerState, createRegisteredNode, resolvePlacementDecision } from '../container-placement'
+import { collectSubtreeIds } from '../helpers'
 import { clampInsertIndex, createLayoutPlan, getSortableArrayIndexForInsert, getSortScopeEntries, resolveDestination, resolveNodeLayout, stripPageLayout } from '../layout'
+import { buildSchemaIndex } from '../schema-index'
 import { cloneSchema } from '../schema-utils'
 import { validateSchema } from '../schema-validation'
-import { getLockedIndicesFromEntries, isInsertAllowed } from '../sortable'
+import { getLockedIndicesFromEntries, getLockedIndicesFromNodes, isInsertAllowed } from '../sortable'
 
 export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): CommandResult {
   const { store, registry } = ctx
@@ -34,6 +36,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
   }
 
   const node = cloneDeep(payload.node)
+  const candidateNodeIds = collectSubtreeIds(node)
   if (node.container && !meta)
     return { ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' }
   if (node.container && !meta?.container)
@@ -53,16 +56,34 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
     node.container = initialized.state
   }
 
+  const idCandidate = cloneSchema(rawSchema)
+  idCandidate.root.children ??= []
+  idCandidate.root.children.push(cloneDeep(node))
+  const idDiagnostics = buildSchemaIndex(idCandidate).diagnostics.filter(
+    diagnostic => diagnostic.code === 'SCHEMA_NODE_ID_DUPLICATE',
+  )
+  if (idDiagnostics.length > 0) {
+    return {
+      ok: false,
+      code: 'SCHEMA_NODE_ID_DUPLICATE',
+      details: { diagnostics: idDiagnostics },
+    }
+  }
+
   if (node.container) {
     const candidate = cloneSchema(rawSchema)
     candidate.root.children ??= []
     candidate.root.children.push(cloneDeep(node))
     const validation = validateSchema(candidate, registry)
-    if (!validation.valid) {
+    const candidateDiagnostics = validation.diagnostics.filter(diagnostic =>
+      (diagnostic.nodeId !== undefined && candidateNodeIds.has(diagnostic.nodeId))
+      || (diagnostic.ownerId !== undefined && candidateNodeIds.has(diagnostic.ownerId)),
+    )
+    if (candidateDiagnostics.some(diagnostic => diagnostic.severity === 'error')) {
       return {
         ok: false,
         code: 'CONTAINER_STATE_INVALID',
-        details: { diagnostics: validation.diagnostics },
+        details: { diagnostics: candidateDiagnostics },
       }
     }
   }
@@ -76,6 +97,9 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
       return { ok: false, code: 'CONTAINER_DESTINATION_REQUIRED' }
 
     const index = clampInsertIndex(destination.index, target.children.length)
+    const lockedIndices = getLockedIndicesFromNodes(target.children, registry, rawSchema)
+    if (!isInsertAllowed(index, lockedIndices))
+      return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
     const decision = resolvePlacementDecision({
       definition: target.definition,
       region: target.region,
@@ -99,6 +123,24 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
         messageKey: decision.messageKey,
         message: decision.message,
         details: decision.details,
+      }
+    }
+
+    const candidate = cloneSchema(rawSchema)
+    const candidateTarget = resolveDestination(candidate, registry, destination)
+    if (!candidateTarget.ok)
+      return candidateTarget
+    candidateTarget.value.children.splice(index, 0, stripPageLayout(cloneDeep(node)))
+    const validation = validateSchema(candidate, registry)
+    const candidateDiagnostics = validation.diagnostics.filter(diagnostic =>
+      (diagnostic.nodeId !== undefined && candidateNodeIds.has(diagnostic.nodeId))
+      || (diagnostic.ownerId !== undefined && candidateNodeIds.has(diagnostic.ownerId)),
+    )
+    if (candidateDiagnostics.some(diagnostic => diagnostic.severity === 'error')) {
+      return {
+        ok: false,
+        code: 'SCHEMA_CANDIDATE_INVALID',
+        details: { diagnostics: candidateDiagnostics },
       }
     }
 
@@ -128,6 +170,22 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
   }
   else if (destination.index !== undefined) {
     resolvedArrayIndex = clampInsertIndex(destination.index, rootChildren.length)
+  }
+
+  const candidate = cloneSchema(rawSchema)
+  candidate.root.children ??= []
+  candidate.root.children.splice(resolvedArrayIndex, 0, cloneDeep(node))
+  const validation = validateSchema(candidate, registry)
+  const candidateDiagnostics = validation.diagnostics.filter(diagnostic =>
+    (diagnostic.nodeId !== undefined && candidateNodeIds.has(diagnostic.nodeId))
+    || (diagnostic.ownerId !== undefined && candidateNodeIds.has(diagnostic.ownerId)),
+  )
+  if (candidateDiagnostics.some(diagnostic => diagnostic.severity === 'error')) {
+    return {
+      ok: false,
+      code: 'SCHEMA_CANDIDATE_INVALID',
+      details: { diagnostics: candidateDiagnostics },
+    }
   }
 
   rootChildren.splice(resolvedArrayIndex, 0, node)

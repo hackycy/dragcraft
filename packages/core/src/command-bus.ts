@@ -42,6 +42,7 @@ export function createCommandBus(
   history: HistoryManagerInstance,
 ): CommandBusInstance {
   const handlers = new Map<string, CommandHandler<any>>()
+  let executing = false
 
   const ctx: CommandContext = { store, registry }
 
@@ -53,43 +54,52 @@ export function createCommandBus(
   }
 
   function execute<T = unknown>(command: Command<T>): CommandExecutionResult {
-    const handler = handlers.get(command.type)
-    if (!handler) {
-      console.warn(`[dragcraft/core] No handler registered for command type: "${command.type}"`)
-      return { ok: false, code: 'COMMAND_HANDLER_MISSING' }
-    }
-
-    const beforeSnapshot = cloneSchemaRef(store.schema)
-    let result: CommandResult
+    if (executing)
+      return { ok: false, code: 'COMMAND_REENTRANT' }
+    executing = true
 
     try {
-      result = handler(ctx, command.payload)
-    }
-    catch (error) {
-      store.setSchema(beforeSnapshot)
-      console.error(`[dragcraft/core] Command "${command.type}" failed, rolling back:`, error)
-      return {
-        ok: false,
-        code: 'COMMAND_HANDLER_FAILED',
-        message: error instanceof Error ? error.message : String(error),
+      const handler = handlers.get(command.type)
+      if (!handler) {
+        console.warn(`[dragcraft/core] No handler registered for command type: "${command.type}"`)
+        return { ok: false, code: 'COMMAND_HANDLER_MISSING' }
       }
-    }
 
-    const normalized = normalizeHandlerResult(result)
-    if (!normalized.ok) {
-      store.setSchema(beforeSnapshot)
+      const beforeSnapshot = cloneSchemaRef(store.schema)
+      let result: CommandResult
+
+      try {
+        result = handler(ctx, command.payload)
+      }
+      catch (error) {
+        store.setSchema(beforeSnapshot)
+        console.error(`[dragcraft/core] Command "${command.type}" failed, rolling back:`, error)
+        return {
+          ok: false,
+          code: 'COMMAND_HANDLER_FAILED',
+          message: error instanceof Error ? error.message : String(error),
+        }
+      }
+
+      const normalized = normalizeHandlerResult(result)
+      if (!normalized.ok) {
+        store.setSchema(beforeSnapshot)
+        return normalized
+      }
+
+      history.pushSnapshot(command.type, beforeSnapshot)
+      store.triggerUpdate()
+
+      const specificEvent = COMMAND_EVENT_MAP[command.type]
+      if (specificEvent) {
+        eventHub.emit(specificEvent, normalized.eventPayload ?? command.payload)
+      }
+      eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
       return normalized
     }
-
-    history.pushSnapshot(command.type, beforeSnapshot)
-    store.triggerUpdate()
-
-    const specificEvent = COMMAND_EVENT_MAP[command.type]
-    if (specificEvent) {
-      eventHub.emit(specificEvent, normalized.eventPayload ?? command.payload)
+    finally {
+      executing = false
     }
-    eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
-    return normalized
   }
 
   return {

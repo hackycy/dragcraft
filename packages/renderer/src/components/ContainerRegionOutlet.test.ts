@@ -282,11 +282,18 @@ describe('containerRegionOutlet', () => {
     }
   })
 
-  it('publishes nothing when the material resolver returns null', () => {
+  it('publishes an explicit no-target rejection when the material resolver returns null', () => {
     const { app, region, onContainerDragOver } = mountExternalSplit({ resolveDropIndex: () => null })
     try {
-      region.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
-      expect(onContainerDragOver).not.toHaveBeenCalled()
+      const event = new DragEvent('dragover', { bubbles: true, cancelable: true })
+      region.dispatchEvent(event)
+      expect(onContainerDragOver).toHaveBeenCalledWith({
+        event,
+        containerId: 'layout',
+        regionId: 'left',
+        allowed: false,
+        code: 'CONTAINER_DROP_NO_TARGET',
+      })
     }
     finally {
       app.unmount()

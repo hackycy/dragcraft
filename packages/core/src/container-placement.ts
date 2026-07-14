@@ -37,7 +37,9 @@ export function resolvePlacementDecision(
     return { allowed: false, code: 'CONTAINER_REGION_MAX_ITEMS' }
 
   try {
-    const decision = ctx.definition.canPlace?.(ctx.callbackContext) ?? { allowed: true }
+    const decision = cloneDeep(
+      ctx.definition.canPlace?.(cloneDeep(ctx.callbackContext)) ?? { allowed: true },
+    )
     if (!decision || typeof decision.allowed !== 'boolean') {
       return {
         allowed: false,

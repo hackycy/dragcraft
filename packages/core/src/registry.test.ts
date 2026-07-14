@@ -59,6 +59,16 @@ describe('createRegistry', () => {
     warn.mockRestore()
   })
 
+  it('warns and skips null widget metadata without throwing', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const reg = createRegistry()
+
+    expect(() => reg.registerWidget(null as unknown as WidgetMeta)).not.toThrow()
+    expect(reg.getAllWidgets()).toEqual([])
+    expect(warn).toHaveBeenCalledOnce()
+    warn.mockRestore()
+  })
+
   it('warns once and skips an invalid container definition', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const reg = createRegistry()
@@ -79,6 +89,42 @@ describe('createRegistry', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('container'))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('CONTAINER_DEFAULT_VARIANT_MISSING'))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('CONTAINER_REGION_ID_RESERVED'))
+    warn.mockRestore()
+  })
+
+  it.each([
+    ['null variants', { defaultVariant: 'single', variants: null }],
+    ['null region definitions', {
+      defaultVariant: 'single',
+      variants: { single: { title: 'Single', regions: [null] } },
+    }],
+    ['non-array constraint type lists', {
+      defaultVariant: 'single',
+      variants: {
+        single: {
+          title: 'Single',
+          regions: [{ id: 'content', title: 'Content', constraints: { includeTypes: null } }],
+        },
+      },
+    }],
+    ['non-record constraints', {
+      defaultVariant: 'single',
+      variants: {
+        single: {
+          title: 'Single',
+          regions: [{ id: 'content', title: 'Content', constraints: new Date() }],
+        },
+      },
+    }],
+  ])('warns once and skips malformed runtime container metadata: %s', (_label, container) => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const reg = createRegistry()
+
+    expect(() => reg.registerWidget(makeMeta('container', {
+      container: container as unknown as WidgetMeta['container'],
+    }))).not.toThrow()
+    expect(reg.getWidget('container')).toBeUndefined()
+    expect(warn).toHaveBeenCalledTimes(1)
     warn.mockRestore()
   })
 

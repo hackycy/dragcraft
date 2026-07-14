@@ -230,6 +230,28 @@ describe('usePropertyBinding', () => {
     })
   })
 
+  it('returns structured variant denial metadata to Designer callers', () => {
+    engine.registerWidget(makeContainerMeta())
+    engine.importSchema(makeSchema([{
+      id: 'layout',
+      type: 'layout',
+      props: {},
+      container: { variant: 'split', regions: { left: [] } },
+    }]))
+    const denial = {
+      ok: false as const,
+      code: 'MIGRATION_DENIED',
+      messageKey: 'container.variant.denied',
+      message: 'Choose another layout.',
+      details: { variant: 'stacked' },
+    }
+    vi.spyOn(engine, 'execute').mockReturnValue(denial)
+    engine.store.selectNode('layout')
+    const { handlePropertyChange } = usePropertyBinding(engine)
+
+    expect(handlePropertyChange('variant', 'stacked')).toEqual(denial)
+  })
+
   it('handlePropertyChange dispatches style patches for bound fields', () => {
     const styleSchema = {
       sections: [{

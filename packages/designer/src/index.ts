@@ -136,6 +136,7 @@ export type {
   ActionRisk,
   ComponentMap,
   ConfirmActionInterceptorOptions,
+  DeepReadonly,
   EmptyStateProps,
   NodeActionContext,
   NodeActionDefinition,

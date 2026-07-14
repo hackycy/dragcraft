@@ -177,8 +177,30 @@ describe('resolvePlacementDecision', () => {
     const predicate = vi.fn(() => decision)
     const context = makePlacementContext({ canPlace: predicate })
 
-    expect(resolvePlacementDecision(context)).toBe(decision)
+    expect(resolvePlacementDecision(context)).toEqual(decision)
     expect(predicate).toHaveBeenCalledWith(context.callbackContext)
+  })
+
+  it('passes detached snapshots to the material predicate', () => {
+    const context = makePlacementContext({
+      canPlace: (callbackContext) => {
+        callbackContext.schema.globalConfig.mutated = true
+        callbackContext.container.props.mutated = true
+        callbackContext.child.props.mutated = true
+        ;(callbackContext.region as ContainerRegionDefinition).title = 'Mutated'
+        return { allowed: true }
+      },
+    })
+    const schemaBefore = structuredClone(context.callbackContext.schema)
+    const containerBefore = structuredClone(context.callbackContext.container)
+    const childBefore = structuredClone(context.callbackContext.child)
+    const regionBefore = structuredClone(context.callbackContext.region)
+
+    expect(resolvePlacementDecision(context)).toEqual({ allowed: true })
+    expect(context.callbackContext.schema).toEqual(schemaBefore)
+    expect(context.callbackContext.container).toEqual(containerBefore)
+    expect(context.callbackContext.child).toEqual(childBefore)
+    expect(context.callbackContext.region).toEqual(regionBefore)
   })
 
   it('allows placement when no material predicate is registered', () => {

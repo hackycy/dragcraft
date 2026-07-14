@@ -8,6 +8,10 @@ function makeNode(id: string, layout?: SchemaNode['layout']): SchemaNode {
   return { id, type: 'text', props: {}, layout }
 }
 
+function makeLockedNode(id: string): SchemaNode {
+  return { ...makeNode(id), type: 'locked' }
+}
+
 function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
 }
@@ -53,6 +57,14 @@ function setupWithContainer(rootNodes: SchemaNode[]) {
     group: 'g',
     defaultProps: {},
     formSchema: { sections: [] },
+  })
+  result.registry.registerWidget({
+    type: 'locked',
+    title: 'Locked',
+    group: 'g',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    sortable: false,
   })
   result.registry.registerWidget({
     type: 'split-layout',
@@ -152,6 +164,20 @@ describe('moveNodeHandler', () => {
     })
   })
 
+  it('rejects a structurally invalid final move candidate without mutation', () => {
+    const invalid = { id: 'invalid', type: 'text', props: null } as unknown as SchemaNode
+    const { ctx, store } = setupWithContainer([invalid, makeContainer()])
+    const before = store.getSchema()
+
+    const result = moveNodeHandler(ctx, {
+      nodeId: 'invalid',
+      destination: { kind: 'container', containerId: 'layout', regionId: 'open', index: 0 },
+    })
+
+    expect(result).toMatchObject({ ok: false, code: 'SCHEMA_CANDIDATE_INVALID' })
+    expect(store.getSchema()).toEqual(before)
+  })
+
   it('moves between regions atomically and honors source minItems', () => {
     const container = makeContainer({
       required: [makeNode('required')],
@@ -204,6 +230,52 @@ describe('moveNodeHandler', () => {
     expect(result).toMatchObject({ ok: true })
     expect(store.getRawSchema().root.children![0].container!.regions.open.map(node => node.id))
       .toEqual(['b', 'c', 'a'])
+  })
+
+  it('rejects a same-region move across an absolute-index lock', () => {
+    const container = makeContainer({
+      required: [makeNode('required')],
+      full: [],
+      open: [makeNode('a'), makeLockedNode('locked'), makeNode('b')],
+    })
+    const { ctx, store } = setupWithContainer([container])
+    const before = store.getSchema()
+
+    const result = moveNodeHandler(ctx, {
+      nodeId: 'a',
+      destination: { kind: 'container', containerId: 'layout', regionId: 'open', index: 3 },
+    })
+
+    expect(result).toEqual({ ok: false, code: 'SORTABLE_LOCK_VIOLATION' })
+    expect(store.getSchema()).toEqual(before)
+  })
+
+  it('rejects cross-owner moves that shift source or target region locks', () => {
+    const sourceLocked = makeContainer({
+      required: [makeNode('required')],
+      full: [],
+      open: [makeNode('source'), makeLockedNode('source-lock')],
+    })
+    const sourceSetup = setupWithContainer([sourceLocked])
+    const sourceBefore = sourceSetup.store.getSchema()
+    expect(moveNodeHandler(sourceSetup.ctx, {
+      nodeId: 'source',
+      destination: { kind: 'root', index: 1 },
+    })).toEqual({ ok: false, code: 'SORTABLE_LOCK_VIOLATION' })
+    expect(sourceSetup.store.getSchema()).toEqual(sourceBefore)
+
+    const targetLocked = makeContainer({
+      required: [makeNode('required')],
+      full: [],
+      open: [makeLockedNode('target-lock')],
+    })
+    const targetSetup = setupWithContainer([makeNode('source'), targetLocked])
+    const targetBefore = targetSetup.store.getSchema()
+    expect(moveNodeHandler(targetSetup.ctx, {
+      nodeId: 'source',
+      destination: { kind: 'container', containerId: 'layout', regionId: 'open', index: 0 },
+    })).toEqual({ ok: false, code: 'SORTABLE_LOCK_VIOLATION' })
+    expect(targetSetup.store.getSchema()).toEqual(targetBefore)
   })
 
   it('moves a region widget back to root', () => {

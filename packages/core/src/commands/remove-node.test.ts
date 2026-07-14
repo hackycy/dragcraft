@@ -171,6 +171,29 @@ describe('removeNodeHandler', () => {
     expect(store.getSchema()).toEqual(before)
   })
 
+  it('rejects region removal that would shift an absolute-index lock', () => {
+    const container = makeContainer({
+      required: [makeNode('required')],
+      open: [makeNode('first'), { ...makeNode('locked'), type: 'locked' }],
+    })
+    const { ctx, registry, store } = setupWithContainer(container)
+    registry.registerWidget({
+      type: 'locked',
+      title: 'Locked',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      sortable: false,
+    })
+    const before = store.getSchema()
+
+    expect(removeNodeHandler(ctx, { nodeId: 'first' })).toEqual({
+      ok: false,
+      code: 'SORTABLE_LOCK_VIOLATION',
+    })
+    expect(store.getSchema()).toEqual(before)
+  })
+
   it.each([
     ['definition', (container: SchemaNode) => { container.type = 'missing-layout' }],
     ['variant', (container: SchemaNode) => { container.container!.variant = 'missing' }],

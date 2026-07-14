@@ -6,11 +6,115 @@ import type {
 import { buildSchemaIndex } from './schema-index'
 import { cloneSchema } from './schema-utils'
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value))
+    return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
+}
+
+export function collectSchemaStructuralDiagnostics(input: unknown): SchemaValidationResult['diagnostics'] {
+  const diagnostics: SchemaValidationResult['diagnostics'] = []
+  if (!isRecord(input)
+    || typeof input.version !== 'string'
+    || input.version.length === 0
+    || !Object.hasOwn(input, 'root')
+    || !input.root) {
+    diagnostics.push({ code: 'SCHEMA_ENVELOPE_INVALID', severity: 'error' })
+    return diagnostics
+  }
+  if (!isRecord(input.globalConfig)) {
+    diagnostics.push({ code: 'SCHEMA_GLOBAL_CONFIG_INVALID', severity: 'error', path: 'globalConfig' })
+    return diagnostics
+  }
+
+  const root = input.root
+  if (!isRecord(root)
+    || typeof root.id !== 'string'
+    || typeof root.type !== 'string'
+    || !isRecord(root.props)) {
+    diagnostics.push({ code: 'SCHEMA_ROOT_INVALID', severity: 'error', path: 'root' })
+    return diagnostics
+  }
+
+  const inspectNode = (value: unknown, path: string, ownerId?: string, regionId?: string): void => {
+    if (!isRecord(value)
+      || typeof value.id !== 'string'
+      || typeof value.type !== 'string'
+      || !isRecord(value.props)) {
+      diagnostics.push({
+        code: 'SCHEMA_NODE_INVALID',
+        severity: 'error',
+        path,
+        nodeId: isRecord(value) && typeof value.id === 'string' ? value.id : undefined,
+        ownerId,
+        regionId,
+      })
+      return
+    }
+    const nodeId = value.id as string
+    if (value.container === undefined)
+      return
+    if (!isRecord(value.container) || typeof value.container.variant !== 'string') {
+      diagnostics.push({
+        code: 'CONTAINER_STATE_INVALID',
+        severity: 'error',
+        nodeId,
+        path: `${path}.container`,
+      })
+      return
+    }
+    if (!isRecord(value.container.regions)) {
+      diagnostics.push({
+        code: 'CONTAINER_REGIONS_INVALID',
+        severity: 'error',
+        nodeId,
+        path: `${path}.container.regions`,
+      })
+      return
+    }
+    for (const [childRegionId, children] of Object.entries(value.container.regions)) {
+      if (!Array.isArray(children)) {
+        diagnostics.push({
+          code: 'CONTAINER_REGION_CHILDREN_INVALID',
+          severity: 'error',
+          nodeId,
+          regionId: childRegionId,
+          path: `${path}.container.regions.${childRegionId}`,
+        })
+        continue
+      }
+      children.forEach((child, index) => inspectNode(
+        child,
+        `${path}.container.regions.${childRegionId}.${index}`,
+        nodeId,
+        childRegionId,
+      ))
+    }
+  }
+
+  if (root.children !== undefined && !Array.isArray(root.children)) {
+    diagnostics.push({ code: 'SCHEMA_CHILDREN_INVALID', severity: 'error', path: 'root.children' })
+    return diagnostics
+  }
+  for (const [index, node] of (root.children ?? []).entries())
+    inspectNode(node, `root.children.${index}`)
+  return diagnostics
+}
+
 export function validateSchema(
   input: DesignerSchema,
   registry: RegistryInstance,
 ): SchemaValidationResult {
   const schema = cloneSchema(input)
+  const structuralDiagnostics = collectSchemaStructuralDiagnostics(schema)
+  if (structuralDiagnostics.length > 0) {
+    return {
+      valid: false,
+      schema,
+      diagnostics: structuralDiagnostics,
+    }
+  }
   const indexed = buildSchemaIndex(schema)
   const diagnostics = [...indexed.diagnostics]
 

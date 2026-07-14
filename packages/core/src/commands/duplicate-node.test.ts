@@ -124,6 +124,12 @@ describe('duplicate node command', () => {
       expect.not.stringMatching(/^(chrome|layout|after)$/),
       'after',
     ])
+    expect(result).toMatchObject({
+      ok: true,
+      eventPayload: {
+        destination: { kind: 'root', sortScope: 'content', index: 2 },
+      },
+    })
   })
 
   it('rejects duplication when adding the clone violates destination constraints', () => {

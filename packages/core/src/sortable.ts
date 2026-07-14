@@ -29,10 +29,18 @@ export function getLockedIndicesFromEntries(
   registry: RegistryInstance,
   schema: DesignerSchema,
 ): Set<number> {
+  return getLockedIndicesFromNodes(scopeEntries.map(entry => entry.node), registry, schema)
+}
+
+export function getLockedIndicesFromNodes(
+  nodes: readonly SchemaNode[],
+  registry: RegistryInstance,
+  schema: DesignerSchema,
+): Set<number> {
   const locked = new Set<number>()
 
-  for (let i = 0; i < scopeEntries.length; i++) {
-    const node = scopeEntries[i].node
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i]
     const meta = registry.getWidget(node.type)
     if (!meta)
       continue

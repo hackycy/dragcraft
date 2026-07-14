@@ -90,6 +90,27 @@ describe('changeContainerVariantHandler', () => {
     })
   })
 
+  it('uses an explicit migrator when region IDs are unchanged', () => {
+    const migrateVariant = vi.fn(() => ({
+      allowed: true as const,
+      state: {
+        variant: 'reversed',
+        regions: { left: [makeNode('right')], right: [makeNode('left')] },
+      },
+    }))
+    const { container, ctx } = setup(makeDefinition({ migrateVariant }))
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'reversed',
+    })).toMatchObject({ ok: true })
+    expect(migrateVariant).toHaveBeenCalledOnce()
+    expect(container.container).toEqual({
+      variant: 'reversed',
+      regions: { left: [makeNode('right')], right: [makeNode('left')] },
+    })
+  })
+
   it('commits a valid externally migrated state', () => {
     const migrateVariant = vi.fn(({ state }) => ({
       allowed: true as const,
@@ -214,6 +235,7 @@ describe('changeContainerVariantHandler', () => {
       migrateVariant: () => ({
         allowed: false,
         code: 'MIGRATION_DENIED',
+        messageKey: 'container.variant.denied',
         message: 'Choose a compatible layout first.',
         details: { fromVariant: 'split', toVariant: 'stacked' },
       }),
@@ -226,7 +248,9 @@ describe('changeContainerVariantHandler', () => {
     })).toEqual({
       ok: false,
       code: 'MIGRATION_DENIED',
+      messageKey: 'container.variant.denied',
       message: 'Choose a compatible layout first.',
+      details: { fromVariant: 'split', toVariant: 'stacked' },
     })
     expect(store.getSchema()).toEqual(before)
   })

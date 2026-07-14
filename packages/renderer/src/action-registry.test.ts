@@ -2,7 +2,7 @@ import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core
 import type { NodeActionContext } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererWidgetMeta } from './types'
-import { getLockedIndices, isMoveAllowed, resolveBehavior } from '@dragcraft/core'
+import { getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
 
@@ -18,6 +18,8 @@ vi.mock('@dragcraft/core', async () => {
     ...actual,
     resolveBehavior: vi.fn((_field: unknown, _ctx: unknown) => true),
     getLockedIndices: vi.fn(() => new Set<number>()),
+    getLockedIndicesFromNodes: vi.fn(() => new Set<number>()),
+    isInsertAllowed: vi.fn(() => true),
     isMoveAllowed: vi.fn(() => true),
     isRemoveAllowed: vi.fn(() => true),
   }
@@ -175,7 +177,10 @@ describe('resolve', () => {
     engine = makeEngine()
     emptyInterceptors = []
     vi.mocked(getLockedIndices).mockReset().mockReturnValue(new Set<number>())
+    vi.mocked(getLockedIndicesFromNodes).mockReset().mockReturnValue(new Set<number>())
     vi.mocked(isMoveAllowed).mockReset().mockReturnValue(true)
+    vi.mocked(isInsertAllowed).mockReset().mockReturnValue(true)
+    vi.mocked(isRemoveAllowed).mockReset().mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -292,6 +297,43 @@ describe('resolve', () => {
         destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
       },
     })
+  })
+
+  it('disables container actions that would shift an absolute-index lock', () => {
+    vi.mocked(getLockedIndicesFromNodes).mockReturnValue(new Set([1]))
+    vi.mocked(isMoveAllowed).mockReturnValue(false)
+    vi.mocked(isRemoveAllowed).mockReturnValue(false)
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine, {
+      owner: { kind: 'container', containerId: 'layout', regionId: 'left' },
+      index: 0,
+      siblingCount: 2,
+      sortScope: false,
+    })
+
+    const resolved = registry.resolve(ctx, emptyInterceptors)
+
+    expect(resolved.find(action => action.key === ActionKey.MOVE_DOWN)?.disabled).toBe(true)
+    expect(resolved.find(action => action.key === ActionKey.DELETE)?.disabled).toBe(true)
+    expect(getLockedIndicesFromNodes).toHaveBeenCalledTimes(3)
+  })
+
+  it('keeps duplicate enabled for an unsorted root node regardless of content locks', () => {
+    vi.mocked(getLockedIndices).mockReturnValue(new Set([0]))
+    vi.mocked(isInsertAllowed).mockReturnValue(false)
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine, {
+      owner: { kind: 'root' },
+      index: -1,
+      siblingCount: 0,
+      sortScope: false,
+    })
+
+    const duplicate = registry.resolve(ctx, emptyInterceptors)
+      .find(action => action.key === ActionKey.DUPLICATE)
+
+    expect(duplicate?.disabled).toBe(false)
+    expect(getLockedIndices).not.toHaveBeenCalled()
   })
 
   it('delete handler calls engine.execute with correct payload', () => {

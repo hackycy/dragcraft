@@ -1,4 +1,4 @@
-import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { ContainerRegionDefinition, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { RendererContext } from './types'
 import { CommandType } from '@dragcraft/core'
 import { describe, expect, it, vi } from 'vitest'
@@ -79,5 +79,33 @@ describe('container runtime', () => {
       type: CommandType.CHANGE_CONTAINER_VARIANT,
       payload: { containerId: 'layout', variant: 'split' },
     })
+  })
+
+  it('returns detached region definition and node snapshots', () => {
+    const node = ref(makeSplitNode())
+    const ctx = makeContext()
+    const runtime = createContainerRuntime(() => node.value, ctx)
+
+    const definitions = runtime.regionDefinitions.value as ContainerRegionDefinition[]
+    const readonlyChildren = runtime.getRegionNodes('left')
+    const children = readonlyChildren as unknown as SchemaNode[]
+    if (false) {
+      // @ts-expect-error runtime snapshots are recursively readonly
+      readonlyChildren[0].props.mutated = true
+    }
+    expect(() => {
+      definitions[0].title = 'Mutated'
+    }).toThrow(TypeError)
+    expect(() => {
+      children[0].props.mutated = true
+    }).toThrow(TypeError)
+    expect(() => {
+      children.push({ id: 'injected', type: 'text', props: {} })
+    }).toThrow(TypeError)
+
+    expect(runtime.regionDefinitions.value[0].title).toBe('Left')
+    expect(node.value.container!.regions.left).toEqual([
+      { id: 'left-child', type: 'text', props: {} },
+    ])
   })
 })

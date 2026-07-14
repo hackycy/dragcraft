@@ -3,7 +3,7 @@ import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
 import type { RendererWidgetMeta } from './types'
-import { CommandType, getLockedIndices, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
+import { CommandType, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
 
@@ -25,10 +25,14 @@ function canReorder(ctx: NodeActionContext): boolean {
 }
 
 function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
-  if (ctx.owner.kind === 'container')
-    return new Set()
-
   const schema = ctx.engine.state.getSchema()
+  if (ctx.owner.kind === 'container') {
+    const containerOwner = ctx.owner
+    const owner = schema.root.children?.find(node => node.id === containerOwner.containerId)
+    const nodes = owner?.container?.regions[containerOwner.regionId] ?? []
+    return getLockedIndicesFromNodes(nodes, ctx.engine.registry, schema)
+  }
+
   const children = schema.root.children ?? []
   return getLockedIndices(
     children,
@@ -241,6 +245,12 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconCopy,
       type: 'button',
       order: 350,
+      disabled: (ctx) => {
+        if (ctx.owner.kind === 'root' && ctx.sortScope === false)
+          return false
+        const lockedIndices = getScopedLockedIndices(ctx)
+        return !isInsertAllowed(ctx.index + 1, lockedIndices)
+      },
       command: ctx => ({
         type: CommandType.DUPLICATE_NODE,
         payload: { nodeId: ctx.node.id },
@@ -257,7 +267,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       className: 'dc-node__toolbar-btn--delete',
       available: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
       disabled: (ctx) => {
-        if (ctx.sortScope === false)
+        if (ctx.owner.kind === 'root' && ctx.sortScope === false)
           return false
         const lockedIndices = getScopedLockedIndices(ctx)
         if (lockedIndices.size === 0)

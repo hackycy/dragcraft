@@ -4,6 +4,15 @@ import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from '
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise, RendererEventHooks } from './event-hooks'
 
+export type DeepReadonly<T>
+  = T extends (...args: infer Args) => infer Result
+    ? (...args: Args) => Result
+    : T extends readonly unknown[]
+      ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
+      : T extends object
+        ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
+        : T
+
 // ──────────────────────────────────────────
 // Component resolution
 // ──────────────────────────────────────────
@@ -29,7 +38,7 @@ export interface ResolveContainerDropIndexContext {
   event: DragEvent
   regionElement: HTMLElement
   itemElements: readonly HTMLElement[]
-  nodes: readonly SchemaNode[]
+  nodes: DeepReadonly<SchemaNode[]>
 }
 
 export type ResolveContainerDropIndex = (ctx: ResolveContainerDropIndexContext) => number | null
@@ -48,7 +57,7 @@ export interface ContainerDropRejection {
   containerId: string
   regionId: string
   allowed: false
-  code: 'CONTAINER_DROP_ADAPTER_MISSING' | 'CONTAINER_DROP_ADAPTER_FAILED' | 'CONTAINER_DROP_ADAPTER_INVALID'
+  code: 'CONTAINER_DROP_ADAPTER_MISSING' | 'CONTAINER_DROP_ADAPTER_FAILED' | 'CONTAINER_DROP_ADAPTER_INVALID' | 'CONTAINER_DROP_NO_TARGET'
   message?: string
 }
 

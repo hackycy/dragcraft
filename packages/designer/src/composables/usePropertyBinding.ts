@@ -1,4 +1,4 @@
-import type { DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { CommandExecutionResult, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
@@ -27,9 +27,9 @@ export interface UsePropertyBindingReturn {
   /** The current values for the global config form */
   globalConfigValues: ComputedRef<Record<string, unknown>>
   /** Handle property change from the form generator */
-  handlePropertyChange: (key: string, value: unknown) => void
+  handlePropertyChange: (key: string, value: unknown) => CommandExecutionResult | null
   /** Handle global config change */
-  handleGlobalConfigChange: (key: string, value: unknown) => void
+  handleGlobalConfigChange: (key: string, value: unknown) => CommandExecutionResult | null
 }
 
 function findField(schema: FormSchema | null | undefined, key: string): FieldSchema | undefined {
@@ -152,35 +152,35 @@ export function usePropertyBinding(
     binding: ResolvedBinding,
     value: unknown,
     nodeId?: string,
-  ): void {
+  ): CommandExecutionResult | null {
     const command = createBindingCommand(binding, value, nodeId)
     if (!command) {
       console.warn(`[dragcraft/designer] Unsupported binding path "${binding.path}"`)
-      return
+      return null
     }
-    engine.execute(command)
+    return engine.execute(command)
   }
 
-  function handlePropertyChange(key: string, value: unknown): void {
+  function handlePropertyChange(key: string, value: unknown): CommandExecutionResult | null {
     const nodeId = engine.store.selectedNodeId.value
     if (!nodeId)
-      return
+      return null
 
     const field = findField(selectedFormSchema.value, key)
     const binding = resolveFieldBinding(
       getFieldBinding(field),
       { scope: 'node', path: `props.${key}` },
     )
-    dispatchBinding(binding, value, nodeId)
+    return dispatchBinding(binding, value, nodeId)
   }
 
-  function handleGlobalConfigChange(key: string, value: unknown): void {
+  function handleGlobalConfigChange(key: string, value: unknown): CommandExecutionResult | null {
     const field = findField(options.globalConfigSchema, key)
     const binding = resolveFieldBinding(
       getFieldBinding(field),
       { scope: 'globalConfig', path: key },
     )
-    dispatchBinding(binding, value)
+    return dispatchBinding(binding, value)
   }
 
   return {

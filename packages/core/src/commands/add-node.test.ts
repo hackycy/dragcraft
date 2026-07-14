@@ -274,6 +274,30 @@ describe('addNodeHandler', () => {
     expect(setupResult.store.getSchema()).toEqual(before)
   })
 
+  it('rejects a region insertion that would shift an absolute-index lock', () => {
+    const container = makeSplitContainer('layout')
+    container.container!.regions.left.push({ ...makeNode('locked'), type: 'locked' })
+    const setupResult = setup(makeSchema([container]))
+    registerTextAndSplit(setupResult)
+    setupResult.registry.registerWidget({
+      type: 'locked',
+      title: 'Locked',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      sortable: false,
+    })
+    const before = setupResult.store.getSchema()
+
+    const result = addNodeHandler(setupResult.ctx, {
+      node: makeNode('new'),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    expect(result).toEqual({ ok: false, code: 'SORTABLE_LOCK_VIOLATION' })
+    expect(setupResult.store.getSchema()).toEqual(before)
+  })
+
   it('normalizes a placement denial without a material-defined code', () => {
     const setupResult = setup(makeSchema([makeSplitContainer('layout')]))
     registerTextAndSplit(setupResult, {

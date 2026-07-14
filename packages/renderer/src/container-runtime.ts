@@ -6,15 +6,25 @@ import type {
   SchemaNode,
 } from '@dragcraft/core'
 import type { ComputedRef, InjectionKey } from 'vue'
-import type { RendererContext } from './types'
+import type { DeepReadonly, RendererContext } from './types'
 import { CommandType, createContainerPlan } from '@dragcraft/core'
+import { cloneDeep } from '@dragcraft/utils'
 import { computed, inject } from 'vue'
+
+function deepFreeze<T>(value: T): DeepReadonly<T> {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value)
+    for (const child of Object.values(value))
+      deepFreeze(child)
+  }
+  return value as DeepReadonly<T>
+}
 
 export interface ContainerRuntime {
   nodeId: ComputedRef<string>
   variant: ComputedRef<ContainerVariantId>
-  regionDefinitions: ComputedRef<readonly ContainerRegionDefinition[]>
-  getRegionNodes: (regionId: ContainerRegionId) => readonly SchemaNode[]
+  regionDefinitions: ComputedRef<DeepReadonly<ContainerRegionDefinition[]>>
+  getRegionNodes: (regionId: ContainerRegionId) => DeepReadonly<SchemaNode[]>
   requestVariantChange: (variant: ContainerVariantId) => CommandExecutionResult
 }
 
@@ -29,8 +39,12 @@ export function createContainerRuntime(
   return {
     nodeId: computed(() => getNode().id),
     variant: computed(() => getNode().container?.variant ?? ''),
-    regionDefinitions: computed(() => plan.value.ok ? plan.value.plan.variant.regions : []),
-    getRegionNodes: regionId => getNode().container?.regions[regionId] ?? [],
+    regionDefinitions: computed(() => deepFreeze(cloneDeep(
+      plan.value.ok ? plan.value.plan.variant.regions : [],
+    ))),
+    getRegionNodes: regionId => deepFreeze(cloneDeep(
+      getNode().container?.regions[regionId] ?? [],
+    )),
     requestVariantChange: variant => ctx.engine.execute({
       type: CommandType.CHANGE_CONTAINER_VARIANT,
       payload: { containerId: getNode().id, variant },

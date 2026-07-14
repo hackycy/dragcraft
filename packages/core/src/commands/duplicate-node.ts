@@ -45,8 +45,13 @@ export function duplicateNodeHandler(
     return { ok: false, code: 'DUPLICATE_ADD_REJECTED' }
   if (!added.ok)
     return added
+  const addedEvent = added.eventPayload as { destination?: NodeDestination } | undefined
   return {
     ok: true,
-    eventPayload: { sourceNodeId: payload.nodeId, nodeId: clone.id, destination },
+    eventPayload: {
+      sourceNodeId: payload.nodeId,
+      nodeId: clone.id,
+      destination: addedEvent?.destination ?? destination,
+    },
   }
 }

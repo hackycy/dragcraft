@@ -464,6 +464,33 @@ describe('useDragDrop', () => {
     })
   })
 
+  it('does not commit a prior same-region destination after a no-target publication', () => {
+    engine = makeContainerEngine()
+    const dd = useDragDrop(engine)
+    const execute = vi.spyOn(engine, 'execute')
+    const schemaBefore = engine.exportSchema()
+    dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      destination: { kind: 'container', containerId: 'layout', regionId: 'left', index: 0 },
+    })
+
+    dd.handleContainerDragOver({
+      event: mockDragEvent(),
+      containerId: 'layout',
+      regionId: 'left',
+      allowed: false,
+      code: 'CONTAINER_DROP_NO_TARGET',
+    })
+    const result = dd.handleContainerDrop(mockContainerDropEvent('layout', 'left'))
+
+    expect(result).toEqual({ ok: false, code: 'DROP_TARGET_MISSING' })
+    expect(execute).not.toHaveBeenCalled()
+    expect(engine.exportSchema()).toEqual(schemaBefore)
+    expect(dd.activeDestination.value).toBeNull()
+    expect(dd.forbiddenReason.value).toMatchObject({ code: 'CONTAINER_DROP_NO_TARGET' })
+  })
+
   it.each([
     { name: 'region', containerId: 'layout', regionId: 'right' },
     { name: 'container', containerId: 'other-layout', regionId: 'left' },

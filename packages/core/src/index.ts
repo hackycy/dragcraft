@@ -67,6 +67,7 @@ export { validateSchema } from './schema-validation'
 export {
   findNearestValidIndex,
   getLockedIndices,
+  getLockedIndicesFromNodes,
   getValidDropIndices,
   isInsertAllowed,
   isMoveAllowed,

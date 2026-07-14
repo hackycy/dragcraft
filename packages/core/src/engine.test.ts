@@ -140,6 +140,104 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
+  it.each([
+    ['an existing node ID', 'a'],
+    ['the document root ID', 'root'],
+  ])('execute ADD_NODE rejects %s without schema, history, or events', (_label, id) => {
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const before = engine.exportSchema()
+    const nodeAdded = vi.fn()
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.NODE_ADDED, nodeAdded)
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    const result = engine.execute({
+      type: CommandType.ADD_NODE,
+      payload: { node: makeNode(id) },
+    })
+
+    expect(result).toMatchObject({ ok: false, code: 'SCHEMA_NODE_ID_DUPLICATE' })
+    expect(engine.exportSchema()).toEqual(before)
+    expect(engine.history.canUndo()).toBe(false)
+    expect(nodeAdded).not.toHaveBeenCalled()
+    expect(schemaChanged).not.toHaveBeenCalled()
+    engine.dispose()
+  })
+
+  it('execute ADD_NODE rejects a structurally invalid final candidate atomically', () => {
+    const engine = createEngine()
+    const before = engine.exportSchema()
+    const nodeAdded = vi.fn()
+    engine.eventHub.on(EventName.NODE_ADDED, nodeAdded)
+
+    const result = engine.execute({
+      type: CommandType.ADD_NODE,
+      payload: { node: { id: 'bad', type: 'text', props: null } as unknown as SchemaNode },
+    })
+
+    expect(result).toMatchObject({ ok: false, code: 'SCHEMA_CANDIDATE_INVALID' })
+    expect(engine.exportSchema()).toEqual(before)
+    expect(engine.history.canUndo()).toBe(false)
+    expect(nodeAdded).not.toHaveBeenCalled()
+    engine.dispose()
+  })
+
+  it('rejects nested command execution from canPlace without nested history or events', () => {
+    const engine = createEngine({ initialSchema: makeSchema([makeContainerNode()]) })
+    let nestedResult: ReturnType<typeof engine.execute> | undefined
+    engine.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'basic',
+      defaultProps: {},
+      formSchema: { sections: [] },
+    })
+    engine.registerWidget({
+      type: 'single-layout',
+      title: 'Single layout',
+      group: 'layout',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      container: {
+        defaultVariant: 'single',
+        variants: {
+          single: { title: 'Single', regions: [{ id: 'content', title: 'Content' }] },
+        },
+        canPlace: () => {
+          nestedResult = engine.execute({
+            type: CommandType.ADD_NODE,
+            payload: { node: makeNode('nested-side-effect') },
+          })
+          return { allowed: true }
+        },
+      },
+    })
+    const nodeAdded = vi.fn()
+    const schemaChanged = vi.fn()
+    engine.eventHub.on(EventName.NODE_ADDED, nodeAdded)
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+
+    const result = engine.execute({
+      type: CommandType.ADD_NODE,
+      payload: {
+        node: makeNode('intended'),
+        destination: { kind: 'container', containerId: 'layout', regionId: 'content' },
+      },
+    })
+
+    expect(result.ok).toBe(true)
+    expect(nestedResult).toEqual({ ok: false, code: 'COMMAND_REENTRANT' })
+    expect(engine.state.getNodeById('nested-side-effect')).toBeNull()
+    expect(engine.state.getNodeById('intended')).not.toBeNull()
+    expect(nodeAdded).toHaveBeenCalledOnce()
+    expect(schemaChanged).toHaveBeenCalledOnce()
+    expect(engine.history.canUndo()).toBe(true)
+    engine.history.undo()
+    expect(engine.state.getNodeById('intended')).toBeNull()
+    expect(engine.history.canUndo()).toBe(false)
+    engine.dispose()
+  })
+
   it('execute UPDATE_PROPS updates node props', () => {
     const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
     engine.execute({
@@ -399,6 +497,80 @@ describe('createEngine', () => {
     })
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('invalid schema'))
     warn.mockRestore()
+    engine.dispose()
+  })
+
+  it.each([
+    ['non-string version', {
+      version: 1,
+      globalConfig: {},
+      root: { id: 'root', type: 'root', props: {}, children: [] },
+    } as unknown as DesignerSchema, 'SCHEMA_ENVELOPE_INVALID'],
+    ['non-record global config', {
+      version: '1.0.0',
+      globalConfig: null,
+      root: { id: 'root', type: 'root', props: {}, children: [] },
+    } as unknown as DesignerSchema, 'SCHEMA_GLOBAL_CONFIG_INVALID'],
+    ['root missing required node fields', {
+      version: '1.0.0',
+      globalConfig: {},
+      root: {},
+    } as unknown as DesignerSchema, 'SCHEMA_ROOT_INVALID'],
+    ['null container regions', makeSchema([{
+      id: 'layout',
+      type: 'missing-layout',
+      props: {},
+      container: { variant: 'single', regions: null },
+    } as unknown as SchemaNode]), 'CONTAINER_REGIONS_INVALID'],
+    ['non-array root children', {
+      version: '1.0.0',
+      globalConfig: {},
+      root: { id: 'root', type: 'root', props: {}, children: null },
+    } as unknown as DesignerSchema, 'SCHEMA_CHILDREN_INVALID'],
+    ['non-array region children', makeSchema([{
+      id: 'layout',
+      type: 'missing-layout',
+      props: {},
+      container: { variant: 'single', regions: { content: {} } },
+    } as unknown as SchemaNode]), 'CONTAINER_REGION_CHILDREN_INVALID'],
+  ])('importSchema diagnoses %s without throwing', (_label, input, code) => {
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('current')]) })
+    const before = engine.exportSchema()
+
+    const result = engine.importSchema(input)
+
+    expect(result).toMatchObject({
+      ok: false,
+      diagnostics: [expect.objectContaining({ code, severity: 'error' })],
+    })
+    expect(engine.exportSchema()).toEqual(before)
+    engine.dispose()
+  })
+
+  it('diagnoses malformed structure before running migrations', () => {
+    const engine = createEngine({ initialSchema: makeSchema([makeNode('current')]) })
+    const migrate = vi.fn((schema: DesignerSchema) => ({
+      ...schema,
+      root: { ...schema.root, children: schema.root.children!.map(node => ({ ...node })) },
+    }))
+    engine.registerMigration({ fromVersion: '1.0.0', toVersion: '2.0.0', migrate })
+    const before = engine.exportSchema()
+    const input = {
+      version: '1.0.0',
+      globalConfig: {},
+      root: { id: 'root', type: 'root', props: {}, children: null },
+    } as unknown as DesignerSchema
+
+    let result: ReturnType<typeof engine.importSchema> | undefined
+    expect(() => {
+      result = engine.importSchema(input)
+    }).not.toThrow()
+    expect(result).toMatchObject({
+      ok: false,
+      diagnostics: [expect.objectContaining({ code: 'SCHEMA_CHILDREN_INVALID', severity: 'error' })],
+    })
+    expect(migrate).not.toHaveBeenCalled()
+    expect(engine.exportSchema()).toEqual(before)
     engine.dispose()
   })
 

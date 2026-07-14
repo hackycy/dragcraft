@@ -31,7 +31,7 @@ import { createHistoryManager } from './history-manager'
 import { createRegistry } from './registry'
 import { createSchemaStore } from './schema-store'
 import { cloneSchema } from './schema-utils'
-import { validateSchema } from './schema-validation'
+import { collectSchemaStructuralDiagnostics, validateSchema } from './schema-validation'
 
 export type SchemaImportResult
   = | { ok: true, diagnostics: SchemaDiagnostic[] }
@@ -129,11 +129,12 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   }
 
   function importSchema(schema: DesignerSchema): SchemaImportResult {
-    if (!schema?.root || !schema.version) {
+    const structuralDiagnostics = collectSchemaStructuralDiagnostics(schema)
+    if (structuralDiagnostics.length > 0) {
       console.warn('[dragcraft/core] importSchema: invalid schema, missing root or version')
       return {
         ok: false,
-        diagnostics: [{ code: 'SCHEMA_ENVELOPE_INVALID', severity: 'error' }],
+        diagnostics: structuralDiagnostics,
       }
     }
     const migrated = migrateSchema(cloneSchema(schema))

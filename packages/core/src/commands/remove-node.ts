@@ -3,7 +3,7 @@ import { resolveBehavior } from '../behavior'
 import { collectSubtreeIds } from '../helpers'
 import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout, resolveNodeSource } from '../layout'
 import { buildSchemaIndex } from '../schema-index'
-import { getLockedIndicesFromEntries, isRemoveAllowed } from '../sortable'
+import { getLockedIndicesFromEntries, getLockedIndicesFromNodes, isRemoveAllowed } from '../sortable'
 
 export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayload): CommandResult {
   const { store, registry } = ctx
@@ -41,6 +41,9 @@ export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayloa
       return { ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' }
     if (source.children.length - 1 < (region.constraints?.minItems ?? 0))
       return { ok: false, code: 'CONTAINER_REGION_MIN_ITEMS' }
+    const lockedIndices = getLockedIndicesFromNodes(source.children, registry, rawSchema)
+    if (!isRemoveAllowed(source.index, lockedIndices))
+      return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
   }
 
   // ── Sortable constraint ──

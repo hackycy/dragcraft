@@ -1,3 +1,4 @@
+import type { SchemaNode } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
 import type { RendererWidgetMeta, ResolveContainerDropIndex } from '../types'
 import { computed, defineComponent, h, mergeProps } from 'vue'
@@ -71,8 +72,16 @@ export default defineComponent({
           itemElements: Array.from(regionElement.querySelectorAll<HTMLElement>(':scope > [data-node-id]')),
           nodes,
         })
-        if (index === null)
+        if (index === null) {
+          ctx.onContainerDragOver?.({
+            event,
+            containerId: runtime.nodeId.value,
+            regionId: props.regionId,
+            allowed: false,
+            code: 'CONTAINER_DROP_NO_TARGET',
+          })
           return
+        }
         if (!Number.isInteger(index) || index < 0 || index > nodes.length) {
           ctx.onContainerDragOver?.({
             event,
@@ -120,7 +129,7 @@ export default defineComponent({
     return () => {
       const children: VNode[] = regionNodes.value.map(node => h(WidgetRenderer, {
         key: node.id,
-        node,
+        node: node as unknown as SchemaNode,
         owner: {
           kind: 'container',
           containerId: runtime.nodeId.value,

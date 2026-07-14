@@ -67,6 +67,7 @@ export type {
   ContainerDropTarget,
   ContainerRegionOutletDropProps,
   ContainerRegionOutletProps,
+  DeepReadonly,
   EmptyStateProps,
   ForbiddenOverlayProps,
   NodeHandleProps,

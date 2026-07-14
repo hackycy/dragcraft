@@ -51,10 +51,10 @@ function isOptionalString(value: unknown): value is string | undefined {
 }
 
 function invalidMigrationResult(containerId: string): ContainerVariantMigrationResult {
+  void containerId
   return {
     allowed: false,
     code: 'CONTAINER_VARIANT_MIGRATION_INVALID',
-    details: { containerId },
   }
 }
 
@@ -117,12 +117,8 @@ export function changeContainerVariantHandler(
   if (!from || !to)
     return { ok: false, code: 'CONTAINER_VARIANT_UNKNOWN' }
 
-  const result: ContainerVariantMigrationResult = sameRegionIds(from, to)
-    ? {
-        allowed: true,
-        state: { ...cloneDeep(indexed.node.container), variant: payload.variant },
-      }
-    : safelyMigrateVariant(definition, {
+  const result: ContainerVariantMigrationResult = definition.migrateVariant
+    ? safelyMigrateVariant(definition, {
         schema: rawSchema,
         container: indexed.node,
         fromVariantId,
@@ -131,11 +127,27 @@ export function changeContainerVariantHandler(
         toVariant: to,
         state: indexed.node.container,
       })
+    : sameRegionIds(from, to)
+      ? {
+          allowed: true,
+          state: { ...cloneDeep(indexed.node.container), variant: payload.variant },
+        }
+      : safelyMigrateVariant(definition, {
+          schema: rawSchema,
+          container: indexed.node,
+          fromVariantId,
+          toVariantId: payload.variant,
+          fromVariant: from,
+          toVariant: to,
+          state: indexed.node.container,
+        })
   if (!result.allowed) {
     return {
       ok: false,
       code: result.code ?? 'CONTAINER_VARIANT_MIGRATION_REJECTED',
-      message: result.message,
+      ...(result.messageKey === undefined ? {} : { messageKey: result.messageKey }),
+      ...(result.message === undefined ? {} : { message: result.message }),
+      ...(result.details === undefined ? {} : { details: result.details }),
     }
   }
   if (result.state.variant !== payload.variant)
