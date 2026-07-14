@@ -71,20 +71,21 @@ src/
 
 当 `creatable` 返回禁止决策时，画布显示红色虚线框，并在框中展示禁止原因；如果没有提供原因，则展示默认提示。禁用提示层由 container shell 渲染，使用 device frame 时覆盖整个设备预览区域，提示文本位于 frame 中央。自定义物料卡片仍会收到 `draggable: true` 与 `disabled: false`，避免左栏和画布出现两套创建规则。
 
-结构树 tab 使用 `DcStructurePanel`，按当前扁平 schema 的 `root.children` 展示节点：
+结构树 tab 使用 `DcStructurePanel`，展示 `root.children`，并把已解析容器展开为注册顺序的虚拟 region 与 region 普通子节点：
 
 - 名称来自 `WidgetMeta.titleKey/title`，缺失时回退到 `node.type`。
 - 同时展示节点 `id`。
 - 点击节点调用选中 hooks 后选中对应画布节点。
 - 删除按钮复用 renderer 的 node action registry，因此遵守 `deletable`、位置锁定约束和删除 hooks。
+- region 行不是 schema 节点，不可选中；子节点动作使用其 container owner 与 region-local index。
 
 ### 中栏：画布区
 
 `DcCanvas` 集成 `RootRenderer`：
 
-- 扁平模型下所有 widget 都添加到 `root.children`。
-- 拖拽始终 drop 到 root，不做容器查找。
-- 通过鼠标 Y 坐标与同一排序域内节点垂直中点比较，计算插入位置。
+- 容器节点只能添加到 `root.children`；普通 widget 可以添加到 root 或一个已解析 container region。
+- root 拖放使用页面 sort scope，region 拖放使用 `ContainerRegionOutlet` 暴露的 destination。
+- root 通过鼠标 Y 坐标与同一排序域内节点垂直中点比较；region 插入位置由外部物料的 `resolveDropIndex` 计算。
 - `dragOverNodeId` 与 `dragOverIndex` 传给 renderer，驱动 DropIndicator。
 - 新增 widget 后自动选中。
 - 点击画布空白处取消选中。
@@ -281,6 +282,8 @@ RootRenderer
       -> apply nodeWrapper
 ```
 
+容器节点仍只由 root 创建一次 `WidgetRenderer`。当 meta 声明 `container` 时，renderer 提供 `ContainerRuntime`；外部物料通过 `ContainerRegionOutlet` 为每个 region 渲染普通子节点，因此每个 schema 节点只从唯一 owner 路径渲染一次。
+
 节点选区外框和浮动工具栏使用 viewport 坐标，并通过 Teleport 逃出画布、设备框架和滚动容器的 overflow clipping。标准 Designer Shell 会提供专用 portal root；Renderer 单独使用时回退到 `body`。
 
 `RootRenderer` 接收：
@@ -293,6 +296,25 @@ RootRenderer
 - `actionRegistry`。
 - `dragOverNodeId`。
 - `dragOverIndex`。
+- `activeDestination`、`forbiddenDestination` 与容器 drop 回调。
+
+## Container Renderer Public API
+
+`ContainerRegionOutlet` 负责读取区域节点、渲染空态/插入态/禁止态，以及把 DOM 信息交给物料提供的 `ResolveContainerDropIndex`。它不定义 flex、grid 或任意插入几何。外部容器物料负责 DOM/CSS，并通过 outlet prop 或 `RendererWidgetMeta.containerAdapter.resolveDropIndex` 注册 renderer drop adapter。
+
+```ts
+const runtime = useContainerRuntime()
+
+h(ContainerRegionOutlet, {
+  regionId: runtime.regionDefinitions.value[0].id,
+  resolveDropIndex: ({ event, itemElements }) =>
+    itemElements.findIndex(element => event.clientY < element.getBoundingClientRect().top),
+})
+```
+
+`useContainerRuntime()` 公开当前 node ID、variant、region definitions、region nodes 和 `requestVariantChange()`。未解析容器使用恢复型 fallback 展示并保留原始区域数据，而不是丢弃子树。
+
+Designer 将 root 与 container region 都建模为 `NodeDestination`，但保留各自的视觉索引解析。结构树显示 root 容器、虚拟 region 和普通子节点；属性面板把 `{ scope: 'container', path: 'variant' }` 字段转译为 `CHANGE_CONTAINER_VARIANT`，不会把 variant 重复写入 props。
 
 ## Node Action 与 Action Runtime
 

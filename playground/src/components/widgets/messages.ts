@@ -3,6 +3,7 @@ import type { MessageTree } from '@dragcraft/utils'
 export const playgroundWidgetMessages: Record<string, MessageTree> = {
   'zh-CN': {
     group: {
+      layout: '布局容器',
       basic: '基础展示',
       form: '表单交互',
       navigation: '导航容器',
@@ -147,6 +148,31 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
           disabled: { label: '禁用' },
         },
       },
+      'flex-container': {
+        title: 'Flex 容器',
+        material: { description: '由外部物料定义方向、换行和插入轴' },
+        form: { layout: { title: '布局' } },
+        variant: { single: '默认' },
+        region: { default: '内容' },
+        field: {
+          direction: { label: '方向', option: { row: '横向', column: '纵向' } },
+          wrap: { label: '自动换行' },
+          gap: { label: '间距' },
+          align: { label: '交叉轴对齐', option: { 'stretch': '拉伸', 'flex-start': '起点', 'center': '居中', 'flex-end': '终点' } },
+        },
+      },
+      'split-container': {
+        title: '异形容器',
+        material: { description: '由外部物料定义三分区结构和变体迁移' },
+        form: { layout: { title: '布局' } },
+        variant: { 'left-one-right-two': '左一右二', 'top-one-bottom-two': '上一下二' },
+        region: { left: '左侧', rightTop: '右上', rightBottom: '右下', top: '顶部', bottomLeft: '左下', bottomRight: '右下' },
+        field: {
+          variant: { label: '布局变体', option: { 'left-one-right-two': '左一右二', 'top-one-bottom-two': '上一下二' } },
+          gap: { label: '间距' },
+          primarySize: { label: '主区域尺寸' },
+        },
+      },
       'navbar': { title: '导航栏', material: { description: '配置页面顶部标题和返回入口' } },
       'tab-bar': { title: 'Tab 栏', material: { description: '配置底部多页面导航入口' } },
       'floating-button': { title: '浮动按钮', material: { description: '悬浮在页面上的快捷操作入口' } },
@@ -155,6 +181,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
   },
   'en': {
     group: {
+      layout: 'Layout',
       basic: 'Basic',
       form: 'Form',
       navigation: 'Navigation',
@@ -199,6 +226,31 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       'form-select': { title: 'Select', material: { description: 'Choose one value from predefined options' } },
       'form-checkbox': { title: 'Checkbox', material: { description: 'Represent checked, agreed, or boolean states' } },
       'form-radio-group': { title: 'Radio Group', material: { description: 'Choose one mutually exclusive option' } },
+      'flex-container': {
+        title: 'Flex Container',
+        material: { description: 'Define direction, wrapping, and insertion axis in external material code' },
+        form: { layout: { title: 'Layout' } },
+        variant: { single: 'Default' },
+        region: { default: 'Content' },
+        field: {
+          direction: { label: 'Direction', option: { row: 'Row', column: 'Column' } },
+          wrap: { label: 'Wrap' },
+          gap: { label: 'Gap' },
+          align: { label: 'Cross-axis alignment', option: { 'stretch': 'Stretch', 'flex-start': 'Start', 'center': 'Center', 'flex-end': 'End' } },
+        },
+      },
+      'split-container': {
+        title: 'Split Container',
+        material: { description: 'Define a three-region structure and variant migration in external material code' },
+        form: { layout: { title: 'Layout' } },
+        variant: { 'left-one-right-two': 'Left one, right two', 'top-one-bottom-two': 'Top one, bottom two' },
+        region: { left: 'Left', rightTop: 'Right top', rightBottom: 'Right bottom', top: 'Top', bottomLeft: 'Bottom left', bottomRight: 'Bottom right' },
+        field: {
+          variant: { label: 'Layout variant', option: { 'left-one-right-two': 'Left one, right two', 'top-one-bottom-two': 'Top one, bottom two' } },
+          gap: { label: 'Gap' },
+          primarySize: { label: 'Primary region size' },
+        },
+      },
       'navbar': { title: 'Navigation Bar', material: { description: 'Configure the page title and back entry' } },
       'tab-bar': { title: 'Tab Bar', material: { description: 'Configure bottom navigation for multiple pages' } },
       'floating-button': { title: 'Floating Button', material: { description: 'Add a quick action floating above the page' } },

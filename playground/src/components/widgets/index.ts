@@ -2,6 +2,7 @@ import type { DesignerWidgetMeta, WidgetGroupConfig } from '@dragcraft/designer'
 import type { WidgetDefinition } from '@dragcraft/widgets'
 import { buildComponentMap, getWidgetMetas } from '@dragcraft/widgets'
 import { basicWidgetDefinitions } from './basic'
+import { playgroundContainerWidgetDefinitions } from './container'
 import { formWidgetDefinitions } from './form'
 import { playgroundWidgetMessages } from './messages'
 import { miniProgramWidgetDefinitions } from './mini-program'
@@ -10,6 +11,7 @@ export const playgroundWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[]
   ...basicWidgetDefinitions,
   ...formWidgetDefinitions,
   ...miniProgramWidgetDefinitions,
+  ...playgroundContainerWidgetDefinitions,
 ].map(definition => ({
   ...definition,
   meta: {
@@ -48,6 +50,7 @@ export const playgroundWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[]
 }))
 
 export const playgroundWidgetGroups: WidgetGroupConfig[] = [
+  { name: 'layout', title: '布局容器', titleKey: 'group.layout' },
   { name: 'basic', title: '基础展示', titleKey: 'group.basic' },
   { name: 'form', title: '表单交互', titleKey: 'group.form' },
   { name: 'navigation', title: '导航容器', titleKey: 'group.navigation' },

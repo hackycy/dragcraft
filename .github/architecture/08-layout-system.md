@@ -1,6 +1,6 @@
 # 布局系统
 
-布局系统解决一个核心问题：**扁平 schema 中的节点如何被投影到设备页面的内容区、固定 chrome 区和浮层中，并且只渲染一次**。
+布局系统解决一个核心问题：**root 页面节点如何被投影到设备页面的内容区、固定 chrome 区和浮层中，并且只渲染一次**。容器 region 的普通子节点由独立的容器计划投影，不进入页面布局计划。
 
 ## 一句话总结
 
@@ -13,6 +13,8 @@
 旧的 slot manifest、positioned overlay 和独立 position 通道已移除。框架不再让某些节点绕过 `LayoutPlan`，所有节点都在同一个 plan 中出现一次。
 
 `flow/chrome/layer` 是设备页面内部的业务布局层。设计器自身的选区外框、节点工具栏、左右面板和应用弹窗使用主题 z-index token 管理，不通过业务 layout 提升或压低。
+
+`flow/chrome/layer` 保持 root-only。`root.children` 包含页面节点；容器必须直接位于 root，区域拥有普通子节点，当前协议拒绝嵌套容器。区域子节点没有 page placement 或 root sort scope。
 
 ## 整体数据流
 
@@ -124,6 +126,14 @@ interface LayoutPlan {
 6. `chrome` 节点进入 `chrome`；当 `avoidContent !== false` 时贡献 `insets`。
 7. `layer` 节点进入 `layers`。
 8. 每个分组按 `order ?? arrayIndex` 排序，order 相同保持 schema 原始顺序。
+
+## ContainerPlan 与外部几何
+
+`createLayoutPlan()` 不递归容器。`createContainerPlan()` 只按注册 meta 投影当前 variant 的 region definitions 和各 region 的普通子节点；schema version 保持不变。
+
+框架 package 不定义 flex/grid geometry，也不会从 metadata 猜测方向、断点或轨道。外部容器 meta 注册 variants、regions、constraints 和 migration；外部组件创建 DOM/CSS，并为 renderer region outlet 提供 insertion geometry adapter。物料可以是单区域 flex、网格、异形分栏或其他布局，而 Core 只校验所有权和约束。
+
+root 与 region 的结构修改都使用显式 `NodeDestination`。容器节点只能发往 root；普通节点可以在 root 和 regions 间移动，进入 region 时移除实例级 page placement/order，移回 root 时恢复物料默认 page layout。
 
 ## Flow
 

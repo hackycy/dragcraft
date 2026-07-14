@@ -54,6 +54,24 @@ const meta: WidgetMeta = {
 | `buildComponentMap(definitions)` | 从 definitions 构建组件映射 |
 | `getWidgetMetas(definitions)` | 提取所有 WidgetMeta |
 | `filterByGroup(definitions, group)` | 按分组过滤 WidgetDefinition |
+| `defineContainerWidget(definition)` | 保留带 `ContainerDefinition` 的外部容器 meta 类型推断 |
+
+## 外部容器物料
+
+容器不是框架内置 flex/grid 协议。外部物料使用 `defineContainerWidget()` 注册 variants、regions、constraints、`canPlace`、`migrateVariant` 和 renderer drop adapter，并在自己的组件与 CSS 中实现 DOM 和几何。框架 package 不定义 flex/grid geometry。
+
+变体表单字段使用容器作用域绑定：
+
+```ts
+{
+  key: 'variant',
+  label: '布局变体',
+  component: 'Select',
+  bindTo: { scope: 'container', path: 'variant' },
+}
+```
+
+当前 playground 的 `container.ts` 同时展示单区域 flex 和三 region/双 variant 异形容器；迁移函数由物料负责重新分配普通子节点，插入索引函数由物料根据自己的轴和 DOM 几何计算。
 
 ## 物料实现位置
 
@@ -88,6 +106,7 @@ const meta: DesignerWidgetMeta = {
 
 playground 作为本仓库的产品级示例，在 `playground/src/components/widgets` 中维护面向小程序装修场景的本地物料：
 
+- 布局容器：外部单区域 flex、三分区双变体异形容器。
 - 基础展示：文本、按钮、图片、链接、分割线、轮播。
 - 表单交互：输入框、多行文本、下拉选择、复选框、单选组。
 - 小程序框架：导航栏、Tab 栏、浮动按钮。

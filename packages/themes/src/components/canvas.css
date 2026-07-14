@@ -374,6 +374,19 @@
 
 /* ── Interaction States ──────────────────── */
 
+.dc-container-region--active {
+  outline: 1px dashed var(--dc-color-primary);
+  outline-offset: -1px;
+}
+
+.dc-container-region--forbidden {
+  outline-color: var(--dc-color-danger);
+}
+
+.dc-container-region__empty {
+  min-height: 32px;
+}
+
 .dc-node--hovered:not(.dc-node--selected) {
   border-color: transparent;
 }

@@ -12,7 +12,7 @@
 
 ## Schema 模型
 
-Schema 采用扁平 widget 列表模型，无树结构、无容器嵌套：
+Schema 使用 root 页面列表加一层容器区域所有权。`root.children` 包含页面节点；容器区域拥有自己的普通子节点，当前协议拒绝容器嵌套：
 
 ```ts
 interface SchemaNode {
@@ -20,6 +20,10 @@ interface SchemaNode {
   type: string
   props: Record<string, unknown>
   style?: NodeStyle
+  container?: {
+    variant: string
+    regions: Record<string, SchemaNode[]>
+  }
   layout?: {
     placement?:
       | { kind: 'flow', region?: string, sortScope?: string | false }
@@ -57,12 +61,14 @@ interface NodeStyle {
 
 核心规则：
 
-- `root.children` 是扁平 widget 数组。
+- `root.children` 包含页面节点，是 `flow/chrome/layer` placement 的唯一入口。
+- 容器节点必须直接属于 root；其 `container.regions` 拥有普通子节点，区域子节点不再声明页面 placement。
 - `root` 是页面承载节点，`root.style.surface` 描述页面 surface 的开放样式 DSL。
 - 不存在 `nodeType`，不区分容器和 widget。
-- 不支持嵌套子节点，`children` 仅 root 保留。
+- `children` 仅 root 保留；普通子节点只存在于一个容器 region 中，容器嵌套在当前协议中被拒绝。
 - `style.container` 描述节点外层布局盒子，`style.content` 描述 widget 内容样式，`style.surface` 描述该节点拥有的承载面样式。
 - `layout.placement` 声明节点进入内容流、固定 chrome 还是浮层。
+- `flow/chrome/layer` 保持 root-only，不递归投影容器区域。
 - `flow.sortScope` 是开放排序域，`false` 表示节点不参与画布拖拽排序。
 
 ## 样式 DSL
@@ -130,7 +136,20 @@ Core 基于 `root.children` 和物料默认布局生成 `LayoutPlan`：
 
 详细的布局机制参见 [布局系统](./08-layout-system.md)。
 
-Renderer 负责把 `LayoutPlan` 分发为 `regionVNodes`、`chromeVNodes` 和 `layerVNodes` 交给 `containerShell`。Shell 不重新读取 schema，不创建业务 widget vnode，只执行 content scrollport、chrome layer、floating layer 和 inset 写入。
+Renderer 负责把 root `LayoutPlan` 分发为 `regionVNodes`、`chromeVNodes` 和 `layerVNodes` 交给 `containerShell`。容器内部由 `createContainerPlan()` 单独投影。Shell 不重新读取 schema，不创建业务 widget vnode，只执行 content scrollport、chrome layer、floating layer 和 inset 写入。
+
+## Container Schema 与 Core Public API
+
+框架 schema 不保存 flex/grid 几何，schema version 也保持不变。外部容器 meta 通过 `ContainerDefinition` 注册变体、区域、静态约束、动态 `canPlace` 和物料自有的 `migrateVariant`。Core 在注册、导入和每条结构命令中重新校验这些声明。
+
+主要公开入口：
+
+- `validateContainerDefinition()`、`createContainerState()`、`createContainerPlan()`。
+- `resolvePlacementDecision()`、`buildSchemaIndex()`、`validateSchema()`。
+- `NodeDestination` 显式区分 root 与 `{ kind: 'container', containerId, regionId }`。
+- `CHANGE_CONTAINER_VARIANT` 是修改 `container.variant` 的唯一命令入口。
+
+结构命令返回 `CommandExecutionResult`。拒绝结果包含稳定 `code`，并在 mutation、history 和成功事件前回滚。跨 owner 的 add/move/remove/duplicate 与 undo 都以一个命令边界提交；未解析容器保留完整区域数据，只禁止结构修改。
 
 ## Core 文件结构
 
@@ -172,7 +191,7 @@ src/
 - `getRawSchema()`：内部命令处理器使用的原始 schema 引用；业务侧应使用 `engine.state.getSchema()`。
 - `setSchema(schema)`：替换整个 schema。
 - `selectNode(id | null)`、`hoverNode(id | null)`、`setDragTarget(target | null)`。
-- `getNodeById(id)`：在 `root.children` 中线性查找。
+- `getNodeById(id)`：通过 schema index 查找 root 或容器区域中的节点。
 - `applyTransientPatch(nodeId, partial)`：局部更新 props/style，不触发历史快照和事件。
 - `triggerUpdate()`：手动触发响应式通知。
 
@@ -195,6 +214,8 @@ UI 层读取 schema 时优先使用 `engine.state`。只有 core 内部命令、
 - `ADD_NODE`：添加 widget 到目标排序域，`index` 表示插入点。
 - `MOVE_NODE`：在节点所属 `sortScope` 中重排序。
 - `REMOVE_NODE`：删除节点。
+- `DUPLICATE_NODE`：深复制普通节点或完整容器子树并重建 ID。
+- `CHANGE_CONTAINER_VARIANT`：调用物料迁移器并原子替换完整容器状态。
 - `UPDATE_PROPS`：更新节点 props/style，嵌套对象按路径递归合并。
 - `SET_GLOBAL_CONFIG`：更新全局配置，嵌套对象按路径递归合并。
 
@@ -289,6 +310,7 @@ interface CoreWidgetMeta {
   defaultProps: Record<string, unknown>
   defaultStyle?: NodeStyle
   formSchema: FormSchemaShape
+  container?: ContainerDefinition
 
   mask?: BehaviorPredicate<InstanceBehaviorContext>
   selectable?: BehaviorPredicate<InstanceBehaviorContext>
@@ -369,13 +391,15 @@ Renderer 侧 `wrapper` 与 action `extra` 扩展见 [`.github/architecture/03-de
 
 ## Core 工具函数
 
-扁平列表工具：
+Schema 与容器工具：
 
 - `findNodeById(root, id)`。
 - `findParentNode(root, targetId)`。
 - `removeNodeFromTree(root, nodeId)`。
 - `insertNodeIntoTree(parent, node, index?)`。
 - `walkFlatChildren(root, visitor)`。
+- `buildSchemaIndex(schema)`：索引 root 节点与一层 region 子节点，并报告多重归属、重复 ID 或嵌套容器。
+- `createContainerPlan(node, registry)`：按照当前注册变体投影区域与普通子节点。
 
 ## 与其他包协作
 

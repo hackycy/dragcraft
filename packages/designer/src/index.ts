@@ -73,6 +73,9 @@ export type {
   BehaviorPredicate,
   Command,
   CommandHandler,
+  ContainerDefinition,
+  ContainerVariantMigrationContext,
+  ContainerVariantMigrationResult,
   CreatableBehaviorPredicate,
   CreatableBehaviorResult,
   CreatableDecision,
@@ -111,6 +114,7 @@ export type {
 // ── Re-exports: @dragcraft/renderer ─────
 export {
   ActionKey,
+  ContainerRegionOutlet,
   createConfirmActionInterceptor,
   createDefaultActions,
   createNodeActionRegistry,
@@ -119,6 +123,7 @@ export {
   DefaultNodeMask,
   DefaultNodeToolbar,
   RootRenderer,
+  useContainerRuntime,
   useNodeActions,
   useNodeDrag,
   useWidgetNode,
@@ -145,6 +150,7 @@ export type {
   WidgetActionConfig as RendererWidgetActionConfig,
   RendererWidgetActionExtra,
   RendererWidgetMeta,
+  ResolveContainerDropIndexContext,
   ResolvedNodeAction,
   WidgetFallbackProps,
 } from '@dragcraft/renderer'
