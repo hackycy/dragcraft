@@ -1,3 +1,6 @@
+import type { ContainerDefinition, SchemaNode } from '@dragcraft/designer'
+import { readFileSync } from 'node:fs'
+import { CommandType, createEngine } from '@dragcraft/designer'
 import { expect, it } from 'vitest'
 import { resolveLinearDropIndex, splitContainerMeta } from './container'
 import { playgroundWidgetDefinitions } from './index'
@@ -6,6 +9,19 @@ function itemRect(left: number, top: number, width = 20, height = 20): HTMLEleme
   return {
     getBoundingClientRect: () => ({ left, top, width, height }) as DOMRect,
   } as HTMLElement
+}
+
+function node(id: string): SchemaNode {
+  return { id, type: 'text', props: {} }
+}
+
+function fullRegions(variant: ContainerDefinition['variants'][string]): Record<string, SchemaNode[]> {
+  let nextId = 0
+  const entries = variant.regions.map((region) => {
+    const count = region.constraints?.maxItems ?? 0
+    return [region.id, Array.from({ length: count }, () => node(`node-${nextId++}`))]
+  })
+  return Object.fromEntries(entries.reverse())
 }
 
 it('keeps all flex and irregular geometry outside framework metadata', () => {
@@ -28,8 +44,16 @@ it('registers playground container definitions and split variants in declaration
   ])
 })
 
+it('styles the empty modifier emitted by ContainerRegionOutlet', () => {
+  const canvasCss = readFileSync(
+    new URL('../../../../packages/themes/src/components/canvas.css', import.meta.url),
+    'utf8',
+  )
+  expect(canvasCss).toMatch(/\.dc-container-region--empty\s*\{/)
+  expect(canvasCss).not.toContain('.dc-container-region__empty')
+})
+
 it('redistributes split children in stable order when the variant changes', () => {
-  const node = (id: string) => ({ id, type: 'text', props: {} })
   const result = splitContainerMeta.container!.migrateVariant!({
     schema: {
       version: '1.0.0',
@@ -61,6 +85,73 @@ it('redistributes split children in stable order when the variant changes', () =
         bottomRight: [node('third'), node('fourth')],
       },
     },
+  })
+})
+
+it.each([
+  ['left-one-right-two', 'top-one-bottom-two'],
+  ['top-one-bottom-two', 'left-one-right-two'],
+] as const)('migrates a max-capacity split from %s to %s without violating target constraints', (fromVariantId, toVariantId) => {
+  const definition = splitContainerMeta.container
+  const fromVariant = definition.variants[fromVariantId]
+  const toVariant = definition.variants[toVariantId]
+  const sourceRegions = fullRegions(fromVariant)
+  const sourceIds = fromVariant.regions.flatMap(region => sourceRegions[region.id].map(item => item.id))
+  const container: SchemaNode = {
+    id: 'split',
+    type: splitContainerMeta.type,
+    props: {},
+    container: { variant: fromVariantId, regions: sourceRegions },
+  }
+  const engine = createEngine({
+    initialSchema: {
+      version: '1.0.0',
+      globalConfig: {},
+      root: { id: 'root', type: 'root', props: {}, children: [container] },
+    },
+  })
+  engine.registerWidget(splitContainerMeta)
+
+  expect(engine.execute({
+    type: CommandType.CHANGE_CONTAINER_VARIANT,
+    payload: { containerId: container.id, variant: toVariantId },
+  })).toMatchObject({ ok: true })
+
+  const migrated = engine.state.getNodeById(container.id)!.container!
+  for (const region of toVariant.regions) {
+    const count = migrated.regions[region.id].length
+    expect(count).toBeGreaterThanOrEqual(region.constraints?.minItems ?? 0)
+    expect(count).toBeLessThanOrEqual(region.constraints?.maxItems ?? Number.POSITIVE_INFINITY)
+  }
+  const migratedIds = toVariant.regions.flatMap(region => migrated.regions[region.id].map(item => item.id))
+  expect(migratedIds).toEqual(sourceIds)
+  expect(new Set(migratedIds).size).toBe(sourceIds.length)
+  engine.dispose()
+})
+
+it('returns a structured material denial when split target capacity is exhausted', () => {
+  const definition = splitContainerMeta.container
+  const fromVariant = definition.variants['left-one-right-two']
+  const toVariant = definition.variants['top-one-bottom-two']
+  const regions = fullRegions(fromVariant)
+  regions.left.push(node('overflow'))
+
+  expect(definition.migrateVariant!({
+    schema: {
+      version: '1.0.0',
+      globalConfig: {},
+      root: { id: 'root', type: 'root', props: {}, children: [] },
+    },
+    container: { id: 'split', type: 'split-container', props: {} },
+    fromVariantId: 'left-one-right-two',
+    toVariantId: 'top-one-bottom-two',
+    fromVariant,
+    toVariant,
+    state: { variant: 'left-one-right-two', regions },
+  })).toEqual({
+    allowed: false,
+    code: 'SPLIT_VARIANT_CAPACITY_EXCEEDED',
+    details: { maxItems: 24, nodeCount: 25 },
   })
 })
 

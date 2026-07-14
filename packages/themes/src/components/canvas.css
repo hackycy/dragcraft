@@ -383,7 +383,7 @@
   outline-color: var(--dc-color-danger);
 }
 
-.dc-container-region__empty {
+.dc-container-region--empty {
   min-height: 32px;
 }
 

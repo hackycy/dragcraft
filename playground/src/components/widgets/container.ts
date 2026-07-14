@@ -166,15 +166,56 @@ const splitVariants = {
 function migrateSplitVariant(
   ctx: ContainerVariantMigrationContext,
 ): ContainerVariantMigrationResult {
-  const nodes = Object.values(ctx.state.regions).flat()
-  const targetIds = ctx.toVariant.regions.map(region => region.id)
-  if (targetIds.length === 0)
+  const nodes = ctx.fromVariant.regions.flatMap(region => ctx.state.regions[region.id] ?? [])
+  const targets = ctx.toVariant.regions.map(region => ({
+    id: region.id,
+    minItems: region.constraints?.minItems ?? 0,
+    maxItems: region.constraints?.maxItems ?? Number.POSITIVE_INFINITY,
+  }))
+  if (targets.length === 0)
     return { allowed: false, code: 'SPLIT_VARIANT_HAS_NO_REGIONS' }
-  const regions = Object.fromEntries(targetIds.map(id => [id, [] as SchemaNode[]]))
-  nodes.forEach((node, index) => {
-    const targetId = targetIds[Math.min(index, targetIds.length - 1)]!
-    regions[targetId].push(node)
-  })
+
+  const requiredItems = targets.reduce((total, target) => total + target.minItems, 0)
+  if (nodes.length < requiredItems) {
+    return {
+      allowed: false,
+      code: 'SPLIT_VARIANT_MIN_ITEMS_UNSATISFIED',
+      details: { minItems: requiredItems, nodeCount: nodes.length },
+    }
+  }
+
+  const capacity = targets.reduce((total, target) => total + target.maxItems, 0)
+  if (nodes.length > capacity) {
+    return {
+      allowed: false,
+      code: 'SPLIT_VARIANT_CAPACITY_EXCEEDED',
+      details: { maxItems: capacity, nodeCount: nodes.length },
+    }
+  }
+
+  const counts = targets.map(target => target.minItems)
+  let remaining = nodes.length - requiredItems
+  for (const [index, target] of targets.entries()) {
+    if (remaining === 0)
+      break
+    if (counts[index] === 0 && target.maxItems > 0) {
+      counts[index]++
+      remaining--
+    }
+  }
+  for (let index = targets.length - 1; index >= 0 && remaining > 0; index--) {
+    const available = targets[index].maxItems - counts[index]
+    const assigned = Math.min(remaining, available)
+    counts[index] += assigned
+    remaining -= assigned
+  }
+
+  let offset = 0
+  const regions = Object.fromEntries(targets.map((target, index) => {
+    const children = nodes.slice(offset, offset + counts[index])
+    offset += counts[index]
+    return [target.id, children as SchemaNode[]]
+  }))
   return { allowed: true, state: { variant: ctx.toVariantId, regions } }
 }
 
