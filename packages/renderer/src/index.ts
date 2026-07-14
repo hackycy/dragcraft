@@ -33,8 +33,9 @@ export {
 } from './components'
 
 // ── Composables ──────────────────────────
-export { useNodeActions, useNodeDrag, useNodeState, useToolbarPosition, useWidgetNode } from './composables'
+export { useNodeActions, useNodeDrag, useNodeInteractionGeometry, useNodeState, useToolbarPosition, useWidgetNode } from './composables'
 
+export type { NodeInteractionGeometry, NodeInteractionRect, UseNodeInteractionGeometryOptions, UseNodeInteractionGeometryReturn } from './composables'
 export type { UseNodeActionsReturn } from './composables'
 export type { UseNodeDragReturn } from './composables'
 export type { UseToolbarPositionReturn } from './composables'
@@ -58,6 +59,10 @@ export type {
 } from './event-hooks'
 // ── Messages ────────────────────────────
 export { rendererMessages } from './messages'
+
+// ── Node Interaction ─────────────────────
+export { resolveNodeInteractionPresentation } from './node-interaction'
+export type { NodeInteractionGeometryMode, NodeInteractionPresentation, NodeToolbarOrientation, NodeToolbarPlacement } from './node-interaction'
 
 // ── Types ────────────────────────────────
 export type {

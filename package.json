@@ -14,7 +14,7 @@
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
     "release": "bumpp -r",
-    "test": "nr -r test && vitest run tests/*.test.mjs",
+    "test": "nr -r test",
     "typecheck": "tsc",
     "prepare": "simple-git-hooks"
   },

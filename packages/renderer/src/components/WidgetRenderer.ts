@@ -2,13 +2,14 @@ import type { NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import { createContainerPlan } from '@dragcraft/core'
 import { computed, defineComponent, h, provide, ref, Teleport } from 'vue'
-import { useBlockOverlayGeometry } from '../composables/useBlockOverlayGeometry'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
+import { useNodeInteractionGeometry } from '../composables/useNodeInteractionGeometry'
 import { useToolbarPosition } from '../composables/useToolbarPosition'
 import { useWidgetNode } from '../composables/useWidgetNode'
 import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from '../container-runtime'
 import { useRendererContext } from '../context'
+import { resolveNodeInteractionPresentation } from '../node-interaction'
 import { normalizeStyle } from '../style-utils'
 import { createWidgetRuntimeContext, WIDGET_RUNTIME_CONTEXT_KEY } from '../widget-runtime'
 import DefaultContainerFallback from './DefaultContainerFallback'
@@ -75,21 +76,42 @@ export default defineComponent({
     const widget = useWidgetNode(() => props.node, ctx)
     const { actions } = useNodeActions(() => props.node, ctx, () => props.owner)
     const drag = useNodeDrag(() => props.node, ctx)
+    const interactionPresentation = resolveNodeInteractionPresentation(props.owner)
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
     const toolbarElRef = ref<HTMLElement | null>(null)
     const overlayActive = computed(() => widget.state.isSelected.value || widget.state.isHovered.value)
-    const { geometry: overlayGeometry } = useBlockOverlayGeometry(nodeElRef, overlayActive, {
+    const { geometry: interactionGeometry } = useNodeInteractionGeometry(nodeElRef, overlayActive, {
+      mode: interactionPresentation.geometryMode,
       boundarySelector: OVERLAY_BOUNDARY_SELECTOR,
       paintInset: NODE_OVERLAY_STROKE_WIDTH,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
     })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
       interactionBoundary: ctx.interactionBoundary,
+      interactionGeometry,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
+      placement: interactionPresentation.toolbarPlacement,
+      orientation: interactionPresentation.toolbarOrientation,
     })
+
+    function isDirectNodeHit(event: MouseEvent): boolean {
+      const target = event.target
+      return target instanceof Element
+        && target.closest<HTMLElement>('[data-node-id]') === event.currentTarget
+    }
+
+    function handleDirectSelect(event: MouseEvent): void {
+      if (isDirectNodeHit(event))
+        widget.handleSelect(event)
+    }
+
+    function handleMouseOver(event: MouseEvent): void {
+      if (isDirectNodeHit(event))
+        widget.handleMouseEnter()
+    }
 
     return () => {
       // Read schema.value to establish reactive dependency
@@ -99,6 +121,7 @@ export default defineComponent({
       const interactionLayerTarget = resolveInteractionLayerTarget(nodeElRef.value)
       const placement = widget.layout.value.placement
       const isContainerOwned = props.owner.kind === 'container'
+      const ownerKind = isContainerOwned ? 'container' : 'root'
       const isSelfPositionedLayer = !isContainerOwned && placement.kind === 'layer' && placement.mode === 'self'
       const containerPlan = node.container
         ? createContainerPlan(node, ctx.engine.registry)
@@ -160,7 +183,8 @@ export default defineComponent({
       // Assemble children
       const wrapperChildren: VNode[] = [innerContent]
 
-      if (overlayActive.value && overlayGeometry.value.visible) {
+      if (overlayActive.value && interactionGeometry.value.visible) {
+        const paintRect = interactionGeometry.value.paintRect
         wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [
           h('div', {
             'class': [
@@ -168,15 +192,16 @@ export default defineComponent({
               {
                 'dc-node__block-overlay--selected': widget.state.isSelected.value,
                 'dc-node__block-overlay--hovered': widget.state.isHovered.value && !widget.state.isSelected.value,
+                [`dc-node__block-overlay--${ownerKind}-owned`]: true,
               },
             ],
             'data-node-id': node.id,
             'data-node-type': node.type,
             'style': {
-              top: `${overlayGeometry.value.top}px`,
-              left: `${overlayGeometry.value.left}px`,
-              width: `${overlayGeometry.value.width}px`,
-              height: `${overlayGeometry.value.height}px`,
+              top: `${paintRect.top}px`,
+              left: `${paintRect.left}px`,
+              width: `${paintRect.width}px`,
+              height: `${paintRect.height}px`,
               outlineStyle: widget.state.isSelected.value ? 'solid' : 'dashed',
               [NODE_OVERLAY_STROKE_WIDTH_PROPERTY]: `${NODE_OVERLAY_STROKE_WIDTH}px`,
             },
@@ -192,17 +217,19 @@ export default defineComponent({
           h(NodeMask, {
             nodeId: node.id,
             nodeType: node.type,
+            owner: props.owner,
             onSelect: widget.handleSelect,
           }),
         )
       }
 
       // HANDLE (mask=false + selectable): small handle for selection
-      if (usesSelectionHandle) {
+      if (usesSelectionHandle && !widget.state.isSelected.value) {
         wrapperChildren.push(
           h(NodeHandle, {
             nodeId: node.id,
             nodeType: node.type,
+            owner: props.owner,
             onSelect: widget.handleSelect,
           }),
         )
@@ -218,6 +245,7 @@ export default defineComponent({
         const toolbarVNode = h(NodeToolbar, {
           nodeId: node.id,
           nodeType: node.type,
+          owner: props.owner,
           actions: actions.value,
           state: widget.state,
           toolbarPosition: toolbarPosition.value,
@@ -229,6 +257,7 @@ export default defineComponent({
             'ref': toolbarElRef,
             'class': 'dc-node__toolbar-anchor',
             'data-placement': toolbarPosition.value.placement,
+            'data-orientation': toolbarPosition.value.orientation,
             'style': {
               position: toolbarPosition.value.strategy,
               top: 0,
@@ -247,7 +276,8 @@ export default defineComponent({
         'div',
         {
           'ref': nodeElRef,
-          'class': widget.wrapperClasses.value,
+          'class': [widget.wrapperClasses.value, `dc-node--${ownerKind}-owned`],
+          'data-dc-node-owner': ownerKind,
           'style': wrapperStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
@@ -258,9 +288,13 @@ export default defineComponent({
             ? undefined
             : widget.layout.value.sortScope,
           'data-dc-visible': widget.visible.value ? undefined : 'false',
-          'onMouseenter': widget.handleMouseEnter,
+          'onMouseover': handleMouseOver,
           'onMouseleave': widget.handleMouseLeave,
-          'onClick': isSelfPositionedLayer && widget.selectable.value ? widget.handleSelect : undefined,
+          'onClick': isSelfPositionedLayer && widget.selectable.value
+            ? widget.handleSelect
+            : isResolvedContainer && widget.selectable.value
+              ? handleDirectSelect
+              : undefined,
         },
         wrapperChildren,
       )
@@ -272,6 +306,7 @@ export default defineComponent({
           {
             nodeId: node.id,
             nodeType: node.type,
+            owner: props.owner,
             state: widget.state,
             meta: widget.meta.value,
           },

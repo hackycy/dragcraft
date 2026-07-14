@@ -146,8 +146,54 @@ describe('containerRegionOutlet', () => {
 
       expect(host.querySelectorAll('[data-node-id="left-child"]')).toHaveLength(1)
       expect(host.querySelectorAll('[data-node-id="right-child"]')).toHaveLength(1)
+      expect(host.querySelector('[data-node-id="layout"]')?.getAttribute('data-dc-node-owner')).toBe('root')
+      expect(host.querySelector('[data-node-id="left-child"]')?.getAttribute('data-dc-node-owner')).toBe('container')
+      expect(host.querySelector('[data-node-id="left-child"]')?.classList).toContain('dc-node--container-owned')
       expect(host.querySelector('[data-dc-container-region="left"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-container-region="right"]')?.tagName).toBe('ASIDE')
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('selects a container from blank material space without stealing child content clicks', async () => {
+    const { app, engine, host } = mountExternalSplit()
+    try {
+      const containerSurface = host.querySelector<HTMLElement>('.external-split')!
+      const childContent = host.querySelector<HTMLElement>('[data-node-id="left-child"] .text-material')!
+      const childHandle = host.querySelector<HTMLElement>('[data-node-id="left-child"] .dc-node__handle')!
+
+      containerSurface.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+      expect(engine.store.selectedNodeId.value).toBe('layout')
+
+      engine.store.selectNode(null)
+      childContent.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+      expect(engine.store.selectedNodeId.value).toBeNull()
+
+      childHandle.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+      expect(engine.store.selectedNodeId.value).toBe('left-child')
+      await nextTick()
+      expect(host.querySelector('[data-node-id="left-child"] .dc-node__handle')).toBeNull()
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('gives hover to the deepest node and restores it to container blank space', () => {
+    const { app, engine, host } = mountExternalSplit()
+    try {
+      const childWrapper = host.querySelector<HTMLElement>('[data-node-id="left-child"]')!
+      const childContent = childWrapper.querySelector<HTMLElement>('.text-material')!
+      const containerSurface = host.querySelector<HTMLElement>('.external-split')!
+
+      childContent.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+      expect(engine.store.hoveredNodeId.value).toBe('left-child')
+
+      childWrapper.dispatchEvent(new MouseEvent('mouseleave'))
+      containerSurface.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+      expect(engine.store.hoveredNodeId.value).toBe('layout')
     }
     finally {
       app.unmount()
@@ -175,6 +221,31 @@ describe('containerRegionOutlet', () => {
       await nextTick()
 
       expect(host.querySelectorAll('[data-node-id="added-child"]')).toHaveLength(1)
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('keeps selection while a node moves from a container region to root presentation', async () => {
+    const { app, engine, host } = mountExternalSplit()
+    try {
+      engine.store.selectNode('left-child')
+      const result = engine.execute({
+        type: CommandType.MOVE_NODE,
+        payload: {
+          nodeId: 'left-child',
+          destination: { kind: 'root', index: 1 },
+        },
+      })
+      expect(result.ok).toBe(true)
+      expect(engine.store.selectedNodeId.value).toBe('left-child')
+
+      await nextTick()
+
+      const moved = host.querySelector<HTMLElement>('[data-node-id="left-child"]')
+      expect(moved?.getAttribute('data-dc-node-owner')).toBe('root')
+      expect(moved?.classList).toContain('dc-node--root-owned')
     }
     finally {
       app.unmount()

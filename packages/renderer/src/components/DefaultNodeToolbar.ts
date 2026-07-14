@@ -1,3 +1,4 @@
+import type { NodeOwner } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import type { ResolvedNodeAction } from '../action-registry'
 import type { NodeInteractionState, ToolbarPositionData } from '../types'
@@ -21,6 +22,10 @@ export default defineComponent({
     },
     nodeType: {
       type: String,
+      required: true,
+    },
+    owner: {
+      type: Object as PropType<NodeOwner>,
       required: true,
     },
     actions: {
@@ -84,9 +89,11 @@ export default defineComponent({
           'dc-node__toolbar',
           {
             'dc-node__toolbar--floating': useFixed,
+            [`dc-node__toolbar--${pos?.orientation ?? 'vertical'}`]: true,
           },
         ],
         'data-placement': pos?.placement,
+        'data-orientation': pos?.orientation,
       }, actionVNodes)
     }
   },

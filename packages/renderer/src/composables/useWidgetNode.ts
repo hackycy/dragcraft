@@ -126,11 +126,15 @@ export function useWidgetNode(
 
   const handleMouseEnter = () => {
     const nodeId = getNode().id
+    if (engine.store.hoveredNodeId.value === nodeId)
+      return
     engine.store.hoverNode(nodeId)
     eventHooks.onHoverChange?.({ nodeId })
   }
 
   const handleMouseLeave = () => {
+    if (engine.store.hoveredNodeId.value !== getNode().id)
+      return
     engine.store.hoverNode(null)
     eventHooks.onHoverChange?.({ nodeId: null })
   }

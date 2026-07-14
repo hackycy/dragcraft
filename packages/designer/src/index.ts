@@ -126,6 +126,7 @@ export {
   useContainerRuntime,
   useNodeActions,
   useNodeDrag,
+  useNodeInteractionGeometry,
   useWidgetNode,
 } from '@dragcraft/renderer'
 export type {
@@ -142,7 +143,13 @@ export type {
   NodeActionDefinition,
   NodeActionRegistry,
   NodeHandleProps,
+  NodeInteractionGeometry,
+  NodeInteractionGeometryMode,
+  NodeInteractionPresentation,
+  NodeInteractionRect,
   NodeMaskProps,
+  NodeToolbarOrientation,
+  NodeToolbarPlacement,
   NodeToolbarProps,
   NodeWrapperProps,
   RendererEventHooks,
@@ -153,6 +160,8 @@ export type {
   RendererWidgetMeta,
   ResolveContainerDropIndexContext,
   ResolvedNodeAction,
+  UseNodeInteractionGeometryOptions,
+  UseNodeInteractionGeometryReturn,
   WidgetFallbackProps,
 } from '@dragcraft/renderer'
 

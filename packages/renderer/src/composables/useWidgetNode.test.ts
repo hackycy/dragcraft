@@ -316,9 +316,18 @@ describe('useWidgetNode', () => {
 
     it('handleMouseLeave clears hover', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      ctx.engine.store.hoveredNodeId.value = 'a'
       const node = useWidgetNode(() => makeNode('a'), ctx)
       node.handleMouseLeave()
       expect(ctx.engine.store.hoverNode).toHaveBeenCalledWith(null)
+    })
+
+    it('does not clear hover owned by a deeper node', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
+      ctx.engine.store.hoveredNodeId.value = 'child'
+      const node = useWidgetNode(() => makeNode('parent'), ctx)
+      node.handleMouseLeave()
+      expect(ctx.engine.store.hoverNode).not.toHaveBeenCalled()
     })
   })
 })

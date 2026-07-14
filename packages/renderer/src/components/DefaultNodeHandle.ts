@@ -1,3 +1,4 @@
+import type { NodeOwner } from '@dragcraft/core'
 import type { PropType } from 'vue'
 import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
@@ -16,6 +17,10 @@ export default defineComponent({
     },
     nodeType: {
       type: String,
+      required: true,
+    },
+    owner: {
+      type: Object as PropType<NodeOwner>,
       required: true,
     },
     onSelect: {

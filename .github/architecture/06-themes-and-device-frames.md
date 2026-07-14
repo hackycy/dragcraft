@@ -143,10 +143,14 @@ src/
 | `.dc-node--hovered` | 悬停状态 |
 | `.dc-node--drag-over` | 拖拽悬停状态 |
 | `.dc-node--locked` | 位置锁定状态 |
+| `.dc-node--root-owned` | root-owned 节点交互投影 |
+| `.dc-node--container-owned` | container-owned 节点交互投影 |
 | `.dc-node__mask` | 透明遮罩 |
 | `.dc-node__handle` | 选中 handle |
 | `.dc-node__toolbar` | 浮动工具栏 |
 | `.dc-node__toolbar--floating` | fixed 定位工具栏 |
+| `.dc-node__toolbar--vertical` | root-owned 纵向动作排列 |
+| `.dc-node__toolbar--horizontal` | container-owned 横向动作排列 |
 | `.dc-drop-indicator` | 拖拽指示器 |
 | `.dc-widget-fallback` | 未知 widget fallback |
 
@@ -161,7 +165,7 @@ visible rect
   -> selected: 1px solid
 ```
 
-`useBlockOverlayGeometry()` 先求节点与裁剪边界的可见交集，再通过 `paintInset` 生成 paint rect。常规节点四边各收进 1px；极小节点会限制 inset，始终保留至少 1px 的可绘制宽高。
+`useNodeInteractionGeometry()` 先求节点与裁剪边界的可见交集，再通过 `paintInset` 生成 paint rect。`root-band` 使用 viewport boundary 的宽度和节点可见高度；`node-box` 使用 wrapper border box 的二维可见交集。常规节点四边各收进 1px；极小节点会限制 inset，始终保留至少 1px 的可绘制宽高。零尺寸或完全不可见的节点不绘制轮廓。
 
 `WidgetRenderer` 是描边宽度与线型的唯一来源：它通过 `--dc-node-overlay-stroke-width` 传递宽度，并按运行时状态设置 `outline-style`。主题不得改变描边宽度、线型、透明背景或几何 inset，只能设置 `--dc-color-accent`。
 

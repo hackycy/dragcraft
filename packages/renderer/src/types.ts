@@ -3,6 +3,7 @@ import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise, RendererEventHooks } from './event-hooks'
+import type { NodeToolbarOrientation } from './node-interaction'
 
 export type DeepReadonly<T>
   = T extends (...args: infer Args) => infer Result
@@ -74,6 +75,8 @@ export interface NodeWrapperProps {
   nodeId: string
   /** The widget type string */
   nodeType: string
+  /** Structural owner that determines the default interaction presentation. */
+  owner: NodeOwner
   /** Reactive interaction state */
   state: NodeInteractionState
   /** The resolved widget meta, if available */
@@ -121,8 +124,10 @@ export interface ToolbarPositionData {
   x: number
   /** CSS y coordinate in pixels (viewport-relative). */
   y: number
-  /** Stable placement. The default toolbar is anchored to the left edge. */
-  placement: 'left-start'
+  /** Resolved placement after collision handling. */
+  placement: 'left-start' | 'top-end' | 'bottom-end'
+  /** Action layout direction for the resolved owner presentation. */
+  orientation: NodeToolbarOrientation
   /** Positioning strategy used by the interaction layer. */
   strategy: 'fixed'
   /** Whether the toolbar should be visible (widget is at least partially in viewport) */
@@ -137,6 +142,8 @@ export interface NodeToolbarProps {
   nodeId: string
   /** The widget type string */
   nodeType: string
+  /** Structural owner that determines the default interaction presentation. */
+  owner: NodeOwner
   /** Pre-resolved actions for this node */
   actions: ResolvedNodeAction[]
   /** Reactive interaction state */
@@ -161,6 +168,8 @@ export interface NodeMaskProps {
   nodeId: string
   /** The widget type string */
   nodeType: string
+  /** Structural owner that determines the default interaction presentation. */
+  owner: NodeOwner
   /** Select handler to call on click */
   onSelect: (e: MouseEvent) => void
 }
@@ -173,6 +182,8 @@ export interface NodeHandleProps {
   nodeId: string
   /** The widget type string */
   nodeType: string
+  /** Structural owner that determines the default interaction presentation. */
+  owner: NodeOwner
   /** Select handler to call on click */
   onSelect: (e: MouseEvent) => void
 }

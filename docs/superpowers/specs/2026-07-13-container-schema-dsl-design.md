@@ -538,7 +538,11 @@ export type ResolveContainerDropIndex = (
 
 RootRenderer 为容器创建一个 root 级 `WidgetRenderer`。区域 outlet 再为其直接子节点创建 `WidgetRenderer`，每个 schema 节点只从一个所有者路径进入组件树。
 
-容器节点不能使用覆盖整个内容面的阻塞式 mask，否则会挡住子节点交互。Renderer 为容器使用非阻塞边界；点击容器空白、结构树或工具栏可以选择容器，点击子节点仍选择子节点。
+容器节点不能使用覆盖整个内容面的阻塞式 mask，否则会挡住子节点交互。Renderer 为容器使用非阻塞边界；点击容器空白或结构树可以选择容器，点击子节点仍选择子节点。子节点完全覆盖容器时，结构树是选择父容器的确定性入口，不增加重复点击或修饰键切换层级。
+
+节点 owner 同时决定默认的 Designer 交互投影。root-owned 节点保留 viewport 宽度的选区和 frame 左侧纵向工具栏；container-owned 节点使用其 framework wrapper border box 的可见交集，并在右上方显示水平工具栏。上方空间不足时工具栏翻转到右下方，最终限制在画布可见区域内。两类 owner 共用 selected、hover 和 forbidden 的颜色语义，物料不能覆盖选区几何或工具栏定位。
+
+父子命中遵循最深可选节点优先。指针位于子节点时父容器不显示 hover；移到容器空白时 hover 直接回到容器。普通子节点仍遵守自己的 `mask`：blocking mask 以整个节点盒作为选择面，unmasked 内容继续接收业务交互并通过 handle 或结构树选中。
 
 ## Designer 协议
 

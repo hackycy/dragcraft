@@ -1,4 +1,4 @@
-import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode, WidgetMeta } from '@dragcraft/core'
 // @vitest-environment happy-dom
 import type { Component } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
@@ -242,6 +242,131 @@ describe('widgetRenderer', () => {
       HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
       app.unmount()
       canvas.remove()
+    }
+  })
+
+  it('uses node-box geometry and a horizontal top-end toolbar for container-owned nodes', async () => {
+    const meta = makeMeta({ mask: false })
+    const ctx = makeContext(meta)
+    ctx.engine.store.selectedNodeId.value = 'fab'
+    const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      if (this instanceof HTMLElement && this.classList.contains('dc-node')) {
+        return {
+          top: 120,
+          right: 310,
+          bottom: 180,
+          left: 150,
+          width: 160,
+          height: 60,
+          x: 150,
+          y: 120,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      if (this instanceof HTMLElement && this.classList.contains('dc-node__toolbar-anchor')) {
+        return {
+          top: 0,
+          right: 100,
+          bottom: 34,
+          left: 0,
+          width: 100,
+          height: 34,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, {
+          node,
+          owner: { kind: 'container', containerId: 'layout', regionId: 'left' },
+        })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+      await new Promise(resolve => requestAnimationFrame(resolve))
+
+      const overlay = document.querySelector<HTMLElement>('.dc-node__block-overlay--container-owned')
+      expect(overlay?.style.left).toBe('151px')
+      expect(overlay?.style.width).toBe('158px')
+      const toolbar = document.querySelector<HTMLElement>('.dc-node__toolbar--horizontal')
+      expect(toolbar?.dataset.placement).toBe('top-end')
+      expect(host.querySelector('.dc-node__handle')).toBeNull()
+    }
+    finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('passes the structural owner to interaction extension components', async () => {
+    const meta = makeMeta({ mask: true })
+    const ctx = makeContext(meta)
+    const owner = { kind: 'container' as const, containerId: 'layout', regionId: 'left' }
+    const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const observed = {
+      mask: null as NodeOwner | null,
+      toolbar: null as NodeOwner | null,
+      wrapper: null as NodeOwner | null,
+    }
+    ctx.extensions = {
+      nodeMask: defineComponent({
+        props: { owner: Object },
+        setup(props) {
+          observed.mask = props.owner as NodeOwner
+          return () => h('div', { class: 'custom-mask' })
+        },
+      }),
+      nodeToolbar: defineComponent({
+        props: { owner: Object },
+        setup(props) {
+          observed.toolbar = props.owner as NodeOwner
+          return () => h('div', { class: 'custom-toolbar' })
+        },
+      }),
+      nodeWrapper: defineComponent({
+        props: { owner: Object },
+        setup(props, { slots }) {
+          observed.wrapper = props.owner as NodeOwner
+          return () => h('div', { class: 'custom-wrapper' }, slots.default?.())
+        },
+      }),
+    }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, { node, owner })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      expect(observed.mask).toEqual(owner)
+      expect(observed.wrapper).toEqual(owner)
+
+      ctx.engine.store.selectedNodeId.value = 'fab'
+      await nextTick()
+      expect(observed.toolbar).toEqual(owner)
+    }
+    finally {
+      app.unmount()
+      host.remove()
     }
   })
 

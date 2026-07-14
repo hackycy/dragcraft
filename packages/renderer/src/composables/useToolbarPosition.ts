@@ -1,5 +1,7 @@
 import type { Ref } from 'vue'
+import type { NodeToolbarOrientation, NodeToolbarPlacement } from '../node-interaction'
 import type { ToolbarPositionData } from '../types'
+import type { NodeInteractionGeometry } from './useNodeInteractionGeometry'
 import { autoUpdate } from '@floating-ui/dom'
 import { onBeforeUnmount, ref, watch } from 'vue'
 
@@ -10,6 +12,9 @@ export interface UseToolbarPositionOptions {
   selfTargetSelector?: string
   boundarySelector?: string
   padding?: number
+  interactionGeometry?: Ref<NodeInteractionGeometry>
+  placement?: NodeToolbarPlacement
+  orientation?: NodeToolbarOrientation
 }
 
 export interface UseToolbarPositionReturn {
@@ -30,11 +35,15 @@ export function useToolbarPosition(
     selfTargetSelector,
     boundarySelector,
     padding = 8,
+    interactionGeometry,
+    placement = 'left-start',
+    orientation = 'vertical',
   } = options
   const position = ref<ToolbarPositionData>({
     x: 0,
     y: 0,
-    placement: 'left-start',
+    placement,
+    orientation,
     strategy: 'fixed',
     visible: false,
   })
@@ -79,6 +88,7 @@ export function useToolbarPosition(
       current.x === next.x
       && current.y === next.y
       && current.placement === next.placement
+      && current.orientation === next.orientation
       && current.strategy === next.strategy
       && current.visible === next.visible
     ) {
@@ -97,12 +107,16 @@ export function useToolbarPosition(
 
     const reference = resolveReference(host)
     const boundaryElement = interactionBoundary?.value ?? null
-    if (!isReferenceVisible(reference, boundaryElement)) {
+    const interactionRect = interactionGeometry?.value.visibleRect
+    const interactionVisible = interactionGeometry
+      ? interactionGeometry.value.visible
+      : isReferenceVisible(reference, boundaryElement)
+    if (!interactionVisible) {
       applyPosition({ ...position.value, visible: false })
       return
     }
 
-    const referenceRect = reference.getBoundingClientRect()
+    const referenceRect = interactionRect ?? reference.getBoundingClientRect()
     const floatingRect = floating.getBoundingClientRect()
     const clipRect = boundaryElement?.getBoundingClientRect() ?? {
       top: 0,
@@ -110,18 +124,44 @@ export function useToolbarPosition(
       bottom: window.innerHeight,
       left: 0,
     }
-    const toolbarBoundary = resolveToolbarBoundary(host, reference)
-    const ownerRect = toolbarBoundary?.getBoundingClientRect() ?? referenceRect
     const availableHeight = Math.max(0, clipRect.bottom - clipRect.top - padding * 2)
+    const availableWidth = Math.max(0, clipRect.right - clipRect.left - padding * 2)
     const minY = clipRect.top + padding
     const maxY = Math.max(minY, clipRect.bottom - padding - floatingRect.height)
 
     floating.style.maxHeight = `${availableHeight}px`
 
+    if (placement === 'top-end') {
+      floating.style.maxWidth = `${availableWidth}px`
+      const minX = clipRect.left + padding
+      const maxX = Math.max(minX, clipRect.right - padding - floatingRect.width)
+      const topY = referenceRect.top - gap - floatingRect.height
+      const bottomY = referenceRect.bottom + gap
+      const fitsTop = topY >= minY
+      const fitsBottom = bottomY <= maxY
+      const resolvedPlacement = fitsTop || !fitsBottom ? 'top-end' : 'bottom-end'
+      const requestedY = resolvedPlacement === 'top-end' ? topY : bottomY
+
+      applyPosition({
+        x: Math.min(Math.max(referenceRect.right - floatingRect.width, minX), maxX),
+        y: Math.min(Math.max(requestedY, minY), maxY),
+        placement: resolvedPlacement,
+        orientation,
+        strategy: 'fixed',
+        visible: true,
+      })
+      return
+    }
+
+    floating.style.maxWidth = ''
+    const toolbarBoundary = resolveToolbarBoundary(host, reference)
+    const ownerRect = toolbarBoundary?.getBoundingClientRect() ?? referenceRect
+
     applyPosition({
       x: ownerRect.left - gap - floatingRect.width,
       y: Math.min(Math.max(referenceRect.top, minY), maxY),
       placement: 'left-start',
+      orientation,
       strategy: 'fixed',
       visible: true,
     })
