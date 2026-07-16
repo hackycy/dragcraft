@@ -2,7 +2,7 @@
 
 这是默认入口包。
 
-容器交互的完整约束见 [Container Schema DSL 设计](https://github.com/hackycy/dragcraft/blob/main/docs/superpowers/specs/2026-07-13-container-schema-dsl-design.md)，可直接跳到本页的 [Container designer API](#container-designer-api)。
+需要实现容器的变体字段、结构树或拖放交互时，先阅读 [外部容器物料](/guide/container-materials)；本页说明 Designer 的容器 API。
 
 先看最常用的导出：
 

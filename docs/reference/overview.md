@@ -4,6 +4,8 @@
 
 如果你还没有完成第一次接入，先回到 [快速开始](/guide/getting-started)。如果你已经知道自己要扩展哪一层，再从下面的 package 页面进入。
 
+如果你的物料需要承载其他物料，先阅读 [外部容器物料](/guide/container-materials)。这条路径会同时用到 core 的容器协议、renderer 的 region outlet 和 designer 的变体字段绑定。
+
 - `@dragcraft/designer`：标准入口
 - `@dragcraft/core`：schema、命令、历史、事件
 - `@dragcraft/renderer`：画布节点渲染和交互扩展

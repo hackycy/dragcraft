@@ -2,7 +2,7 @@
 
 `@dragcraft/renderer` 负责把 schema 节点渲染成真正的 Vue 节点树。
 
-容器渲染边界见 [Container Schema DSL 设计](https://github.com/hackycy/dragcraft/blob/main/docs/superpowers/specs/2026-07-13-container-schema-dsl-design.md)，可直接跳到本页的 [Container renderer API](#container-renderer-api)。
+需要实现容器的 region DOM、插入几何或选择交互时，先阅读 [外部容器物料](/guide/container-materials)；本页说明 Renderer 的容器 API。
 
 先看一个最小示例：
 
@@ -28,12 +28,52 @@ nodeActions.register({
 
 ## Container renderer API
 
-`useContainerRuntime()` 提供当前 variant、region definitions、region nodes 和受控 variant change。`ContainerRegionOutlet` 渲染每个普通子节点一次，并承载区域空态、active/forbidden 状态和 drop 回调。
+`useContainerRuntime()` 提供当前 variant、region definitions、region nodes 和受控变体切换。容器组件用 `ContainerRegionOutlet` 放置每个 region；outlet 会渲染区域子节点、空态、插入指示和禁止状态。
 
-框架 package 不定义 flex/grid geometry。外部物料创建区域 DOM/CSS，并通过 outlet 的 `resolveDropIndex` 或 `RendererWidgetMeta.containerAdapter` 注册 drop adapter；`ResolveContainerDropIndexContext` 提供事件、region element、item elements 和 nodes。缺少或失败的 adapter 会返回结构化拒绝，不会猜测 append。未解析容器继续保留并展示原始 region 数据。
+```ts
+import { ContainerRegionOutlet, useContainerRuntime } from '@dragcraft/renderer'
+import { h } from 'vue'
 
-Renderer 根据 `NodeOwner` 生成视觉无关的 selected 投影：root-owned 节点保留物料完整 border box，不能被 Frame safe area 收缩；默认 presenter 在物料外侧绘制上下边，并使用 Frame 提供的覆盖宽度绘制左右边。container-owned 节点使用 framework wrapper 的完整 border box。投影不计算可见交集，而是进入 container shell 注册的内容/视口平面，由滚动和 overflow 自然裁剪。普通物料的 hover 状态仍用于命中、hooks 和内嵌 handle，但不绘制范围高亮。resolved container 的 handle 不依赖物料 hover；它在未选中时常驻画布 interaction layer，低透明度定位在 Frame 左侧并与容器可见顶部对齐，自身 hover 或 focus 时恢复完整视觉。
+const runtime = useContainerRuntime()
 
-`rendererExtensions.nodeSelection` 可以替换默认实线 presenter；投影范围、平面路由和 Frame 裁剪不属于该扩展点。root flow 子树使用内容平面，root chrome/layer 子树使用视口平面。工具栏维持独立的全局呈现通道：root-owned 位于 Frame 左侧，container-owned 位于节点上方或下方。
+const content = h(ContainerRegionOutlet, {
+  regionId: runtime.regionDefinitions.value[0].id,
+  resolveDropIndex: ({ event, itemElements }) => {
+    for (const [index, element] of itemElements.entries()) {
+      const rect = element.getBoundingClientRect()
+      if (event.clientY < rect.top + rect.height / 2)
+        return index
+    }
+    return itemElements.length
+  },
+})
+```
 
-父子节点命中时，最深可选普通节点独占 hover。resolved container 不发布物料 hover，只从自身空白选择；子节点继续遵守各自的 blocking mask 或 unmasked handle 契约。点击外置 handle 后，handle 退出并进入 selected 呈现。完全被子节点覆盖的父容器通过结构面板选择。
+`resolveDropIndex` 按容器自己的几何返回 `0` 到区域节点数之间的插入边界；无法确定目标时返回 `null`。固定策略也可以注册为 `RendererWidgetMeta.containerAdapter.resolveDropIndex`。缺少、抛错或返回越界索引时，Renderer 拒绝放置，不会猜测追加位置。
+
+Renderer 不定义 flex/grid geometry。未解析容器保留并展示原始 region 数据，但禁止结构修改。完整的物料定义、约束和变体迁移见 [外部容器物料](/guide/container-materials)。
+
+## 根据节点所有权定制交互
+
+`nodeWrapper`、`nodeMask`、`nodeHandle`、`nodeToolbar` 和 `nodeSelection` 都会收到 `owner: NodeOwner`。`owner.kind` 为 `root` 时，节点属于页面布局；为 `container` 时，节点属于某个容器 region。自定义扩展应使用这个字段选择视觉表现，而不要重新从 Schema 推断父子关系。
+
+```ts
+import { defineComponent, h } from 'vue'
+
+const NodeWrapper = defineComponent({
+  props: { owner: { type: Object, required: true } },
+  setup(props, { slots }) {
+    return () => h('div', {
+      class: props.owner.kind === 'container'
+        ? 'app-node--container-owned'
+        : 'app-node--root-owned',
+    }, slots.default?.())
+  },
+})
+
+const extensions = { nodeWrapper: NodeWrapper }
+```
+
+root-owned 节点使用完整物料 border box 的选中投影，工具栏位于 Frame 左侧。container-owned 节点使用自身 wrapper box，工具栏位于节点上方或下方。已解析容器本身在未选中时使用画布外的语义选择按钮，不发布物料 hover；子节点仍按自己的 mask 或 handle 处理命中。
+
+`rendererExtensions.nodeSelection` 只能替换投影内部的视觉；范围、坐标平面和 overflow 裁剪仍由 Renderer 与 `containerShell` 负责。root flow 子树使用内容平面，root chrome/layer 子树使用视口平面。自定义 Frame 如何注册这些平面，见 [主题与设备框架](/guide/themes-and-device-frames)。

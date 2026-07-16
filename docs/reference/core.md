@@ -2,7 +2,7 @@
 
 `@dragcraft/core` 负责 schema、命令和历史记录。
 
-容器协议的背景与不变量见 [Container Schema DSL 设计](https://github.com/hackycy/dragcraft/blob/main/docs/superpowers/specs/2026-07-13-container-schema-dsl-design.md)，可直接跳到本页的 [Container public API](#container-public-api)。
+需要实现可承载子节点的 flex、grid 或分栏物料时，先阅读 [外部容器物料](/guide/container-materials)；本页说明 Core 提供的容器 API。
 
 先看一个最小示例：
 

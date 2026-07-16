@@ -44,6 +44,8 @@ export const componentMap = buildComponentMap(definitions)
 
 `type` 是 Schema 的稳定标识，因此应由业务维护并避免随意改名。`defaultProps` 会在拖入时复制到新节点，`formSchema` 则决定右侧属性面板显示哪些字段。
 
+如果一个物料需要承载并排列其他物料，不要给普通节点增加自定义 `children`。使用 [外部容器物料](/guide/container-materials) 的 `container` 定义与 `ContainerRegionOutlet`，让 Core 管理子节点和命令边界，业务组件只管理布局几何。
+
 ## 控制创建、选择和布局
 
 行为字段让约束留在物料定义里，而不是散落在界面事件中。
@@ -92,4 +94,4 @@ const designer = createDesigner({
 })
 ```
 
-关于物料，目前知道这些就够了。接下来阅读 [配置表单与字段](/guide/forms-and-fields)，让物料的属性编辑适配你的 UI 库。
+普通物料的属性编辑接下来在 [配置表单与字段](/guide/forms-and-fields) 中配置；需要分栏、网格或其他嵌套布局时，阅读 [外部容器物料](/guide/container-materials)。
