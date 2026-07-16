@@ -7,6 +7,9 @@
   --dc-workspace-rail-width: 44px;
   --dc-workspace-drawer-width: 320px;
   --dc-node-toolbar-width: 32px;
+  --dc-node-selection-stroke-width: 2px;
+  --dc-node-selection-root-block-overlap: var(--dc-node-selection-stroke-width);
+  --dc-node-selection-root-inline-overlap: var(--dc-node-selection-stroke-width);
 
   --dc-z-node-mask: 10;
   --dc-z-node-handle: 20;

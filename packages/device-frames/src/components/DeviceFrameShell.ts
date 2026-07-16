@@ -1,5 +1,6 @@
 import type { DesignerSchema, LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
+import type { DeviceFrameSelectionPresentationHost } from '../types'
 import { computed, defineComponent, h, inject } from 'vue'
 import { getDefaultPresets } from '../presets'
 import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
@@ -38,6 +39,10 @@ const DeviceFrameShell = defineComponent({
       type: Object as PropType<DesignerSchema>,
       default: undefined,
     },
+    selectionPresentation: {
+      type: Object as PropType<DeviceFrameSelectionPresentationHost>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -59,6 +64,7 @@ const DeviceFrameShell = defineComponent({
         layerVNodes: props.layerVNodes,
         forbiddenOverlayVNode: props.forbiddenOverlayVNode,
         surfaceStyle: props.schema?.root.style?.surface as StyleValueMap | undefined,
+        selectionPresentation: props.selectionPresentation,
       }, slots)
   },
 })

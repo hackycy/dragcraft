@@ -32,6 +32,8 @@ nodeActions.register({
 
 框架 package 不定义 flex/grid geometry。外部物料创建区域 DOM/CSS，并通过 outlet 的 `resolveDropIndex` 或 `RendererWidgetMeta.containerAdapter` 注册 drop adapter；`ResolveContainerDropIndexContext` 提供事件、region element、item elements 和 nodes。缺少或失败的 adapter 会返回结构化拒绝，不会猜测 append。未解析容器继续保留并展示原始 region 数据。
 
-Renderer 根据 `NodeOwner` 统一决定编辑态几何：root-owned 节点保留 viewport 宽度的选区与 frame 左侧纵向工具栏，container-owned 节点使用 framework wrapper 的可见 border box，并在右上方显示水平工具栏。工具栏空间不足时翻转到右下方并限制在画布 viewport 内。外部容器拥有布局和 drop geometry，但不能覆盖选择几何；自定义 `nodeWrapper`、`nodeMask`、`nodeHandle` 和 `nodeToolbar` 会收到当前 `owner`。
+Renderer 根据 `NodeOwner` 生成视觉无关的 selected 投影：root-owned 节点保留物料完整 border box，不能被 Frame safe area 收缩；默认 presenter 在物料外侧绘制上下边，并使用 Frame 提供的覆盖宽度绘制左右边。container-owned 节点使用 framework wrapper 的完整 border box。投影不计算可见交集，而是进入 container shell 注册的内容/视口平面，由滚动和 overflow 自然裁剪。hover 状态仍用于命中、hooks 和 handle，但不绘制范围高亮。
+
+`rendererExtensions.nodeSelection` 可以替换默认实线 presenter；投影范围、平面路由和 Frame 裁剪不属于该扩展点。root flow 子树使用内容平面，root chrome/layer 子树使用视口平面。工具栏维持独立的全局呈现通道：root-owned 位于 Frame 左侧，container-owned 位于节点上方或下方。
 
 父子节点命中时，最深可选节点独占 hover。resolved container 只从自身空白选择，子节点继续遵守各自的 blocking mask 或 unmasked handle 契约。完全被子节点覆盖的父容器通过结构面板选择。

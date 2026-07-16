@@ -45,11 +45,11 @@ import '@dragcraft/themes/material'
 
 颜色、排版、形状、阴影、密度和动效都通过语义令牌进入组件。覆盖变量适合统一调整品牌与产品密度；覆盖 `dc-*` class 适合调整局部组件结构。若要完全无头集成，不导入 `@dragcraft/themes`，而是为需要的 class 编写完整样式。
 
-## 节点轮廓由 renderer 控制
+## selected 投影与视觉分离
 
-画布节点未选中时悬浮显示虚线，选中后显示实线。renderer 会按可见边界计算安全绘制区域，因此主题只需要通过 `--dc-color-accent` 调整轮廓颜色。
+hover 不绘制范围轮廓；节点 selected 后，Renderer 计算完整投影，Device Frame 的内容/视口平面负责原生滚动和 overflow 裁剪，默认 `nodeSelection` presenter 绘制连续实线矩形。root-owned 投影不会收缩到安全区内：上下边位于物料外侧，左右边覆盖 Frame 边框；container-owned 投影保持 wrapper border box。
 
-不要覆盖 `.dc-node__block-overlay` 的线型、线宽或几何位置；这些交互约束保证节点贴近设备或滚动边界时，四边轮廓仍能稳定显示。
+通过 `--dc-color-accent` 和 `--dc-node-selection-stroke-width` 调整默认 presenter；自定义 Frame 通过 `--dc-node-selection-root-inline-overlap` 声明根级左右边需要覆盖的宽度，并通过 `--dc-node-selection-root-block-overlap` 统一上下边线与 chrome/content 间的留白。需要其他视觉形式时替换 `rendererExtensions.nodeSelection`，不要覆盖 `.dc-node__selection-projection` 的位置和尺寸。自定义 `containerShell` 可以使用传入的 `selectionPresentation.registerPlane()` 注册自己的内容与视口平面；未注册时 Renderer 使用矩形 fallback plane。
 
 ## 在画布中接入设备预览
 

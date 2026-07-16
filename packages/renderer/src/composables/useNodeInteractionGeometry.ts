@@ -1,6 +1,7 @@
 import type { Ref } from 'vue'
 import type { NodeInteractionGeometryMode } from '../node-interaction'
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { autoUpdate } from '@floating-ui/dom'
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 const CLIP_OVERFLOW_RE = /auto|scroll|hidden|clip|overlay/
 
@@ -137,7 +138,7 @@ export function useNodeInteractionGeometry(
     paintRect: EMPTY_RECT,
     visible: false,
   })
-  let rafId: number | null = null
+  let cleanupAutoUpdate: (() => void) | null = null
 
   function applyGeometry(next: NodeInteractionGeometry): void {
     const previous = geometry.value
@@ -203,30 +204,35 @@ export function useNodeInteractionGeometry(
     })
   }
 
-  function stopPolling(): void {
-    if (rafId != null) {
-      cancelAnimationFrame(rafId)
-      rafId = null
-    }
+  function stopAutoUpdate(): void {
+    cleanupAutoUpdate?.()
+    cleanupAutoUpdate = null
   }
 
-  function startPolling(): void {
-    function loop(): void {
-      update()
-      rafId = requestAnimationFrame(loop)
-    }
-    rafId = requestAnimationFrame(loop)
+  function startAutoUpdate(): void {
+    stopAutoUpdate()
+    const host = elRef.value
+    if (!host || !isActive.value)
+      return
+    const target = resolveTargetElement(host, options.selfTargetSelector)
+    cleanupAutoUpdate = autoUpdate(target, host, update, {
+      ancestorScroll: true,
+      ancestorResize: true,
+      elementResize: true,
+      layoutShift: true,
+      animationFrame: false,
+    })
   }
 
   watch([elRef, isActive] as const, ([newEl, active]) => {
-    stopPolling()
+    stopAutoUpdate()
     if (newEl && active)
-      startPolling()
+      void nextTick(startAutoUpdate)
     else
       hide()
-  }, { immediate: true })
+  }, { immediate: true, flush: 'post' })
 
-  onBeforeUnmount(stopPolling)
+  onBeforeUnmount(stopAutoUpdate)
 
   return { geometry, update }
 }

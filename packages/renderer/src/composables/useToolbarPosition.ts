@@ -13,6 +13,7 @@ export interface UseToolbarPositionOptions {
   boundarySelector?: string
   padding?: number
   interactionGeometry?: Ref<NodeInteractionGeometry>
+  interactionGeometryUpdate?: () => void
   placement?: NodeToolbarPlacement
   orientation?: NodeToolbarOrientation
 }
@@ -36,6 +37,7 @@ export function useToolbarPosition(
     boundarySelector,
     padding = 8,
     interactionGeometry,
+    interactionGeometryUpdate,
     placement = 'left-start',
     orientation = 'vertical',
   } = options
@@ -106,6 +108,7 @@ export function useToolbarPosition(
     }
 
     const reference = resolveReference(host)
+    interactionGeometryUpdate?.()
     const boundaryElement = interactionBoundary?.value ?? null
     const interactionRect = interactionGeometry?.value.visibleRect
     const interactionVisible = interactionGeometry
@@ -179,7 +182,7 @@ export function useToolbarPosition(
     if (!host || !floating || !isActive.value)
       return
     cleanupAutoUpdate = autoUpdate(resolveReference(host), floating, update, {
-      animationFrame: true,
+      animationFrame: false,
       ancestorResize: true,
       ancestorScroll: true,
       elementResize: true,

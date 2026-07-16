@@ -5,6 +5,7 @@ describe('resolveNodeInteractionPresentation', () => {
   it('keeps root-owned nodes on the page interaction band', () => {
     expect(resolveNodeInteractionPresentation({ kind: 'root' })).toEqual({
       geometryMode: 'root-band',
+      selectionKind: 'root-segment',
       toolbarPlacement: 'left-start',
       toolbarOrientation: 'vertical',
     })
@@ -17,6 +18,7 @@ describe('resolveNodeInteractionPresentation', () => {
       regionId: 'left',
     })).toEqual({
       geometryMode: 'node-box',
+      selectionKind: 'material-bounds',
       toolbarPlacement: 'top-end',
       toolbarOrientation: 'horizontal',
     })

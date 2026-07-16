@@ -7,6 +7,7 @@ import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, Rendere
 import { createLayoutPlan, DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE } from '@dragcraft/core'
 import { computed, defineComponent, h, provide } from 'vue'
 import { createRendererContext } from '../context'
+import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import DefaultContainerShell from './DefaultContainerShell'
 import DefaultDropIndicator from './DefaultDropIndicator'
@@ -106,6 +107,8 @@ export default defineComponent({
       interactionBoundary: props.interactionBoundary,
     })
     provide(RENDERER_CONTEXT_KEY, ctx)
+    const selectionPresentation = createNodeSelectionPresentation()
+    provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
 
     // Resolve which container shell to use
     const ContainerShell = computed(
@@ -132,6 +135,7 @@ export default defineComponent({
           h(WidgetRenderer, {
             'key': entry.node.id,
             'node': entry.node,
+            'selectionPlane': 'content',
             'data-dc-layout-region': entry.layout.region,
           }),
         )
@@ -141,6 +145,7 @@ export default defineComponent({
         h(WidgetRenderer, {
           'key': entry.node.id,
           'node': entry.node,
+          'selectionPlane': 'viewport',
           'data-dc-layout-placement': 'chrome',
         }),
       )
@@ -151,6 +156,7 @@ export default defineComponent({
           h(WidgetRenderer, {
             'key': entry.node.id,
             'node': entry.node,
+            'selectionPlane': 'viewport',
             'data-dc-layout-placement': 'layer',
           }),
         )
@@ -208,6 +214,7 @@ export default defineComponent({
               layoutPlan: plan,
               schema,
               registry: props.engine.registry,
+              selectionPresentation,
             },
             {
               default: () => {
@@ -220,6 +227,14 @@ export default defineComponent({
               ),
             },
           ),
+          h('div', {
+            'ref': (element: unknown) => {
+              selectionPresentation.registerFallback(element instanceof HTMLElement ? element : null)
+            },
+            'class': 'dc-node-selection-plane dc-node-selection-plane--fallback',
+            'data-dc-selection-plane': 'fallback',
+            'aria-hidden': 'true',
+          }),
           fallbackForbiddenOverlayVNode,
         ],
       )

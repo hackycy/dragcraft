@@ -540,7 +540,7 @@ RootRenderer 为容器创建一个 root 级 `WidgetRenderer`。区域 outlet 再
 
 容器节点不能使用覆盖整个内容面的阻塞式 mask，否则会挡住子节点交互。Renderer 为容器使用非阻塞边界；点击容器空白或结构树可以选择容器，点击子节点仍选择子节点。子节点完全覆盖容器时，结构树是选择父容器的确定性入口，不增加重复点击或修饰键切换层级。
 
-节点 owner 同时决定默认的 Designer 交互投影。root-owned 节点保留 viewport 宽度的选区和 frame 左侧纵向工具栏；container-owned 节点使用其 framework wrapper border box 的可见交集，并在右上方显示水平工具栏。上方空间不足时工具栏翻转到右下方，最终限制在画布可见区域内。两类 owner 共用 selected、hover 和 forbidden 的颜色语义，物料不能覆盖选区几何或工具栏定位。
+节点 owner 决定默认的 Designer selected 投影。root-owned 节点保留物料完整 border box，默认 presenter 在外侧绘制四边并由 Frame 提供左右边框覆盖宽度；container-owned 节点使用其 framework wrapper 的完整 border box。两者进入 shell-owned 内容/视口平面并由原生 overflow 裁剪。hover 仍参与命中和 handle，但不生成范围高亮。frame 左侧纵向工具栏与 container 右上方横向工具栏继续走独立全局呈现通道。上方空间不足时工具栏翻转到右下方，最终限制在画布可见区域内。
 
 父子命中遵循最深可选节点优先。指针位于子节点时父容器不显示 hover；移到容器空白时 hover 直接回到容器。普通子节点仍遵守自己的 `mask`：blocking mask 以整个节点盒作为选择面，unmasked 内容继续接收业务交互并通过 handle 或结构树选中。
 

@@ -1,5 +1,6 @@
 import type { LayoutEdge, LayoutNodeEntry, LayoutPlan, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from '@dragcraft/core'
 import type { VNode, VNodeChild } from 'vue'
+import type { DeviceFrameSelectionPresentationHost } from '../types'
 import { h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
 import { normalizeStyle, pickBackgroundStyle } from './style-utils'
 
@@ -9,6 +10,7 @@ export interface FrameViewportOptions {
   layerVNodes?: Record<string, VNode[]>
   plan?: LayoutPlan
   surfaceStyle?: StyleValueMap
+  selectionPresentation?: DeviceFrameSelectionPresentationHost
 }
 
 function edgeClass(edge: LayoutEdge): string {
@@ -116,7 +118,7 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
   let observer: ResizeObserver | null = null
 
   function getChromeMeasureTarget(item: HTMLElement): HTMLElement {
-    return item.querySelector<HTMLElement>(':scope > .dc-node > :first-child') ?? item
+    return item.querySelector<HTMLElement>(':scope > .dc-node') ?? item
   }
 
   function update(): void {
@@ -167,6 +169,7 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
 }
 
 function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
+  const contributors = plan?.insets.contributors ?? []
   const sizedTotals: Record<LayoutEdge, string[]> = {
     'block-start': [],
     'block-end': [],
@@ -180,7 +183,7 @@ function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
     'inline-end': [],
   }
 
-  for (const contributor of plan?.insets.contributors ?? []) {
+  for (const contributor of contributors) {
     if (contributor.reserve.mode === 'size')
       sizedTotals[contributor.edge].push(sizeToCss(contributor.reserve.size))
     else if (contributor.reserve.mode === 'measure' && contributor.reserve.size !== undefined)
@@ -188,6 +191,12 @@ function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
   }
 
   const style: Record<string, string> = {}
+  style['--dc-selection-gutter-block-start'] = contributors.some(({ edge }) => edge === 'block-start')
+    ? 'var(--dc-node-selection-root-block-overlap)'
+    : '0px'
+  style['--dc-selection-gutter-block-end'] = contributors.some(({ edge }) => edge === 'block-end')
+    ? 'var(--dc-node-selection-root-block-overlap)'
+    : '0px'
   for (const [edge, values] of Object.entries(sizedTotals)) {
     style[sizeVar(edge as LayoutEdge)] = values.length === 0
       ? '0px'
@@ -303,7 +312,17 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
               class: 'dc-device-frame__content-surface dc-container-shell',
               style: surfaceStyle,
             },
-            current.content ?? [],
+            [
+              ...(current.content ?? []),
+              h('div', {
+                'ref': (element: unknown) => {
+                  current.selectionPresentation?.registerPlane('content', element instanceof HTMLElement ? element : null)
+                },
+                'class': 'dc-device-frame__selection-plane dc-device-frame__selection-plane--content',
+                'data-dc-selection-plane': 'content',
+                'aria-hidden': 'true',
+              }),
+            ],
           ),
         ]),
         h('div', { 'class': 'dc-device-frame__scrollbar', 'aria-hidden': 'true' }, [
@@ -312,6 +331,14 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
       ]),
       renderChrome(current.plan, current.chromeVNodes ?? []),
       ...renderLayers(current.plan, current.layerVNodes ?? {}),
+      h('div', {
+        'ref': (element: unknown) => {
+          current.selectionPresentation?.registerPlane('viewport', element instanceof HTMLElement ? element : null)
+        },
+        'class': 'dc-device-frame__selection-plane dc-device-frame__selection-plane--viewport',
+        'data-dc-selection-plane': 'viewport',
+        'aria-hidden': 'true',
+      }),
     ])
   }
 }

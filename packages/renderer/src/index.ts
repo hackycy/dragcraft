@@ -26,6 +26,7 @@ export {
   DefaultForbiddenOverlay,
   DefaultNodeHandle,
   DefaultNodeMask,
+  DefaultNodeSelection,
   DefaultNodeToolbar,
   DefaultWidgetFallback,
   RootRenderer,
@@ -33,9 +34,10 @@ export {
 } from './components'
 
 // ── Composables ──────────────────────────
-export { useNodeActions, useNodeDrag, useNodeInteractionGeometry, useNodeState, useToolbarPosition, useWidgetNode } from './composables'
+export { useNodeActions, useNodeDrag, useNodeInteractionGeometry, useNodeSelectionProjection, useNodeState, useToolbarPosition, useWidgetNode } from './composables'
 
 export type { NodeInteractionGeometry, NodeInteractionRect, UseNodeInteractionGeometryOptions, UseNodeInteractionGeometryReturn } from './composables'
+export type { UseNodeSelectionProjectionOptions, UseNodeSelectionProjectionReturn } from './composables'
 export type { UseNodeActionsReturn } from './composables'
 export type { UseNodeDragReturn } from './composables'
 export type { UseToolbarPositionReturn } from './composables'
@@ -64,6 +66,22 @@ export { rendererMessages } from './messages'
 export { resolveNodeInteractionPresentation } from './node-interaction'
 export type { NodeInteractionGeometryMode, NodeInteractionPresentation, NodeToolbarOrientation, NodeToolbarPlacement } from './node-interaction'
 
+// ── Selection Presentation ───────────────
+export {
+  createNodeSelectionPresentation,
+  NODE_SELECTION_PLANE_KEY,
+  NODE_SELECTION_PRESENTATION_KEY,
+  useNodeSelectionPresentation,
+} from './selection-presentation'
+export type {
+  NodeSelectionPlane,
+  NodeSelectionPresentation,
+  NodeSelectionPresentationHost,
+  NodeSelectionProjection,
+  NodeSelectionProjectionKind,
+  NodeSelectionRect,
+} from './selection-presentation'
+
 // ── Types ────────────────────────────────
 export type {
   ComponentMap,
@@ -78,6 +96,7 @@ export type {
   NodeHandleProps,
   NodeInteractionState,
   NodeMaskProps,
+  NodeSelectionProps,
   NodeToolbarProps,
   NodeWrapperProps,
   RendererContainerAdapter,

@@ -27,6 +27,8 @@ export {
 export type {
   DeviceFrameContext,
   DeviceFrameOptions,
+  DeviceFrameSelectionPlane,
+  DeviceFrameSelectionPresentationHost,
   DevicePreset,
   DeviceType,
 } from './types'

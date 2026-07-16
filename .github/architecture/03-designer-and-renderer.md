@@ -278,13 +278,15 @@ RootRenderer
       -> useNodeDrag
       -> resolve component from componentMap
       -> render nodeMask or nodeHandle
+      -> project selected node into shell plane
+      -> render nodeSelection presenter
       -> render nodeToolbar
       -> apply nodeWrapper
 ```
 
 容器节点仍只由 root 创建一次 `WidgetRenderer`。当 meta 声明 `container` 时，renderer 提供 `ContainerRuntime`；外部物料通过 `ContainerRegionOutlet` 为每个 region 渲染普通子节点，因此每个 schema 节点只从唯一 owner 路径渲染一次。
 
-节点选区外框和浮动工具栏使用 viewport 坐标，并通过 Teleport 逃出画布、设备框架和滚动容器的 overflow clipping。标准 Designer Shell 会提供专用 portal root；Renderer 单独使用时回退到 `body`。`resolveNodeInteractionPresentation(owner)` 将 root owner 投影为 viewport 宽度的 `root-band`，将 container owner 投影为 wrapper border box 的 `node-box`；布局物料不参与选择几何。
+selected 高亮和浮动工具栏使用不同的呈现通道。高亮生成 Renderer-owned `NodeSelectionProjection`，并 Teleport 到 container shell 注册的内容或视口平面，由 shell 的原生滚动和 overflow 负责裁剪；工具栏继续 Teleport 到 Designer 全局 interaction layer。root owner 投影为物料完整 border box 的 `root-segment`，其默认四边 presenter 在外侧绘制并允许 Frame 提供左右边框覆盖宽度；container owner 投影为完整 wrapper border box 的 `material-bounds`。root flow 使用内容平面，root chrome/layer 使用视口平面，容器子树继承所属根级物料的平面。
 
 `RootRenderer` 接收：
 
@@ -445,30 +447,31 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 | `nodeToolbar` | `DefaultNodeToolbar` | 节点浮动工具栏 |
 | `nodeMask` | `DefaultNodeMask` | 透明点击层 |
 | `nodeHandle` | `DefaultNodeHandle` | hover 选中按钮 |
+| `nodeSelection` | `DefaultNodeSelection` | selected 投影视觉 presenter |
 | `emptyState` | `DefaultEmptyState` | 空画布状态 |
 | `widgetFallback` | `DefaultWidgetFallback` | 未知 widget fallback |
 
 ## 交互状态
 
 - 选中：点击 mask 或 handle，调用 `engine.store.selectNode(nodeId)`，应用 `dc-node--selected`；resolved container 的自身空白也可以选择容器。
-- 悬停：最深的 `[data-node-id]` 独占 hover，父容器只在自身空白命中时调用 `engine.store.hoverNode()`。
+- 悬停：最深的 `[data-node-id]` 独占 hover，父容器只在自身空白命中时调用 `engine.store.hoverNode()`；hover 不生成范围高亮。
 - 拖拽悬停：外部 `dragOverNodeId` 控制，应用 `dc-node--drag-over` 并渲染 DropIndicator。
 - 不可选中：`WidgetMeta.selectable` 为 `false` 时忽略选中。
 - 位置锁定：`WidgetMeta.sortable` 为 `false` 时应用 `dc-node--locked`，隐藏拖拽与移动动作。
 
 ## Toolbar 定位
 
-`useToolbarPosition` 使用 `@floating-ui/dom` 的 `autoUpdate` 跟踪节点工具栏坐标，并消费 `useNodeInteractionGeometry` 计算出的同一可见矩形。
+`useToolbarPosition` 使用 `@floating-ui/dom` 的事件式 `autoUpdate` 跟踪节点工具栏坐标，并消费 `useNodeInteractionGeometry` 计算出的可见矩形；它不参与 selected 投影定位。
 
 策略：
 
-- `autoUpdate` 跟踪祖先滚动、尺寸变化和布局偏移，只在节点被选中时运行。
+- `autoUpdate` 跟踪祖先滚动、尺寸变化和布局偏移，只在节点被选中时运行，不启用逐帧轮询。
 - root-owned 工具栏使用纵向 `left-start`，横坐标由 `[data-dc-toolbar-boundary]` 的左边缘和工具栏真实宽度决定。
 - container-owned 工具栏使用水平 `top-end`；上方空间不足时翻转为 `bottom-end`，并在画布 viewport 内 shift。
-- container-owned 节点只锚定裁剪后的可见选区；零尺寸或完全不可见时保持逻辑选中，但隐藏选区和工具栏。
+- container-owned 工具栏只锚定节点可见交集；节点完全不可见时保持逻辑选中并隐藏工具栏。selected 投影 DOM 仍存在，由 shell 平面自然裁剪。
 - 工具栏动作始终来自同一个 `NodeActionRegistry`，owner 只改变排列和定位，不改变动作解析。
 - Widget 离开画布可见区域时隐藏 toolbar；Renderer 独立使用时退回浏览器 viewport。
-- 工具栏与选区 Teleport 到所属画布 interaction layer，画布面板负责统一层级。
+- 工具栏 Teleport 到画布全局 interaction layer；selected 投影 Teleport 到 shell-owned interaction presentation plane。
 
 ## CSS Class 层级
 
@@ -489,6 +492,7 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
       .dc-node--locked
     .dc-drop-indicator
     .dc-widget-fallback
+  .dc-node-selection-plane--fallback
 ```
 
 Renderer 不内置样式，class 由 `@dragcraft/themes` 或业务 CSS 实现视觉效果。

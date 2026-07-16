@@ -1,20 +1,24 @@
 import type { NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
+import type { NodeSelectionPlane } from '../selection-presentation'
 import { createContainerPlan } from '@dragcraft/core'
-import { computed, defineComponent, h, provide, ref, Teleport } from 'vue'
+import { computed, defineComponent, h, inject, provide, ref, Teleport } from 'vue'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
 import { useNodeInteractionGeometry } from '../composables/useNodeInteractionGeometry'
+import { useNodeSelectionProjection } from '../composables/useNodeSelectionProjection'
 import { useToolbarPosition } from '../composables/useToolbarPosition'
 import { useWidgetNode } from '../composables/useWidgetNode'
 import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from '../container-runtime'
 import { useRendererContext } from '../context'
 import { resolveNodeInteractionPresentation } from '../node-interaction'
+import { NODE_SELECTION_PLANE_KEY } from '../selection-presentation'
 import { normalizeStyle } from '../style-utils'
 import { createWidgetRuntimeContext, WIDGET_RUNTIME_CONTEXT_KEY } from '../widget-runtime'
 import DefaultContainerFallback from './DefaultContainerFallback'
 import DefaultNodeHandle from './DefaultNodeHandle'
 import DefaultNodeMask from './DefaultNodeMask'
+import DefaultNodeSelection from './DefaultNodeSelection'
 import DefaultNodeToolbar from './DefaultNodeToolbar'
 import DefaultWidgetFallback from './DefaultWidgetFallback'
 
@@ -22,8 +26,6 @@ const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
 const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
 const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
 const CANVAS_INTERACTION_LAYER_SELECTOR = '[data-dc-canvas-interaction-layer]'
-const NODE_OVERLAY_STROKE_WIDTH = 1
-const NODE_OVERLAY_STROKE_WIDTH_PROPERTY = '--dc-node-overlay-stroke-width'
 
 const ContainerRuntimeProvider = defineComponent({
   name: 'DcContainerRuntimeProvider',
@@ -64,6 +66,10 @@ export default defineComponent({
       type: Object as PropType<NodeOwner>,
       default: () => ({ kind: 'root' }),
     },
+    selectionPlane: {
+      type: String as PropType<NodeSelectionPlane>,
+      default: undefined,
+    },
   },
 
   setup(props) {
@@ -77,20 +83,33 @@ export default defineComponent({
     const { actions } = useNodeActions(() => props.node, ctx, () => props.owner)
     const drag = useNodeDrag(() => props.node, ctx)
     const interactionPresentation = resolveNodeInteractionPresentation(props.owner)
+    const inheritedSelectionPlane = inject(NODE_SELECTION_PLANE_KEY, ref<NodeSelectionPlane>('content'))
+    const selectionPlane = computed(() => props.selectionPlane ?? inheritedSelectionPlane.value)
+    provide(NODE_SELECTION_PLANE_KEY, selectionPlane)
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
     const toolbarElRef = ref<HTMLElement | null>(null)
-    const overlayActive = computed(() => widget.state.isSelected.value || widget.state.isHovered.value)
-    const { geometry: interactionGeometry } = useNodeInteractionGeometry(nodeElRef, overlayActive, {
+    const {
+      geometry: interactionGeometry,
+      update: updateInteractionGeometry,
+    } = useNodeInteractionGeometry(nodeElRef, widget.state.isSelected, {
       mode: interactionPresentation.geometryMode,
       boundarySelector: OVERLAY_BOUNDARY_SELECTOR,
-      paintInset: NODE_OVERLAY_STROKE_WIDTH,
+      selfTargetSelector: NODE_SURFACE_SELECTOR,
+    })
+    const {
+      projection: selectionProjection,
+      target: selectionTarget,
+    } = useNodeSelectionProjection(nodeElRef, widget.state.isSelected, {
+      kind: interactionPresentation.selectionKind,
+      plane: selectionPlane,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
     })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
       interactionBoundary: ctx.interactionBoundary,
       interactionGeometry,
+      interactionGeometryUpdate: updateInteractionGeometry,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
       placement: interactionPresentation.toolbarPlacement,
@@ -141,6 +160,7 @@ export default defineComponent({
       const NodeMask = extensions.nodeMask ?? DefaultNodeMask
       const NodeHandle = extensions.nodeHandle ?? DefaultNodeHandle
       const NodeToolbar = extensions.nodeToolbar ?? DefaultNodeToolbar
+      const NodeSelection = extensions.nodeSelection ?? DefaultNodeSelection
       const WidgetFallback = extensions.widgetFallback ?? DefaultWidgetFallback
 
       // Resolve per-widget or global wrapper
@@ -183,29 +203,32 @@ export default defineComponent({
       // Assemble children
       const wrapperChildren: VNode[] = [innerContent]
 
-      if (overlayActive.value && interactionGeometry.value.visible) {
-        const paintRect = interactionGeometry.value.paintRect
-        wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [
+      if (selectionProjection.value && selectionTarget.value) {
+        const projection = selectionProjection.value
+        wrapperChildren.push(h(Teleport, { to: selectionTarget.value }, [
           h('div', {
             'class': [
-              'dc-node__block-overlay',
-              {
-                'dc-node__block-overlay--selected': widget.state.isSelected.value,
-                'dc-node__block-overlay--hovered': widget.state.isHovered.value && !widget.state.isSelected.value,
-                [`dc-node__block-overlay--${ownerKind}-owned`]: true,
-              },
+              'dc-node__selection-projection',
+              `dc-node__selection-projection--${projection.kind}`,
+              `dc-node__selection-projection--${ownerKind}-owned`,
             ],
             'data-node-id': node.id,
             'data-node-type': node.type,
+            'data-dc-selection-plane': projection.plane,
             'style': {
-              top: `${paintRect.top}px`,
-              left: `${paintRect.left}px`,
-              width: `${paintRect.width}px`,
-              height: `${paintRect.height}px`,
-              outlineStyle: widget.state.isSelected.value ? 'solid' : 'dashed',
-              [NODE_OVERLAY_STROKE_WIDTH_PROPERTY]: `${NODE_OVERLAY_STROKE_WIDTH}px`,
+              top: `${projection.rect.top}px`,
+              left: `${projection.rect.left}px`,
+              width: `${projection.rect.width}px`,
+              height: `${projection.rect.height}px`,
             },
-          }),
+          }, [
+            h(NodeSelection, {
+              nodeId: node.id,
+              nodeType: node.type,
+              owner: props.owner,
+              projection,
+            }),
+          ]),
         ]))
       }
 

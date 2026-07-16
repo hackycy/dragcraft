@@ -1,11 +1,13 @@
 import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode, WidgetMeta } from '@dragcraft/core'
 // @vitest-environment happy-dom
-import type { Component } from 'vue'
+import type { Component, VNode } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
+import type { NodeSelectionPresentationHost } from '../selection-presentation'
 import type { RendererContext } from '../types'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import { useWidgetRuntime } from '../widget-runtime'
 import ContainerRegionOutlet from './ContainerRegionOutlet'
@@ -78,12 +80,16 @@ describe('widgetRenderer', () => {
     document.body.innerHTML = ''
   })
 
-  it('owns the hover and selected outline styles at runtime', async () => {
+  it('renders only selected state into the registered root projection plane', async () => {
     const meta = makeMeta()
     const ctx = makeContext(meta)
+    const selectionPresentation = createNodeSelectionPresentation()
     const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
     const host = document.createElement('div')
-    document.body.appendChild(host)
+    const plane = document.createElement('div')
+    plane.className = 'test-selection-plane'
+    selectionPresentation.registerPlane('content', plane)
+    document.body.append(host, plane)
 
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
     HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
@@ -100,6 +106,19 @@ describe('widgetRenderer', () => {
           toJSON: () => ({}),
         } as DOMRect
       }
+      if (this instanceof HTMLElement && this.classList.contains('test-selection-plane')) {
+        return {
+          top: 0,
+          right: 395,
+          bottom: 500,
+          left: 20,
+          width: 375,
+          height: 500,
+          x: 20,
+          y: 0,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
       return originalGetBoundingClientRect.call(this)
     }
 
@@ -108,6 +127,7 @@ describe('widgetRenderer', () => {
     const app = createApp(defineComponent({
       setup() {
         provide(RENDERER_CONTEXT_KEY, ctx)
+        provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
         return () => h(WidgetRenderer, { node })
       },
     }))
@@ -115,22 +135,110 @@ describe('widgetRenderer', () => {
     try {
       app.mount(host)
       await nextTick()
-      await new Promise(resolve => requestAnimationFrame(resolve))
-
-      const hoveredOverlay = document.querySelector<HTMLElement>('.dc-node__block-overlay--hovered')
-      expect(hoveredOverlay?.style.outlineStyle).toBe('dashed')
+      expect(document.querySelector('.dc-node__selection-projection')).toBeNull()
 
       ctx.engine.store.selectedNodeId.value = 'fab'
       await nextTick()
+      await vi.waitFor(() => {
+        expect(plane.querySelector('.dc-node__selection-projection--root-segment')).not.toBeNull()
+      })
 
-      const selectedOverlay = document.querySelector<HTMLElement>('.dc-node__block-overlay--selected')
-      expect(selectedOverlay?.style.outlineStyle).toBe('solid')
-      expect(document.querySelector('.dc-node__block-overlay--hovered')).toBeNull()
+      const selection = plane.querySelector<HTMLElement>('.dc-node__selection-projection--root-segment')
+      expect(selection?.style.top).toBe('10px')
+      expect(selection?.style.left).toBe('-10px')
+      expect(selection?.style.width).toBe('100px')
+      expect(selection?.style.height).toBe('50px')
+      expect(selection?.querySelector('.dc-node__selection-outline')).not.toBeNull()
+      expect(selection?.querySelectorAll('.dc-node__selection-edge')).toHaveLength(4)
+      expect(document.querySelector('.dc-node__block-overlay')).toBeNull()
     }
     finally {
       HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
       app.unmount()
       host.remove()
+    }
+  })
+
+  it('keeps projection geometry outside a custom selection presenter', async () => {
+    const meta = makeMeta()
+    const ctx = makeContext(meta)
+    const selectionPresentation = createNodeSelectionPresentation()
+    const plane = document.createElement('div')
+    const host = document.createElement('div')
+    plane.className = 'test-selection-plane'
+    plane.getBoundingClientRect = () => ({
+      top: 100,
+      right: 400,
+      bottom: 500,
+      left: 100,
+      width: 300,
+      height: 400,
+      x: 100,
+      y: 100,
+      toJSON: () => ({}),
+    }) as DOMRect
+    selectionPresentation.registerPlane('content', plane)
+    document.body.append(host, plane)
+    ctx.engine.store.selectedNodeId.value = 'fab'
+
+    let observedOwner: NodeOwner | null = null
+    let observedKind: string | null = null
+    ctx.extensions.nodeSelection = defineComponent({
+      props: { owner: Object, projection: Object },
+      setup(props) {
+        observedOwner = props.owner as NodeOwner
+        observedKind = (props.projection as { kind: string }).kind
+        return () => h('div', { class: 'custom-selection-presenter' })
+      },
+    })
+
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      if (this instanceof HTMLElement && this.classList.contains('dc-node')) {
+        return {
+          top: 120,
+          right: 310,
+          bottom: 180,
+          left: 150,
+          width: 160,
+          height: 60,
+          x: 150,
+          y: 120,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+
+    const owner = { kind: 'container' as const, containerId: 'layout', regionId: 'left' }
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
+        return () => h(WidgetRenderer, {
+          node: { id: 'fab', type: 'floating-button', props: {} },
+          owner,
+        })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+      await vi.waitFor(() => {
+        expect(plane.querySelector('.custom-selection-presenter')).not.toBeNull()
+      })
+
+      const projection = plane.querySelector<HTMLElement>('.dc-node__selection-projection')
+      expect(projection?.style.cssText).toContain('top: 20px')
+      expect(projection?.style.cssText).toContain('left: 50px')
+      expect(observedOwner).toEqual(owner)
+      expect(observedKind).toBe('material-bounds')
+      expect(plane.querySelector('.dc-node__selection-outline')).toBeNull()
+    }
+    finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      app.unmount()
     }
   })
 
@@ -248,10 +356,14 @@ describe('widgetRenderer', () => {
   it('uses node-box geometry and a horizontal top-end toolbar for container-owned nodes', async () => {
     const meta = makeMeta({ mask: false })
     const ctx = makeContext(meta)
+    const selectionPresentation = createNodeSelectionPresentation()
     ctx.engine.store.selectedNodeId.value = 'fab'
     const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
     const host = document.createElement('div')
-    document.body.appendChild(host)
+    const plane = document.createElement('div')
+    plane.className = 'test-selection-plane'
+    selectionPresentation.registerPlane('content', plane)
+    document.body.append(host, plane)
 
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
     HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
@@ -281,12 +393,26 @@ describe('widgetRenderer', () => {
           toJSON: () => ({}),
         } as DOMRect
       }
+      if (this instanceof HTMLElement && this.classList.contains('test-selection-plane')) {
+        return {
+          top: 100,
+          right: 400,
+          bottom: 500,
+          left: 100,
+          width: 300,
+          height: 400,
+          x: 100,
+          y: 100,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
       return originalGetBoundingClientRect.call(this)
     }
 
     const app = createApp(defineComponent({
       setup() {
         provide(RENDERER_CONTEXT_KEY, ctx)
+        provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
         return () => h(WidgetRenderer, {
           node,
           owner: { kind: 'container', containerId: 'layout', regionId: 'left' },
@@ -297,11 +423,13 @@ describe('widgetRenderer', () => {
     try {
       app.mount(host)
       await nextTick()
-      await new Promise(resolve => requestAnimationFrame(resolve))
+      await nextTick()
 
-      const overlay = document.querySelector<HTMLElement>('.dc-node__block-overlay--container-owned')
-      expect(overlay?.style.left).toBe('151px')
-      expect(overlay?.style.width).toBe('158px')
+      const overlay = plane.querySelector<HTMLElement>('.dc-node__selection-projection--container-owned')
+      expect(overlay?.style.top).toBe('20px')
+      expect(overlay?.style.left).toBe('50px')
+      expect(overlay?.style.width).toBe('160px')
+      expect(overlay?.style.height).toBe('60px')
       const toolbar = document.querySelector<HTMLElement>('.dc-node__toolbar--horizontal')
       expect(toolbar?.dataset.placement).toBe('top-end')
       expect(host.querySelector('.dc-node__handle')).toBeNull()
@@ -485,6 +613,87 @@ describe('widgetRenderer', () => {
     }
   })
 
+  it('inherits the viewport selection plane through a root layer container subtree', async () => {
+    const child: SchemaNode = { id: 'layer-child', type: 'text', props: {} }
+    const engine = createEngineWithContainer(
+      [child],
+      true,
+      {},
+      { placement: { kind: 'layer', layer: 'float', mode: 'framework' } },
+    )
+    const ExternalContainer = defineComponent({
+      setup() {
+        return () => h('div', { class: 'external-container' }, [
+          h(ContainerRegionOutlet, { regionId: 'left' }),
+        ])
+      },
+    })
+    const TestShell = defineComponent({
+      props: {
+        layerVNodes: { type: Object, default: () => ({}) },
+        selectionPresentation: { type: Object, required: true },
+      },
+      setup(props) {
+        const presentation = props.selectionPresentation as NodeSelectionPresentationHost
+        return () => h('div', { class: 'test-shell' }, [
+          h('div', {
+            ref: (element: unknown) => {
+              presentation.registerPlane('content', element instanceof HTMLElement ? element : null)
+            },
+            class: 'test-content-plane',
+          }),
+          h('div', {
+            ref: (element: unknown) => {
+              presentation.registerPlane('viewport', element instanceof HTMLElement ? element : null)
+            },
+            class: 'test-viewport-plane',
+          }, Object.values(props.layerVNodes as Record<string, VNode[]>).flat()),
+        ])
+      },
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      if (this instanceof HTMLElement && this.classList.contains('test-content-plane')) {
+        return { top: 0, right: 375, bottom: 600, left: 0, width: 375, height: 600, x: 0, y: 0, toJSON: () => ({}) } as DOMRect
+      }
+      if (this instanceof HTMLElement && this.classList.contains('test-viewport-plane')) {
+        return { top: 0, right: 375, bottom: 600, left: 0, width: 375, height: 600, x: 0, y: 0, toJSON: () => ({}) } as DOMRect
+      }
+      if (this instanceof HTMLElement && this.dataset.nodeId === 'layer-child') {
+        return { top: 80, right: 240, bottom: 140, left: 120, width: 120, height: 60, x: 120, y: 80, toJSON: () => ({}) } as DOMRect
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+    const app = createApp(defineComponent({
+      setup() {
+        return () => h(RootRenderer, {
+          engine,
+          componentMap: {
+            'split-layout': ExternalContainer,
+            'text': defineComponent({ setup: () => () => h('span', 'child') }),
+          },
+          extensions: { containerShell: TestShell },
+        })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      engine.store.selectNode('layer-child')
+      await nextTick()
+      await vi.waitFor(() => {
+        expect(host.querySelector('.test-viewport-plane .dc-node__selection-projection--container-owned')).not.toBeNull()
+      })
+      expect(host.querySelector('.test-content-plane .dc-node__selection-projection')).toBeNull()
+    }
+    finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      app.unmount()
+    }
+  })
+
   it('renders unresolved persisted children in a recovery fallback exactly once', () => {
     const preservedChild: SchemaNode = { id: 'preserved-child', type: 'text', props: {} }
     const engine = createEngineWithContainer([preservedChild], false)
@@ -558,6 +767,7 @@ function createEngineWithContainer(
   left: SchemaNode[],
   registerContainer = true,
   otherRegions: Record<string, SchemaNode[]> = {},
+  layout?: SchemaNode['layout'],
 ) {
   const engine = createEngine({
     initialSchema: {
@@ -571,6 +781,7 @@ function createEngineWithContainer(
           id: 'layout',
           type: 'split-layout',
           props: {},
+          layout,
           container: { variant: 'split', regions: { left, right: [], ...otherRegions } },
         }],
       },

@@ -4,6 +4,7 @@ import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from '
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise, RendererEventHooks } from './event-hooks'
 import type { NodeToolbarOrientation } from './node-interaction'
+import type { NodeSelectionPlane, NodeSelectionPresentationHost, NodeSelectionProjection } from './selection-presentation'
 
 export type DeepReadonly<T>
   = T extends (...args: infer Args) => infer Result
@@ -28,6 +29,8 @@ export type ComponentMap = Record<string, Component>
 export interface WidgetRendererProps {
   node: SchemaNode
   owner?: NodeOwner
+  /** Internal coordinate plane inherited by nested container nodes. */
+  selectionPlane?: NodeSelectionPlane
 }
 
 export interface ContainerRegionOutletProps {
@@ -189,6 +192,22 @@ export interface NodeHandleProps {
 }
 
 /**
+ * Props received by a custom nodeSelection component.
+ * The Renderer-owned projection wrapper fixes the geometry; the component
+ * only paints inside that box.
+ */
+export interface NodeSelectionProps {
+  /** The schema node ID */
+  nodeId: string
+  /** The widget type string */
+  nodeType: string
+  /** Structural owner that determines the projection kind. */
+  owner: NodeOwner
+  /** Renderer-owned range and coordinate-plane projection. */
+  projection: NodeSelectionProjection
+}
+
+/**
  * Props received by a custom emptyState component.
  */
 export interface EmptyStateProps {
@@ -228,6 +247,8 @@ export interface ContainerShellProps {
   layoutPlan: LayoutPlan
   schema: DesignerSchema
   registry: RegistryInstance
+  /** Registers shell-owned content and viewport presentation planes. */
+  selectionPresentation: NodeSelectionPresentationHost
 }
 
 // ──────────────────────────────────────────
@@ -272,6 +293,12 @@ export interface RendererExtensions {
    * Receives NodeHandleProps.
    */
   nodeHandle?: Component
+
+  /**
+   * Replaces the visual painted inside the Renderer-owned selected projection.
+   * Geometry, plane routing, and clipping remain owned by Renderer and the shell.
+   */
+  nodeSelection?: Component
 
   /**
    * Replaces the default "drag components here" empty state.

@@ -45,6 +45,7 @@ describe('rootRenderer forbidden overlay', () => {
       expect(host.querySelectorAll('.dc-forbidden-overlay')).toHaveLength(1)
       expect(host.querySelector('.dc-root-renderer > .dc-forbidden-overlay')).not.toBeNull()
       expect(host.querySelector('.legacy-shell .dc-forbidden-overlay')).toBeNull()
+      expect(host.querySelector('.dc-root-renderer > [data-dc-selection-plane="fallback"]')).not.toBeNull()
     }
     finally {
       app.unmount()
@@ -109,6 +110,8 @@ describe('rootRenderer forbidden overlay', () => {
     try {
       app.mount(host)
       expect(host.querySelector<HTMLElement>('.dc-container-shell')?.style.backgroundColor).toBe('#f6ffed')
+      expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="content"]')).not.toBeNull()
+      expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="viewport"]')).not.toBeNull()
     }
     finally {
       app.unmount()

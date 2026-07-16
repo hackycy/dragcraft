@@ -1,5 +1,6 @@
 import type { DesignerSchema } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
+import type { NodeSelectionPresentationHost } from '../selection-presentation'
 import { defineComponent, h } from 'vue'
 import { normalizeStyle } from '../style-utils'
 
@@ -35,6 +36,10 @@ const DefaultContainerShell = defineComponent({
       type: Object as PropType<DesignerSchema>,
       default: undefined,
     },
+    selectionPresentation: {
+      type: Object as PropType<NodeSelectionPresentationHost>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -47,6 +52,22 @@ const DefaultContainerShell = defineComponent({
         },
         [
           ...(slots.default?.() ?? []),
+          h('div', {
+            'ref': (element: unknown) => {
+              props.selectionPresentation?.registerPlane('content', element instanceof HTMLElement ? element : null)
+            },
+            'class': 'dc-node-selection-plane dc-node-selection-plane--content',
+            'data-dc-selection-plane': 'content',
+            'aria-hidden': 'true',
+          }),
+          h('div', {
+            'ref': (element: unknown) => {
+              props.selectionPresentation?.registerPlane('viewport', element instanceof HTMLElement ? element : null)
+            },
+            'class': 'dc-node-selection-plane dc-node-selection-plane--viewport',
+            'data-dc-selection-plane': 'viewport',
+            'aria-hidden': 'true',
+          }),
           props.forbiddenOverlayVNode,
         ],
       )

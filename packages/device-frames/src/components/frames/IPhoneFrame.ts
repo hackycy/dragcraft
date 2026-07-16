@@ -1,5 +1,6 @@
 import type { LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
+import type { DeviceFrameSelectionPresentationHost } from '../../types'
 import { defineComponent, h } from 'vue'
 import { useFrameViewport } from '../frame-viewport'
 
@@ -33,6 +34,10 @@ export default defineComponent({
       type: Object as PropType<StyleValueMap>,
       default: undefined,
     },
+    selectionPresentation: {
+      type: Object as PropType<DeviceFrameSelectionPresentationHost>,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -42,6 +47,7 @@ export default defineComponent({
       layerVNodes: props.layerVNodes,
       plan: props.layoutPlan,
       surfaceStyle: props.surfaceStyle,
+      selectionPresentation: props.selectionPresentation,
     }))
 
     return () =>

@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import type { LayoutPlan } from '@dragcraft/core'
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
-import { h } from 'vue'
+import { describe, expect, it, vi } from 'vitest'
+import { h, nextTick } from 'vue'
 import DeviceFrameShell from './DeviceFrameShell'
 
 function makePlan(): LayoutPlan {
@@ -87,8 +87,10 @@ function makePlan(): LayoutPlan {
 
 describe('deviceFrameShell', () => {
   it('renders content, fixed chrome, and layer nodes from the layout plan', () => {
+    const registerPlane = vi.fn()
     const wrapper = mount(DeviceFrameShell, {
       props: {
+        selectionPresentation: { registerPlane },
         layoutPlan: makePlan(),
         schema: {
           version: '1.0.0',
@@ -135,5 +137,58 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame').attributes()).toHaveProperty('data-dc-toolbar-boundary')
     expect(wrapper.find('.dc-device-frame > .dc-forbidden-overlay[data-test-id="forbidden"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface .dc-forbidden-overlay').exists()).toBe(false)
+    expect(wrapper.find('.dc-device-frame__content-scroller [data-dc-selection-plane="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__viewport > [data-dc-selection-plane="viewport"]').exists()).toBe(true)
+    expect(registerPlane).toHaveBeenCalledWith('content', expect.any(HTMLElement))
+    expect(registerPlane).toHaveBeenCalledWith('viewport', expect.any(HTMLElement))
+  })
+
+  it('reserves the complete chrome wrapper plus block selection gutters', async () => {
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      const height = this.classList.contains('dc-node') ? 46 : 44
+      return {
+        top: 0,
+        right: 369,
+        bottom: height,
+        left: 0,
+        width: 369,
+        height,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      } as DOMRect
+    }
+
+    const wrapper = mount(DeviceFrameShell, {
+      props: {
+        layoutPlan: makePlan(),
+        schema: {
+          version: '1.0.0',
+          globalConfig: {},
+          root: { id: 'root', type: 'root', props: {}, children: [] },
+        },
+        chromeVNodes: [
+          h('div', { class: 'dc-node' }, [h('div', 'nav')]),
+          h('div', { class: 'dc-node' }, [h('div', 'tab')]),
+        ],
+      },
+    })
+
+    try {
+      await nextTick()
+      await vi.waitFor(() => {
+        const viewport = wrapper.find<HTMLElement>('.dc-device-frame__viewport').element
+        expect(viewport.style.getPropertyValue('--dc-measured-inset-block-start')).toBe('46px')
+      })
+
+      const style = wrapper.find('.dc-device-frame__viewport').attributes('style')
+      expect(style).toContain('--dc-selection-gutter-block-start: var(--dc-node-selection-root-block-overlap)')
+      expect(style).toContain('--dc-selection-gutter-block-end: var(--dc-node-selection-root-block-overlap)')
+    }
+    finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      wrapper.unmount()
+    }
   })
 })
