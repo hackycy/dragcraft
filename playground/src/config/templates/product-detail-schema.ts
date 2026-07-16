@@ -10,7 +10,6 @@ export const productDetailSchema: DesignerSchema = {
     title: '商品详情',
     description: '商品详情页',
     backgroundColor: '#ffffff',
-    maxWidth: 375,
   },
   root: {
     id: 'root',
@@ -20,7 +19,6 @@ export const productDetailSchema: DesignerSchema = {
       surface: {
         backgroundColor: '#ffffff',
         backgroundSize: 'cover',
-        maxWidth: 375,
       },
     },
     children: [

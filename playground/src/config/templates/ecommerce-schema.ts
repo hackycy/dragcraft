@@ -10,7 +10,6 @@ export const ecommerceSchema: DesignerSchema = {
     title: '好物精选',
     description: '小程序商城首页',
     backgroundColor: '#ffffff',
-    maxWidth: 375,
   },
   root: {
     id: 'root',
@@ -20,7 +19,6 @@ export const ecommerceSchema: DesignerSchema = {
       surface: {
         backgroundColor: '#ffffff',
         backgroundSize: 'cover',
-        maxWidth: 375,
       },
     },
     children: [

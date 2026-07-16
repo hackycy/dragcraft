@@ -75,17 +75,6 @@ export const globalConfigSchema: FormSchema = {
             max: 100,
           },
         },
-        {
-          key: 'maxWidth',
-          label: '最大宽度 (px)',
-          component: 'InputNumber',
-          defaultValue: 375,
-          bindTo: { scope: 'schema', path: 'root.style.surface.maxWidth' },
-          componentProps: {
-            min: 320,
-            max: 1920,
-          },
-        },
       ],
     },
   ],

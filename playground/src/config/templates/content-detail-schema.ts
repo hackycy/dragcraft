@@ -10,7 +10,6 @@ export const contentDetailSchema: DesignerSchema = {
     title: '精选文章',
     description: '内容详情页',
     backgroundColor: '#ffffff',
-    maxWidth: 375,
   },
   root: {
     id: 'root',
@@ -20,7 +19,6 @@ export const contentDetailSchema: DesignerSchema = {
       surface: {
         backgroundColor: '#ffffff',
         backgroundSize: 'cover',
-        maxWidth: 375,
       },
     },
     children: [
