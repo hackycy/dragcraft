@@ -90,6 +90,7 @@ export const flexContainerMeta: DesignerWidgetMeta & { container: ContainerDefin
   titleKey: 'widget.flex-container.title',
   group: 'layout',
   material: {
+    icon: '容',
     description: '由外部物料定义方向、换行和插入轴',
     descriptionKey: 'widget.flex-container.material.description',
     tags: ['布局'],
@@ -225,6 +226,7 @@ export const splitContainerMeta: DesignerWidgetMeta & { container: ContainerDefi
   titleKey: 'widget.split-container.title',
   group: 'layout',
   material: {
+    icon: '分',
     description: '由外部物料定义三分区结构和变体迁移',
     descriptionKey: 'widget.split-container.material.description',
     tags: ['布局'],

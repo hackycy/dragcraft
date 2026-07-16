@@ -38,6 +38,10 @@ it('registers playground container definitions and split variants in declaration
     'flex-container',
     'split-container',
   ])
+  expect(playgroundWidgetDefinitions.slice(-2).map(item => item.meta.material?.icon)).toEqual([
+    '容',
+    '分',
+  ])
   expect(Object.keys(splitContainerMeta.container!.variants)).toEqual([
     'left-one-right-two',
     'top-one-bottom-two',
