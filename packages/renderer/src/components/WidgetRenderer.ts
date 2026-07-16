@@ -87,9 +87,38 @@ export default defineComponent({
     const selectionPlane = computed(() => props.selectionPlane ?? inheritedSelectionPlane.value)
     provide(NODE_SELECTION_PLANE_KEY, selectionPlane)
 
+    const containerPlan = computed(() => props.node.container
+      ? createContainerPlan(props.node, ctx.engine.registry)
+      : null)
+    const isResolvedContainer = computed(() => {
+      const plan = containerPlan.value
+      if (plan?.ok !== true || !widget.resolvedComponent.value)
+        return false
+      const declaredRegionIds = new Set(plan.plan.variant.regions.map(region => region.id))
+      return Object.keys(props.node.container?.regions ?? {}).every(regionId => declaredRegionIds.has(regionId))
+    })
+    const isSelfPositionedLayer = computed(() => {
+      if (props.owner.kind === 'container')
+        return false
+      const placement = widget.layout.value.placement
+      return placement.kind === 'layer' && placement.mode === 'self'
+    })
+    const usesBlockingMask = computed(() =>
+      widget.useMask.value && !isSelfPositionedLayer.value && !isResolvedContainer.value,
+    )
+    const usesSelectionHandle = computed(() =>
+      !usesBlockingMask.value && widget.selectable.value && !isSelfPositionedLayer.value,
+    )
+
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
     const toolbarElRef = ref<HTMLElement | null>(null)
+    const handleAnchorElRef = ref<HTMLElement | null>(null)
+    const isExternalHandleActive = computed(() =>
+      isResolvedContainer.value
+      && usesSelectionHandle.value
+      && !widget.state.isSelected.value,
+    )
     const {
       geometry: interactionGeometry,
       update: updateInteractionGeometry,
@@ -114,6 +143,21 @@ export default defineComponent({
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
       placement: interactionPresentation.toolbarPlacement,
       orientation: interactionPresentation.toolbarOrientation,
+    })
+    const {
+      geometry: handleGeometry,
+      update: updateHandleGeometry,
+    } = useNodeInteractionGeometry(nodeElRef, isExternalHandleActive, {
+      mode: 'node-box',
+      boundarySelector: OVERLAY_BOUNDARY_SELECTOR,
+    })
+    const { position: handlePosition } = useToolbarPosition(nodeElRef, handleAnchorElRef, isExternalHandleActive, {
+      interactionBoundary: ctx.interactionBoundary,
+      interactionGeometry: handleGeometry,
+      interactionGeometryUpdate: updateHandleGeometry,
+      boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
+      placement: 'left-start',
+      orientation: 'vertical',
     })
 
     function isDirectNodeHit(event: MouseEvent): boolean {
@@ -141,20 +185,7 @@ export default defineComponent({
       const placement = widget.layout.value.placement
       const isContainerOwned = props.owner.kind === 'container'
       const ownerKind = isContainerOwned ? 'container' : 'root'
-      const isSelfPositionedLayer = !isContainerOwned && placement.kind === 'layer' && placement.mode === 'self'
-      const containerPlan = node.container
-        ? createContainerPlan(node, ctx.engine.registry)
-        : null
-      const declaredRegionIds = containerPlan?.ok === true
-        ? new Set(containerPlan.plan.variant.regions.map(region => region.id))
-        : null
-      const hasOnlyDeclaredRegions = declaredRegionIds !== null
-        && Object.keys(node.container?.regions ?? {}).every(regionId => declaredRegionIds.has(regionId))
-      const isResolvedContainer = containerPlan?.ok === true
-        && Boolean(widget.resolvedComponent.value)
-        && hasOnlyDeclaredRegions
-      const usesBlockingMask = widget.useMask.value && !isSelfPositionedLayer && !isResolvedContainer
-      const usesSelectionHandle = !usesBlockingMask && widget.selectable.value && !isSelfPositionedLayer
+      const resolvedContainer = isResolvedContainer.value
 
       // Resolve extension components with defaults
       const NodeMask = extensions.nodeMask ?? DefaultNodeMask
@@ -173,13 +204,13 @@ export default defineComponent({
 
       // When a blocking mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index
-      if (usesBlockingMask) {
+      if (usesBlockingMask.value) {
         contentStyle = contentStyle ?? {}
         contentStyle.pointerEvents = 'none'
       }
 
       let innerContent: VNode
-      if (node.container && !isResolvedContainer) {
+      if (node.container && !resolvedContainer) {
         innerContent = h(DefaultContainerFallback, { node })
       }
       else if (widget.resolvedComponent.value) {
@@ -188,7 +219,7 @@ export default defineComponent({
           'style': contentStyle,
           'data-dc-node-surface': '',
         })
-        innerContent = isResolvedContainer
+        innerContent = resolvedContainer
           ? h(ContainerRuntimeProvider, { runtime: containerRuntime }, { default: () => material })
           : material
       }
@@ -235,7 +266,7 @@ export default defineComponent({
       // MASK (mask=true): transparent overlay blocks widget interaction.
       // Self-positioned layer hosts span the viewport, so they select from the
       // material hit target instead of rendering a viewport-sized mask.
-      if (usesBlockingMask) {
+      if (usesBlockingMask.value) {
         wrapperChildren.push(
           h(NodeMask, {
             nodeId: node.id,
@@ -246,16 +277,38 @@ export default defineComponent({
         )
       }
 
-      // HANDLE (mask=false + selectable): small handle for selection
-      if (usesSelectionHandle && !widget.state.isSelected.value) {
-        wrapperChildren.push(
-          h(NodeHandle, {
-            nodeId: node.id,
-            nodeType: node.type,
-            owner: props.owner,
-            onSelect: widget.handleSelect,
-          }),
-        )
+      // Resolved containers use the same external Frame-left placement as the
+      // selected toolbar; other unmasked nodes keep the adapter inline so their
+      // interaction model does not change.
+      if (usesSelectionHandle.value && !widget.state.isSelected.value) {
+        const handleVNode = h(NodeHandle, {
+          nodeId: node.id,
+          nodeType: node.type,
+          owner: props.owner,
+          onSelect: widget.handleSelect,
+        })
+        if (resolvedContainer) {
+          const position = handlePosition.value
+          wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [
+            h('div', {
+              'ref': handleAnchorElRef,
+              'class': [
+                'dc-node__handle-anchor',
+                { 'dc-node__handle-anchor--visible': position.visible },
+              ],
+              'data-dc-node-handle-for': node.id,
+              'style': {
+                position: position.strategy,
+                top: 0,
+                left: 0,
+                transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+              },
+            }, [handleVNode]),
+          ]))
+        }
+        else {
+          wrapperChildren.push(handleVNode)
+        }
       }
 
       // TOOLBAR (when selected): action-driven floating toolbar.
@@ -311,11 +364,11 @@ export default defineComponent({
             ? undefined
             : widget.layout.value.sortScope,
           'data-dc-visible': widget.visible.value ? undefined : 'false',
-          'onMouseover': handleMouseOver,
-          'onMouseleave': widget.handleMouseLeave,
-          'onClick': isSelfPositionedLayer && widget.selectable.value
+          'onMouseover': resolvedContainer ? undefined : handleMouseOver,
+          'onMouseleave': resolvedContainer ? undefined : widget.handleMouseLeave,
+          'onClick': isSelfPositionedLayer.value && widget.selectable.value
             ? widget.handleSelect
-            : isResolvedContainer && widget.selectable.value
+            : resolvedContainer && widget.selectable.value
               ? handleDirectSelect
               : undefined,
         },

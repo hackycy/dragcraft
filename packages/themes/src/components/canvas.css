@@ -219,7 +219,7 @@
   pointer-events: auto;
 }
 
-/* ── Selection Handle (mask=false) ────────── */
+/* ── Selection Handle ─────────────────────── */
 
 .dc-node--unmasked {
   position: relative;
@@ -230,36 +230,122 @@
 }
 
 .dc-node__handle {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 20px;
-  height: 20px;
-  background: var(--dc-color-accent);
+  margin: 0;
+  padding: 0;
+  color: var(--dc-color-accent);
+  background: transparent;
   border: none;
-  border-radius: 3px;
+  box-sizing: border-box;
   cursor: pointer;
-  z-index: var(--dc-z-node-handle);
-  opacity: 0;
-  transition: opacity var(--dc-duration-fast);
+  font: inherit;
+}
+
+.dc-node__handle-surface {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--dc-font-size-xs);
   color: var(--dc-color-on-accent);
+  background: var(--dc-color-accent);
+  border: none;
+  border-radius: var(--dc-radius-sm);
+  box-shadow: var(--dc-shadow-sm);
+  box-sizing: border-box;
+  transition:
+    background-color var(--dc-duration-fast) var(--dc-ease-standard),
+    transform var(--dc-duration-fast) var(--dc-ease-standard);
 }
 
-.dc-node--hovered .dc-node__handle {
-  opacity: 0.8;
+.dc-node__handle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  pointer-events: none;
 }
 
-.dc-node--selected .dc-node__handle {
+.dc-node > .dc-node__handle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  z-index: var(--dc-z-node-handle);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dc-duration-fast) var(--dc-ease-standard);
+}
+
+.dc-node > .dc-node__handle > .dc-node__handle-surface {
+  position: absolute;
+  inset: 2px;
+}
+
+.dc-node--hovered > .dc-node__handle,
+.dc-node > .dc-node__handle:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dc-node--selected > .dc-node__handle {
   opacity: 0;
   pointer-events: none;
 }
 
-.dc-node__handle:hover {
+.dc-node__handle:hover > .dc-node__handle-surface {
+  background: var(--dc-color-accent-hover);
+}
+
+.dc-node__handle:active > .dc-node__handle-surface {
+  background: var(--dc-color-accent-active);
+  transform: scale(0.94);
+}
+
+.dc-node__handle:focus-visible {
+  outline: none;
+}
+
+.dc-node__handle:focus-visible > .dc-node__handle-surface {
+  outline: 2px solid var(--dc-color-focus-ring);
+  outline-offset: 2px;
+}
+
+.dc-node__handle-anchor {
+  width: 32px;
+  height: 32px;
+  z-index: var(--dc-z-node-handle);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dc-duration-fast) var(--dc-ease-standard);
+  will-change: transform;
+}
+
+.dc-node__handle-anchor--visible {
+  opacity: 0.2;
+  pointer-events: auto;
+}
+
+.dc-node__handle-anchor--visible:hover,
+.dc-node__handle-anchor--visible:focus-within {
   opacity: 1;
+}
+
+.dc-node__handle-anchor > .dc-node__handle {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.dc-node__handle-anchor > .dc-node__handle > .dc-node__handle-surface {
+  position: absolute;
+  inset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-node__handle,
+  .dc-node__handle-anchor,
+  .dc-node__handle-surface {
+    transition: none;
+  }
 }
 
 /* ── Floating Toolbar (when selected) ────── */

@@ -1,11 +1,11 @@
 import type { NodeOwner } from '@dragcraft/core'
 import type { PropType } from 'vue'
+import { IconComponent } from '@dragcraft/icons'
 import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 
 /**
- * Default selection handle component for widgets with mask=false.
- * Renders a small handle on hover that allows selecting the widget.
+ * Default semantic selection handle for unmasked widgets and resolved containers.
  */
 export default defineComponent({
   name: 'DcDefaultNodeHandle',
@@ -31,11 +31,21 @@ export default defineComponent({
 
   setup(props) {
     const { t } = useI18n()
-    return () =>
-      h('div', {
-        class: 'dc-node__handle',
-        onClick: props.onSelect,
-        title: t('canvas.node-handle', '选中组件'),
-      })
+    return () => {
+      const label = t('canvas.node-handle', '选中组件')
+      return h('button', {
+        'type': 'button',
+        'class': 'dc-node__handle',
+        'onClick': props.onSelect,
+        'title': label,
+        'aria-label': label,
+      }, [
+        h('span', { class: 'dc-node__handle-surface' }, [
+          h('span', { 'class': 'dc-node__handle-icon', 'aria-hidden': 'true' }, [
+            h(IconComponent, { size: 12 }),
+          ]),
+        ]),
+      ])
+    }
   },
 })

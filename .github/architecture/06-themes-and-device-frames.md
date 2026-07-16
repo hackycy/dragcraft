@@ -147,6 +147,9 @@ src/
 | `.dc-node--container-owned` | container-owned 节点交互投影 |
 | `.dc-node__mask` | 透明遮罩 |
 | `.dc-node__handle` | 选中 handle |
+| `.dc-node__handle-anchor` | resolved 容器外置 handle 的 Renderer 定位锚点 |
+| `.dc-node__handle-surface` | handle 的主题表面与交互状态 |
+| `.dc-node__handle-icon` | handle 的语义图标容器 |
 | `.dc-node__toolbar` | 浮动工具栏 |
 | `.dc-node__toolbar--floating` | fixed 定位工具栏 |
 | `.dc-node__toolbar--vertical` | root-owned 纵向动作排列 |
@@ -160,7 +163,7 @@ src/
 
 ### 节点选中投影
 
-hover 仍驱动命中状态、事件 hooks 和 unmasked handle，但不生成范围高亮。只有 selected 节点生成 `NodeSelectionProjection`，范围、坐标平面和视觉 presenter 分别由不同模块负责：
+普通物料的 hover 仍驱动命中状态、事件 hooks 和 inline unmasked handle，但不生成范围高亮。resolved 容器的 Frame 外置 handle 未选中时常驻，默认低透明度，仅由自身 hover 或 focus 恢复完整视觉。只有 selected 节点生成 `NodeSelectionProjection`，范围、坐标平面和视觉 presenter 分别由不同模块负责：
 
 ```text
 NodeOwner -> root-segment | material-bounds

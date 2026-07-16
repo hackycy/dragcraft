@@ -181,7 +181,7 @@ describe('containerRegionOutlet', () => {
     }
   })
 
-  it('gives hover to the deepest node and restores it to container blank space', () => {
+  it('gives hover to the deepest node without publishing container material hover', () => {
     const { app, engine, host } = mountExternalSplit()
     try {
       const childWrapper = host.querySelector<HTMLElement>('[data-node-id="left-child"]')!
@@ -193,7 +193,7 @@ describe('containerRegionOutlet', () => {
 
       childWrapper.dispatchEvent(new MouseEvent('mouseleave'))
       containerSurface.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
-      expect(engine.store.hoveredNodeId.value).toBe('layout')
+      expect(engine.store.hoveredNodeId.value).toBeNull()
     }
     finally {
       app.unmount()

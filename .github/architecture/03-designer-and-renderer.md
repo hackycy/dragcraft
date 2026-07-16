@@ -277,7 +277,7 @@ RootRenderer
       -> useNodeActions
       -> useNodeDrag
       -> resolve component from componentMap
-      -> render nodeMask or nodeHandle
+      -> render nodeMask, inline nodeHandle, or Frame-external container handle
       -> project selected node into shell plane
       -> render nodeSelection presenter
       -> render nodeToolbar
@@ -287,6 +287,8 @@ RootRenderer
 容器节点仍只由 root 创建一次 `WidgetRenderer`。当 meta 声明 `container` 时，renderer 提供 `ContainerRuntime`；外部物料通过 `ContainerRegionOutlet` 为每个 region 渲染普通子节点，因此每个 schema 节点只从唯一 owner 路径渲染一次。
 
 selected 高亮和浮动工具栏使用不同的呈现通道。高亮生成 Renderer-owned `NodeSelectionProjection`，并 Teleport 到 container shell 注册的内容或视口平面，由 shell 的原生滚动和 overflow 负责裁剪；工具栏继续 Teleport 到 Designer 全局 interaction layer。root owner 投影为物料完整 border box 的 `root-segment`，其默认四边 presenter 在外侧绘制并允许 Frame 提供左右边框覆盖宽度；container owner 投影为完整 wrapper border box 的 `material-bounds`。root flow 使用内容平面，root chrome/layer 使用视口平面，容器子树继承所属根级物料的平面。
+
+resolved 容器的 handle 同样进入当前画布的全局 interaction layer，但不进入 selected 呈现平面。它与 root-owned selected toolbar 共享 `left-start` 定位语义：横向位于 Frame 左侧，纵向与容器可见顶部对齐，并限制在画布 interaction boundary 内。handle 在未选中时常驻，以低透明度呈现，并在自身 hover 或 focus 时恢复完整视觉；selected 后立即退出并由同位置的 toolbar 接管。它不依赖或写入容器物料 hover 状态。普通 unmasked 物料继续使用 wrapper 内的 handle。
 
 `RootRenderer` 接收：
 
@@ -446,7 +448,7 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 | `nodeWrapper` | 无 | 包裹每个节点 |
 | `nodeToolbar` | `DefaultNodeToolbar` | 节点浮动工具栏 |
 | `nodeMask` | `DefaultNodeMask` | 透明点击层 |
-| `nodeHandle` | `DefaultNodeHandle` | hover 选中按钮 |
+| `nodeHandle` | `DefaultNodeHandle` | 带语义图标的选择按钮；resolved 容器由 Renderer 外置定位 |
 | `nodeSelection` | `DefaultNodeSelection` | selected 投影视觉 presenter |
 | `emptyState` | `DefaultEmptyState` | 空画布状态 |
 | `widgetFallback` | `DefaultWidgetFallback` | 未知 widget fallback |
@@ -454,7 +456,7 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 ## 交互状态
 
 - 选中：点击 mask 或 handle，调用 `engine.store.selectNode(nodeId)`，应用 `dc-node--selected`；resolved container 的自身空白也可以选择容器。
-- 悬停：最深的 `[data-node-id]` 独占 hover，父容器只在自身空白命中时调用 `engine.store.hoverNode()`；hover 不生成范围高亮。
+- 悬停：普通物料中最深的 `[data-node-id]` 独占 hover，hover 不生成范围高亮；resolved 容器物料不发布 hover，其常驻外置 handle 只响应自身 hover 或 focus。
 - 拖拽悬停：外部 `dragOverNodeId` 控制，应用 `dc-node--drag-over` 并渲染 DropIndicator。
 - 不可选中：`WidgetMeta.selectable` 为 `false` 时忽略选中。
 - 位置锁定：`WidgetMeta.sortable` 为 `false` 时应用 `dc-node--locked`，隐藏拖拽与移动动作。
@@ -491,6 +493,10 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
       .dc-node--hovered
       .dc-node--locked
     .dc-drop-indicator
+  .dc-node__handle-anchor
+    .dc-node__handle
+      .dc-node__handle-surface
+        .dc-node__handle-icon
     .dc-widget-fallback
   .dc-node-selection-plane--fallback
 ```

@@ -613,6 +613,106 @@ describe('widgetRenderer', () => {
     }
   })
 
+  it('keeps the container handle outside the Frame without material hover state', async () => {
+    const engine = createEngineWithContainer([])
+    const ExternalContainer = defineComponent({
+      setup() {
+        return () => h('div', { class: 'external-container' }, [
+          h(ContainerRegionOutlet, { regionId: 'left' }),
+        ])
+      },
+    })
+    const canvas = document.createElement('div')
+    canvas.className = 'dc-canvas'
+    const frame = document.createElement('div')
+    frame.setAttribute('data-dc-toolbar-boundary', '')
+    const host = document.createElement('div')
+    const interactionLayer = document.createElement('div')
+    interactionLayer.setAttribute('data-dc-canvas-interaction-layer', '')
+    frame.appendChild(host)
+    canvas.append(frame, interactionLayer)
+    document.body.appendChild(canvas)
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
+    HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
+      if (this instanceof HTMLElement && this.dataset.nodeId === 'layout') {
+        return {
+          top: 100,
+          right: 500,
+          bottom: 300,
+          left: 200,
+          width: 300,
+          height: 200,
+          x: 200,
+          y: 100,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      if (this instanceof HTMLElement && this.hasAttribute('data-dc-toolbar-boundary')) {
+        return {
+          top: 40,
+          right: 480,
+          bottom: 640,
+          left: 80,
+          width: 400,
+          height: 600,
+          x: 80,
+          y: 40,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      if (this instanceof HTMLElement && this.classList.contains('dc-node__handle-anchor')) {
+        return {
+          top: 0,
+          right: 32,
+          bottom: 32,
+          left: 0,
+          width: 32,
+          height: 32,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
+      return originalGetBoundingClientRect.call(this)
+    }
+    const app = createApp(defineComponent({
+      setup() {
+        return () => h(RootRenderer, {
+          engine,
+          componentMap: { 'split-layout': ExternalContainer },
+        })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+
+      await vi.waitFor(() => {
+        expect(interactionLayer.querySelector('.dc-node__handle-anchor--visible')).not.toBeNull()
+      })
+      const wrapper = host.querySelector<HTMLElement>('[data-node-id="layout"]')!
+      const anchor = interactionLayer.querySelector<HTMLElement>('.dc-node__handle-anchor')!
+      const button = anchor.querySelector<HTMLButtonElement>('.dc-node__handle')!
+      expect(wrapper.querySelector(':scope > .dc-node__handle')).toBeNull()
+      expect(anchor.dataset.dcNodeHandleFor).toBe('layout')
+      expect(anchor.style.transform).toBe('translate3d(40px, 100px, 0)')
+
+      wrapper.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+      expect(engine.store.hoveredNodeId.value).toBeNull()
+
+      button.click()
+      await nextTick()
+      expect(engine.store.selectedNodeId.value).toBe('layout')
+      expect(interactionLayer.querySelector('.dc-node__handle-anchor')).toBeNull()
+    }
+    finally {
+      HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      app.unmount()
+      canvas.remove()
+    }
+  })
+
   it('inherits the viewport selection plane through a root layer container subtree', async () => {
     const child: SchemaNode = { id: 'layer-child', type: 'text', props: {} }
     const engine = createEngineWithContainer(
