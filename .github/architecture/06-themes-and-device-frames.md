@@ -16,13 +16,13 @@ dragcraft 的 UI 包采用 Headless Component 模式：
 
 | 皮肤 | 导入路径 | 风格描述 |
 | --- | --- | --- |
-| shadcn | `@dragcraft/themes` 或 `@dragcraft/themes/shadcn` | 企业蓝主色、紧凑密度、低阴影，适合高信息密度工作台 |
+| Standard | `@dragcraft/themes` 或 `@dragcraft/themes/standard` | 企业蓝主色、紧凑密度、低阴影，适合高信息密度工作台 |
 | Google Material 3 | `@dragcraft/themes/material` | Material 3 色彩角色、舒适密度、圆润形状与分层阴影 |
 
 使用方式：
 
 ```ts
-import '@dragcraft/themes/shadcn'
+import '@dragcraft/themes'
 // 或
 import '@dragcraft/themes/material'
 ```
@@ -46,7 +46,7 @@ import './my-custom-styles.css'
 
 ## Design Tokens
 
-主题令牌按产品语义分层。组件只读取语义角色，不读取 shadcn 或 Material 的原始品牌色值。
+主题令牌按产品语义分层。组件只读取语义角色，不读取具体主题的原始品牌色值。
 
 ### 颜色角色
 
@@ -115,7 +115,7 @@ src/
 │   ├── property-panel.css
 │   ├── form-generator.css
 │   └── widgets.css
-├── shadcn/
+├── standard/
 │   ├── tokens.css
 │   ├── overrides.css
 │   └── index.css

@@ -2,13 +2,13 @@
   "name": "@dragcraft/themes",
   "type": "module",
   "version": "0.0.0",
-  "description": "Product-grade shadcn and Google Material themes for dragcraft",
+  "description": "Product-grade Standard and Google Material themes for dragcraft",
   "sideEffects": [
     "**/*.css"
   ],
   "exports": {
-    ".": "./dist/shadcn.css",
-    "./shadcn": "./dist/shadcn.css",
+    ".": "./dist/standard.css",
+    "./standard": "./dist/standard.css",
     "./material": "./dist/material.css",
     "./package.json": "./package.json"
   },
@@ -16,7 +16,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "postcss src/shadcn/index.css -o dist/shadcn.css && postcss src/material/index.css -o dist/material.css",
+    "build": "rm -rf dist && postcss src/standard/index.css -o dist/standard.css && postcss src/material/index.css -o dist/material.css",
     "dev": "pnpm run build --watch"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-/* shadcn keeps controls quiet until interaction. */
+/* Standard keeps controls quiet until interaction. */
 
 .dc-widget-button {
   border-radius: var(--dc-radius-md);

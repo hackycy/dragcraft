@@ -1,15 +1,15 @@
-/* shadcn: enterprise blue, compact and content-first. */
+/* Standard: enterprise blue, compact and content-first. */
 
 :root {
   color-scheme: light;
 
   /* Color roles */
-  --dc-color-accent: #2563eb;
-  --dc-color-accent-hover: #1d4ed8;
-  --dc-color-accent-active: #1e40af;
+  --dc-color-accent: #2e70dc;
+  --dc-color-accent-hover: #2563eb;
+  --dc-color-accent-active: #1d4ed8;
   --dc-color-accent-subtle: #eff6ff;
   --dc-color-accent-border: #bfdbfe;
-  --dc-color-accent-ring: rgba(37, 99, 235, 0.2);
+  --dc-color-accent-ring: rgba(46, 112, 220, 0.2);
   --dc-color-on-accent: #fafafa;
   --dc-color-on-accent-subtle: #1e3a8a;
   --dc-color-success: #15803d;
@@ -28,7 +28,7 @@
   --dc-color-canvas: #f1f1f3;
   --dc-color-border: #d4d4d8;
   --dc-color-border-subtle: #e4e4e7;
-  --dc-color-focus-ring: #2563eb;
+  --dc-color-focus-ring: #2e70dc;
   --dc-color-backdrop: rgba(9, 9, 11, 0.32);
   --dc-color-sidebar-handle: #d4d4d8;
   --dc-color-sidebar-handle-hover: #a1a1aa;
