@@ -18,14 +18,13 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./package.json": "./package.json",
-    "./structure.css": "./styles/structure.css"
+    "./structure.css": "./dist/structure.css"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "files": [
-    "dist",
-    "styles"
+    "dist"
   ],
   "scripts": {
     "build": "tsdown",

@@ -192,10 +192,10 @@ function validatePackageStyleExports() {
   for (const packageName of ['designer', 'renderer', 'form-generator']) {
     const packageRoot = path.join(repoRoot, 'packages', packageName)
     const packageJson = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'))
-    if (packageJson.exports?.['./structure.css'] !== './styles/structure.css')
+    if (packageJson.exports?.['./structure.css'] !== './dist/structure.css')
       errors.push(`packages/${packageName}/package.json: missing ./structure.css export`)
-    if (!packageJson.files?.includes('styles'))
-      errors.push(`packages/${packageName}/package.json: styles must be published`)
+    if (!packageJson.files?.includes('dist'))
+      errors.push(`packages/${packageName}/package.json: dist must be published`)
     if (!Array.isArray(packageJson.sideEffects) || !packageJson.sideEffects.includes('**/*.css'))
       errors.push(`packages/${packageName}/package.json: CSS side effects are not declared`)
     if (!fs.existsSync(path.join(packageRoot, 'styles/structure.css')))

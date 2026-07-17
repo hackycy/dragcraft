@@ -27,7 +27,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsdown && postcss src/styles/index.css -o dist/styles/index.css",
+    "build": "tsdown",
     "dev": "tsdown --watch",
     "lint": "eslint",
     "prepublishOnly": "nr build",
@@ -46,9 +46,6 @@
   "devDependencies": {
     "@vue/test-utils": "catalog:testing",
     "happy-dom": "catalog:testing",
-    "postcss": "catalog:cli",
-    "postcss-cli": "catalog:cli",
-    "postcss-import": "catalog:cli",
     "vitest": "catalog:testing",
     "vue": "catalog:vue"
   }

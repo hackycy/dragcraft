@@ -1,15 +1,13 @@
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
-  entry: [
-    'src/index.ts',
-  ],
-  dts: true,
-  exports: {
-    customExports: exports => ({
-      ...exports,
-      './structure.css': './styles/structure.css',
-    }),
+  entry: {
+    index: 'src/index.ts',
+    structure: 'styles/structure.css',
   },
+  css: {
+    fileName: 'structure.css',
+  },
+  dts: true,
   publint: true,
 })
