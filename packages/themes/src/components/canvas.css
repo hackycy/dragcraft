@@ -320,7 +320,7 @@
 }
 
 .dc-node__handle-anchor--visible {
-  opacity: 0.2;
+  opacity: 0.15;
   pointer-events: auto;
 }
 
