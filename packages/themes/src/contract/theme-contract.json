@@ -57,8 +57,8 @@
     "--dc-node-toolbar-shadow": { "kind": "component", "default": "0 4px 12px var(--dc-color-accent-ring)", "description": "Floating node-toolbar shadow." }
   },
   "integrationProperties": {
-    "--dc-node-selection-root-block-overlap": { "description": "Block-axis overlap reserved by a container shell for root selection edges." },
-    "--dc-node-selection-root-inline-overlap": { "description": "Inline-axis overlap reserved by a container shell for root selection edges." }
+    "--dc-node-selection-root-block-overlap": { "description": "Root block-edge thickness painted outside material bounds without affecting layout." },
+    "--dc-node-selection-root-inline-overlap": { "description": "Root inline-edge width painted in the root-plane edge strips outside material bounds." }
   },
   "components": {
     "designer": { "parts": ["backdrop", "body", "center-panel", "left-panel", "right-panel"], "states": ["compact", "left-open", "right-open", "wide"] },

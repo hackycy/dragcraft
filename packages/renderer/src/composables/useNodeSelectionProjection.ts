@@ -58,17 +58,26 @@ export function useNodeSelectionProjection(
       return
     }
 
-    const rect = {
+    const materialBounds = {
       top: targetRect.top - planeRect.top,
       left: targetRect.left - planeRect.left,
       width: targetRect.width,
       height: targetRect.height,
     }
+    const bounds = options.kind === 'root-segment'
+      ? {
+          top: materialBounds.top,
+          left: 0,
+          width: planeRect.width,
+          height: materialBounds.height,
+        }
+      : { ...materialBounds }
 
     projection.value = {
       kind: options.kind,
       plane: options.plane.value,
-      rect,
+      materialBounds,
+      bounds,
     }
   }
 
@@ -87,7 +96,7 @@ export function useNodeSelectionProjection(
     }
 
     cleanupAutoUpdate = autoUpdate(resolveTargetElement(host, options.selfTargetSelector), plane, update, {
-      ancestorScroll: false,
+      ancestorScroll: options.plane.value === 'root',
       ancestorResize: true,
       elementResize: true,
       layoutShift: true,

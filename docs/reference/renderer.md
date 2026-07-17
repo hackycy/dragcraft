@@ -74,6 +74,6 @@ const NodeWrapper = defineComponent({
 const extensions = { nodeWrapper: NodeWrapper }
 ```
 
-root-owned 节点使用完整物料 border box 的选中投影，工具栏位于 Frame 左侧。container-owned 节点使用自身 wrapper box，工具栏位于节点上方或下方。已解析容器本身在未选中时使用画布外的语义选择按钮，不发布物料 hover；子节点仍按自己的 mask 或 handle 处理命中。
+root-owned 节点保留物料真实 border box，但其选中语义范围横向覆盖完整 container shell/Device Frame，工具栏位于 Frame 左侧。container-owned 节点的真实范围与选中范围都使用自身 wrapper box，工具栏位于节点上方或下方。已解析容器本身在未选中时使用画布外的语义选择按钮，不发布物料 hover；子节点仍按自己的 mask 或 handle 处理命中。
 
-`rendererExtensions.nodeSelection` 只能替换投影内部的视觉；范围、坐标平面和 overflow 裁剪仍由 Renderer 与 `containerShell` 负责。root flow 子树使用内容平面，root chrome/layer 子树使用视口平面。自定义 Frame 如何注册这些平面，见 [主题与设备框架](/guide/themes-and-device-frames)。
+`rendererExtensions.nodeSelection` 只能替换投影视觉；`projection.materialBounds`、`projection.bounds`、坐标平面和 overflow 裁剪仍由 Renderer 与 `containerShell` 负责。root-owned 节点始终投影到 root 平面；root flow 子树向 container-owned descendants 传播 content 平面，root chrome/layer 子树传播 viewport 平面。自定义 Frame 如何注册三个平面，见 [主题与设备框架](/guide/themes-and-device-frames)。

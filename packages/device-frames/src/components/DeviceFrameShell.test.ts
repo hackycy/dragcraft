@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import type { LayoutPlan } from '@dragcraft/core'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import { h, nextTick } from 'vue'
@@ -86,6 +88,27 @@ function makePlan(): LayoutPlan {
 }
 
 describe('deviceFrameShell', () => {
+  it('aligns root material with the frame inner content edges', () => {
+    const css = readFileSync(path.resolve(process.cwd(), 'src/styles/device-frame.css'), 'utf8')
+    const surfaceRule = css.match(/\.dc-device-frame__content-surface\s*\{[^}]*\}/)?.[0]
+    const viewportRule = css.match(/\.dc-device-frame__viewport\s*\{[^}]*\}/)?.[0]
+    const chromeRule = css.match(/\.dc-device-frame__chrome\s*\{[^}]*\}/)?.[0]
+    const blockStartRule = css.match(/\.dc-device-frame__chrome--block-start\s*\{[^}]*\}/)?.[0]
+    const blockEndRule = css.match(/\.dc-device-frame__chrome--block-end\s*\{[^}]*\}/)?.[0]
+    const layerRule = css.match(/\.dc-device-frame__layer\s*\{[^}]*\}/)?.[0]
+
+    expect(surfaceRule).toContain('min-height: 100%')
+    expect(surfaceRule).toContain('box-sizing: border-box')
+    expect(surfaceRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
+    expect(viewportRule).not.toContain('--dc-selection-gutter')
+    expect(viewportRule).toContain('--dc-inset-inline-start: calc(var(--dc-device-frame-border-width) +')
+    expect(viewportRule).toContain('--dc-inset-inline-end: calc(var(--dc-device-frame-border-width) +')
+    expect(chromeRule).toContain('inset: 0 var(--dc-device-frame-border-width);')
+    expect(blockStartRule).toContain('top: 0;')
+    expect(blockEndRule).toContain('bottom: 0;')
+    expect(layerRule).toContain('inset: 0 var(--dc-device-frame-border-width);')
+  })
+
   it('renders content, fixed chrome, and layer nodes from the layout plan', () => {
     const registerPlane = vi.fn()
     const wrapper = mount(DeviceFrameShell, {
@@ -137,13 +160,15 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame').attributes()).toHaveProperty('data-dc-toolbar-boundary')
     expect(wrapper.find('.dc-device-frame > .dc-forbidden-overlay[data-test-id="forbidden"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface .dc-forbidden-overlay').exists()).toBe(false)
+    expect(wrapper.find('.dc-device-frame > [data-dc-selection-plane="root"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-scroller [data-dc-selection-plane="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport > [data-dc-selection-plane="viewport"]').exists()).toBe(true)
+    expect(registerPlane).toHaveBeenCalledWith('root', expect.any(HTMLElement))
     expect(registerPlane).toHaveBeenCalledWith('content', expect.any(HTMLElement))
     expect(registerPlane).toHaveBeenCalledWith('viewport', expect.any(HTMLElement))
   })
 
-  it('reserves the complete chrome wrapper plus block selection gutters', async () => {
+  it('reserves the complete chrome wrapper without selection gutters', async () => {
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
     HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
       const height = this.classList.contains('dc-node') ? 46 : 44
@@ -183,8 +208,7 @@ describe('deviceFrameShell', () => {
       })
 
       const style = wrapper.find('.dc-device-frame__viewport').attributes('style')
-      expect(style).toContain('--dc-selection-gutter-block-start: var(--dc-node-selection-root-block-overlap)')
-      expect(style).toContain('--dc-selection-gutter-block-end: var(--dc-node-selection-root-block-overlap)')
+      expect(style).not.toContain('--dc-selection-gutter')
     }
     finally {
       HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect

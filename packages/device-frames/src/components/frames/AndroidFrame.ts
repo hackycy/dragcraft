@@ -3,7 +3,7 @@ import type { PropType, VNode } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../../types'
 import { IconNavBack, IconNavHome, IconNavRecent, IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
-import { useFrameViewport } from '../frame-viewport'
+import { renderDeviceFrame, useFrameViewport } from '../frame-viewport'
 
 /**
  * Android phone frame with status bar and bottom navigation bar.
@@ -50,7 +50,7 @@ export default defineComponent({
     }))
 
     return () =>
-      h('div', { 'class': 'dc-device-frame dc-device-frame--android', 'data-dc-toolbar-boundary': '' }, [
+      renderDeviceFrame('dc-device-frame--android', props.selectionPresentation, [
         // Status bar
         h('div', { class: 'dc-device-frame__status-bar' }, [
           h('span', { class: 'dc-device-frame__status-time' }, '12:00'),

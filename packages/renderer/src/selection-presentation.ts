@@ -1,7 +1,7 @@
 import type { ComputedRef, InjectionKey, Ref } from 'vue'
 import { computed, inject, ref } from 'vue'
 
-export type NodeSelectionPlane = 'content' | 'viewport'
+export type NodeSelectionPlane = 'root' | 'content' | 'viewport'
 export type NodeSelectionProjectionKind = 'root-segment' | 'material-bounds'
 
 export interface NodeSelectionRect {
@@ -14,7 +14,10 @@ export interface NodeSelectionRect {
 export interface NodeSelectionProjection {
   kind: NodeSelectionProjectionKind
   plane: NodeSelectionPlane
-  rect: NodeSelectionRect
+  /** Material border box relative to the registered plane. */
+  materialBounds: NodeSelectionRect
+  /** Renderer-owned semantic selection range relative to the registered plane. */
+  bounds: NodeSelectionRect
 }
 
 export interface NodeSelectionPresentationHost {
@@ -41,11 +44,13 @@ const DETACHED_PRESENTATION: NodeSelectionPresentation = {
 
 export function createNodeSelectionPresentation(): NodeSelectionPresentation {
   const planes: Record<NodeSelectionPlane, Ref<HTMLElement | null>> = {
+    root: ref(null),
     content: ref(null),
     viewport: ref(null),
   }
   const fallback = ref<HTMLElement | null>(null)
   const resolvedPlanes: Record<NodeSelectionPlane, ComputedRef<HTMLElement | null>> = {
+    root: computed(() => planes.root.value ?? fallback.value),
     content: computed(() => planes.content.value ?? fallback.value),
     viewport: computed(() => planes.viewport.value ?? fallback.value),
   }

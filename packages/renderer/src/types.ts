@@ -193,8 +193,8 @@ export interface NodeHandleProps {
 
 /**
  * Props received by a custom nodeSelection component.
- * The Renderer-owned projection wrapper fixes the geometry; the component
- * only paints inside that box.
+ * Renderer and the shell own geometry, plane routing, and clipping; the
+ * component only owns the visual presentation.
  */
 export interface NodeSelectionProps {
   /** The schema node ID */
@@ -203,7 +203,7 @@ export interface NodeSelectionProps {
   nodeType: string
   /** Structural owner that determines the projection kind. */
   owner: NodeOwner
-  /** Renderer-owned range and coordinate-plane projection. */
+  /** Renderer-owned material and semantic selection bounds in a coordinate plane. */
   projection: NodeSelectionProjection
 }
 
@@ -247,7 +247,7 @@ export interface ContainerShellProps {
   layoutPlan: LayoutPlan
   schema: DesignerSchema
   registry: RegistryInstance
-  /** Registers shell-owned content and viewport presentation planes. */
+  /** Registers shell-owned root, content, and viewport presentation planes. */
   selectionPresentation: NodeSelectionPresentationHost
 }
 
@@ -295,7 +295,7 @@ export interface RendererExtensions {
   nodeHandle?: Component
 
   /**
-   * Replaces the visual painted inside the Renderer-owned selected projection.
+   * Replaces the visual presentation of the Renderer-owned selected projection.
    * Geometry, plane routing, and clipping remain owned by Renderer and the shell.
    */
   nodeSelection?: Component

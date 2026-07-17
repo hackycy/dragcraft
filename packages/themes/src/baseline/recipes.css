@@ -395,8 +395,8 @@
 
 [data-dc-component="node"][data-dc-state~="drag-over"] {
   background-color: var(--dc-color-accent-subtle);
-  border-color: var(--dc-color-accent);
-  border-style: dashed;
+  outline: 1px dashed var(--dc-color-accent);
+  outline-offset: -1px;
 }
 
 [data-dc-component="node-handle"] {

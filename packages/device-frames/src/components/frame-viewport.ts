@@ -13,6 +13,33 @@ export interface FrameViewportOptions {
   selectionPresentation?: DeviceFrameSelectionPresentationHost
 }
 
+function renderFrameRootSelectionPlane(
+  selectionPresentation: DeviceFrameSelectionPresentationHost | undefined,
+): VNode {
+  return h('div', {
+    'ref': (element: unknown) => {
+      selectionPresentation?.registerPlane('root', element instanceof HTMLElement ? element : null)
+    },
+    'class': 'dc-device-frame__selection-plane dc-device-frame__selection-plane--root',
+    'data-dc-selection-plane': 'root',
+    'aria-hidden': 'true',
+  })
+}
+
+export function renderDeviceFrame(
+  modifierClass: string,
+  selectionPresentation: DeviceFrameSelectionPresentationHost | undefined,
+  children: VNodeChild[],
+): VNode {
+  return h('div', {
+    'class': ['dc-device-frame', modifierClass],
+    'data-dc-toolbar-boundary': '',
+  }, [
+    ...children,
+    renderFrameRootSelectionPlane(selectionPresentation),
+  ])
+}
+
 function edgeClass(edge: LayoutEdge): string {
   return `dc-device-frame__chrome--${edge}`
 }
@@ -191,12 +218,6 @@ function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
   }
 
   const style: Record<string, string> = {}
-  style['--dc-selection-gutter-block-start'] = contributors.some(({ edge }) => edge === 'block-start')
-    ? 'var(--dc-node-selection-root-block-overlap)'
-    : '0px'
-  style['--dc-selection-gutter-block-end'] = contributors.some(({ edge }) => edge === 'block-end')
-    ? 'var(--dc-node-selection-root-block-overlap)'
-    : '0px'
   for (const [edge, values] of Object.entries(sizedTotals)) {
     style[sizeVar(edge as LayoutEdge)] = values.length === 0
       ? '0px'

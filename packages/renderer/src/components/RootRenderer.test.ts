@@ -113,6 +113,7 @@ describe('rootRenderer forbidden overlay', () => {
       expect(host.querySelector('[data-dc-component="root-renderer"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="container-shell"][data-dc-state="empty"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="empty-state"] > [data-dc-part="icon"]')).not.toBeNull()
+      expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="root"]')).not.toBeNull()
       expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="content"]')).not.toBeNull()
       expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="viewport"]')).not.toBeNull()
     }

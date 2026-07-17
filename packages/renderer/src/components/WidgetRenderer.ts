@@ -84,8 +84,11 @@ export default defineComponent({
     const drag = useNodeDrag(() => props.node, ctx)
     const interactionPresentation = resolveNodeInteractionPresentation(props.owner)
     const inheritedSelectionPlane = inject(NODE_SELECTION_PLANE_KEY, ref<NodeSelectionPlane>('content'))
-    const selectionPlane = computed(() => props.selectionPlane ?? inheritedSelectionPlane.value)
-    provide(NODE_SELECTION_PLANE_KEY, selectionPlane)
+    const subtreeSelectionPlane = computed(() => props.selectionPlane ?? inheritedSelectionPlane.value)
+    const projectionPlane = computed<NodeSelectionPlane>(() =>
+      props.owner.kind === 'root' ? 'root' : subtreeSelectionPlane.value,
+    )
+    provide(NODE_SELECTION_PLANE_KEY, subtreeSelectionPlane)
 
     const containerPlan = computed(() => props.node.container
       ? createContainerPlan(props.node, ctx.engine.registry)
@@ -132,7 +135,7 @@ export default defineComponent({
       target: selectionTarget,
     } = useNodeSelectionProjection(nodeElRef, widget.state.isSelected, {
       kind: interactionPresentation.selectionKind,
-      plane: selectionPlane,
+      plane: projectionPlane,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
     })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
@@ -247,10 +250,10 @@ export default defineComponent({
             'data-node-type': node.type,
             'data-dc-selection-plane': projection.plane,
             'style': {
-              top: `${projection.rect.top}px`,
-              left: `${projection.rect.left}px`,
-              width: `${projection.rect.width}px`,
-              height: `${projection.rect.height}px`,
+              top: `${projection.bounds.top}px`,
+              left: `${projection.bounds.left}px`,
+              width: `${projection.bounds.width}px`,
+              height: `${projection.bounds.height}px`,
             },
           }, [
             h(NodeSelection, {

@@ -3,7 +3,7 @@ import type { PropType, VNode } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../../types'
 import { IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
-import { useFrameViewport } from '../frame-viewport'
+import { renderDeviceFrame, useFrameViewport } from '../frame-viewport'
 
 /**
  * Tablet / iPad frame with minimal chrome and thin bezels.
@@ -50,7 +50,7 @@ export default defineComponent({
     }))
 
     return () =>
-      h('div', { 'class': 'dc-device-frame dc-device-frame--tablet', 'data-dc-toolbar-boundary': '' }, [
+      renderDeviceFrame('dc-device-frame--tablet', props.selectionPresentation, [
         // Status bar (iPad-style)
         h('div', { class: 'dc-device-frame__status-bar' }, [
           h('span', { class: 'dc-device-frame__status-time' }, '9:41'),

@@ -56,6 +56,14 @@ const DefaultContainerShell = defineComponent({
           ...(slots.default?.() ?? []),
           h('div', {
             'ref': (element: unknown) => {
+              props.selectionPresentation?.registerPlane('root', element instanceof HTMLElement ? element : null)
+            },
+            'class': 'dc-node-selection-plane dc-node-selection-plane--root',
+            'data-dc-selection-plane': 'root',
+            'aria-hidden': 'true',
+          }),
+          h('div', {
+            'ref': (element: unknown) => {
               props.selectionPresentation?.registerPlane('content', element instanceof HTMLElement ? element : null)
             },
             'class': 'dc-node-selection-plane dc-node-selection-plane--content',

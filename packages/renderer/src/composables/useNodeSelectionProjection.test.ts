@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import type { Component } from 'vue'
+import type { NodeSelectionPlane } from '../selection-presentation'
 import type { UseNodeSelectionProjectionReturn } from './useNodeSelectionProjection'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import {
   createNodeSelectionPresentation,
@@ -23,19 +24,19 @@ describe('useNodeSelectionProjection', () => {
     document.body.innerHTML = ''
   })
 
-  it('keeps the complete root material width when the presentation plane is narrower', async () => {
+  it('projects a root segment across the complete root plane while preserving material bounds', async () => {
     const node = document.createElement('div')
     const plane = document.createElement('div')
     const mountPoint = document.createElement('div')
     document.body.append(node, plane, mountPoint)
-    mockRect(node, { top: -20, right: 389, bottom: 60, left: 20, width: 369, height: 80 })
-    mockRect(plane, { top: 0, right: 385, bottom: 500, left: 24, width: 361, height: 500 })
+    mockRect(node, { top: 120, right: 392, bottom: 200, left: 23, width: 369, height: 80 })
+    mockRect(plane, { top: 0, right: 395, bottom: 700, left: 20, width: 375, height: 700 })
 
     const presentation = createNodeSelectionPresentation()
-    presentation.registerPlane('content', plane)
+    presentation.registerPlane('root', plane)
     const nodeRef = ref<HTMLElement | null>(node)
     const selected = ref(true)
-    const planeRef = ref<'content' | 'viewport'>('content')
+    const planeRef = ref<NodeSelectionPlane>('root')
     let result: UseNodeSelectionProjectionReturn | undefined
 
     const Consumer = defineComponent({
@@ -61,13 +62,73 @@ describe('useNodeSelectionProjection', () => {
 
       expect(result?.projection.value).toEqual({
         kind: 'root-segment',
-        plane: 'content',
-        rect: { top: -20, left: -4, width: 369, height: 80 },
+        plane: 'root',
+        materialBounds: { top: 120, left: 3, width: 369, height: 80 },
+        bounds: { top: 120, left: 0, width: 375, height: 80 },
       })
 
       selected.value = false
       await nextTick()
       expect(result?.projection.value).toBeNull()
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('keeps a root projection aligned when an ancestor scrolls below the fixed root plane', async () => {
+    const scroller = document.createElement('div')
+    scroller.style.overflow = 'auto'
+    const node = document.createElement('div')
+    const plane = document.createElement('div')
+    const mountPoint = document.createElement('div')
+    scroller.append(node)
+    document.body.append(scroller, plane, mountPoint)
+    let nodeTop = 120
+    node.getBoundingClientRect = () => ({
+      top: nodeTop,
+      right: 392,
+      bottom: nodeTop + 80,
+      left: 23,
+      width: 369,
+      height: 80,
+      x: 23,
+      y: nodeTop,
+      toJSON: () => ({}),
+    }) as DOMRect
+    mockRect(plane, { top: 0, right: 395, bottom: 700, left: 20, width: 375, height: 700 })
+
+    const presentation = createNodeSelectionPresentation()
+    presentation.registerPlane('root', plane)
+    let result: UseNodeSelectionProjectionReturn | undefined
+    const Consumer = defineComponent({
+      setup() {
+        result = useNodeSelectionProjection(ref(node), ref(true), {
+          kind: 'root-segment',
+          plane: ref('root'),
+        })
+        return () => null
+      },
+    })
+    const app = createApp(defineComponent({
+      setup() {
+        provide(NODE_SELECTION_PRESENTATION_KEY, presentation)
+        return () => h(Consumer as Component)
+      },
+    }))
+
+    try {
+      app.mount(mountPoint)
+      await vi.waitFor(() => {
+        expect(result?.projection.value?.bounds.top).toBe(120)
+      })
+
+      nodeTop = 90
+      scroller.dispatchEvent(new Event('scroll'))
+
+      await vi.waitFor(() => {
+        expect(result?.projection.value?.bounds.top).toBe(90)
+      })
     }
     finally {
       app.unmount()
@@ -108,11 +169,11 @@ describe('useNodeSelectionProjection', () => {
       await nextTick()
       result?.update()
 
-      expect(result?.projection.value?.rect).toEqual({
-        top: 20,
-        left: 50,
-        width: 160,
-        height: 60,
+      expect(result?.projection.value).toEqual({
+        kind: 'material-bounds',
+        plane: 'content',
+        materialBounds: { top: 20, left: 50, width: 160, height: 60 },
+        bounds: { top: 20, left: 50, width: 160, height: 60 },
       })
     }
     finally {

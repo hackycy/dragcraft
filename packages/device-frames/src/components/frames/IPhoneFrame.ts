@@ -2,7 +2,7 @@ import type { LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../../types'
 import { defineComponent, h } from 'vue'
-import { useFrameViewport } from '../frame-viewport'
+import { renderDeviceFrame, useFrameViewport } from '../frame-viewport'
 
 /**
  * iPhone frame with Dynamic Island notch, status bar, and home indicator.
@@ -51,7 +51,7 @@ export default defineComponent({
     }))
 
     return () =>
-      h('div', { 'class': 'dc-device-frame dc-device-frame--iphone', 'data-dc-toolbar-boundary': '' }, [
+      renderDeviceFrame('dc-device-frame--iphone', props.selectionPresentation, [
         // Status bar: time | Dynamic Island | icons
         h('div', { class: 'dc-device-frame__status-bar' }, [
           // Left: time

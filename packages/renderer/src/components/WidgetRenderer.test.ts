@@ -80,15 +80,15 @@ describe('widgetRenderer', () => {
     document.body.innerHTML = ''
   })
 
-  it('renders only selected state into the registered root projection plane', async () => {
+  it('routes a selected root-owned viewport node into the registered root projection plane', async () => {
     const meta = makeMeta()
     const ctx = makeContext(meta)
     const selectionPresentation = createNodeSelectionPresentation()
     const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
     const host = document.createElement('div')
     const plane = document.createElement('div')
-    plane.className = 'test-selection-plane'
-    selectionPresentation.registerPlane('content', plane)
+    plane.className = 'test-root-selection-plane'
+    selectionPresentation.registerPlane('root', plane)
     document.body.append(host, plane)
 
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
@@ -96,9 +96,9 @@ describe('widgetRenderer', () => {
       if (this instanceof HTMLElement && this.classList.contains('dc-node')) {
         return {
           top: 10,
-          right: 110,
+          right: 123,
           bottom: 60,
-          left: 10,
+          left: 23,
           width: 100,
           height: 50,
           x: 10,
@@ -106,7 +106,7 @@ describe('widgetRenderer', () => {
           toJSON: () => ({}),
         } as DOMRect
       }
-      if (this instanceof HTMLElement && this.classList.contains('test-selection-plane')) {
+      if (this instanceof HTMLElement && this.classList.contains('test-root-selection-plane')) {
         return {
           top: 0,
           right: 395,
@@ -128,7 +128,7 @@ describe('widgetRenderer', () => {
       setup() {
         provide(RENDERER_CONTEXT_KEY, ctx)
         provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
-        return () => h(WidgetRenderer, { node })
+        return () => h(WidgetRenderer, { node, selectionPlane: 'viewport' })
       },
     }))
 
@@ -145,8 +145,8 @@ describe('widgetRenderer', () => {
 
       const selection = plane.querySelector<HTMLElement>('.dc-node__selection-projection--root-segment')
       expect(selection?.style.top).toBe('10px')
-      expect(selection?.style.left).toBe('-10px')
-      expect(selection?.style.width).toBe('100px')
+      expect(selection?.style.left).toBe('0px')
+      expect(selection?.style.width).toBe('375px')
       expect(selection?.style.height).toBe('50px')
       expect(selection?.querySelector('.dc-node__selection-outline')).not.toBeNull()
       expect(selection?.querySelectorAll('.dc-node__selection-edge')).toHaveLength(4)

@@ -2,7 +2,7 @@ import type { LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../../types'
 import { defineComponent, h } from 'vue'
-import { useFrameViewport } from '../frame-viewport'
+import { renderDeviceFrame, useFrameViewport } from '../frame-viewport'
 
 /**
  * Desktop browser chrome frame with title bar, traffic lights, and URL bar.
@@ -49,7 +49,7 @@ export default defineComponent({
     }))
 
     return () =>
-      h('div', { 'class': 'dc-device-frame dc-device-frame--desktop', 'data-dc-toolbar-boundary': '' }, [
+      renderDeviceFrame('dc-device-frame--desktop', props.selectionPresentation, [
         // Browser title bar
         h('div', { class: 'dc-device-frame__title-bar' }, [
           // Traffic light dots

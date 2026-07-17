@@ -82,9 +82,8 @@
 
 .dc-device-frame__content-surface {
   min-height: 100%;
+  box-sizing: border-box;
   position: relative;
-  padding-block: var(--dc-node-selection-root-block-overlap);
-  padding-inline: var(--dc-device-frame-border-width);
 }
 
 .dc-device-frame__selection-plane {
@@ -92,6 +91,10 @@
   z-index: var(--dc-device-z-selection);
   overflow: hidden;
   pointer-events: none;
+}
+
+.dc-device-frame__selection-plane--root {
+  inset: 0;
 }
 
 .dc-device-frame__selection-plane--content {
@@ -136,12 +139,10 @@
   --dc-measured-inset-block-end: 0px;
   --dc-measured-inset-inline-start: 0px;
   --dc-measured-inset-inline-end: 0px;
-  --dc-selection-gutter-block-start: 0px;
-  --dc-selection-gutter-block-end: 0px;
-  --dc-inset-block-start: calc(var(--dc-safe-area-block-start) + var(--dc-sized-inset-block-start) + var(--dc-measured-inset-block-start) + var(--dc-selection-gutter-block-start));
-  --dc-inset-block-end: calc(var(--dc-safe-area-block-end) + var(--dc-sized-inset-block-end) + var(--dc-measured-inset-block-end) + var(--dc-selection-gutter-block-end));
-  --dc-inset-inline-start: calc(var(--dc-safe-area-inline-start) + var(--dc-sized-inset-inline-start) + var(--dc-measured-inset-inline-start));
-  --dc-inset-inline-end: calc(var(--dc-safe-area-inline-end) + var(--dc-sized-inset-inline-end) + var(--dc-measured-inset-inline-end));
+  --dc-inset-block-start: calc(var(--dc-safe-area-block-start) + var(--dc-sized-inset-block-start) + var(--dc-measured-inset-block-start));
+  --dc-inset-block-end: calc(var(--dc-safe-area-block-end) + var(--dc-sized-inset-block-end) + var(--dc-measured-inset-block-end));
+  --dc-inset-inline-start: calc(var(--dc-device-frame-border-width) + var(--dc-safe-area-inline-start) + var(--dc-sized-inset-inline-start) + var(--dc-measured-inset-inline-start));
+  --dc-inset-inline-end: calc(var(--dc-device-frame-border-width) + var(--dc-safe-area-inline-end) + var(--dc-sized-inset-inline-end) + var(--dc-measured-inset-inline-end));
 }
 
 .dc-device-frame__chrome {
@@ -159,13 +160,13 @@
 }
 
 .dc-device-frame__chrome--block-start {
-  top: var(--dc-node-selection-root-block-overlap);
+  top: 0;
   left: 0;
   right: 0;
 }
 
 .dc-device-frame__chrome--block-end {
-  bottom: var(--dc-node-selection-root-block-overlap);
+  bottom: 0;
   left: 0;
   right: 0;
 }

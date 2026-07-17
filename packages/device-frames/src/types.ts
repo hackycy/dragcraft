@@ -1,6 +1,6 @@
 import type { Component, InjectionKey, Ref } from 'vue'
 
-export type DeviceFrameSelectionPlane = 'content' | 'viewport'
+export type DeviceFrameSelectionPlane = 'root' | 'content' | 'viewport'
 
 /** Structural counterpart of Renderer selection presentation registration. */
 export interface DeviceFrameSelectionPresentationHost {

@@ -8,6 +8,7 @@ const packageRoot = path.resolve(import.meta.dirname, '..')
 const recipes = parse('src/baseline/recipes.css')
 const designerStructure = parse(import.meta.resolve('@dragcraft/designer/structure.css'))
 const formStructure = parse(import.meta.resolve('@dragcraft/form-generator/structure.css'))
+const rendererStructure = parse(import.meta.resolve('@dragcraft/renderer/structure.css'))
 const errors = []
 
 function parse(relativePath) {
@@ -48,6 +49,15 @@ function expectDeclarations(label, root, selector, expected) {
   }
 }
 
+function expectNoDeclarations(label, root, selector, properties) {
+  const rule = findRule(root, selector)
+  for (const property of properties) {
+    const actual = declaration(rule, property)
+    if (actual !== undefined)
+      errors.push(`${label}: expected no ${property}, found ${actual}`)
+  }
+}
+
 expectDeclarations('drop indicator', recipes, '[data-dc-component="drop-indicator"]', {
   background: 'var(--dc-color-accent-subtle)',
   border: '2px dashed var(--dc-color-accent)',
@@ -55,9 +65,14 @@ expectDeclarations('drop indicator', recipes, '[data-dc-component="drop-indicato
 
 expectDeclarations('node drag over', recipes, '[data-dc-component="node"][data-dc-state~="drag-over"]', {
   'background-color': 'var(--dc-color-accent-subtle)',
-  'border-color': 'var(--dc-color-accent)',
-  'border-style': 'dashed',
+  'outline': '1px dashed var(--dc-color-accent)',
+  'outline-offset': '-1px',
 })
+expectNoDeclarations('node drag over', recipes, '[data-dc-component="node"][data-dc-state~="drag-over"]', [
+  'border-color',
+  'border-style',
+])
+expectNoDeclarations('node wrapper geometry', rendererStructure, '.dc-node', ['border'])
 
 expectDeclarations('container material selection', recipes, '[data-dc-component="node-selection"]', {
   border: 'var(--dc-node-selection-stroke-width) solid var(--dc-color-accent)',
