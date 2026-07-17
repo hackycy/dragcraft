@@ -41,6 +41,8 @@
   },
   "devDependencies": {
     "@types/lodash-es": "catalog:types",
-    "vue": "catalog:shared"
+    "happy-dom": "catalog:testing",
+    "vitest": "catalog:testing",
+    "vue": "catalog:vue"
   }
 }

@@ -37,6 +37,7 @@
     "vue": ">=3.0.0"
   },
   "devDependencies": {
-    "vue": "catalog:shared"
+    "vitest": "catalog:testing",
+    "vue": "catalog:vue"
   }
 }

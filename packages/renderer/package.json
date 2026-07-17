@@ -40,10 +40,11 @@
     "@dragcraft/core": "workspace:*",
     "@dragcraft/icons": "workspace:*",
     "@dragcraft/utils": "workspace:*",
-    "@floating-ui/dom": "catalog:"
+    "@floating-ui/dom": "catalog:vue"
   },
   "devDependencies": {
-    "happy-dom": "catalog:",
-    "vue": "catalog:shared"
+    "happy-dom": "catalog:testing",
+    "vitest": "catalog:testing",
+    "vue": "catalog:vue"
   }
 }

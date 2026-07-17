@@ -16,13 +16,6 @@ packages:
   - packages/*
   - packages/fields/*
   - examples/*
-catalog:
-  '@floating-ui/dom': ^1.7.4
-  '@vitejs/plugin-vue': ^6.0.4
-  '@vue/test-utils': ^2.4.11
-  ant-design-vue: ^4.2.6
-  happy-dom: ^20.10.6
-  vitepress: next
 catalogs:
   cli:
     '@antfu/eslint-config': ^6.2.0
@@ -40,12 +33,15 @@ catalogs:
     turbo: ^2.8.3
     typescript: ^5.9.3
     vite: ^7.2.1
+  docs:
+    vitepress: next
   inlined:
     '@antfu/utils': ^9.3.0
   shared:
     lodash-es: ^4.17.23
-    vue: ^3.5.27
   testing:
+    '@vue/test-utils': ^2.4.11
+    happy-dom: ^20.10.6
     tinyexec: ^1.0.2
     vitest: ^4.0.7
     vitest-package-exports: ^0.1.1
@@ -53,6 +49,11 @@ catalogs:
   types:
     '@types/lodash-es': ^4.17.12
     '@types/node': ^24.10.0
+  vue:
+    '@floating-ui/dom': ^1.7.4
+    '@vitejs/plugin-vue': ^6.0.4
+    ant-design-vue: ^4.2.6
+    vue: ^3.5.27
 onlyBuiltDependencies:
   - core-js
   - esbuild

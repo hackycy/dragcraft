@@ -40,8 +40,8 @@
     "@dragcraft/form-generator": "workspace:*"
   },
   "devDependencies": {
-    "ant-design-vue": "catalog:",
+    "ant-design-vue": "catalog:vue",
     "vitest": "catalog:testing",
-    "vue": "catalog:shared"
+    "vue": "catalog:vue"
   }
 }

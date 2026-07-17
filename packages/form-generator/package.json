@@ -41,7 +41,8 @@
     "@dragcraft/utils": "workspace:*"
   },
   "devDependencies": {
+    "happy-dom": "catalog:testing",
     "vitest": "catalog:testing",
-    "vue": "catalog:shared"
+    "vue": "catalog:vue"
   }
 }

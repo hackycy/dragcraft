@@ -44,11 +44,12 @@
     "@dragcraft/icons": "workspace:*"
   },
   "devDependencies": {
-    "@vue/test-utils": "catalog:",
-    "happy-dom": "catalog:",
+    "@vue/test-utils": "catalog:testing",
+    "happy-dom": "catalog:testing",
     "postcss": "catalog:cli",
     "postcss-cli": "catalog:cli",
     "postcss-import": "catalog:cli",
-    "vue": "catalog:shared"
+    "vitest": "catalog:testing",
+    "vue": "catalog:vue"
   }
 }

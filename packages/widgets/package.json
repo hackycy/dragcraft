@@ -40,6 +40,7 @@
     "@dragcraft/core": "workspace:*"
   },
   "devDependencies": {
-    "vue": "catalog:shared"
+    "vitest": "catalog:testing",
+    "vue": "catalog:vue"
   }
 }

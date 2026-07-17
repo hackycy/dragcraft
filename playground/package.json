@@ -16,11 +16,12 @@
     "@dragcraft/themes": "workspace:*",
     "@dragcraft/utils": "workspace:*",
     "@dragcraft/widgets": "workspace:*",
-    "ant-design-vue": "catalog:",
-    "vue": "catalog:shared"
+    "ant-design-vue": "catalog:vue",
+    "vue": "catalog:vue"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "catalog:",
-    "vite": "catalog:cli"
+    "@vitejs/plugin-vue": "catalog:vue",
+    "vite": "catalog:cli",
+    "vitest": "catalog:testing"
   }
 }

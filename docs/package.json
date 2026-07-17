@@ -1,5 +1,5 @@
 {
-  "name": "dragcraft-docs",
+  "name": "@dragcraft/docs",
   "type": "module",
   "private": true,
   "scripts": {
@@ -8,6 +8,6 @@
     "preview": "vitepress preview"
   },
   "devDependencies": {
-    "vitepress": "catalog:"
+    "vitepress": "catalog:docs"
   }
 }
