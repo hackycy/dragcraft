@@ -29,8 +29,8 @@ describe('useNodeSelectionProjection', () => {
     const plane = document.createElement('div')
     const mountPoint = document.createElement('div')
     document.body.append(node, plane, mountPoint)
-    mockRect(node, { top: 120, right: 392, bottom: 200, left: 23, width: 369, height: 80 })
-    mockRect(plane, { top: 0, right: 395, bottom: 700, left: 20, width: 375, height: 700 })
+    mockRect(node, { top: 120, right: 398, bottom: 200, left: 23, width: 375, height: 80 })
+    mockRect(plane, { top: 0, right: 401, bottom: 700, left: 20, width: 381, height: 700 })
 
     const presentation = createNodeSelectionPresentation()
     presentation.registerPlane('root', plane)
@@ -63,8 +63,8 @@ describe('useNodeSelectionProjection', () => {
       expect(result?.projection.value).toEqual({
         kind: 'root-segment',
         plane: 'root',
-        materialBounds: { top: 120, left: 3, width: 369, height: 80 },
-        bounds: { top: 120, left: 0, width: 375, height: 80 },
+        materialBounds: { top: 120, left: 3, width: 375, height: 80 },
+        bounds: { top: 120, left: 0, width: 381, height: 80 },
       })
 
       selected.value = false
@@ -87,16 +87,16 @@ describe('useNodeSelectionProjection', () => {
     let nodeTop = 120
     node.getBoundingClientRect = () => ({
       top: nodeTop,
-      right: 392,
+      right: 398,
       bottom: nodeTop + 80,
       left: 23,
-      width: 369,
+      width: 375,
       height: 80,
       x: 23,
       y: nodeTop,
       toJSON: () => ({}),
     }) as DOMRect
-    mockRect(plane, { top: 0, right: 395, bottom: 700, left: 20, width: 375, height: 700 })
+    mockRect(plane, { top: 0, right: 401, bottom: 700, left: 20, width: 381, height: 700 })
 
     const presentation = createNodeSelectionPresentation()
     presentation.registerPlane('root', plane)

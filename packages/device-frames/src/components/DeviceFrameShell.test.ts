@@ -88,8 +88,11 @@ function makePlan(): LayoutPlan {
 }
 
 describe('deviceFrameShell', () => {
-  it('aligns root material with the frame inner content edges', () => {
+  it('keeps the declared device viewport width available to root material', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'src/styles/device-frame.css'), 'utf8')
+    const frameRule = css.match(/\.dc-device-frame\s*\{[^}]*\}/)?.[0]
+    const frameBorderRule = css.match(/\.dc-device-frame::after\s*\{[^}]*\}/)?.[0]
+    const frameSurfaceRule = css.match(/\.dc-device-frame__surface\s*\{[^}]*\}/)?.[0]
     const surfaceRule = css.match(/\.dc-device-frame__content-surface\s*\{[^}]*\}/)?.[0]
     const viewportRule = css.match(/\.dc-device-frame__viewport\s*\{[^}]*\}/)?.[0]
     const chromeRule = css.match(/\.dc-device-frame__chrome\s*\{[^}]*\}/)?.[0]
@@ -97,16 +100,25 @@ describe('deviceFrameShell', () => {
     const blockEndRule = css.match(/\.dc-device-frame__chrome--block-end\s*\{[^}]*\}/)?.[0]
     const layerRule = css.match(/\.dc-device-frame__layer\s*\{[^}]*\}/)?.[0]
 
+    expect(frameRule).toContain('box-sizing: content-box')
+    expect(frameRule).toContain('border: 0')
+    expect(frameRule).toContain('overflow: visible')
+    expect(frameRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
+    expect(frameBorderRule).toContain('box-sizing: border-box')
+    expect(frameBorderRule).toContain('inset: calc(-1 * var(--dc-device-frame-border-width))')
+    expect(frameBorderRule).toContain('border: var(--dc-device-frame-border-width) solid var(--dc-device-frame-border-color)')
+    expect(frameSurfaceRule).toContain('overflow: hidden')
+    expect(frameSurfaceRule).toContain('border-radius: calc(var(--dc-device-frame-radius) - var(--dc-device-frame-border-width))')
     expect(surfaceRule).toContain('min-height: 100%')
     expect(surfaceRule).toContain('box-sizing: border-box')
     expect(surfaceRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
     expect(viewportRule).not.toContain('--dc-selection-gutter')
-    expect(viewportRule).toContain('--dc-inset-inline-start: calc(var(--dc-device-frame-border-width) +')
-    expect(viewportRule).toContain('--dc-inset-inline-end: calc(var(--dc-device-frame-border-width) +')
-    expect(chromeRule).toContain('inset: 0 var(--dc-device-frame-border-width);')
+    expect(viewportRule).toContain('--dc-inset-inline-start: calc(var(--dc-safe-area-inline-start) +')
+    expect(viewportRule).toContain('--dc-inset-inline-end: calc(var(--dc-safe-area-inline-end) +')
+    expect(chromeRule).toContain('inset: 0;')
     expect(blockStartRule).toContain('top: 0;')
     expect(blockEndRule).toContain('bottom: 0;')
-    expect(layerRule).toContain('inset: 0 var(--dc-device-frame-border-width);')
+    expect(layerRule).toContain('inset: 0;')
   })
 
   it('renders content, fixed chrome, and layer nodes from the layout plan', () => {
@@ -144,6 +156,8 @@ describe('deviceFrameShell', () => {
     })
 
     expect(wrapper.find('.dc-device-frame__content [data-test-id="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame > .dc-device-frame__surface').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__surface > .dc-device-frame__viewport').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-scroller [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content').classes()).not.toContain('dc-container-shell')
@@ -174,10 +188,10 @@ describe('deviceFrameShell', () => {
       const height = this.classList.contains('dc-node') ? 46 : 44
       return {
         top: 0,
-        right: 369,
+        right: 375,
         bottom: height,
         left: 0,
-        width: 369,
+        width: 375,
         height,
         x: 0,
         y: 0,

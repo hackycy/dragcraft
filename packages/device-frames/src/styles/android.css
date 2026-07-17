@@ -2,7 +2,7 @@
 
 .dc-device-frame--android {
   width: 360px;
-  border-radius: 20px;
+  --dc-device-frame-radius: 20px;
 }
 
 .dc-device-frame--android .dc-device-frame__viewport {

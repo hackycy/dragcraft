@@ -62,7 +62,6 @@ export default defineComponent({
           h('div', { class: 'dc-device-frame__url-bar' }, 'localhost:5173'),
         ]),
         renderViewport(),
-        props.forbiddenOverlayVNode,
-      ])
+      ], props.forbiddenOverlayVNode)
   },
 })

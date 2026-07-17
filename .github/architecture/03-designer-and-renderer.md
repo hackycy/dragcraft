@@ -205,7 +205,7 @@ interface MaterialItemRenderProps {
 
 物料栏属于高密度工具区，推荐常驻展示只包含图标、标题和短标签；描述、关键词和更多业务数据优先用于搜索、tooltip 或完整替换 `materialPanelRenderer` 后的详情交互，避免两列栏位出现横向滚动或信息噪声。
 
-画布由裁剪视口和可平移 stage 组成。stage 以视口中心为原点，frame 外框的几何中心默认落在原点；frame 大于视口时会在相对两侧等量裁切，不通过滚动位置模拟居中。
+画布由裁剪视口和可平移 stage 组成。stage 先以视口中心为数学原点，再根据 viewport 绝对位置、stage 尺寸和 `devicePixelRatio` 把最终左上角吸附到物理像素网格；恰好落在半物理像素时向 inline-start/block-start 取整，避免奇数尺寸 Frame 在 DPR=1 下产生模糊边线或单侧空隙。这个吸附量独立于用户 pan offset，并在 viewport/stage 尺寸、工作区布局或 DPR 变化时重新计算。stage 的最小工作宽度不等于设备 preset 宽度，较窄 Frame 必须通过 inline auto margin 在 stage 内居中。frame 大于视口时仍在相对两侧等量裁切，不通过滚动位置模拟居中。
 
 抓手模式维护独立的二维平移量，因此不受内容尺寸和滚动边界限制。用户也可以在指针模式下按住空格临时抓取；重置位置会将平移量归零，设备 frame 被替换时同样回到中心。普通内容更新和尺寸变化不会覆盖用户已经拖动的位置。
 

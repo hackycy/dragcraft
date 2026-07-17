@@ -3,12 +3,13 @@
 .dc-device-frame {
   position: relative;
   isolation: isolate;
+  box-sizing: content-box;
   margin: 24px auto;
-  padding-block: var(--dc-device-frame-border-width);
   background: var(--dc-device-frame-bg);
   border: 0;
-  box-shadow: var(--dc-device-frame-shadow);
-  overflow: hidden;
+  border-radius: calc(var(--dc-device-frame-radius) - var(--dc-device-frame-border-width));
+  box-shadow: none;
+  overflow: visible;
   flex-shrink: 0;
   --dc-device-z-chrome-item: 10;
   --dc-device-z-scrollbar: 20;
@@ -23,11 +24,20 @@
 .dc-device-frame::after {
   content: '';
   position: absolute;
-  inset: 0;
+  box-sizing: border-box;
+  inset: calc(-1 * var(--dc-device-frame-border-width));
   z-index: var(--dc-device-z-frame-border);
   border: var(--dc-device-frame-border-width) solid var(--dc-device-frame-border-color);
-  border-radius: inherit;
+  border-radius: var(--dc-device-frame-radius);
+  box-shadow: var(--dc-device-frame-shadow);
   pointer-events: none;
+}
+
+.dc-device-frame__surface {
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--dc-device-frame-radius) - var(--dc-device-frame-border-width));
+  background: var(--dc-device-frame-bg);
 }
 
 .dc-device-frame__status-bar {
@@ -94,7 +104,8 @@
 }
 
 .dc-device-frame__selection-plane--root {
-  inset: 0;
+  inset: calc(-1 * var(--dc-device-frame-border-width));
+  border-radius: var(--dc-device-frame-radius);
 }
 
 .dc-device-frame__selection-plane--content {
@@ -141,13 +152,13 @@
   --dc-measured-inset-inline-end: 0px;
   --dc-inset-block-start: calc(var(--dc-safe-area-block-start) + var(--dc-sized-inset-block-start) + var(--dc-measured-inset-block-start));
   --dc-inset-block-end: calc(var(--dc-safe-area-block-end) + var(--dc-sized-inset-block-end) + var(--dc-measured-inset-block-end));
-  --dc-inset-inline-start: calc(var(--dc-device-frame-border-width) + var(--dc-safe-area-inline-start) + var(--dc-sized-inset-inline-start) + var(--dc-measured-inset-inline-start));
-  --dc-inset-inline-end: calc(var(--dc-device-frame-border-width) + var(--dc-safe-area-inline-end) + var(--dc-sized-inset-inline-end) + var(--dc-measured-inset-inline-end));
+  --dc-inset-inline-start: calc(var(--dc-safe-area-inline-start) + var(--dc-sized-inset-inline-start) + var(--dc-measured-inset-inline-start));
+  --dc-inset-inline-end: calc(var(--dc-safe-area-inline-end) + var(--dc-sized-inset-inline-end) + var(--dc-measured-inset-inline-end));
 }
 
 .dc-device-frame__chrome {
   position: absolute;
-  inset: 0 var(--dc-device-frame-border-width);
+  inset: 0;
   z-index: var(--dc-device-z-chrome);
   pointer-events: none;
 }
@@ -191,7 +202,7 @@
 
 .dc-device-frame__layer {
   position: absolute;
-  inset: 0 var(--dc-device-frame-border-width);
+  inset: 0;
   z-index: var(--dc-device-z-layer);
   pointer-events: none;
 }
@@ -228,7 +239,7 @@
 
 .dc-device-frame > [data-dc-component="forbidden-overlay"] {
   z-index: var(--dc-device-z-selection);
-  border-radius: inherit;
+  border-radius: calc(var(--dc-device-frame-radius) - var(--dc-device-frame-border-width));
 }
 
 /* ── Device Picker ──────────────────────── */

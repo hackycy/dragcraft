@@ -60,7 +60,6 @@ export default defineComponent({
           ]),
         ]),
         renderViewport(),
-        props.forbiddenOverlayVNode,
-      ])
+      ], props.forbiddenOverlayVNode)
   },
 })

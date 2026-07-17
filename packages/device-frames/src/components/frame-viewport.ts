@@ -30,12 +30,14 @@ export function renderDeviceFrame(
   modifierClass: string,
   selectionPresentation: DeviceFrameSelectionPresentationHost | undefined,
   children: VNodeChild[],
+  frameOverlay?: VNodeChild,
 ): VNode {
   return h('div', {
     'class': ['dc-device-frame', modifierClass],
     'data-dc-toolbar-boundary': '',
   }, [
-    ...children,
+    h('div', { class: 'dc-device-frame__surface' }, children),
+    frameOverlay,
     renderFrameRootSelectionPlane(selectionPresentation),
   ])
 }

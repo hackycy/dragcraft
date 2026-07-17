@@ -236,6 +236,39 @@ describe('dcDesigner', () => {
     }
   })
 
+  it('shrink-wraps the canvas stage when the container shell declares a toolbar boundary', async () => {
+    const BoundaryShell = defineComponent({
+      setup(_, { slots }) {
+        return () => h('div', { 'data-dc-toolbar-boundary': '' }, slots.default?.())
+      },
+    })
+    const designer = createDesigner({
+      engineOptions: { initialSchema: makeSchema() },
+      extensions: {
+        rendererExtensions: {
+          containerShell: BoundaryShell,
+        },
+      },
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      await nextTick()
+
+      expect(host.querySelector('.dc-canvas__content')?.classList)
+        .toContain('dc-canvas__content--bounded')
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
   it('renders optional host controls only in sidebar rails', async () => {
     const designer = createDesigner({
       engineOptions: { initialSchema: makeSchema() },

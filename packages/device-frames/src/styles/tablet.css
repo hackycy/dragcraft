@@ -2,7 +2,7 @@
 
 .dc-device-frame--tablet {
   width: 768px;
-  border-radius: 24px;
+  --dc-device-frame-radius: 24px;
 }
 
 .dc-device-frame--tablet .dc-device-frame__viewport {

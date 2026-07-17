@@ -66,7 +66,6 @@ export default defineComponent({
           h('span', { class: 'dc-device-frame__nav-btn dc-device-frame__nav-btn--home' }, h(IconNavHome, { size: 12 })),
           h('span', { class: 'dc-device-frame__nav-btn' }, h(IconNavRecent, { size: 12 })),
         ]),
-        props.forbiddenOverlayVNode,
-      ])
+      ], props.forbiddenOverlayVNode)
   },
 })

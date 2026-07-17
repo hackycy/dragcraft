@@ -30,8 +30,10 @@ export default defineComponent({
       actionRegistry,
     } = ctx
     const viewportRef = ref<HTMLElement | null>(null)
+    const stageRef = ref<HTMLElement | null>(null)
     const contentRef = ref<HTMLElement | null>(null)
-    const canvasPan = useCanvasPan(viewportRef)
+    const hasToolbarBoundary = ref(false)
+    const canvasPan = useCanvasPan(viewportRef, stageRef)
     let mutationObserver: MutationObserver | null = null
     let observedTarget: HTMLElement | null = null
 
@@ -53,6 +55,7 @@ export default defineComponent({
       const nextTarget = content?.querySelector<HTMLElement>('[data-dc-toolbar-boundary]')
         ?? content?.querySelector<HTMLElement>('.dc-root-renderer')
         ?? null
+      hasToolbarBoundary.value = nextTarget?.hasAttribute('data-dc-toolbar-boundary') ?? false
 
       if (nextTarget && observedTarget && nextTarget !== observedTarget)
         canvasPan.reset()
@@ -118,15 +121,22 @@ export default defineComponent({
           'onPointercancelCapture': canvasPan.handlePointerUp,
         }, [
           h('div', {
+            'ref': stageRef,
             'class': 'dc-canvas__stage',
             'data-dc-part': 'stage',
             'data-dc-canvas-stage': '',
             'style': {
               '--_dc-canvas-pan-x': `${canvasPan.offset.value.x}px`,
               '--_dc-canvas-pan-y': `${canvasPan.offset.value.y}px`,
+              '--_dc-canvas-snap-x': `${canvasPan.pixelSnap.value.x}px`,
+              '--_dc-canvas-snap-y': `${canvasPan.pixelSnap.value.y}px`,
             },
           }, [
-            h('div', { 'ref': contentRef, 'class': 'dc-canvas__content', 'data-dc-part': 'content' }, [
+            h('div', {
+              'ref': contentRef,
+              'class': ['dc-canvas__content', { 'dc-canvas__content--bounded': hasToolbarBoundary.value }],
+              'data-dc-part': 'content',
+            }, [
               h(RootRenderer, {
                 engine,
                 componentMap,
