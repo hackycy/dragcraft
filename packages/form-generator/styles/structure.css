@@ -1,0 +1,75 @@
+.dc-form-generator,
+.dc-form-section,
+.dc-form-section__header,
+.dc-form-section__body,
+.dc-form-field,
+.dc-form-field__control,
+.dc-field-unknown {
+  box-sizing: border-box;
+}
+
+.dc-field-unknown {
+  border: 1px dashed transparent;
+}
+
+.dc-form-generator {
+  padding: 0 12px;
+}
+
+.dc-form-section {
+  margin-bottom: 4px;
+}
+
+.dc-form-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 6px;
+  text-align: left;
+  border: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dc-form-section__toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.dc-form-section__toggle--collapsed {
+  transform: rotate(-90deg);
+}
+
+.dc-form-section__body {
+  padding-bottom: 8px;
+}
+
+.dc-form-section--grid {
+  display: grid;
+  grid-template-columns: repeat(var(--_dc-columns), minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.dc-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.dc-form-section--grid > .dc-form-field {
+  grid-column: span min(var(--_dc-span, 1), var(--_dc-columns));
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.dc-form-field__control {
+  width: 100%;
+  min-width: 0;
+}
+
+.dc-field-unknown {
+  padding: 6px 8px;
+}

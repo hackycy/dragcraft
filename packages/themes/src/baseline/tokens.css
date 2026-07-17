@@ -1,0 +1,67 @@
+:root {
+  /* Color roles */
+  --dc-color-accent: #2e70dc;
+  --dc-color-accent-hover: #2563eb;
+  --dc-color-accent-active: #1d4ed8;
+  --dc-color-accent-subtle: #eff6ff;
+  --dc-color-accent-border: #bfdbfe;
+  --dc-color-accent-ring: rgba(46, 112, 220, 0.2);
+  --dc-color-on-accent: #fafafa;
+  --dc-color-on-accent-subtle: #1e3a8a;
+  --dc-color-success: #15803d;
+  --dc-color-warning: #a16207;
+  --dc-color-danger: #dc2626;
+  --dc-color-danger-subtle: #fef2f2;
+
+  /* Content and surfaces */
+  --dc-color-text: #09090b;
+  --dc-color-text-muted: #52525b;
+  --dc-color-text-subtle: #a1a1aa;
+  --dc-color-surface: #ffffff;
+  --dc-color-surface-subtle: #fafafa;
+  --dc-color-surface-muted: #f4f4f5;
+  --dc-color-surface-raised: #ffffff;
+  --dc-color-canvas: #f1f1f3;
+  --dc-color-border: #d4d4d8;
+  --dc-color-border-subtle: #e4e4e7;
+  --dc-color-focus-ring: #2e70dc;
+  --dc-color-backdrop: rgba(9, 9, 11, 0.32);
+  --dc-color-sidebar-handle: #d4d4d8;
+  --dc-color-sidebar-handle-hover: #a1a1aa;
+
+  /* Typography */
+  --dc-font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --dc-font-size-xs: 11px;
+  --dc-font-size-sm: 12px;
+  --dc-font-size-md: 13px;
+  --dc-font-size-lg: 14px;
+  --dc-font-weight-regular: 400;
+  --dc-font-weight-medium: 500;
+  --dc-font-weight-semibold: 600;
+
+  /* Shape and density */
+  --dc-radius-sm: 4px;
+  --dc-radius-md: 6px;
+  --dc-radius-lg: 8px;
+  --dc-radius-full: 999px;
+  --dc-control-height-sm: 28px;
+  --dc-control-height-md: 32px;
+  --dc-control-height-lg: 40px;
+
+  /* Elevation and motion */
+  --dc-shadow-sm: 0 1px 2px rgba(9, 9, 11, 0.06), 0 1px 3px rgba(9, 9, 11, 0.08);
+  --dc-shadow-md: 0 4px 12px rgba(9, 9, 11, 0.08);
+  --dc-shadow-lg: 0 16px 40px rgba(9, 9, 11, 0.14);
+  --dc-duration-fast: 120ms;
+  --dc-duration-normal: 180ms;
+  --dc-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Component roles */
+  --dc-empty-state-icon-opacity: 0.5;
+  --dc-empty-state-icon-size: 32px;
+  --dc-material-item-shadow: none;
+  --dc-material-item-hover-shadow: var(--dc-shadow-sm);
+  --dc-material-search-radius: var(--dc-radius-md);
+  --dc-node-selection-stroke-width: 2px;
+  --dc-node-toolbar-shadow: 0 4px 12px var(--dc-color-accent-ring);
+}

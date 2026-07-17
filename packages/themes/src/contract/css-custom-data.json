@@ -1,0 +1,275 @@
+{
+  "version": 1.1,
+  "properties": [
+    {
+      "name": "--dc-color-accent",
+      "description": "Primary action and selection color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-accent-hover",
+      "description": "Hovered primary action color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-accent-active",
+      "description": "Pressed primary action color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-accent-subtle",
+      "description": "Low-emphasis accent surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-accent-border",
+      "description": "Border color on subtle accent surfaces.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-accent-ring",
+      "description": "Translucent accent ring and glow.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-on-accent",
+      "description": "Content color on strong accent surfaces.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-on-accent-subtle",
+      "description": "Content color on subtle accent surfaces.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-success",
+      "description": "Success feedback color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-warning",
+      "description": "Warning feedback color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-danger",
+      "description": "Danger and destructive action color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-danger-subtle",
+      "description": "Low-emphasis danger surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-text",
+      "description": "Primary workbench text color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-text-muted",
+      "description": "Secondary workbench text color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-text-subtle",
+      "description": "Tertiary and placeholder text color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-surface",
+      "description": "Primary workbench surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-surface-subtle",
+      "description": "Low-contrast workbench surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-surface-muted",
+      "description": "Muted control and hover surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-surface-raised",
+      "description": "Raised workbench surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-canvas",
+      "description": "Designer canvas background.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-border",
+      "description": "Standard workbench border.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-border-subtle",
+      "description": "Low-contrast workbench border.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-focus-ring",
+      "description": "Keyboard focus ring color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-backdrop",
+      "description": "Compact drawer backdrop.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-sidebar-handle",
+      "description": "Collapsed sidebar handle surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-color-sidebar-handle-hover",
+      "description": "Hovered sidebar handle surface.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-sans",
+      "description": "Workbench sans-serif font stack.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-size-xs",
+      "description": "Extra-small workbench text.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-size-sm",
+      "description": "Small workbench text.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-size-md",
+      "description": "Default workbench text.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-size-lg",
+      "description": "Large workbench text.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-weight-regular",
+      "description": "Regular workbench font weight.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-weight-medium",
+      "description": "Medium workbench font weight.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-font-weight-semibold",
+      "description": "Semibold workbench font weight.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-radius-sm",
+      "description": "Small component radius.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-radius-md",
+      "description": "Default component radius.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-radius-lg",
+      "description": "Large component radius.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-radius-full",
+      "description": "Pill-shaped component radius.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-control-height-sm",
+      "description": "Compact control height.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-control-height-md",
+      "description": "Default control height.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-control-height-lg",
+      "description": "Comfortable control height.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-shadow-sm",
+      "description": "Low elevation shadow.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-shadow-md",
+      "description": "Medium elevation shadow.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-shadow-lg",
+      "description": "High elevation shadow.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-duration-fast",
+      "description": "Fast interaction duration.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-duration-normal",
+      "description": "Default interaction duration.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-ease-standard",
+      "description": "Standard workbench easing curve.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-empty-state-icon-opacity",
+      "description": "Empty-state icon opacity.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-empty-state-icon-size",
+      "description": "Empty-state icon size.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-material-item-shadow",
+      "description": "Resting material-item shadow.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-material-item-hover-shadow",
+      "description": "Hovered material-item shadow.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-material-search-radius",
+      "description": "Material-panel search input radius.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-node-selection-stroke-width",
+      "description": "Node selection stroke width.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-node-toolbar-shadow",
+      "description": "Floating node-toolbar shadow.",
+      "syntax": "*"
+    }
+  ]
+}

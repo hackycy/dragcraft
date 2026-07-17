@@ -1,0 +1,15 @@
+/* Import this file after @dragcraft/themes to preview a host brand delta. */
+
+:root {
+  --dc-color-accent: #0f766e;
+  --dc-color-accent-hover: #115e59;
+  --dc-color-accent-active: #134e4a;
+  --dc-color-accent-subtle: #ccfbf1;
+  --dc-color-accent-border: #5eead4;
+  --dc-color-accent-ring: rgba(15, 118, 110, 0.2);
+  --dc-color-on-accent-subtle: #134e4a;
+}
+
+[data-dc-component="material-item"] {
+  --dc-material-item-hover-shadow: var(--dc-shadow-md);
+}

@@ -1,0 +1,343 @@
+.dc-root-renderer,
+.dc-container-shell,
+.dc-node-selection-plane,
+.dc-empty-state,
+.dc-node,
+.dc-node__mask,
+.dc-node__handle,
+.dc-node__handle-surface,
+.dc-node__handle-icon,
+.dc-node__handle-anchor,
+.dc-node__toolbar,
+.dc-node__toolbar-anchor,
+.dc-node__toolbar-btn,
+.dc-node__selection-projection,
+.dc-node__selection-outline,
+.dc-node__selection-edge,
+.dc-drop-indicator,
+.dc-widget-fallback,
+.dc-forbidden-overlay,
+.dc-forbidden-overlay__text {
+  box-sizing: border-box;
+}
+
+.dc-node {
+  border: 1px solid transparent;
+}
+
+.dc-node__selection-outline {
+  border: var(--dc-node-selection-stroke-width, 2px) solid transparent;
+}
+
+.dc-drop-indicator {
+  border: 2px dashed transparent;
+}
+
+.dc-widget-fallback {
+  border: 1px dashed transparent;
+}
+
+.dc-forbidden-overlay {
+  border: 2px dashed transparent;
+}
+
+.dc-forbidden-overlay__text {
+  border: 1px solid transparent;
+}
+
+.dc-root-renderer {
+  position: relative;
+  min-height: 100%;
+}
+
+.dc-container-shell,
+[data-dc-component="container-shell"] {
+  position: relative;
+  min-height: 200px;
+}
+
+.dc-node-selection-plane {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dc-container-shell--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.dc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.dc-empty-state__text {
+  pointer-events: none;
+}
+
+.dc-node {
+  position: relative;
+  cursor: default;
+}
+
+.dc-node--masked,
+.dc-node--unmasked {
+  position: relative;
+}
+
+.dc-node__mask {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dc-node--unsorted {
+  cursor: default;
+}
+
+.dc-node__handle {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+.dc-node__handle-surface,
+.dc-node__handle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dc-node__handle-icon {
+  pointer-events: none;
+}
+
+.dc-node > .dc-node__handle {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 20;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+}
+
+.dc-node > .dc-node__handle > .dc-node__handle-surface {
+  position: absolute;
+  inset: 2px;
+}
+
+.dc-node--hovered > .dc-node__handle,
+.dc-node > .dc-node__handle:focus-visible {
+  pointer-events: auto;
+}
+
+.dc-node--selected > .dc-node__handle {
+  pointer-events: none;
+}
+
+.dc-node__handle:active > .dc-node__handle-surface {
+  transform: scale(0.94);
+}
+
+.dc-node__handle-anchor {
+  z-index: 20;
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.dc-node__handle-anchor--visible {
+  pointer-events: auto;
+}
+
+.dc-node__handle-anchor > .dc-node__handle {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.dc-node__handle-anchor > .dc-node__handle > .dc-node__handle-surface {
+  position: absolute;
+  inset: 4px;
+}
+
+.dc-node__toolbar {
+  position: absolute;
+  top: 0;
+  right: -40px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+}
+
+.dc-node__toolbar--vertical {
+  flex-direction: column;
+}
+
+.dc-node__toolbar--horizontal {
+  flex-direction: row;
+  flex-wrap: nowrap;
+}
+
+.dc-node__toolbar-anchor {
+  z-index: 20;
+  overflow: auto;
+  pointer-events: auto;
+  will-change: transform;
+}
+
+.dc-node__toolbar-anchor[data-orientation="vertical"] {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.dc-node__toolbar-anchor[data-orientation="horizontal"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.dc-node__toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+.dc-node__toolbar-btn:hover:not(:disabled, .dc-node__toolbar-btn--disabled) {
+  transform: translateY(-1px);
+}
+
+.dc-node__toolbar-btn:active:not(:disabled, .dc-node__toolbar-btn--disabled) {
+  transform: translateY(0);
+}
+
+.dc-node__toolbar-btn:disabled,
+.dc-node__toolbar-btn--disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dc-node__toolbar-btn--drag {
+  cursor: grab;
+}
+
+.dc-node__toolbar-btn--drag:active {
+  cursor: grabbing;
+}
+
+.dc-node__toolbar-btn--drag.dc-node__toolbar-btn--disabled {
+  cursor: not-allowed;
+}
+
+.dc-node__toolbar--floating {
+  position: static;
+  top: auto;
+  right: auto;
+  pointer-events: auto;
+}
+
+.dc-node__selection-projection {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dc-node__selection-outline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dc-node__selection-projection--root-segment > .dc-node__selection-outline {
+  border: 0;
+}
+
+.dc-node__selection-edge {
+  position: absolute;
+  display: block;
+}
+
+.dc-node__selection-edge--block-start,
+.dc-node__selection-edge--block-end {
+  right: calc(-1 * var(--dc-node-selection-root-inline-overlap, var(--dc-node-selection-stroke-width, 2px)));
+  left: calc(-1 * var(--dc-node-selection-root-inline-overlap, var(--dc-node-selection-stroke-width, 2px)));
+  height: var(--dc-node-selection-root-block-overlap, var(--dc-node-selection-stroke-width, 2px));
+}
+
+.dc-node__selection-edge--block-start {
+  bottom: 100%;
+}
+
+.dc-node__selection-edge--block-end {
+  top: 100%;
+}
+
+.dc-node__selection-edge--inline-start,
+.dc-node__selection-edge--inline-end {
+  top: calc(-1 * var(--dc-node-selection-root-block-overlap, var(--dc-node-selection-stroke-width, 2px)));
+  bottom: calc(-1 * var(--dc-node-selection-root-block-overlap, var(--dc-node-selection-stroke-width, 2px)));
+  width: var(--dc-node-selection-root-inline-overlap, var(--dc-node-selection-stroke-width, 2px));
+}
+
+.dc-node__selection-edge--inline-start {
+  right: 100%;
+}
+
+.dc-node__selection-edge--inline-end {
+  left: 100%;
+}
+
+.dc-container-region--empty {
+  min-height: 32px;
+}
+
+.dc-drop-indicator {
+  min-height: 48px;
+  margin: 4px 0;
+  pointer-events: none;
+}
+
+.dc-widget-fallback {
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.dc-forbidden-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  pointer-events: none;
+}
+
+.dc-forbidden-overlay__text {
+  max-width: min(280px, calc(100% - 32px));
+  padding: 6px 10px;
+  overflow-wrap: anywhere;
+  text-align: center;
+  white-space: normal;
+}
