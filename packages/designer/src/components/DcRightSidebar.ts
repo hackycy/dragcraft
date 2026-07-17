@@ -49,6 +49,7 @@ export default defineComponent({
           'dc-right-sidebar__tab',
           { 'dc-right-sidebar__tab--active': active },
         ],
+        'data-dc-part': 'tab',
         'title': label,
         'aria-label': label,
         'aria-selected': active,
@@ -66,25 +67,32 @@ export default defineComponent({
         : t('workspace.right.open', '展开属性栏')
       const railExtension = extensions.rightRailRenderer?.({ engine, workspace, t })
 
-      return h('div', { class: 'dc-right-sidebar' }, [
+      return h('div', {
+        'class': 'dc-right-sidebar',
+        'data-dc-component': 'right-sidebar',
+        'data-dc-state': open ? 'open' : 'closed',
+      }, [
         h('div', {
           'class': 'dc-right-sidebar__surface',
+          'data-dc-part': 'surface',
           'aria-hidden': workspace.mode.value === 'compact' && !open,
           'inert': workspace.mode.value === 'compact' && !open ? '' : undefined,
         }, [
           h('div', {
             'class': 'dc-right-sidebar__rail',
+            'data-dc-part': 'rail',
             'role': 'tablist',
             'aria-label': t('workspace.right.label', '属性检查器'),
           }, [
             ...RIGHT_PANEL_TABS.map(renderTabButton),
-            railExtension ? h('div', { class: 'dc-sidebar-rail__extension' }, [railExtension]) : null,
+            railExtension ? h('div', { 'class': 'dc-sidebar-rail__extension', 'data-dc-part': 'rail-extension' }, [railExtension]) : null,
           ]),
-          h('div', { class: 'dc-right-sidebar__content' }, [h(PropertyPanel)]),
+          h('div', { 'class': 'dc-right-sidebar__content', 'data-dc-part': 'content' }, [h(PropertyPanel)]),
         ]),
         h('button', {
           'type': 'button',
           'class': 'dc-sidebar-toggle dc-sidebar-toggle--right',
+          'data-dc-part': 'toggle',
           'title': toggleLabel,
           'aria-label': toggleLabel,
           'aria-expanded': open,

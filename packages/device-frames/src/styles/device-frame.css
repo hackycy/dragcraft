@@ -182,7 +182,7 @@
   right: 0;
 }
 
-.dc-device-frame__chrome-item > .dc-node {
+.dc-device-frame__chrome-item > [data-dc-component="node"] {
   margin: 0;
   padding: 0;
   border-color: transparent;
@@ -205,7 +205,7 @@
   pointer-events: none;
 }
 
-.dc-device-frame__layer-item--self > .dc-node {
+.dc-device-frame__layer-item--self > [data-dc-component="node"] {
   position: absolute;
   inset: 0;
   margin: 0;
@@ -214,15 +214,20 @@
   pointer-events: none;
 }
 
-.dc-device-frame__layer-item--self > .dc-node > [data-dc-node-surface],
-.dc-device-frame__layer-item--self > .dc-node > :first-child {
+.dc-device-frame__layer-item--self > [data-dc-component="node"] > [data-dc-node-surface],
+.dc-device-frame__layer-item--self > [data-dc-component="node"] > :first-child {
   pointer-events: auto;
 }
 
-.dc-device-frame__layer-item--self > .dc-node.dc-node--hovered:not(.dc-node--selected),
-.dc-device-frame__layer-item--self > .dc-node.dc-node--selected {
+.dc-device-frame__layer-item--self > [data-dc-component="node"][data-dc-state~="hovered"]:not([data-dc-state~="selected"]),
+.dc-device-frame__layer-item--self > [data-dc-component="node"][data-dc-state~="selected"] {
   border-color: transparent;
   box-shadow: none;
+}
+
+.dc-device-frame > [data-dc-component="forbidden-overlay"] {
+  z-index: var(--dc-device-z-selection);
+  border-radius: inherit;
 }
 
 /* ── Device Picker ──────────────────────── */

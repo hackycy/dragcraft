@@ -1,8 +1,4 @@
-/* Google Material 3: expressive color, comfortable density and elevation. */
-
 :root {
-  color-scheme: light;
-
   /* Color roles */
   --dc-color-accent: #6750a4;
   --dc-color-accent-hover: #5b4595;
@@ -59,4 +55,11 @@
   --dc-duration-fast: 100ms;
   --dc-duration-normal: 200ms;
   --dc-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Component deltas */
+  --dc-empty-state-icon-opacity: 0.4;
+  --dc-empty-state-icon-size: 40px;
+  --dc-material-item-shadow: var(--dc-shadow-sm);
+  --dc-material-item-hover-shadow: var(--dc-shadow-md);
+  --dc-material-search-radius: var(--dc-radius-full);
 }

@@ -156,6 +156,12 @@ export default defineComponent({
         }))
       }
 
+      const themeStates = [
+        isEmpty.value ? 'empty' : null,
+        isActive.value ? 'active' : null,
+        isForbidden.value ? 'forbidden' : null,
+      ].filter(Boolean).join(' ') || undefined
+
       return h(props.as, mergeProps(attrs, {
         'class': [
           'dc-container-region',
@@ -165,6 +171,8 @@ export default defineComponent({
             'dc-container-region--forbidden': isForbidden.value,
           },
         ],
+        'data-dc-component': 'container-region',
+        'data-dc-state': themeStates,
         'data-dc-container-id': runtime.nodeId.value,
         'data-dc-container-region': props.regionId,
         'role': attrs.role ?? 'group',

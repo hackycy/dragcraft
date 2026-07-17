@@ -309,8 +309,9 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
           h(
             'div',
             {
-              class: 'dc-device-frame__content-surface dc-container-shell',
-              style: surfaceStyle,
+              'class': 'dc-device-frame__content-surface',
+              'data-dc-component': 'container-shell',
+              'style': surfaceStyle,
             },
             [
               ...(current.content ?? []),

@@ -183,6 +183,8 @@ export default defineComponent({
           { 'dc-structure-panel__delete': action.key === ActionKey.DELETE },
           action.className,
         ],
+        'data-dc-part': 'action',
+        'data-dc-state': action.key === ActionKey.DELETE ? 'danger' : undefined,
         'data-dc-action-key': action.key,
         'title': action.label,
         'aria-label': action.label,
@@ -200,7 +202,7 @@ export default defineComponent({
         .filter(action => action.type === 'button')
         .map(renderActionButton)
       return buttons.length > 0
-        ? h('div', { class: 'dc-structure-panel__actions' }, buttons)
+        ? h('div', { 'class': 'dc-structure-panel__actions', 'data-dc-part': 'actions' }, buttons)
         : null
     }
 
@@ -212,18 +214,21 @@ export default defineComponent({
           'dc-structure-panel__item',
           { 'dc-structure-panel__item--selected': selected },
         ],
+        'data-dc-component': 'structure-item',
+        'data-dc-state': selected ? 'selected' : undefined,
         'data-node-id': item.node.id,
       }, [
         h('button', {
           'type': 'button',
           'class': 'dc-structure-panel__select',
+          'data-dc-part': 'select',
           'aria-pressed': selected,
           'onClick': (e: MouseEvent) => handleSelect(item.node, e),
         }, [
-          h('span', { class: 'dc-structure-panel__branch' }),
-          h('span', { class: 'dc-structure-panel__main' }, [
-            h('span', { class: 'dc-structure-panel__title', title: item.title }, item.title),
-            h('span', { class: 'dc-structure-panel__id', title: item.node.id }, item.node.id),
+          h('span', { 'class': 'dc-structure-panel__branch', 'data-dc-part': 'branch' }),
+          h('span', { 'class': 'dc-structure-panel__main', 'data-dc-part': 'main' }, [
+            h('span', { 'class': 'dc-structure-panel__title', 'data-dc-part': 'title', 'title': item.title }, item.title),
+            h('span', { 'class': 'dc-structure-panel__id', 'data-dc-part': 'id', 'title': item.node.id }, item.node.id),
           ]),
         ]),
         renderActions(item.actions),
@@ -231,19 +236,21 @@ export default defineComponent({
     }
 
     const renderRegion = (region: ContainerStructureRegion) => h('div', {
-      key: region.id,
-      class: 'dc-structure-panel__region-branch',
+      'key': region.id,
+      'class': 'dc-structure-panel__region-branch',
+      'data-dc-component': 'structure-region',
     }, [
       h('div', {
         'class': 'dc-structure-panel__region',
+        'data-dc-part': 'row',
         'data-dc-region-id': region.id,
       }, [
-        h('span', { 'class': 'dc-structure-panel__region-branch-mark', 'aria-hidden': 'true' }),
-        h('span', { class: 'dc-structure-panel__region-title', title: region.title }, region.title),
-        h('span', { class: 'dc-structure-panel__region-count' }, String(region.nodes.length)),
+        h('span', { 'class': 'dc-structure-panel__region-branch-mark', 'data-dc-part': 'branch', 'aria-hidden': 'true' }),
+        h('span', { 'class': 'dc-structure-panel__region-title', 'data-dc-part': 'title', 'title': region.title }, region.title),
+        h('span', { 'class': 'dc-structure-panel__region-count', 'data-dc-part': 'count' }, String(region.nodes.length)),
       ]),
       region.nodes.length > 0
-        ? h('div', { class: 'dc-structure-panel__children' }, region.nodes.map((node, index) => {
+        ? h('div', { 'class': 'dc-structure-panel__children', 'data-dc-part': 'children' }, region.nodes.map((node, index) => {
             const item = createStructureItem(node, region.owner, index, region.nodes.length, false)
             return h('div', { key: node.id, class: 'dc-structure-panel__row' }, [renderItem(item)])
           }))
@@ -260,13 +267,13 @@ export default defineComponent({
         : null,
     ])
 
-    return () => h('div', { class: 'dc-structure-panel' }, [
-      h('div', { class: 'dc-structure-panel__header' }, [
-        h('span', { class: 'dc-structure-panel__heading' }, t('panel.structure.title', '结构树')),
+    return () => h('div', { 'class': 'dc-structure-panel', 'data-dc-component': 'structure-panel' }, [
+      h('div', { 'class': 'dc-structure-panel__header', 'data-dc-part': 'header' }, [
+        h('span', { 'class': 'dc-structure-panel__heading', 'data-dc-part': 'heading' }, t('panel.structure.title', '结构树')),
       ]),
       items.value.length === 0
-        ? h('div', { class: 'dc-structure-panel__empty' }, t('panel.structure.empty', '暂无结构'))
-        : h('div', { class: 'dc-structure-panel__list' }, items.value.map(renderStructureItem)),
+        ? h('div', { 'class': 'dc-structure-panel__empty', 'data-dc-part': 'empty' }, t('panel.structure.empty', '暂无结构'))
+        : h('div', { 'class': 'dc-structure-panel__list', 'data-dc-part': 'list' }, items.value.map(renderStructureItem)),
     ])
   },
 })

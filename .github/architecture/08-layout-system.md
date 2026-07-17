@@ -289,7 +289,7 @@ Shell 不读取 schema、不重新 resolve 节点、不创建业务 widget vnode
 }
 ```
 
-设计模式下不可见节点仍渲染为 `.dc-node--hidden`，方便选中和编辑；运行时预览可以基于同一 resolved layout 决定是否完全跳过节点。
+设计模式下不可见节点仍渲染，并通过 `[data-dc-component="node"][data-dc-state~="hidden"]` 暴露主题状态，方便选中和编辑；运行时预览可以基于同一 resolved layout 决定是否完全跳过节点。内部用于结构行为的 class 不属于公共契约。
 
 ## 完整示例
 

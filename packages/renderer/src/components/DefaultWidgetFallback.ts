@@ -19,7 +19,7 @@ export default defineComponent({
     return () =>
       h(
         'div',
-        { class: 'dc-widget-fallback' },
+        { 'class': 'dc-widget-fallback', 'data-dc-component': 'widget-fallback' },
         `Unknown widget: ${props.nodeType}`,
       )
   },

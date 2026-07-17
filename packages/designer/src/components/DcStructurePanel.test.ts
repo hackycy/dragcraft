@@ -211,6 +211,9 @@ describe('dcStructurePanel', () => {
       await nextTick()
       expect(designer.engine.store.selectedNodeId.value).toBe('nested-a')
       expect(onAfterSelect).toHaveBeenCalledWith({ nodeId: 'nested-a' })
+      expect(host.querySelector('[data-node-id="nested-a"]')?.getAttribute('data-dc-component')).toBe('structure-item')
+      expect(host.querySelector('[data-node-id="nested-a"]')?.getAttribute('data-dc-state')).toBe('selected')
+      expect(host.querySelector('[data-dc-component="structure-region"] > [data-dc-part="row"]')).not.toBeNull()
     }
     finally {
       app.unmount()
@@ -229,6 +232,7 @@ describe('dcStructurePanel', () => {
     try {
       await nextTick()
       const nested = host.querySelector('[data-node-id="nested-a"]')!
+      expect(nested.querySelector('[data-dc-part="action"][data-dc-state="danger"]')).not.toBeNull()
 
       click(nested.querySelector('[data-dc-action-key="move-down"]')!)
       click(nested.querySelector('[data-dc-action-key="duplicate"]')!)

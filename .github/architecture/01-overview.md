@@ -1,12 +1,12 @@
 # 项目总览
 
-dragcraft 是面向小程序装修场景的可视化页面搭建引擎。它采用 `Core Engine + UI Shell + Headless Themes` 的分层架构，用拖拽式物料编排和 Schema 驱动渲染帮助业务方快速搭建页面。
+dragcraft 是面向小程序装修场景的可视化页面搭建引擎。它采用 `Core Engine + Themeable UI Shell + Workbench Themes` 的分层架构，用拖拽式物料编排和 Schema 驱动渲染帮助业务方快速搭建页面。
 
 ## 产品目标
 
 - 开箱即用：业务方引入 `@dragcraft/designer`、`@dragcraft/themes` 和内置字段包，并显式传入自己的物料与配置 schema，即可完成设计器接入。
-- 完全可定制：业务方可以自行实现物料、字段 adapter 和 CSS。
-- 无头组件：UI 包只输出语义化 BEM 类名，不捆绑业务样式。视觉样式由 `@dragcraft/themes` 或业务自定义 CSS 提供。
+- 完全可定制：业务方可以自行实现物料、字段 adapter、内容主题和工作台主题差异。
+- 可主题化 UI Shell：组件包拥有 DOM、结构行为与必要结构 CSS，工作台主题只通过稳定 token 与精选 component/part/state 钩子定制视觉。
 - 单一入口：标准业务接入以 `@dragcraft/designer` 为统一入口，designer 负责组合 core、renderer 与 form-generator。
 - 强内核：`@dragcraft/core` 不包含 UI，负责状态、命令、历史、注册和事件语义。
 
@@ -23,7 +23,7 @@ root
 │   ├── form-generator   # Schema 表单引擎
 │   ├── fields           # UI 库字段 adapter 包
 │   ├── widgets          # 物料协议与工具函数
-│   ├── themes           # Headless 皮肤包
+│   ├── themes           # 工作台主题聚合、令牌与视觉配方
 │   ├── device-frames    # 设备容器框架
 │   ├── icons            # SVG 图标组件库
 │   └── utils            # 通用纯函数工具
@@ -62,14 +62,14 @@ root
 
 `@dragcraft/form-generator` 根据 FormSchema 渲染配置表单。它不依赖 core，不执行命令，只通过 `change` 事件向 designer 报告字段变更，由 designer 转发为 core 命令。
 
-### Headless Themes
+### Workbench Themes
 
-`@dragcraft/themes` 提供与组件逻辑解耦的 CSS 皮肤：
+`@dragcraft/themes` 提供与组件结构行为分层的工作台主题：
 
-- 所有 UI 包输出 `dc-*` BEM 类名。
-- 皮肤包基于 CSS 变量和共享组件样式实现视觉表现。
-- 内置 shadcn 与 Google Material 3 两套 light 皮肤。
-- 业务可不导入皮肤进入无头模式，也可覆盖 CSS 变量快速换肤。
+- designer、renderer 与 form-generator 分别发布自身必要的结构 CSS。
+- Standard 提供完整默认 token 与共享基线视觉配方，Material 只维护差异。
+- 外部主题通过公开 token 和精选 hook 增量覆盖；内部 BEM 不属于公共契约。
+- 工作台主题不样式化画布内业务物料，内容主题由宿主独立拥有。
 
 ## 标准接入模式
 
@@ -96,7 +96,7 @@ const designer = createDesigner({
 ## 跨包设计约束
 
 - Runtime 一致性：schema 写操作必须通过 core command；无效或被拒绝的命令不写入 history，也不触发 `schema:changed`。
-- Headless 一致性：UI 逻辑包不内置主题样式，只输出稳定 class。
+- 主题一致性：UI 包拥有结构样式，Themes 拥有视觉配方；公共主题契约不暴露内部 BEM。
 - 可扩展性：左栏物料、画布容器、节点渲染、节点工具栏、空状态、右栏表单都通过显式扩展点替换。
 - 可测试性：core 可独立单元测试，UI 层通过集成测试覆盖交互。
 - Schema 版本化：schema 必须携带版本号，后续结构演进应显式识别语义。

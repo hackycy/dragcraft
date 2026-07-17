@@ -28,6 +28,9 @@ describe('defaultNodeHandle', () => {
       expect(button?.type).toBe('button')
       expect(button?.getAttribute('aria-label')).toBe('选中组件')
       expect(button?.title).toBe('选中组件')
+      expect(button?.getAttribute('data-dc-component')).toBe('node-handle')
+      expect(button?.querySelector('[data-dc-part="surface"]')).not.toBeNull()
+      expect(button?.querySelector('[data-dc-part="icon"] svg')?.getAttribute('width')).toBe('12')
       expect(button?.querySelector('.dc-node__handle-surface')).not.toBeNull()
       expect(button?.querySelector('.dc-node__handle-icon svg')?.getAttribute('width')).toBe('12')
 

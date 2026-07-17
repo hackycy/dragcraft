@@ -177,6 +177,11 @@ export default defineComponent({
     return () => {
       const compact = workspace.mode.value === 'compact'
       const drawerOpen = compact && (workspace.leftOpen.value || workspace.rightOpen.value)
+      const themeStates = [
+        workspace.mode.value,
+        workspace.leftOpen.value ? 'left-open' : null,
+        workspace.rightOpen.value ? 'right-open' : null,
+      ].filter(Boolean).join(' ')
 
       return h('div', {
         'ref': rootRef,
@@ -188,16 +193,25 @@ export default defineComponent({
             'dc-designer--right-open': workspace.rightOpen.value,
           },
         ],
+        'data-dc-component': 'designer',
+        'data-dc-state': themeStates,
         'tabindex': -1,
         'data-dc-workspace-mode': workspace.mode.value,
+        'style': {
+          '--_dc-workspace-left-width': `${workspace.leftPanelWidth}px`,
+          '--_dc-workspace-right-width': `${workspace.rightPanelWidth}px`,
+          '--_dc-workspace-rail-width': `${workspace.railWidth}px`,
+          '--_dc-workspace-drawer-width': `${workspace.drawerWidth}px`,
+        },
         'onKeydown': handleKeydown,
         'onPointerdown': handlePointerdown,
       }, [
-        h('div', { class: 'dc-designer__body' }, [
+        h('div', { 'class': 'dc-designer__body', 'data-dc-part': 'body' }, [
           drawerOpen
             ? h('button', {
                 'type': 'button',
                 'class': 'dc-workspace-backdrop',
+                'data-dc-part': 'backdrop',
                 'aria-label': t('workspace.drawer.close', '关闭面板'),
                 'onClick': workspace.closeDrawers,
               })
@@ -209,13 +223,17 @@ export default defineComponent({
               'dc-designer__panel--left',
               { 'dc-designer__panel--open': workspace.leftOpen.value },
             ],
+            'data-dc-part': 'left-panel',
             'aria-label': t('workspace.left.label', '物料与结构'),
             'onTransitionend': (event: TransitionEvent) => {
               if (event.propertyName === 'transform' && compact && workspace.leftOpen.value)
                 focusPanel(leftPanelRef.value)
             },
           }, [h(DcLeftSidebar)]),
-          h('main', { class: 'dc-designer__panel dc-designer__panel--center' }, [h(DcCanvas)]),
+          h('main', {
+            'class': 'dc-designer__panel dc-designer__panel--center',
+            'data-dc-part': 'center-panel',
+          }, [h(DcCanvas)]),
           h('aside', {
             'ref': rightPanelRef,
             'class': [
@@ -223,6 +241,7 @@ export default defineComponent({
               'dc-designer__panel--right',
               { 'dc-designer__panel--open': workspace.rightOpen.value },
             ],
+            'data-dc-part': 'right-panel',
             'aria-label': t('workspace.right.label', '属性检查器'),
             'onTransitionend': (event: TransitionEvent) => {
               if (event.propertyName === 'transform' && compact && workspace.rightOpen.value)

@@ -80,6 +80,21 @@ describe('dcDesigner', () => {
       expect(host.querySelector('[data-dc-workspace-control="pointer"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="hand"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="center"]')).not.toBeNull()
+      const root = host.querySelector<HTMLElement>('[data-dc-component="designer"]')
+      expect(root?.dataset.dcState?.split(' ')).toContain('compact')
+      expect(root?.style.getPropertyValue('--_dc-workspace-left-width')).toBe('280px')
+      expect(root?.querySelector(':scope > [data-dc-part="body"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="canvas-controls"] [data-dc-part="toolbar"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="material-panel"] [data-dc-part="search-input"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="material-panel"] [data-dc-part="search-icon"] svg')).not.toBeNull()
+      const materialGroup = host.querySelector<HTMLElement>('[data-dc-component="material-group"]')
+      const materialGroupHeader = materialGroup?.querySelector<HTMLButtonElement>(':scope > [data-dc-part="header"]')
+      expect(materialGroupHeader?.querySelector('[data-dc-part="toggle"] svg')).not.toBeNull()
+      materialGroupHeader?.click()
+      await nextTick()
+      expect(materialGroup?.getAttribute('data-dc-state')).toBe('collapsed')
+      expect(materialGroup?.querySelector('[data-dc-part="toggle"]')?.classList.contains('dc-material-group__toggle--collapsed')).toBe(true)
+      expect(host.querySelector('[data-dc-component="property-panel"] > [data-dc-part="content"]')).not.toBeNull()
     }
     finally {
       app.unmount()
@@ -203,16 +218,16 @@ describe('dcDesigner', () => {
       }))
       await nextTick()
 
-      expect(stage.style.getPropertyValue('--dc-canvas-pan-x')).toBe('-220px')
-      expect(stage.style.getPropertyValue('--dc-canvas-pan-y')).toBe('160px')
+      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('-220px')
+      expect(stage.style.getPropertyValue('--_dc-canvas-pan-y')).toBe('160px')
       expect(viewport.scrollLeft).toBe(0)
       expect(viewport.scrollTop).toBe(0)
 
       reset.click()
       await nextTick()
 
-      expect(stage.style.getPropertyValue('--dc-canvas-pan-x')).toBe('0px')
-      expect(stage.style.getPropertyValue('--dc-canvas-pan-y')).toBe('0px')
+      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('0px')
+      expect(stage.style.getPropertyValue('--_dc-canvas-pan-y')).toBe('0px')
     }
     finally {
       app.unmount()
@@ -325,6 +340,8 @@ describe('dcDesigner', () => {
       expect(designer.workspace.leftOpen.value).toBe(false)
       expect(designer.workspace.rightOpen.value).toBe(true)
       expect(rightPanel.contains(document.activeElement)).toBe(true)
+      expect(host.querySelector('[data-dc-component="designer"]')?.getAttribute('data-dc-state')).toContain('compact')
+      expect(host.querySelector('[data-dc-component="designer"] [data-dc-part="backdrop"]')).not.toBeNull()
 
       rightPanel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
       await flushFocus()

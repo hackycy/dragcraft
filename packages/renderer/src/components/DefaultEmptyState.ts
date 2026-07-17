@@ -21,13 +21,15 @@ export default defineComponent({
     const { t } = useI18n()
     return () =>
       h('div', {
-        class: [
+        'class': [
           'dc-empty-state',
           { 'dc-empty-state--drag-over': props.isDragOver },
         ],
+        'data-dc-component': 'empty-state',
+        'data-dc-state': props.isDragOver ? 'drag-over' : undefined,
       }, [
-        h('div', { class: 'dc-empty-state__icon' }, h(IconPlus, { size: 32 })),
-        h('div', { class: 'dc-empty-state__text' }, t('canvas.empty', '拖拽组件到这里')),
+        h('div', { 'class': 'dc-empty-state__icon', 'data-dc-part': 'icon' }, h(IconPlus, { size: 32 })),
+        h('div', { 'class': 'dc-empty-state__text', 'data-dc-part': 'text' }, t('canvas.empty', '拖拽组件到这里')),
       ])
   },
 })

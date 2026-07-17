@@ -10,6 +10,6 @@ export default defineComponent({
 
   setup() {
     return () =>
-      h('div', { class: 'dc-drop-indicator' })
+      h('div', { 'class': 'dc-drop-indicator', 'data-dc-component': 'drop-indicator' })
   },
 })

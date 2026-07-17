@@ -36,6 +36,7 @@ export default defineComponent({
     const renderHistoryButton = (options: ControlButtonOptions): VNodeChild => h('button', {
       'type': 'button',
       'class': 'dc-canvas-controls__button',
+      'data-dc-part': 'button',
       'disabled': options.disabled,
       'title': options.label,
       'aria-label': options.label,
@@ -46,9 +47,10 @@ export default defineComponent({
 
     return () => {
       const history = engine.history.state.value
-      return h('div', { class: 'dc-canvas-controls' }, [
+      return h('div', { 'class': 'dc-canvas-controls', 'data-dc-component': 'canvas-controls' }, [
         h('div', {
           'class': 'dc-canvas-controls__history',
+          'data-dc-part': 'toolbar',
           'role': 'toolbar',
           'aria-label': t('workspace.canvas.controls', '画布工具'),
         }, [
@@ -66,7 +68,7 @@ export default defineComponent({
             disabled: !history.canRedo,
             onClick: () => engine.history.redo(),
           }),
-          h('span', { 'class': 'dc-canvas-controls__divider', 'aria-hidden': 'true' }),
+          h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
           renderHistoryButton({
             key: 'pointer',
             label: t('workspace.canvas.pointer', '指针模式'),
@@ -81,7 +83,7 @@ export default defineComponent({
             active: props.interactionMode === 'hand',
             onClick: () => emit('modeChange', 'hand'),
           }),
-          h('span', { 'class': 'dc-canvas-controls__divider', 'aria-hidden': 'true' }),
+          h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
           renderHistoryButton({
             key: 'center',
             label: t('workspace.canvas.reset', '重置画布位置'),

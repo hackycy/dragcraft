@@ -273,6 +273,8 @@ describe('widgetRenderer', () => {
       expect(host.querySelector('.dc-node__handle')).toBeNull()
       expect(button?.hasAttribute('data-dc-node-surface')).toBe(true)
       expect(button?.getAttribute('style') ?? '').not.toContain('pointer-events: none')
+      const nodeWrapper = host.querySelector<HTMLElement>('[data-dc-component="node"]')
+      expect(nodeWrapper?.getAttribute('data-dc-state')).toContain('root-owned')
 
       button?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
       expect(ctx.engine.store.selectNode).toHaveBeenCalledWith('fab')
@@ -343,7 +345,9 @@ describe('widgetRenderer', () => {
       await nextTick()
       await new Promise(resolve => requestAnimationFrame(resolve))
 
-      expect(portal.querySelector('.dc-node__toolbar')).not.toBeNull()
+      const toolbar = portal.querySelector<HTMLElement>('[data-dc-component="node-toolbar"]')
+      expect(toolbar).not.toBeNull()
+      expect(toolbar?.querySelector('[data-dc-part="action"][data-dc-state="danger"]')).not.toBeNull()
       expect(host.querySelector('.dc-node__toolbar')).toBeNull()
     }
     finally {
@@ -432,6 +436,8 @@ describe('widgetRenderer', () => {
       expect(overlay?.style.height).toBe('60px')
       const toolbar = document.querySelector<HTMLElement>('.dc-node__toolbar--horizontal')
       expect(toolbar?.dataset.placement).toBe('top-end')
+      expect(toolbar?.getAttribute('data-dc-component')).toBe('node-toolbar')
+      expect(toolbar?.getAttribute('data-dc-state')).toContain('horizontal')
       expect(host.querySelector('.dc-node__handle')).toBeNull()
     }
     finally {

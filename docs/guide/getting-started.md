@@ -67,6 +67,6 @@ import { designer } from './designer'
 现在你可以从左侧拖入文本，选中它后在右侧修改 `content`。设计器把修改写进 Schema；它不会替你把页面保存到服务端。
 
 > [!TIP]
-> 想先使用默认视觉，导入 `@dragcraft/themes` 或 `@dragcraft/themes/standard`。偏好 Google Material 3 时使用 `@dragcraft/themes/material`。完全自定义界面时可以不导入主题，只为稳定的 `dc-*` class 编写自己的 CSS。
+> 默认入口与 `@dragcraft/themes/standard` 都包含必要结构样式和 Standard 视觉；Google Material 3 使用 `@dragcraft/themes/material`。完整自定义工作台时导入 `@dragcraft/themes/structure`，再基于公开主题契约编写视觉配方，不能省略结构 CSS。
 
 关于最小接入，目前知道这些就够了。接下来阅读 [集成设计器](/guide/designer-integration)，把初始 Schema、全局配置和业务页面接进来。

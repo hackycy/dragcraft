@@ -48,13 +48,13 @@ it('registers playground container definitions and split variants in declaration
   ])
 })
 
-it('styles the empty modifier emitted by ContainerRegionOutlet', () => {
-  const canvasCss = readFileSync(
-    new URL('../../../../packages/themes/src/components/canvas.css', import.meta.url),
+it('keeps empty-region geometry in renderer structural CSS', () => {
+  const structureCss = readFileSync(
+    new URL('../../../../packages/renderer/styles/structure.css', import.meta.url),
     'utf8',
   )
-  expect(canvasCss).toMatch(/\.dc-container-region--empty\s*\{/)
-  expect(canvasCss).not.toContain('.dc-container-region__empty')
+  expect(structureCss).toMatch(/\.dc-container-region--empty\s*\{/)
+  expect(structureCss).not.toContain('.dc-container-region__empty')
 })
 
 it('redistributes split children in stable order when the variant changes', () => {

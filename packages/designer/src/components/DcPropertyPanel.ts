@@ -65,17 +65,18 @@ export default defineComponent({
       else {
         tabContent = h(
           'div',
-          { class: 'dc-property-panel__empty' },
+          { 'class': 'dc-property-panel__empty', 'data-dc-part': 'empty' },
           effectiveTab === 'global'
             ? t('panel.empty.no-global-config', '暂无全局配置')
             : t('panel.empty.select-widget', '请选择组件'),
         )
       }
 
-      return h('div', { class: 'dc-property-panel' }, [
+      return h('div', { 'class': 'dc-property-panel', 'data-dc-component': 'property-panel' }, [
         h('div', {
           'id': `dc-property-panel-${effectiveTab}`,
           'class': 'dc-property-panel__content',
+          'data-dc-part': 'content',
           'role': 'tabpanel',
           'aria-labelledby': `dc-property-tab-${effectiveTab}`,
         }, [tabContent]),

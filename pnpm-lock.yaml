@@ -30,6 +30,9 @@ catalogs:
     postcss-import:
       specifier: ^16.1.0
       version: 16.1.1
+    postcss-selector-parser:
+      specifier: ^7.1.0
+      version: 7.1.4
     publint:
       specifier: ^0.3.17
       version: 0.3.21
@@ -311,15 +314,21 @@ importers:
 
   packages/themes:
     devDependencies:
+      '@dragcraft/designer':
+        specifier: workspace:*
+        version: link:../designer
+      '@dragcraft/form-generator':
+        specifier: workspace:*
+        version: link:../form-generator
+      '@dragcraft/renderer':
+        specifier: workspace:*
+        version: link:../renderer
       postcss:
         specifier: catalog:cli
         version: 8.5.15
-      postcss-cli:
+      postcss-selector-parser:
         specifier: catalog:cli
-        version: 11.0.1(jiti@2.7.0)(postcss@8.5.15)(tsx@4.22.4)
-      postcss-import:
-        specifier: catalog:cli
-        version: 16.1.1(postcss@8.5.15)
+        version: 7.1.4
 
   packages/utils:
     dependencies:

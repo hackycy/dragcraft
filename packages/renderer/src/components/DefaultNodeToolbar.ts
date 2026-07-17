@@ -58,29 +58,37 @@ export default defineComponent({
       const actionVNodes = props.actions.map((action) => {
         if (action.type === 'drag-handle') {
           return h('div', {
-            class: [
+            'class': [
               'dc-node__toolbar-btn',
               'dc-node__toolbar-btn--drag',
               { 'dc-node__toolbar-btn--disabled': action.disabled },
               action.className,
             ],
-            title: action.label,
-            draggable: !action.disabled,
-            onDragstart: action.disabled ? undefined : props.onDragStart,
-            onDragend: action.disabled ? undefined : props.onDragEnd,
+            'data-dc-part': 'action',
+            'data-dc-state': [
+              'drag',
+              action.disabled ? 'disabled' : null,
+            ].filter(Boolean).join(' '),
+            'title': action.label,
+            'aria-disabled': action.disabled ? 'true' : undefined,
+            'draggable': !action.disabled,
+            'onDragstart': action.disabled ? undefined : props.onDragStart,
+            'onDragend': action.disabled ? undefined : props.onDragEnd,
           }, typeof action.icon === 'string' ? action.icon : (action.icon ? h(action.icon) : undefined))
         }
 
         // button type
         return h('button', {
-          type: 'button',
-          class: [
+          'type': 'button',
+          'class': [
             'dc-node__toolbar-btn',
             action.className,
           ],
-          title: action.label,
-          disabled: action.disabled,
-          onClick: action.handler,
+          'data-dc-part': 'action',
+          'data-dc-state': action.key === 'delete' ? 'danger' : undefined,
+          'title': action.label,
+          'disabled': action.disabled,
+          'onClick': action.handler,
         }, typeof action.icon === 'string' ? action.icon : (action.icon ? h(action.icon) : undefined))
       })
 
@@ -92,6 +100,11 @@ export default defineComponent({
             [`dc-node__toolbar--${pos?.orientation ?? 'vertical'}`]: true,
           },
         ],
+        'data-dc-component': 'node-toolbar',
+        'data-dc-state': [
+          useFixed ? 'floating' : null,
+          pos?.orientation ?? 'vertical',
+        ].filter(Boolean).join(' '),
         'data-placement': pos?.placement,
         'data-orientation': pos?.orientation,
       }, actionVNodes)

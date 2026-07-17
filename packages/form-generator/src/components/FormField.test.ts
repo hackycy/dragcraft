@@ -122,6 +122,17 @@ describe('formField', () => {
       expect(input?.value).toBe('Ada')
       expect(input?.placeholder).toBe('Enter name')
       expect(input?.dataset.size).toBe('small')
+      expect(host.querySelector('[data-dc-component="form-generator"]')).not.toBeNull()
+      const formSection = host.querySelector<HTMLElement>('[data-dc-component="form-section"]')
+      const formSectionHeader = formSection?.querySelector<HTMLButtonElement>(':scope > [data-dc-part="header"]')
+      expect(formSection?.querySelector(':scope > [data-dc-part="body"]')).not.toBeNull()
+      expect(formSectionHeader?.querySelector('[data-dc-part="toggle"] svg')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="form-field"] > [data-dc-part="label"]')?.textContent).toBe('Name')
+      expect(host.querySelector('[data-dc-component="form-field"] > [data-dc-part="control"] .input-like')).not.toBeNull()
+      formSectionHeader?.click()
+      await nextTick()
+      expect(formSection?.getAttribute('data-dc-state')).toBe('collapsed')
+      expect(formSection?.querySelector('[data-dc-part="toggle"]')?.classList.contains('dc-form-section__toggle--collapsed')).toBe(true)
     }
     finally {
       app.unmount()
@@ -210,7 +221,7 @@ describe('formField', () => {
         note: 'mode:basic',
       })
       expect(wrapper?.classList.contains('dc-form-field--span-2')).toBe(true)
-      expect(wrapper?.style.getPropertyValue('--dc-span')).toBe('2')
+      expect(wrapper?.style.getPropertyValue('--_dc-span')).toBe('2')
 
       values.title = 'Second'
       values.mode = 'advanced'
@@ -260,6 +271,8 @@ describe('formField', () => {
 
       expect(onChange).toHaveBeenCalledWith({ key: 'name', value: '' })
       expect(host.querySelector('.dc-form-field__error')?.textContent).toBe('Name required')
+      expect(host.querySelector('[data-dc-component="form-field"]')?.getAttribute('data-dc-state')).toBe('error')
+      expect(host.querySelector('[data-dc-component="form-field"] > [data-dc-part="error"]')?.textContent).toBe('Name required')
     }
     finally {
       app.unmount()

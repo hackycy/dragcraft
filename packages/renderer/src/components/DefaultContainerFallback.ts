@@ -14,6 +14,7 @@ export default defineComponent({
   setup(props) {
     return () => h('div', {
       'class': 'dc-unresolved-container',
+      'data-dc-component': 'unresolved-container',
       'data-dc-unresolved-container': props.node.id,
     }, Object.entries(props.node.container?.regions ?? {}).map(([regionId, nodes]) => {
       const owner: NodeOwner = {
@@ -24,6 +25,8 @@ export default defineComponent({
       return h('div', {
         'key': regionId,
         'class': 'dc-container-region dc-container-region--unresolved',
+        'data-dc-component': 'container-region',
+        'data-dc-state': 'unresolved',
         'data-dc-container-id': props.node.id,
         'data-dc-container-region': regionId,
         'role': 'group',

@@ -11,11 +11,19 @@ export interface DesignerWorkspaceOptions {
   defaultLeftOpen?: boolean
   defaultRightOpen?: boolean
   keyboardShortcuts?: boolean
+  leftPanelWidth?: number
+  rightPanelWidth?: number
+  railWidth?: number
+  drawerWidth?: number
 }
 
 export interface DesignerWorkspaceController {
   readonly compactBreakpoint: number
   readonly keyboardShortcuts: boolean
+  readonly leftPanelWidth: number
+  readonly rightPanelWidth: number
+  readonly railWidth: number
+  readonly drawerWidth: number
   mode: Ref<DesignerWorkspaceMode>
   leftOpen: Ref<boolean>
   rightOpen: Ref<boolean>

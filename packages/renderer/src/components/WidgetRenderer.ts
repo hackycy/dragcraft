@@ -296,6 +296,8 @@ export default defineComponent({
                 'dc-node__handle-anchor',
                 { 'dc-node__handle-anchor--visible': position.visible },
               ],
+              'data-dc-component': 'node-handle-anchor',
+              'data-dc-state': position.visible ? 'visible' : 'hidden',
               'data-dc-node-handle-for': node.id,
               'style': {
                 position: position.strategy,
@@ -348,11 +350,25 @@ export default defineComponent({
 
       // Build the core wrapper vnode. Container styles control the node's box
       // in its assigned placement; content styles are passed to the widget.
+      const themeStates = [
+        widget.useMask.value ? 'masked' : 'unmasked',
+        !widget.selectable.value ? 'non-selectable' : null,
+        widget.inSortScope.value && !widget.sortable.value ? 'locked' : null,
+        !widget.inSortScope.value ? 'unsorted' : null,
+        widget.isDragging.value ? 'dragging' : null,
+        !widget.visible.value ? 'hidden' : null,
+        widget.state.isSelected.value ? 'selected' : null,
+        widget.state.isHovered.value ? 'hovered' : null,
+        widget.state.isDragOver.value ? 'drag-over' : null,
+        `${ownerKind}-owned`,
+      ].filter(Boolean).join(' ')
       const coreWrapper = h(
         'div',
         {
           'ref': nodeElRef,
           'class': [widget.wrapperClasses.value, `dc-node--${ownerKind}-owned`],
+          'data-dc-component': 'node',
+          'data-dc-state': themeStates,
           'data-dc-node-owner': ownerKind,
           'style': wrapperStyle,
           'data-node-id': node.id,

@@ -129,7 +129,7 @@ export default defineComponent({
 
       return h(
         'div',
-        { class: 'dc-form-generator' },
+        { 'class': 'dc-form-generator', 'data-dc-component': 'form-generator' },
         schema.sections.map((section, i) =>
           h(FormSection, {
             key: `${section.title}-${i}`,

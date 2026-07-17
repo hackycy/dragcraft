@@ -151,6 +151,7 @@ describe('containerRegionOutlet', () => {
       expect(host.querySelector('[data-node-id="left-child"]')?.classList).toContain('dc-node--container-owned')
       expect(host.querySelector('[data-dc-container-region="left"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-container-region="right"]')?.tagName).toBe('ASIDE')
+      expect(host.querySelector('[data-dc-container-region="left"]')?.getAttribute('data-dc-component')).toBe('container-region')
     }
     finally {
       app.unmount()

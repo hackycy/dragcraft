@@ -45,22 +45,27 @@ export default defineComponent({
         {
           'type': 'button',
           'class': 'dc-form-section__header',
+          'data-dc-part': 'header',
           'aria-expanded': !collapsed.value,
           'onClick': toggleCollapse,
         },
         [
-          h('span', { class: 'dc-form-section__title' }, section.titleKey ? t(section.titleKey, section.title) : section.title),
-          h(IconChevronDown, {
-            size: 15,
-            class: collapsed.value
+          h('span', { 'class': 'dc-form-section__title', 'data-dc-part': 'title' }, section.titleKey ? t(section.titleKey, section.title) : section.title),
+          h('span', {
+            'class': collapsed.value
               ? 'dc-form-section__toggle dc-form-section__toggle--collapsed'
               : 'dc-form-section__toggle',
-          }),
+            'data-dc-part': 'toggle',
+          }, [h(IconChevronDown, { size: 15 })]),
         ],
       )
 
       if (collapsed.value) {
-        return h('div', { class: 'dc-form-section' }, [header])
+        return h('div', {
+          'class': 'dc-form-section',
+          'data-dc-component': 'form-section',
+          'data-dc-state': 'collapsed',
+        }, [header])
       }
 
       const bodyClass = ['dc-form-section__body']
@@ -68,12 +73,12 @@ export default defineComponent({
 
       if (columns > 1) {
         bodyClass.push('dc-form-section--grid')
-        bodyStyle['--dc-columns'] = String(columns)
+        bodyStyle['--_dc-columns'] = String(columns)
       }
 
       const body = h(
         'div',
-        { class: bodyClass, style: bodyStyle },
+        { 'class': bodyClass, 'style': bodyStyle, 'data-dc-part': 'body' },
         section.fields.map(field =>
           h(FormField, { key: field.key, field }),
         ),
@@ -81,7 +86,11 @@ export default defineComponent({
 
       return h(
         'div',
-        { class: 'dc-form-section' },
+        {
+          'class': 'dc-form-section',
+          'data-dc-component': 'form-section',
+          'data-dc-state': 'expanded',
+        },
         [header, body],
       )
     }

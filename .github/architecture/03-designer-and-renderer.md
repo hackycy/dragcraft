@@ -398,7 +398,7 @@ Renderer 只负责把 schema DSL 解释成设计器预览效果，不把 DSL 绑
 | DSL | 预览位置 |
 | --- | --- |
 | `schema.root.style.surface` | 默认 container shell 或 device frame 内容 surface |
-| `node.style.container` | `.dc-node` 外层节点盒子 |
+| `node.style.container` | Renderer 拥有的节点外层盒子 |
 | `node.style.content` | 实际 widget 组件 vnode 的 `style` |
 
 示例：
@@ -455,11 +455,11 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 
 ## 交互状态
 
-- 选中：点击 mask 或 handle，调用 `engine.store.selectNode(nodeId)`，应用 `dc-node--selected`；resolved container 的自身空白也可以选择容器。
+- 选中：点击 mask 或 handle，调用 `engine.store.selectNode(nodeId)`，节点主题状态包含 `selected`；resolved container 的自身空白也可以选择容器。
 - 悬停：普通物料中最深的 `[data-node-id]` 独占 hover，hover 不生成范围高亮；resolved 容器物料不发布 hover，其常驻外置 handle 只响应自身 hover 或 focus。
-- 拖拽悬停：外部 `dragOverNodeId` 控制，应用 `dc-node--drag-over` 并渲染 DropIndicator。
+- 拖拽悬停：外部 `dragOverNodeId` 控制，节点主题状态包含 `drag-over` 并渲染 DropIndicator。
 - 不可选中：`WidgetMeta.selectable` 为 `false` 时忽略选中。
-- 位置锁定：`WidgetMeta.sortable` 为 `false` 时应用 `dc-node--locked`，隐藏拖拽与移动动作。
+- 位置锁定：`WidgetMeta.sortable` 为 `false` 时节点主题状态包含 `locked`，隐藏拖拽与移动动作。
 
 ## Toolbar 定位
 
@@ -475,30 +475,23 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 - Widget 离开画布可见区域时隐藏 toolbar；Renderer 独立使用时退回浏览器 viewport。
 - 工具栏 Teleport 到画布全局 interaction layer；selected 投影 Teleport 到 shell-owned interaction presentation plane。
 
-## CSS Class 层级
+## 主题契约层级
 
 ```plaintext
-.dc-root-renderer
-  .dc-container-shell
-    .dc-container-shell--empty
-      .dc-empty-state
-    .dc-node.dc-node--widget
-      .dc-node--root-owned | .dc-node--container-owned
-      .dc-node--masked
-        .dc-node__mask
-      .dc-node--unmasked
-        .dc-node__handle
-      .dc-node--selected
-        .dc-node__toolbar--vertical | .dc-node__toolbar--horizontal
-      .dc-node--hovered
-      .dc-node--locked
-    .dc-drop-indicator
-  .dc-node__handle-anchor
-    .dc-node__handle
-      .dc-node__handle-surface
-        .dc-node__handle-icon
-    .dc-widget-fallback
-  .dc-node-selection-plane--fallback
+[data-dc-component="root-renderer"]
+  [data-dc-component="container-shell"]
+    [data-dc-component="empty-state"]
+    [data-dc-component="node"][data-dc-state~="root-owned"]
+    [data-dc-component="node"][data-dc-state~="container-owned"]
+      [data-dc-node-surface]
+      [data-dc-component="node-handle"]
+    [data-dc-component="drop-indicator"]
+  [data-dc-component="node-handle-anchor"]
+  [data-dc-component="node-toolbar"]
+  [data-dc-component="node-selection"]
+  [data-dc-component="widget-fallback"]
 ```
 
-Renderer 不内置样式，class 由 `@dragcraft/themes` 或业务 CSS 实现视觉效果。
+Renderer 通过 `@dragcraft/renderer/structure.css` 提供必要结构样式；完整工作台主题会自动聚合该入口。外部视觉配方只依赖公开的 component/part/state 与 token，Renderer 内部 class 不属于主题契约。
+
+基线交互视觉有三项必须保持一致：drop indicator 使用强调色虚线与浅强调色底；node toolbar 的 drag handle 与原生 `button` action 使用同一强调色表面和反色前景；`material-bounds` selection 绘制完整连续实线边框。结构层可以用私有 class 预留透明边框几何，完整主题按导入顺序在其后通过公开 hook 声明颜色或完整 border。对应视觉声明由 Themes 的 interaction recipe 校验保护。

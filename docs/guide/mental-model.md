@@ -39,7 +39,7 @@ const designer = createDesigner({
 - `@dragcraft/core`：定义 Schema、命令、历史、行为约束和事件。
 - `@dragcraft/renderer`：把 Schema 节点变成设计态 Vue 组件，并提供画布扩展点。
 - `@dragcraft/form-generator`：根据 FormSchema 渲染字段，不持久化页面数据。
-- `@dragcraft/themes`：只提供 CSS 皮肤，不改变编辑器逻辑。
+- `@dragcraft/themes`：聚合 UI 包的必要结构 CSS，并提供默认工作台 token 与视觉配方；不改变编辑器逻辑，也不负责业务物料内容主题。
 
 ## 读取与写入规则
 

@@ -47,8 +47,10 @@ const DefaultContainerShell = defineComponent({
       h(
         'div',
         {
-          class: 'dc-container-shell',
-          style: normalizeStyle(props.schema?.root?.style?.surface),
+          'class': 'dc-container-shell',
+          'data-dc-component': 'container-shell',
+          'data-dc-state': props.isEmpty ? 'empty' : undefined,
+          'style': normalizeStyle(props.schema?.root?.style?.surface),
         },
         [
           ...(slots.default?.() ?? []),

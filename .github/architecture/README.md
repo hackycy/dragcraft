@@ -33,7 +33,7 @@
    - icons 与 utils 包职责
 
 6. [主题与设备容器](./06-themes-and-device-frames.md)
-   - Headless 主题模型
+   - 可主题化 UI Shell 与公共主题契约
    - Design Tokens
    - 设备容器与 toolbar 集成
 
@@ -54,4 +54,5 @@
 - 修改 Schema、命令、行为约束时，同步更新 [Schema 与 Core Engine](./02-schema-and-core.md)。
 - 修改 `engine.state` / `engine.store` 边界、command 语义或对外入口分级时，同步更新 [项目总览](./01-overview.md)、[Schema 与 Core Engine](./02-schema-and-core.md) 与 [Designer 与 Renderer](./03-designer-and-renderer.md)。
 - 修改 designer、renderer、form-generator、themes、device-frames 的扩展点时，同步更新对应章节。
+- 重构完成后把最终架构合并进对应主题章节，不保留已实施方案索引或重构过程文档。
 - 包目录下不再新增 README 或架构 Markdown，避免文档入口分散。

@@ -8,12 +8,20 @@ import type {
 import { ref } from 'vue'
 
 const DEFAULT_COMPACT_BREAKPOINT = 1100
+const DEFAULT_LEFT_PANEL_WIDTH = 280
+const DEFAULT_RIGHT_PANEL_WIDTH = 320
+const DEFAULT_RAIL_WIDTH = 44
+const DEFAULT_DRAWER_WIDTH = 320
 
 export function createDesignerWorkspace(
   options: DesignerWorkspaceOptions = {},
 ): DesignerWorkspaceController {
   const compactBreakpoint = options.compactBreakpoint ?? DEFAULT_COMPACT_BREAKPOINT
   const keyboardShortcuts = options.keyboardShortcuts ?? true
+  const leftPanelWidth = options.leftPanelWidth ?? DEFAULT_LEFT_PANEL_WIDTH
+  const rightPanelWidth = options.rightPanelWidth ?? DEFAULT_RIGHT_PANEL_WIDTH
+  const railWidth = options.railWidth ?? DEFAULT_RAIL_WIDTH
+  const drawerWidth = options.drawerWidth ?? DEFAULT_DRAWER_WIDTH
   const mode = ref<DesignerWorkspaceMode>('wide')
   const leftOpen = ref(options.defaultLeftOpen ?? true)
   const rightOpen = ref(options.defaultRightOpen ?? true)
@@ -96,6 +104,10 @@ export function createDesignerWorkspace(
   return {
     compactBreakpoint,
     keyboardShortcuts,
+    leftPanelWidth,
+    rightPanelWidth,
+    railWidth,
+    drawerWidth,
     mode,
     leftOpen,
     rightOpen,

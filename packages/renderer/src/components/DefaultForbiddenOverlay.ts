@@ -32,8 +32,8 @@ export default defineComponent({
     }
 
     return () =>
-      h('div', { class: 'dc-forbidden-overlay' }, [
-        h('span', { class: 'dc-forbidden-overlay__text' }, getMessage()),
+      h('div', { 'class': 'dc-forbidden-overlay', 'data-dc-component': 'forbidden-overlay' }, [
+        h('span', { 'class': 'dc-forbidden-overlay__text', 'data-dc-part': 'text' }, getMessage()),
       ])
   },
 })

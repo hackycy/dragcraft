@@ -86,6 +86,8 @@ describe('dcMaterialItem', () => {
       expect(host.querySelector('.dc-material-item__title')?.textContent).toBe('Action Button')
       expect(host.querySelector('.dc-material-item')?.getAttribute('title')).toBe('Action Button: Trigger a primary action')
       expect(host.querySelector('.dc-material-item__description')).toBeNull()
+      expect(host.querySelector('[data-dc-component="material-item"] > [data-dc-part="icon"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="material-item"] [data-dc-part="title"]')?.textContent).toBe('Action Button')
     }
     finally {
       app.unmount()
@@ -114,8 +116,10 @@ describe('dcMaterialItem', () => {
       expect(customContent.textContent).toBe('Action Button:button')
       expect(item.classList.contains('dc-material-item--custom')).toBe(true)
       item.dispatchEvent(new Event('dragstart', { bubbles: true, cancelable: true }))
+      await nextTick()
 
       expect(ctx.handleMaterialDragStart).toHaveBeenCalledWith(expect.any(Event), meta)
+      expect(item.getAttribute('data-dc-state')).toBe('dragging')
     }
     finally {
       app.unmount()

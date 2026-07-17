@@ -49,23 +49,27 @@ export default defineComponent({
     }
 
     return () =>
-      h('div', { class: 'dc-material-panel' }, [
-        h('div', { class: 'dc-material-panel__header' }, [
-          h('h2', { class: 'dc-material-panel__heading' }, t('panel.materials.title', '物料')),
+      h('div', { 'class': 'dc-material-panel', 'data-dc-component': 'material-panel' }, [
+        h('div', { 'class': 'dc-material-panel__header', 'data-dc-part': 'header' }, [
+          h('h2', { 'class': 'dc-material-panel__heading', 'data-dc-part': 'heading' }, t('panel.materials.title', '物料')),
         ]),
-        h('div', { class: 'dc-material-panel__search' }, [
-          h(IconSearch, { size: 15, class: 'dc-material-panel__search-icon' }),
+        h('div', { 'class': 'dc-material-panel__search', 'data-dc-part': 'search' }, [
+          h('span', { 'class': 'dc-material-panel__search-icon', 'data-dc-part': 'search-icon' }, [
+            h(IconSearch, { size: 15 }),
+          ]),
           h('input', {
-            type: 'text',
-            class: 'dc-material-panel__search-input',
-            placeholder: t('panel.search.placeholder', '搜索组件...'),
-            value: searchQuery.value,
-            onInput: handleSearchInput,
+            'type': 'text',
+            'class': 'dc-material-panel__search-input',
+            'data-dc-part': 'search-input',
+            'placeholder': t('panel.search.placeholder', '搜索组件...'),
+            'value': searchQuery.value,
+            'onInput': handleSearchInput,
           }),
           searchQuery.value
             ? h('button', {
                 'type': 'button',
                 'class': 'dc-material-panel__search-clear',
+                'data-dc-part': 'search-clear',
                 'title': t('panel.search.clear', '清除搜索'),
                 'aria-label': t('panel.search.clear', '清除搜索'),
                 'onClick': () => { searchQuery.value = '' },
@@ -75,7 +79,7 @@ export default defineComponent({
         // Widget groups
         h(
           'div',
-          { class: 'dc-material-panel__groups' },
+          { 'class': 'dc-material-panel__groups', 'data-dc-part': 'groups' },
           filteredGroups.value.map(group =>
             h(DcMaterialGroup, {
               key: group.name,

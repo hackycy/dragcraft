@@ -28,8 +28,8 @@ features:
     details: 新增、移动、删除、属性更新和全局配置都通过 engine.execute() 进入命令系统，天然接入历史、事件和行为约束。
   - title: 设计器开箱接入
     details: '@dragcraft/designer 负责组合 core、renderer 和 form-generator，业务侧只需要传入物料、组件映射和字段 adapter。'
-  - title: Headless 视觉体系
-    details: '组件逻辑只输出稳定 dc-* class，主题由 @dragcraft/themes 或业务 CSS 接管，可以使用内置皮肤，也可以完全自定义。'
+  - title: 可主题化 UI Shell
+    details: '组件包拥有必要结构样式，@dragcraft/themes 提供完整默认 token 和共享视觉配方，业务通过稳定主题契约增量定制。'
   - title: 面向平台化扩展
     details: 物料展示、画布容器、节点动作、属性面板、字段组件、设备框架和主题变量都通过显式扩展点接入。
 ---
@@ -73,7 +73,7 @@ const designer = createDesigner({
 
 ## 架构一眼看懂
 
-dragcraft 的架构边界刻意保持清晰：core 管状态和命令，designer 管产品化设计器交互，renderer 管 schema 到组件树的渲染，form-generator 管属性表单，themes 和 device-frames 分别承接视觉皮肤与设备外壳。
+dragcraft 的架构边界刻意保持清晰：core 管状态和命令，designer 管产品化设计器交互，renderer 管 schema 到组件树的渲染，form-generator 管属性表单，themes 和 device-frames 分别承接工作台主题与设备外壳。
 
 ```text
 业务应用
@@ -92,7 +92,7 @@ dragcraft 的架构边界刻意保持清晰：core 管状态和命令，designer
 - 业务写入统一经过 `engine.execute()`，撤销重做、事件通知和命令校验不会散落在 UI 里。
 - `form-generator` 不依赖 core，只负责字段渲染和值变更，字段到命令的翻译由 designer 承担。
 - `renderer` 不持久化业务状态，只消费 schema、组件映射、扩展点和事件 hooks。
-- `themes` 不改变组件逻辑，只覆盖稳定 class 和 CSS 变量。
+- `themes` 不改变组件逻辑，只聚合必要结构样式并通过公开 token 与 component/part/state 契约提供工作台视觉。
 - `device-frames` 通过 renderer 的 `containerShell` 接入，让手机、平板、桌面预览成为可替换外壳。
 
 完整设计约束可以继续阅读 [技术架构文档](https://github.com/hackycy/dragcraft/tree/main/.github/architecture)。
@@ -108,7 +108,7 @@ dragcraft 的架构边界刻意保持清晰：core 管状态和命令，designer
 | 实现 flex、grid 或分栏等可承载子节点的物料 | [外部容器物料](/guide/container-materials) |
 | 自定义字段 adapter、联动与 Schema 绑定 | [配置表单与字段](/guide/forms-and-fields) |
 | 替换面板、扩展 rail 或节点动作 | [扩展设计器交互](/guide/extending-the-designer) |
-| 增加设备预览和主题皮肤 | [主题与设备框架](/guide/themes-and-device-frames) |
+| 增加设备预览和工作台主题 | [主题与设备框架](/guide/themes-and-device-frames) |
 | 接入编辑器语言包 | [编辑器国际化](/guide/i18n) |
 | 保存草稿、处理版本冲突并发布 | [保存草稿与发布](/guide/saving-and-publishing) |
 | 确认生产运行时的消费边界 | [运行时集成边界](/guide/runtime-integration) |
@@ -118,5 +118,5 @@ dragcraft 的架构边界刻意保持清晰：core 管状态和命令，designer
 
 - 正在建设小程序、H5 或营销页装修后台，希望沉淀可导入导出的页面 Schema。
 - 需要把运营配置、页面预览、设备外壳、物料管理和属性面板放进同一个设计器体验里。
-- 希望 UI 逻辑、主题皮肤、字段组件和业务物料保持解耦，避免后期扩展时牵一发动全身。
+- 希望 UI 结构、工作台主题、字段组件和业务物料保持解耦，避免后期扩展时牵一发动全身。
 - 希望核心写入链路可测试、可审计、可拦截，并天然支持历史记录和事件订阅。

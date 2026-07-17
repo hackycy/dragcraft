@@ -36,12 +36,13 @@ export default defineComponent({
       return h('button', {
         'type': 'button',
         'class': 'dc-node__handle',
+        'data-dc-component': 'node-handle',
         'onClick': props.onSelect,
         'title': label,
         'aria-label': label,
       }, [
-        h('span', { class: 'dc-node__handle-surface' }, [
-          h('span', { 'class': 'dc-node__handle-icon', 'aria-hidden': 'true' }, [
+        h('span', { 'class': 'dc-node__handle-surface', 'data-dc-part': 'surface' }, [
+          h('span', { 'class': 'dc-node__handle-icon', 'data-dc-part': 'icon', 'aria-hidden': 'true' }, [
             h(IconComponent, { size: 12 }),
           ]),
         ]),

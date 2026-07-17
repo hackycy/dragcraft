@@ -38,6 +38,7 @@ describe('defaultForbiddenOverlay', () => {
 
     try {
       expect(host.querySelector('.dc-forbidden-overlay__text')?.textContent).toBe('当前物料不满足创建条件，无法添加到画布')
+      expect(host.querySelector('[data-dc-component="forbidden-overlay"] > [data-dc-part="text"]')).not.toBeNull()
     }
     finally {
       app.unmount()

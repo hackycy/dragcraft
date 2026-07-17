@@ -9,7 +9,7 @@ function renderIcon(icon: MaterialItemIcon | undefined) {
   if (!icon)
     return null
 
-  return h('span', { class: 'dc-material-item__icon' }, [
+  return h('span', { 'class': 'dc-material-item__icon', 'data-dc-part': 'icon' }, [
     typeof icon === 'string'
       ? icon
       : h(icon, { size: 20 }),
@@ -59,13 +59,14 @@ export default defineComponent({
       const defaultContent = [
         material.thumbnail
           ? h('img', {
-              class: 'dc-material-item__thumbnail',
-              src: material.thumbnail,
-              alt: material.title,
+              'class': 'dc-material-item__thumbnail',
+              'data-dc-part': 'thumbnail',
+              'src': material.thumbnail,
+              'alt': material.title,
             })
           : renderIcon(material.icon),
-        h('span', { class: 'dc-material-item__content' }, [
-          h('span', { class: 'dc-material-item__title' }, material.title),
+        h('span', { 'class': 'dc-material-item__content', 'data-dc-part': 'content' }, [
+          h('span', { 'class': 'dc-material-item__title', 'data-dc-part': 'title' }, material.title),
         ]),
       ]
 
@@ -80,6 +81,8 @@ export default defineComponent({
               'dc-material-item--with-description': !!material.description,
             },
           ],
+          'data-dc-component': 'material-item',
+          'data-dc-state': isDragging.value ? 'dragging' : undefined,
           'draggable': draggable,
           'aria-disabled': disabled,
           'title': material.description ? `${material.title}: ${material.description}` : material.title,

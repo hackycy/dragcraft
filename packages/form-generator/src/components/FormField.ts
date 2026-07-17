@@ -74,11 +74,11 @@ export default defineComponent({
               setValue(normalized)
             },
           })
-        : h('div', { class: 'dc-field-unknown' }, `Unknown field: ${String(field.component)}`)
+        : h('div', { 'class': 'dc-field-unknown', 'data-dc-part': 'unknown' }, `Unknown field: ${String(field.component)}`)
 
       return [
-        h('label', { class: 'dc-form-field__label' }, field.labelKey ? t(field.labelKey, field.label) : field.label),
-        h('div', { class: 'dc-form-field__control' }, [fieldContent]),
+        h('label', { 'class': 'dc-form-field__label', 'data-dc-part': 'label' }, field.labelKey ? t(field.labelKey, field.label) : field.label),
+        h('div', { 'class': 'dc-form-field__control', 'data-dc-part': 'control' }, [fieldContent]),
       ]
     }
 
@@ -96,13 +96,13 @@ export default defineComponent({
 
       if (field.tooltip) {
         children.push(
-          h('div', { class: 'dc-form-field__tooltip' }, field.tooltip),
+          h('div', { 'class': 'dc-form-field__tooltip', 'data-dc-part': 'tooltip' }, field.tooltip),
         )
       }
 
       if (errorMsg) {
         children.push(
-          h('div', { class: 'dc-form-field__error' }, errorMsg),
+          h('div', { 'class': 'dc-form-field__error', 'data-dc-part': 'error' }, errorMsg),
         )
       }
 
@@ -118,7 +118,7 @@ export default defineComponent({
 
       if (span > 1) {
         wrapperClass.push(`dc-form-field--span-${span}`)
-        wrapperStyle['--dc-span'] = String(span)
+        wrapperStyle['--_dc-span'] = String(span)
       }
 
       // show: false -> display: none (CSS hide, preserves DOM)
@@ -128,7 +128,12 @@ export default defineComponent({
 
       return h(
         'div',
-        { class: wrapperClass, style: wrapperStyle },
+        {
+          'class': wrapperClass,
+          'style': wrapperStyle,
+          'data-dc-component': 'form-field',
+          'data-dc-state': [disabled ? 'disabled' : null, errorMsg ? 'error' : null].filter(Boolean).join(' ') || undefined,
+        },
         children,
       )
     }

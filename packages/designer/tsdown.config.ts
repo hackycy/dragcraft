@@ -5,6 +5,11 @@ export default defineConfig({
     'src/index.ts',
   ],
   dts: true,
-  exports: true,
+  exports: {
+    customExports: exports => ({
+      ...exports,
+      './structure.css': './styles/structure.css',
+    }),
+  },
   publint: true,
 })

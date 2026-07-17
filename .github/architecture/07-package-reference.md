@@ -12,7 +12,7 @@
 | `@dragcraft/form-generator` | 配置面板 schema 表单引擎 |
 | `@dragcraft/fields-ant-design-vue` | Ant Design Vue 字段 adapter 包 |
 | `@dragcraft/widgets` | 物料协议与通用工具函数 |
-| `@dragcraft/themes` | CSS 皮肤包 |
+| `@dragcraft/themes` | 工作台主题聚合、令牌与视觉配方 |
 | `@dragcraft/device-frames` | 设备容器框架 |
 | `@dragcraft/icons` | SVG 图标组件库 |
 | `@dragcraft/utils` | 跨包复用纯函数工具 |
@@ -61,7 +61,7 @@
 
 - 依赖 core、renderer、form-generator。
 - 用户显式传入 widget meta、componentMap 和 fieldComponentMap。
-- 主题样式由 themes 或业务 CSS 提供。
+- 必要结构样式由 renderer 包提供，工作台视觉由 themes 或业务主题差异提供。
 
 ## @dragcraft/renderer
 
@@ -152,19 +152,22 @@
 
 职责：
 
-- 为 Headless UI 包提供 CSS 皮肤。
-- 基于 CSS 变量提供 Standard 与 Google Material 3 两套 light 主题。
-- 覆盖 designer、renderer、form-generator、widgets 等 class。
+- 聚合 designer、renderer 与 form-generator 的必要结构 CSS。
+- 提供完整 Standard 默认令牌、共享基线视觉配方与 Material 差异。
+- 发布机器可读主题契约；不负责画布内业务 widget 的内容主题。
 
 主要入口：
 
 - `@dragcraft/themes` 或 `@dragcraft/themes/standard`。
 - `@dragcraft/themes/material`。
+- `@dragcraft/themes/structure`。
+- `@dragcraft/themes/theme-contract.json` 与 `@dragcraft/themes/css-custom-data.json`。
 
 依赖与协作：
 
 - 不改变组件逻辑。
-- 业务可覆盖 CSS 变量或完全自定义样式。
+- 构建时通过 designer、renderer、form-generator 的公开 `structure.css` 子路径聚合结构层；发布的每个主题 CSS 都是可独立导入的完整文件。
+- 业务优先增量覆盖 token，必要时使用公开 component/part/state 编写差异配方。
 
 ## @dragcraft/device-frames
 

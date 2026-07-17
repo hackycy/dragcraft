@@ -304,26 +304,23 @@ h(FormGenerator, {
 
 业务特化字段仍由业务侧注册到同一个 `fieldComponentMap`。如果业务希望获得 schema 侧的 `componentProps` 类型提示，应为字段包导出 `ComponentPropsMap`，并配合 `TypedFormSchema<PropsMap>` 使用。
 
-## CSS Class 层级
+## 主题契约层级
 
 ```plaintext
-.dc-form-generator
-  .dc-form-section
-    .dc-form-section__header
-      .dc-form-section__title
-      .dc-form-section__toggle
-    .dc-form-section__body
-      .dc-form-field
-        .dc-form-field__label
-        .dc-form-field__control
-        .dc-form-field__tooltip
-        .dc-form-field__error
-        .dc-form-field--disabled
-        .dc-form-field--error
-      .dc-field-input
-      .dc-field-number
-      .dc-field-textarea
-      .dc-field-unknown
+[data-dc-component="form-generator"]
+  [data-dc-component="form-section"]
+    [data-dc-part="header"]
+      [data-dc-part="title"]
+      [data-dc-part="toggle"]
+    [data-dc-part="body"]
+      [data-dc-component="form-field"]
+        [data-dc-part="label"]
+        [data-dc-part="control"]
+        [data-dc-part="tooltip"]
+        [data-dc-part="error"]
+        [data-dc-part="unknown"]
 ```
 
-form-generator 不内置样式，class 由 `@dragcraft/themes` 或业务 CSS 实现视觉效果。
+form-generator 通过 `@dragcraft/form-generator/structure.css` 提供 section/field 外壳的必要结构样式；完整工作台主题会自动聚合该入口。字段 adapter 渲染的具体控件由对应 UI 库负责视觉，Themes 不维护不存在于 form-generator DOM 的字段 class。
+
+`form-section` 与 Designer 的 `material-group` 共享 `header`、`title`、`toggle` 基线视觉配方和折叠反馈：相同高度、内边距、hover/focus 表面与 chevron transition。两个组件仍分别拥有结构 CSS 和状态逻辑；共享发生在 Themes 的公开 hook recipe，不建立 Form Generator 到 Designer 的代码依赖。

@@ -47,6 +47,7 @@ export default defineComponent({
           'dc-left-sidebar__tab',
           { 'dc-left-sidebar__tab--active': active },
         ],
+        'data-dc-part': 'tab',
         'title': label,
         'aria-label': label,
         'aria-pressed': active,
@@ -73,25 +74,32 @@ export default defineComponent({
         : t('workspace.left.open', '展开左侧栏')
       const railExtension = extensions.leftRailRenderer?.({ engine, workspace, t })
 
-      return h('div', { class: 'dc-left-sidebar' }, [
+      return h('div', {
+        'class': 'dc-left-sidebar',
+        'data-dc-component': 'left-sidebar',
+        'data-dc-state': open ? 'open' : 'closed',
+      }, [
         h('div', {
           'class': 'dc-left-sidebar__surface',
+          'data-dc-part': 'surface',
           'aria-hidden': workspace.mode.value === 'compact' && !open,
           'inert': workspace.mode.value === 'compact' && !open ? '' : undefined,
         }, [
           h('div', {
             'class': 'dc-left-sidebar__rail',
+            'data-dc-part': 'rail',
             'role': 'tablist',
             'aria-label': t('workspace.left.label', '物料与结构'),
           }, [
             ...LEFT_PANEL_TABS.map(tab => renderTabButton(tab)),
-            railExtension ? h('div', { class: 'dc-sidebar-rail__extension' }, [railExtension]) : null,
+            railExtension ? h('div', { 'class': 'dc-sidebar-rail__extension', 'data-dc-part': 'rail-extension' }, [railExtension]) : null,
           ]),
-          h('div', { class: 'dc-left-sidebar__content' }, [renderActivePanel()]),
+          h('div', { 'class': 'dc-left-sidebar__content', 'data-dc-part': 'content' }, [renderActivePanel()]),
         ]),
         h('button', {
           'type': 'button',
           'class': 'dc-sidebar-toggle dc-sidebar-toggle--left',
+          'data-dc-part': 'toggle',
           'title': toggleLabel,
           'aria-label': toggleLabel,
           'aria-expanded': open,

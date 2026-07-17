@@ -198,6 +198,7 @@ export default defineComponent({
         'div',
         {
           'class': 'dc-root-renderer',
+          'data-dc-component': 'root-renderer',
           'data-node-id': 'root',
           'data-node-type': 'root',
         },

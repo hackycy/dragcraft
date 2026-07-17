@@ -10,18 +10,27 @@
     ".": "./dist/standard.css",
     "./standard": "./dist/standard.css",
     "./material": "./dist/material.css",
+    "./structure": "./dist/structure.css",
+    "./theme-contract.json": "./dist/theme-contract.json",
+    "./css-custom-data.json": "./dist/css-custom-data.json",
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist/*.css",
+    "dist/*.json"
   ],
   "scripts": {
-    "build": "rm -rf dist && postcss src/standard/index.css -o dist/standard.css && postcss src/material/index.css -o dist/material.css",
-    "dev": "pnpm run build --watch"
+    "build": "pnpm generate:contract && pnpm check && tsdown",
+    "check": "node scripts/validate-theme-contract.mjs && node scripts/validate-theme-interactions.mjs",
+    "generate:contract": "node scripts/generate-theme-custom-data.mjs",
+    "test": "pnpm check",
+    "dev": "tsdown --watch"
   },
   "devDependencies": {
+    "@dragcraft/designer": "workspace:*",
+    "@dragcraft/form-generator": "workspace:*",
+    "@dragcraft/renderer": "workspace:*",
     "postcss": "catalog:cli",
-    "postcss-cli": "catalog:cli",
-    "postcss-import": "catalog:cli"
+    "postcss-selector-parser": "catalog:cli"
   }
 }

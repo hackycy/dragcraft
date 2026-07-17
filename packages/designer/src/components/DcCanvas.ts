@@ -77,69 +77,83 @@ export default defineComponent({
       mutationObserver?.disconnect()
     })
 
-    return () => h('div', {
-      class: ['dc-canvas', {
-        'dc-canvas--dragging': isDragging.value,
-        'dc-canvas--forbidden': isForbidden.value && isDragging.value,
-        'dc-canvas--hand': canvasPan.panEnabled.value,
-        'dc-canvas--panning': canvasPan.isPanning.value,
-      }],
-    }, [
-      h(DcCanvasControls, {
-        interactionMode: canvasPan.mode.value,
-        onModeChange: canvasPan.setMode,
-        onResetView: canvasPan.reset,
-      }),
-      h('div', {
-        'ref': viewportRef,
-        'class': 'dc-canvas__viewport',
-        'data-dc-interaction-boundary': '',
-        'onDragover': handleCanvasDragOver,
-        'onDragleave': handleCanvasDragLeave,
-        'onDrop': handleCanvasDrop,
-        'onClick': handleClick,
-        'onClickCapture': canvasPan.handleClickCapture,
-        'onPointerdownCapture': canvasPan.handlePointerDown,
-        'onPointerenter': canvasPan.handlePointerEnter,
-        'onPointerleave': canvasPan.handlePointerLeave,
-        'onPointermoveCapture': canvasPan.handlePointerMove,
-        'onPointerupCapture': canvasPan.handlePointerUp,
-        'onPointercancelCapture': canvasPan.handlePointerUp,
+    return () => {
+      const themeStates = [
+        isDragging.value ? 'dragging' : null,
+        isForbidden.value && isDragging.value ? 'forbidden' : null,
+        canvasPan.panEnabled.value ? 'hand' : null,
+        canvasPan.isPanning.value ? 'panning' : null,
+      ].filter(Boolean).join(' ') || undefined
+
+      return h('div', {
+        'class': ['dc-canvas', {
+          'dc-canvas--dragging': isDragging.value,
+          'dc-canvas--forbidden': isForbidden.value && isDragging.value,
+          'dc-canvas--hand': canvasPan.panEnabled.value,
+          'dc-canvas--panning': canvasPan.isPanning.value,
+        }],
+        'data-dc-component': 'canvas',
+        'data-dc-state': themeStates,
       }, [
+        h(DcCanvasControls, {
+          interactionMode: canvasPan.mode.value,
+          onModeChange: canvasPan.setMode,
+          onResetView: canvasPan.reset,
+        }),
         h('div', {
-          'class': 'dc-canvas__stage',
-          'data-dc-canvas-stage': '',
-          'style': {
-            '--dc-canvas-pan-x': `${canvasPan.offset.value.x}px`,
-            '--dc-canvas-pan-y': `${canvasPan.offset.value.y}px`,
-          },
+          'ref': viewportRef,
+          'class': 'dc-canvas__viewport',
+          'data-dc-part': 'viewport',
+          'data-dc-interaction-boundary': '',
+          'onDragover': handleCanvasDragOver,
+          'onDragleave': handleCanvasDragLeave,
+          'onDrop': handleCanvasDrop,
+          'onClick': handleClick,
+          'onClickCapture': canvasPan.handleClickCapture,
+          'onPointerdownCapture': canvasPan.handlePointerDown,
+          'onPointerenter': canvasPan.handlePointerEnter,
+          'onPointerleave': canvasPan.handlePointerLeave,
+          'onPointermoveCapture': canvasPan.handlePointerMove,
+          'onPointerupCapture': canvasPan.handlePointerUp,
+          'onPointercancelCapture': canvasPan.handlePointerUp,
         }, [
-          h('div', { ref: contentRef, class: 'dc-canvas__content' }, [
-            h(RootRenderer, {
-              engine,
-              componentMap,
-              extensions: rendererExtensions.value,
-              eventHooks,
-              actionInterceptors,
-              actionRegistry,
-              activeDestination,
-              containerDropDecision,
-              onContainerDragOver: handleContainerDragOver,
-              onContainerDragLeave: handleContainerDragLeave,
-              onContainerDrop: handleContainerDrop,
-              dragOverNodeId,
-              dragOverIndex,
-              isForbidden,
-              forbiddenReason,
-              interactionBoundary: viewportRef,
-            }),
+          h('div', {
+            'class': 'dc-canvas__stage',
+            'data-dc-part': 'stage',
+            'data-dc-canvas-stage': '',
+            'style': {
+              '--_dc-canvas-pan-x': `${canvasPan.offset.value.x}px`,
+              '--_dc-canvas-pan-y': `${canvasPan.offset.value.y}px`,
+            },
+          }, [
+            h('div', { 'ref': contentRef, 'class': 'dc-canvas__content', 'data-dc-part': 'content' }, [
+              h(RootRenderer, {
+                engine,
+                componentMap,
+                extensions: rendererExtensions.value,
+                eventHooks,
+                actionInterceptors,
+                actionRegistry,
+                activeDestination,
+                containerDropDecision,
+                onContainerDragOver: handleContainerDragOver,
+                onContainerDragLeave: handleContainerDragLeave,
+                onContainerDrop: handleContainerDrop,
+                dragOverNodeId,
+                dragOverIndex,
+                isForbidden,
+                forbiddenReason,
+                interactionBoundary: viewportRef,
+              }),
+            ]),
           ]),
         ]),
-      ]),
-      h('div', {
-        'class': 'dc-canvas__interaction-layer',
-        'data-dc-canvas-interaction-layer': '',
-      }),
-    ])
+        h('div', {
+          'class': 'dc-canvas__interaction-layer',
+          'data-dc-part': 'interaction-layer',
+          'data-dc-canvas-interaction-layer': '',
+        }),
+      ])
+    }
   },
 })
