@@ -11,6 +11,14 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
   return { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children } }
 }
 
+function createImportedEngine(schema: DesignerSchema): ReturnType<typeof createEngine> {
+  const engine = createEngine()
+  const result = engine.importSchema(schema)
+  if (!result.ok)
+    throw new Error(`Test schema rejected: ${result.diagnostics.map(item => item.code).join(', ')}`)
+  return engine
+}
+
 function registerSingleRegionContainer(engine: ReturnType<typeof createEngine>): void {
   engine.registerWidget({
     type: 'single-layout',
@@ -52,7 +60,7 @@ function makeVariantEngine(migrateVariant: ContainerDefinition['migrateVariant']
       regions: { left: [makeNode('left')], right: [makeNode('right')] },
     },
   }
-  const engine = createEngine({ initialSchema: makeSchema([container]) })
+  const engine = createEngine()
   engine.registerWidget({
     type: 'variant-layout',
     title: 'Variant',
@@ -74,10 +82,18 @@ function makeVariantEngine(migrateVariant: ContainerDefinition['migrateVariant']
       migrateVariant,
     },
   })
+  const result = engine.importSchema(makeSchema([container]))
+  if (!result.ok)
+    throw new Error(`Test schema rejected: ${result.diagnostics.map(item => item.code).join(', ')}`)
   return engine
 }
 
 describe('createEngine', () => {
+  if (false) {
+    // @ts-expect-error Core schemas must be imported after registry setup.
+    createEngine({ initialSchema: makeSchema() })
+  }
+
   it('initializes with default schema', () => {
     const engine = createEngine()
     expect(engine.store.schema.value.version).toBe('1.0.0')
@@ -85,9 +101,13 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
-  it('initializes with provided schema', () => {
+  it('imports a provided schema after engine creation', () => {
     const schema = makeSchema([makeNode('a')])
-    const engine = createEngine({ initialSchema: schema })
+    const engine = createEngine()
+
+    const result = engine.importSchema(schema)
+
+    expect(result.ok).toBe(true)
     expect(engine.store.schema.value.root.children).toHaveLength(1)
     engine.dispose()
   })
@@ -144,7 +164,7 @@ describe('createEngine', () => {
     ['an existing node ID', 'a'],
     ['the document root ID', 'root'],
   ])('execute ADD_NODE rejects %s without schema, history, or events', (_label, id) => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
     const before = engine.exportSchema()
     const nodeAdded = vi.fn()
     const schemaChanged = vi.fn()
@@ -183,7 +203,7 @@ describe('createEngine', () => {
   })
 
   it('rejects nested command execution from canPlace without nested history or events', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeContainerNode()]) })
+    const engine = createEngine()
     let nestedResult: ReturnType<typeof engine.execute> | undefined
     engine.registerWidget({
       type: 'text',
@@ -212,6 +232,9 @@ describe('createEngine', () => {
         },
       },
     })
+    const imported = engine.importSchema(makeSchema([makeContainerNode()]))
+    if (!imported.ok)
+      throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
     const nodeAdded = vi.fn()
     const schemaChanged = vi.fn()
     engine.eventHub.on(EventName.NODE_ADDED, nodeAdded)
@@ -239,7 +262,7 @@ describe('createEngine', () => {
   })
 
   it('execute UPDATE_PROPS updates node props', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
     engine.execute({
       type: CommandType.UPDATE_PROPS,
       payload: { nodeId: 'a', props: { label: 'updated' } },
@@ -248,9 +271,25 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
+  it.each([
+    [CommandType.UPDATE_PROPS, { nodeId: 'a', props: JSON.parse('{"__proto__":{"dragcraftPolluted":true}}') }],
+    [CommandType.SET_GLOBAL_CONFIG, { config: JSON.parse('{"__proto__":{"dragcraftPolluted":true}}') }],
+  ])('execute %s does not pollute object prototypes', (type, payload) => {
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
+
+    try {
+      engine.execute({ type, payload })
+      expect(({} as Record<string, unknown>).dragcraftPolluted).toBeUndefined()
+    }
+    finally {
+      delete (Object.prototype as Record<string, unknown>).dragcraftPolluted
+      engine.dispose()
+    }
+  })
+
   it('invalid MOVE_NODE does not push history or emit schema changed', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
     const schemaChanged = vi.fn()
     engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
@@ -266,7 +305,7 @@ describe('createEngine', () => {
   })
 
   it('same-index MOVE_NODE does not push history or emit schema changed', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a'), makeNode('b')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a'), makeNode('b')]))
     const schemaChanged = vi.fn()
     engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
@@ -283,7 +322,7 @@ describe('createEngine', () => {
 
   it('invalid REMOVE_NODE does not push history or emit schema changed', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
     const schemaChanged = vi.fn()
     engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
@@ -297,7 +336,7 @@ describe('createEngine', () => {
 
   it('invalid UPDATE_PROPS does not push history or emit schema changed', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
     const schemaChanged = vi.fn()
     engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
@@ -313,7 +352,7 @@ describe('createEngine', () => {
   })
 
   it('execute REMOVE_NODE removes a node', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a'), makeNode('b')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a'), makeNode('b')]))
     engine.execute({ type: CommandType.REMOVE_NODE, payload: { nodeId: 'a' } })
     expect(engine.store.schema.value.root.children).toHaveLength(1)
     expect(engine.store.schema.value.root.children![0].id).toBe('b')
@@ -400,7 +439,7 @@ describe('createEngine', () => {
   })
 
   it('exportSchema returns deep clone', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
     const exported = engine.exportSchema()
     expect(exported.root.children).toHaveLength(1)
     // Verify it's a clone
@@ -534,7 +573,7 @@ describe('createEngine', () => {
       container: { variant: 'single', regions: { content: {} } },
     } as unknown as SchemaNode]), 'CONTAINER_REGION_CHILDREN_INVALID'],
   ])('importSchema diagnoses %s without throwing', (_label, input, code) => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('current')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('current')]))
     const before = engine.exportSchema()
 
     const result = engine.importSchema(input)
@@ -548,7 +587,7 @@ describe('createEngine', () => {
   })
 
   it('diagnoses malformed structure before running migrations', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('current')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('current')]))
     const migrate = vi.fn((schema: DesignerSchema) => ({
       ...schema,
       root: { ...schema.root, children: schema.root.children!.map(node => ({ ...node })) },
@@ -575,7 +614,7 @@ describe('createEngine', () => {
   })
 
   it('state.getSchema returns a clone that cannot mutate internal schema', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
 
     const snapshot = engine.state.getSchema()
     snapshot.root.children!.push(makeNode('b'))
@@ -586,7 +625,7 @@ describe('createEngine', () => {
   })
 
   it('state.getNodeById returns a clone that cannot mutate internal schema', () => {
-    const engine = createEngine({ initialSchema: makeSchema([makeNode('a')]) })
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
 
     const node = engine.state.getNodeById('a')
     node!.props.label = 'mutated'

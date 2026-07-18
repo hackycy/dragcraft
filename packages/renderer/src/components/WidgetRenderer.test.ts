@@ -588,7 +588,6 @@ describe('widgetRenderer', () => {
       id: 'preserved-child',
       type: 'text',
       props: {},
-      layout: { placement: { kind: 'layer', layer: 'float' }, order: 12 },
     }
     const engine = createEngineWithContainer([child])
     const ExternalContainer = defineComponent({
@@ -875,24 +874,33 @@ function createEngineWithContainer(
   otherRegions: Record<string, SchemaNode[]> = {},
   layout?: SchemaNode['layout'],
 ) {
-  const engine = createEngine({
-    initialSchema: {
-      version: '1.0.0',
-      globalConfig: {},
-      root: {
-        id: 'root',
-        type: 'root',
+  const engine = createEngine()
+  engine.registerWidget({
+    type: 'text',
+    title: 'Text',
+    group: 'content',
+    defaultProps: {},
+    formSchema: { sections: [] },
+    mask: false,
+  })
+  const imported = engine.importSchema({
+    version: '1.0.0',
+    globalConfig: {},
+    root: {
+      id: 'root',
+      type: 'root',
+      props: {},
+      children: [{
+        id: 'layout',
+        type: 'split-layout',
         props: {},
-        children: [{
-          id: 'layout',
-          type: 'split-layout',
-          props: {},
-          layout,
-          container: { variant: 'split', regions: { left, right: [], ...otherRegions } },
-        }],
-      },
+        layout,
+        container: { variant: 'split', regions: { left, right: [], ...otherRegions } },
+      }],
     },
   })
+  if (!imported.ok)
+    throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
   if (registerContainer) {
     engine.registerWidget({
       type: 'split-layout',
@@ -914,14 +922,6 @@ function createEngineWithContainer(
       },
     })
   }
-  engine.registerWidget({
-    type: 'text',
-    title: 'Text',
-    group: 'content',
-    defaultProps: {},
-    formSchema: { sections: [] },
-    mask: false,
-  })
   return engine
 }
 

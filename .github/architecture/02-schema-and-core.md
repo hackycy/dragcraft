@@ -278,6 +278,8 @@ undo/redo 直接恢复快照，不经过 `CommandBus`，避免历史回放再次
 
 `createEngine(options?)` 组装所有子系统：
 
+Core engine 始终从默认空 schema 启动，`EngineOptions` 只包含运行参数。加载已有页面时先注册 widget metadata 与容器定义，再调用 `importSchema()`，使初始数据经过与后续导入相同的结构和注册表校验。Designer 的 `engineOptions.initialSchema` 是上层便捷入口，由 `createDesigner()` 按这个顺序完成注册和导入。
+
 ```ts
 interface DesignerEngine {
   store: SchemaStoreInstance

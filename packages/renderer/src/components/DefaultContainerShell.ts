@@ -1,6 +1,7 @@
 import type { DesignerSchema } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
 import type { NodeSelectionPresentationHost } from '../selection-presentation'
+import { DEFAULT_LAYOUT_REGION } from '@dragcraft/core'
 import { defineComponent, h } from 'vue'
 import { normalizeStyle } from '../style-utils'
 
@@ -13,15 +14,15 @@ const DefaultContainerShell = defineComponent({
       default: false,
     },
     regionVNodes: {
-      type: Object,
+      type: Object as PropType<Record<string, VNode[]>>,
       default: () => ({}),
     },
     chromeVNodes: {
-      type: Array,
+      type: Array as PropType<VNode[]>,
       default: () => [],
     },
     layerVNodes: {
-      type: Object,
+      type: Object as PropType<Record<string, VNode[]>>,
       default: () => ({}),
     },
     forbiddenOverlayVNode: {
@@ -43,8 +44,13 @@ const DefaultContainerShell = defineComponent({
   },
 
   setup(props, { slots }) {
-    return () =>
-      h(
+    return () => {
+      const additionalRegions = Object.entries(props.regionVNodes)
+        .filter(([region]) => region !== DEFAULT_LAYOUT_REGION)
+        .flatMap(([, nodes]) => nodes)
+      const layerNodes = Object.values(props.layerVNodes).flat()
+
+      return h(
         'div',
         {
           'class': 'dc-container-shell',
@@ -54,6 +60,9 @@ const DefaultContainerShell = defineComponent({
         },
         [
           ...(slots.default?.() ?? []),
+          ...additionalRegions,
+          ...props.chromeVNodes,
+          ...layerNodes,
           h('div', {
             'ref': (element: unknown) => {
               props.selectionPresentation?.registerPlane('root', element instanceof HTMLElement ? element : null)
@@ -81,6 +90,7 @@ const DefaultContainerShell = defineComponent({
           props.forbiddenOverlayVNode,
         ],
       )
+    }
   },
 })
 

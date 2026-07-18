@@ -243,9 +243,9 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   function computeDropIndex(e: DragEvent, sortScope: string): number {
     const canvasEl = e.currentTarget as HTMLElement
-    const widgetEls = canvasEl.querySelectorAll<HTMLElement>(
-      `[data-dc-sort-scope="${sortScope}"]`,
-    )
+    const widgetEls = Array.from(
+      canvasEl.querySelectorAll<HTMLElement>('[data-dc-sort-scope]'),
+    ).filter(element => element.dataset.dcSortScope === sortScope)
     const mouseY = e.clientY
     for (let i = 0; i < widgetEls.length; i++) {
       const rect = widgetEls[i].getBoundingClientRect()

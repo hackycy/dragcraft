@@ -21,7 +21,7 @@ export class EventEmitter {
   emit(event: string, ...args: unknown[]): void {
     const listeners = this.events.get(event)
     if (listeners) {
-      listeners.forEach((listener) => {
+      listeners.slice().forEach((listener) => {
         try {
           listener(...args)
         }
@@ -34,8 +34,8 @@ export class EventEmitter {
 
   once(event: string, listener: (...args: unknown[]) => void): void {
     const wrapper = (...args: unknown[]): void => {
-      listener(...args)
       this.off(event, wrapper)
+      listener(...args)
     }
     this.on(event, wrapper)
   }

@@ -3,6 +3,15 @@
   "type": "module",
   "version": "0.0.0",
   "description": "Product-grade Standard and Google Material themes for dragcraft",
+  "author": "hackycy <hackycy@outlook.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/hackycy/dragcraft#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hackycy/dragcraft.git"
+  },
+  "bugs": "https://github.com/hackycy/dragcraft/issues",
+  "keywords": [],
   "sideEffects": [
     "**/*.css"
   ],

@@ -41,7 +41,7 @@ const definition: ContainerDefinition = {
 }
 
 function makeContainerEngine() {
-  const engine = createEngine({ initialSchema: makeSchema([makeContainer(), makeNode('after')]) })
+  const engine = createEngine()
   engine.registerWidget({
     type: 'text',
     title: 'Text',
@@ -57,6 +57,9 @@ function makeContainerEngine() {
     formSchema: { sections: [] },
     container: definition,
   })
+  const result = engine.importSchema(makeSchema([makeContainer(), makeNode('after')]))
+  if (!result.ok)
+    throw new Error(`Test schema rejected: ${result.diagnostics.map(item => item.code).join(', ')}`)
   return engine
 }
 

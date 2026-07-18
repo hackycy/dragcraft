@@ -620,7 +620,6 @@ export interface HistoryEntry {
 // ──────────────────────────────────────────
 
 export interface EngineOptions {
-  initialSchema?: DesignerSchema
   maxHistorySize?: number
 }
 

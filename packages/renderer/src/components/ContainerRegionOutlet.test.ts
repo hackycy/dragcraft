@@ -32,23 +32,22 @@ function mountExternalSplit(options: MountOptions = {}) {
   const onContainerDragOver = options.onContainerDragOver ?? vi.fn()
   const onContainerDragLeave = options.onContainerDragLeave ?? vi.fn()
   const onContainerDrop = options.onContainerDrop ?? vi.fn()
-  const engine = createEngine({
-    initialSchema: {
-      version: '1.0.0',
-      globalConfig: {},
-      root: {
-        id: 'root',
-        type: 'root',
+  const schema = {
+    version: '1.0.0',
+    globalConfig: {},
+    root: {
+      id: 'root',
+      type: 'root',
+      props: {},
+      children: [{
+        id: 'layout',
+        type: 'split-layout',
         props: {},
-        children: [{
-          id: 'layout',
-          type: 'split-layout',
-          props: {},
-          container: { variant: 'split', regions: { left: nodes, right: [right] } },
-        }],
-      },
+        container: { variant: 'split', regions: { left: nodes, right: [right] } },
+      }],
     },
-  })
+  }
+  const engine = createEngine()
   engine.registerWidget({
     type: 'split-layout',
     title: 'Split layout',
@@ -79,6 +78,9 @@ function mountExternalSplit(options: MountOptions = {}) {
     formSchema: { sections: [] },
     mask: false,
   })
+  const imported = engine.importSchema(schema)
+  if (!imported.ok)
+    throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
 
   const SplitMaterial = defineComponent({
     setup() {

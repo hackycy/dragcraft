@@ -10,6 +10,7 @@ import type {
   SchemaNode,
   WidgetMeta,
 } from './types'
+import { cloneDeep } from '@dragcraft/utils'
 import { describe, expect, it, vi } from 'vitest'
 import {
   createContainerState,
@@ -191,10 +192,10 @@ describe('resolvePlacementDecision', () => {
         return { allowed: true }
       },
     })
-    const schemaBefore = structuredClone(context.callbackContext.schema)
-    const containerBefore = structuredClone(context.callbackContext.container)
-    const childBefore = structuredClone(context.callbackContext.child)
-    const regionBefore = structuredClone(context.callbackContext.region)
+    const schemaBefore = cloneDeep(context.callbackContext.schema)
+    const containerBefore = cloneDeep(context.callbackContext.container)
+    const childBefore = cloneDeep(context.callbackContext.child)
+    const regionBefore = cloneDeep(context.callbackContext.region)
 
     expect(resolvePlacementDecision(context)).toEqual({ allowed: true })
     expect(context.callbackContext.schema).toEqual(schemaBefore)

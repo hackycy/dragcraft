@@ -39,6 +39,10 @@ export interface DesignerWorkspaceController {
   closeDrawers: () => void
 }
 
+export interface DesignerEngineOptions extends EngineOptions {
+  initialSchema?: DesignerSchema
+}
+
 // ──────────────────────────────────────────
 // Widget group config (inline definition to avoid @dragcraft/widgets dependency)
 // ──────────────────────────────────────────
@@ -123,7 +127,7 @@ export interface MaterialItemRenderProps {
  */
 export interface DesignerOptions {
   /** Core engine options (initialSchema, maxHistorySize) */
-  engineOptions?: EngineOptions
+  engineOptions?: DesignerEngineOptions
   /** Widget metas to register with the engine */
   widgetMetas?: DesignerWidgetMeta[]
   /** Widget type → Vue component map for canvas rendering */

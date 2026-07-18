@@ -32,6 +32,36 @@ describe('utils exports', () => {
     expect(listener).toHaveBeenCalledTimes(1)
   })
 
+  it('notifies later listeners when a once listener removes itself', () => {
+    const emitter = new EventEmitter()
+    const calls: string[] = []
+    emitter.once('ready', () => calls.push('once'))
+    emitter.on('ready', () => calls.push('on'))
+
+    emitter.emit('ready')
+    emitter.emit('ready')
+
+    expect(calls).toEqual(['once', 'on', 'on'])
+  })
+
+  it('removes a once listener before invoking a failing callback', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const emitter = new EventEmitter()
+    const listener = vi.fn(() => {
+      throw new Error('listener failed')
+    })
+    emitter.once('ready', listener)
+
+    try {
+      emitter.emit('ready')
+      emitter.emit('ready')
+      expect(listener).toHaveBeenCalledOnce()
+    }
+    finally {
+      error.mockRestore()
+    }
+  })
+
   it('creates i18n instances with nested messages and runtime merges', () => {
     const i18n = createI18n('zh-CN', {
       'zh-CN': { common: { save: '保存' } },

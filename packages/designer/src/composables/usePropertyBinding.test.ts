@@ -44,8 +44,11 @@ describe('usePropertyBinding', () => {
   let engine: DesignerEngine
 
   beforeEach(() => {
-    engine = createEngine({ initialSchema: makeSchema([makeNode('a', 'text', { label: 'Hello' })]) })
+    engine = createEngine()
     engine.registerWidget(makeMeta('text', { sections: [{ title: 'Basic', fields: [] }] }))
+    const imported = engine.importSchema(makeSchema([makeNode('a', 'text', { label: 'Hello' })]))
+    if (!imported.ok)
+      throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
   })
 
   it('selectedNode is null when nothing selected', () => {

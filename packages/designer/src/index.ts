@@ -39,6 +39,7 @@ export { designerMessages } from './messages'
 // ── Types ───────────────────────────────
 export type {
   DesignerContext,
+  DesignerEngineOptions,
   DesignerExtensions,
   DesignerInstance,
   DesignerOptions,

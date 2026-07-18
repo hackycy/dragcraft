@@ -59,7 +59,7 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   const maxHistorySize = options?.maxHistorySize ?? DEFAULT_MAX_HISTORY_SIZE
 
   const eventHub = createEventHub()
-  const store = createSchemaStore(options?.initialSchema, (id) => {
+  const store = createSchemaStore(undefined, (id) => {
     eventHub.emit(EventName.SELECTION_CHANGED, id)
   })
   const registry = createRegistry()

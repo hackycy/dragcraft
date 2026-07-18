@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "happy-dom": "catalog:testing",
+    "postcss": "catalog:cli",
     "vitest": "catalog:testing",
     "vue": "catalog:vue"
   }

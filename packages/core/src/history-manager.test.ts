@@ -169,6 +169,23 @@ describe('createHistoryManager', () => {
       expect(history.canUndo()).toBe(false)
     })
 
+    it('discardTransaction emits the restored schema', () => {
+      const { store, eventHub, history } = setup()
+      const schemas: DesignerSchema[] = []
+      const transactionStates: boolean[] = []
+      eventHub.on('schema:changed', (schema) => {
+        schemas.push(schema as DesignerSchema)
+        transactionStates.push(history.isInTransaction())
+      })
+      history.beginTransaction()
+      store.setSchema(makeSchema('discarded'))
+
+      history.discardTransaction()
+
+      expect(schemas.map(schema => schema.root.props.label)).toEqual(['initial'])
+      expect(transactionStates).toEqual([false])
+    })
+
     it('nested beginTransaction warns and ignores', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const { history } = setup()

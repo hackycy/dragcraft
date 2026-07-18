@@ -147,12 +147,15 @@ export function createHistoryManager(
       return
     }
 
+    const restored = transactionSnapshot !== null
     if (transactionSnapshot) {
       store.setSchema(transactionSnapshot)
     }
 
     resetTransaction()
     emitChange()
+    if (restored)
+      eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
   }
 
   function isInTransaction(): boolean {

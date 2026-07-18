@@ -188,7 +188,7 @@ export default defineComponent({
       }
 
       // Empty state placeholder (only when no children and not dragging)
-      const isEmpty = (plan.sortScopes.get(DEFAULT_SORT_SCOPE)?.length ?? 0) === 0 && !isDragOver
+      const isEmpty = contentVNodes.length === 0 && !isDragOver
       const ContainerShellComponent = ContainerShell.value
       const fallbackForbiddenOverlayVNode = forbiddenOverlayVNode && !handlesForbiddenOverlay(ContainerShellComponent)
         ? createForbiddenOverlayVNode()

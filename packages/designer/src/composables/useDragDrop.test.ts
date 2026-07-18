@@ -53,12 +53,13 @@ function makeContainerEngine(
   definition: ContainerDefinition = splitDefinition,
   extraRootNodes: SchemaNode[] = [],
 ): DesignerEngine {
-  const result = createEngine({
-    initialSchema: makeSchema([makeContainer('layout', regions), ...extraRootNodes]),
-  })
+  const result = createEngine()
   result.registerWidget(makeMeta('text'))
   result.registerWidget(makeMeta('image'))
   result.registerWidget(makeMeta('split-layout', { container: definition }))
+  const imported = result.importSchema(makeSchema([makeContainer('layout', regions), ...extraRootNodes]))
+  if (!imported.ok)
+    throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
   return result
 }
 
@@ -91,11 +92,12 @@ describe('useDragDrop', () => {
   let engine: DesignerEngine
 
   beforeEach(() => {
-    engine = createEngine({
-      initialSchema: makeSchema([makeNode('a', 'text'), makeNode('b', 'button')]),
-    })
+    engine = createEngine()
     engine.registerWidget(makeMeta('text'))
     engine.registerWidget(makeMeta('button'))
+    const imported = engine.importSchema(makeSchema([makeNode('a', 'text'), makeNode('b', 'button')]))
+    if (!imported.ok)
+      throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
   })
 
   it('initial state has no drag-over', () => {
@@ -104,6 +106,25 @@ describe('useDragDrop', () => {
     expect(dd.dragOverIndex.value).toBeNull()
     expect(dd.isForbidden.value).toBe(false)
     expect(dd.forbiddenReason.value).toBeNull()
+  })
+
+  it('handles arbitrary sort scope identifiers during canvas drag-over', () => {
+    const sortScope = 'hero"scope'
+    const meta = makeMeta('image', {
+      defaultLayout: { placement: { kind: 'flow', sortScope } },
+    })
+    engine.registerWidget(meta)
+    const dd = useDragDrop(engine)
+    dd.handleMaterialDragStart(mockDragEvent(), meta)
+    const canvas = document.createElement('div')
+    const child = document.createElement('div')
+    child.dataset.dcSortScope = sortScope
+    child.getBoundingClientRect = () => ({ top: 100, height: 40 }) as DOMRect
+    canvas.appendChild(child)
+    const event = mockDragEvent({ currentTarget: canvas, target: canvas, clientY: 110 })
+
+    expect(() => dd.handleCanvasDragOver(event)).not.toThrow()
+    expect(dd.activeDestination.value).toEqual({ kind: 'root', sortScope, index: 0 })
   })
 
   it('handleMaterialDragStart sets dragTarget with widgetType even when creatable is false', () => {

@@ -107,14 +107,15 @@ it.each([
     props: {},
     container: { variant: fromVariantId, regions: sourceRegions },
   }
-  const engine = createEngine({
-    initialSchema: {
-      version: '1.0.0',
-      globalConfig: {},
-      root: { id: 'root', type: 'root', props: {}, children: [container] },
-    },
-  })
+  const engine = createEngine()
   engine.registerWidget(splitContainerMeta)
+  const imported = engine.importSchema({
+    version: '1.0.0',
+    globalConfig: {},
+    root: { id: 'root', type: 'root', props: {}, children: [container] },
+  })
+  if (!imported.ok)
+    throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
 
   expect(engine.execute({
     type: CommandType.CHANGE_CONTAINER_VARIANT,

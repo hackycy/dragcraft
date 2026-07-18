@@ -26,6 +26,8 @@ console.log(schema.globalConfig.title)
 
 这段代码展示了这个包最常见的读写节奏。我们先用 `createEngine()` 创建实例，再通过命令对象调用 `engine.execute()`，最后用 `engine.state.getSchema()` 读取公开状态。
 
+加载已有页面时不要把 schema 传给 `createEngine()`。先注册页面需要的 widget metadata，再调用 `engine.importSchema(schema)`；这样容器定义、节点所有权和 ID 唯一性会在进入运行态前统一校验。使用 `createDesigner()` 时可以继续传 `engineOptions.initialSchema`，Designer 会负责正确的注册与导入顺序。
+
 如果你在扩展布局、事件或拖拽约束，下一步再看 `createLayoutPlan()`、`EventName` 和 `resolveBehavior()` 这一组入口。关于这一层目前知道这些就够了。准备好之后，继续阅读 [Schema 与布局](/guide/schema-and-layout)。
 
 ## Container public API
