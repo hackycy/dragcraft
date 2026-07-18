@@ -1,6 +1,8 @@
+import process from 'node:process'
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  base: process.env.VITE_BASE ?? '/',
   lang: 'zh-CN',
   title: 'dragcraft',
   description: '面向小程序装修场景的可视化页面搭建引擎',
