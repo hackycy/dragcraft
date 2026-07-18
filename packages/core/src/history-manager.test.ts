@@ -41,6 +41,18 @@ describe('createHistoryManager', () => {
     expect(history.canRedo()).toBe(false)
   })
 
+  it('keeps public snapshots isolated from later caller mutations', () => {
+    const { store, history } = setup()
+    const before = makeSchema('before')
+    history.pushSnapshot('test', before)
+    before.root.props.label = 'mutated-after-push'
+    store.setSchema(makeSchema('after'))
+
+    history.undo()
+
+    expect(store.schema.value.root.props.label).toBe('before')
+  })
+
   it('undo restores previous snapshot and enables redo', () => {
     const { store, history } = setup()
     const before = store.getSchema()

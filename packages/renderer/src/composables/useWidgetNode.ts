@@ -1,4 +1,4 @@
-import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/core'
+import type { BehaviorPredicate, DesignerSchema, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext, RendererWidgetMeta } from '../types'
 import { resolveNodeLayout } from '@dragcraft/core'
@@ -58,15 +58,13 @@ export function useWidgetNode(
     engine.registry.getWidget(getNode().type) as RendererWidgetMeta | undefined,
   )
   const resolvedComponent = computed(() => componentMap[getNode().type])
-  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, engine.state.getSchema()))
+  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, ctx.schema.value as DesignerSchema))
   const inSortScope = computed(() => layout.value.sortScope !== false)
   const isDragging = computed(() => engine.store.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
 
   function readInstanceCtx(): InstanceBehaviorContext {
-    // Read schema.value to establish reactive dependency, then return a safe snapshot for predicate evaluation
-    void engine.store.schema.value
-    return { node: getNode(), schema: engine.state.getSchema() }
+    return { node: getNode(), schema: ctx.schema.value }
   }
 
   function resolveMetaBehavior(

@@ -33,19 +33,6 @@ const LENGTH_STYLE_KEYS = new Set([
   'width',
 ])
 
-const BACKGROUND_STYLE_KEYS = new Set([
-  'background',
-  'backgroundAttachment',
-  'backgroundBlendMode',
-  'backgroundClip',
-  'backgroundColor',
-  'backgroundImage',
-  'backgroundOrigin',
-  'backgroundPosition',
-  'backgroundRepeat',
-  'backgroundSize',
-])
-
 export function normalizeStyle(style: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
   if (!style)
     return undefined
@@ -57,16 +44,4 @@ export function normalizeStyle(style: Record<string, unknown> | undefined): Reco
       : value
   }
   return normalized
-}
-
-export function pickBackgroundStyle(style: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
-  if (!style)
-    return undefined
-
-  const backgroundStyle: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(style)) {
-    if (BACKGROUND_STYLE_KEYS.has(key))
-      backgroundStyle[key] = value
-  }
-  return Object.keys(backgroundStyle).length > 0 ? backgroundStyle : undefined
 }

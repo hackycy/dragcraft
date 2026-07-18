@@ -3,6 +3,19 @@ import { describe, expect, it, vi } from 'vitest'
 import { CommandType, EventName } from '../constants'
 import { createEngine } from '../engine'
 
+function mutateSchema(
+  engine: ReturnType<typeof createEngine>,
+  mutate: (schema: DesignerSchema) => void,
+): void {
+  engine.registerHandler('__TEST_MUTATE_SCHEMA__', ({ store }) => {
+    mutate(store.getRawSchema())
+  })
+  const result = engine.execute({ type: '__TEST_MUTATE_SCHEMA__', payload: null })
+  if (!result.ok)
+    throw new Error(`Test mutation rejected: ${result.code}`)
+  engine.history.clear()
+}
+
 function makeNode(id: string): SchemaNode {
   return { id, type: 'text', props: { label: id } }
 }
@@ -109,9 +122,11 @@ describe('duplicate node command', () => {
 
   it('duplicates beside its source without treating chrome as a content sibling', () => {
     const engine = makeContainerEngine()
-    engine.store.getRawSchema().root.children!.unshift({
-      ...makeNode('chrome'),
-      layout: { placement: { kind: 'chrome', edge: 'block-end' } },
+    mutateSchema(engine, (schema) => {
+      schema.root.children!.unshift({
+        ...makeNode('chrome'),
+        layout: { placement: { kind: 'chrome', edge: 'block-end' } },
+      })
     })
 
     const result = engine.execute({
@@ -161,7 +176,7 @@ describe('duplicate node command', () => {
     }, 'child'],
   ])('rejects an unresolved source %s before mutation', (_, makeUnresolved, nodeId) => {
     const engine = makeContainerEngine()
-    makeUnresolved(engine.store.getRawSchema().root.children![0])
+    mutateSchema(engine, schema => makeUnresolved(schema.root.children![0]))
     const before = engine.exportSchema()
 
     const result = engine.execute({

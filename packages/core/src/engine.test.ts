@@ -613,23 +613,27 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
-  it('state.getSchema returns a clone that cannot mutate internal schema', () => {
+  it('state.getSchema returns a deeply frozen snapshot', () => {
     const engine = createImportedEngine(makeSchema([makeNode('a')]))
 
     const snapshot = engine.state.getSchema()
-    snapshot.root.children!.push(makeNode('b'))
+    expect(() => (snapshot.root.children as SchemaNode[]).push(makeNode('b'))).toThrow(TypeError)
 
+    expect(Object.isFrozen(snapshot.root.children)).toBe(true)
     expect(engine.store.schema.value.root.children).toHaveLength(1)
     expect(engine.state.getSchema().root.children).toHaveLength(1)
     engine.dispose()
   })
 
-  it('state.getNodeById returns a clone that cannot mutate internal schema', () => {
+  it('state.getNodeById returns a deeply frozen snapshot', () => {
     const engine = createImportedEngine(makeSchema([makeNode('a')]))
 
     const node = engine.state.getNodeById('a')
-    node!.props.label = 'mutated'
+    expect(() => {
+      (node!.props as Record<string, unknown>).label = 'mutated'
+    }).toThrow(TypeError)
 
+    expect(Object.isFrozen(node!.props)).toBe(true)
     expect(engine.store.schema.value.root.children![0].props.label).toBeUndefined()
     engine.dispose()
   })
@@ -645,6 +649,33 @@ describe('createEngine', () => {
     expect(engine.state.getHoveredNodeId()).toBe('hovered')
     expect(engine.state.getDragTarget()).toEqual({ sourceNodeId: null, widgetType: 'text' })
     engine.dispose()
+  })
+
+  it('exposes a runtime-safe public store interface', () => {
+    const engine = createEngine()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    if (false) {
+      // @ts-expect-error Schema replacement is only available inside core.
+      engine.store.setSchema(makeSchema())
+      // @ts-expect-error Raw schema access is only available inside core commands.
+      engine.store.getRawSchema()
+      // @ts-expect-error Manual reactive triggering is only available inside core.
+      engine.store.triggerUpdate()
+    }
+
+    try {
+      expect(engine.store).not.toHaveProperty('setSchema')
+      expect(engine.store).not.toHaveProperty('getRawSchema')
+      expect(engine.store).not.toHaveProperty('triggerUpdate')
+
+      ;(engine.store.schema.value.root.props as Record<string, unknown>).mutated = true
+      expect(engine.exportSchema().root.props.mutated).toBeUndefined()
+    }
+    finally {
+      warn.mockRestore()
+      engine.dispose()
+    }
   })
 
   it('sELECTION_CHANGED event is emitted on selectNode', () => {

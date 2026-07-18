@@ -32,6 +32,12 @@ export default defineComponent({
       runtime.regionDefinitions.value.find(item => item.id === props.regionId),
     )
     const regionNodes = computed(() => runtime.getRegionNodes(props.regionId))
+    const containerMeta = computed(() => {
+      const containerNode = ctx.schemaIndex.value.index.get(runtime.nodeId.value)?.node
+      return containerNode
+        ? ctx.engine.registry.getWidget(containerNode.type) as RendererWidgetMeta | undefined
+        : undefined
+    })
     const isEmpty = computed(() => regionNodes.value.length === 0)
     const isActive = computed(() => {
       const destination = ctx.activeDestination.value
@@ -49,11 +55,7 @@ export default defineComponent({
         return
       event.preventDefault()
       event.stopPropagation()
-      const containerNode = ctx.engine.state.getNodeById(runtime.nodeId.value)
-      const meta = containerNode
-        ? ctx.engine.registry.getWidget(containerNode.type) as RendererWidgetMeta | undefined
-        : undefined
-      const resolver = props.resolveDropIndex ?? meta?.containerAdapter?.resolveDropIndex
+      const resolver = props.resolveDropIndex ?? containerMeta.value?.containerAdapter?.resolveDropIndex
       if (!resolver) {
         ctx.onContainerDragOver?.({
           event,
@@ -65,7 +67,7 @@ export default defineComponent({
         return
       }
       try {
-        const nodes = runtime.getRegionNodes(props.regionId)
+        const nodes = regionNodes.value
         const index = resolver({
           event,
           regionElement,

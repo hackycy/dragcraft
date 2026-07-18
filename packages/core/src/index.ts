@@ -60,7 +60,7 @@ export { createRegistry } from './registry'
 export { buildSchemaIndex, findIndexedNode } from './schema-index'
 
 // ── Subsystem factories ───────────────────
-export { createDefaultSchema, createSchemaStore } from './schema-store'
+export { createDefaultSchema } from './schema-store'
 export { validateSchema } from './schema-validation'
 
 // ── Sortable constraints ─────────────────
@@ -109,11 +109,13 @@ export type {
   CreatableDecision,
   CreateRegisteredNode,
   CreationBlockReason,
+  DeepReadonly,
   DesignerSchema,
   DragTarget,
   DuplicateNodePayload,
   EngineOptions,
   EngineState,
+  EngineStore,
   FieldSchemaShape,
   FormSchemaShape,
   HistoryEntry,
@@ -157,7 +159,6 @@ export type {
   SchemaIndexResult,
   SchemaMigration,
   SchemaNode,
-  SchemaStoreInstance,
   SchemaValidationResult,
   SetGlobalConfigPayload,
   StyleValueMap,

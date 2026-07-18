@@ -6,7 +6,7 @@ import type { NodeSelectionPresentationHost } from '../selection-presentation'
 import type { RendererContext } from '../types'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { computed, createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import { useWidgetRuntime } from '../widget-runtime'
@@ -26,7 +26,15 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
 }
 
 function makeContext(meta: WidgetMeta): RendererContext {
-  const selectNode = vi.fn()
+  const selectedNodeId = ref<string | null>(null)
+  const hoveredNodeId = ref<string | null>(null)
+  const dragTarget = ref(null)
+  const selectNode = vi.fn((id: string | null) => {
+    selectedNodeId.value = id
+  })
+  const hoverNode = vi.fn((id: string | null) => {
+    hoveredNodeId.value = id
+  })
   const schema: DesignerSchema = {
     version: '1.0.0',
     globalConfig: {},
@@ -37,12 +45,12 @@ function makeContext(meta: WidgetMeta): RendererContext {
       execute: vi.fn(),
       store: {
         schema: ref(schema),
-        selectedNodeId: ref(null),
-        hoveredNodeId: ref(null),
-        dragTarget: ref(null),
+        selectedNodeId,
+        hoveredNodeId,
+        dragTarget,
         getRawSchema: () => schema,
         selectNode,
-        hoverNode: vi.fn(),
+        hoverNode,
       },
       state: {
         getSchema: () => schema,
@@ -55,6 +63,7 @@ function makeContext(meta: WidgetMeta): RendererContext {
         getWidget: vi.fn(() => meta),
       },
     } as unknown as DesignerEngine,
+    schema: computed(() => schema),
     componentMap: {
       'floating-button': defineComponent({
         setup() {
@@ -122,7 +131,7 @@ describe('widgetRenderer', () => {
       return originalGetBoundingClientRect.call(this)
     }
 
-    ctx.engine.store.hoveredNodeId.value = 'fab'
+    ctx.engine.store.hoverNode('fab')
 
     const app = createApp(defineComponent({
       setup() {
@@ -137,7 +146,7 @@ describe('widgetRenderer', () => {
       await nextTick()
       expect(document.querySelector('.dc-node__selection-projection')).toBeNull()
 
-      ctx.engine.store.selectedNodeId.value = 'fab'
+      ctx.engine.store.selectNode('fab')
       await nextTick()
       await vi.waitFor(() => {
         expect(plane.querySelector('.dc-node__selection-projection--root-segment')).not.toBeNull()
@@ -179,7 +188,7 @@ describe('widgetRenderer', () => {
     }) as DOMRect
     selectionPresentation.registerPlane('content', plane)
     document.body.append(host, plane)
-    ctx.engine.store.selectedNodeId.value = 'fab'
+    ctx.engine.store.selectNode('fab')
 
     let observedOwner: NodeOwner | null = null
     let observedKind: string | null = null
@@ -288,7 +297,7 @@ describe('widgetRenderer', () => {
   it('teleports selected node toolbar into the owning canvas interaction layer', async () => {
     const meta = makeMeta({ mask: false })
     const ctx = makeContext(meta)
-    ctx.engine.store.selectedNodeId.value = 'fab'
+    ctx.engine.store.selectNode('fab')
     const resolvedActions: ResolvedNodeAction[] = [{
       key: 'delete',
       label: 'Delete',
@@ -361,7 +370,7 @@ describe('widgetRenderer', () => {
     const meta = makeMeta({ mask: false })
     const ctx = makeContext(meta)
     const selectionPresentation = createNodeSelectionPresentation()
-    ctx.engine.store.selectedNodeId.value = 'fab'
+    ctx.engine.store.selectNode('fab')
     const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
     const host = document.createElement('div')
     const plane = document.createElement('div')
@@ -494,7 +503,7 @@ describe('widgetRenderer', () => {
       expect(observed.mask).toEqual(owner)
       expect(observed.wrapper).toEqual(owner)
 
-      ctx.engine.store.selectedNodeId.value = 'fab'
+      ctx.engine.store.selectNode('fab')
       await nextTick()
       expect(observed.toolbar).toEqual(owner)
     }

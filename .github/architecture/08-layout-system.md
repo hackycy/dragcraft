@@ -7,7 +7,7 @@
 布局系统使用 `placement` 描述节点布局意图，把 `root.children` 投影为三类 surface：
 
 - `flow`：普通内容流，进入内容 scrollport，可参与拖拽排序。
-- `chrome`：页面结构 chrome，例如导航栏、底部标签栏。视觉上固定在 viewport 边缘，同时向内容区贡献 inset，避免内容被遮挡。
+- `chrome`：页面结构 chrome，例如导航栏、底部标签栏。可固定在 viewport 边缘并向内容区贡献 inset，也可作为 sticky/flow 元素留在内容 scrollport。
 - `layer`：浮层，例如 FAB、气泡、助手。可以由框架按 anchor 定位，也可以由物料在框架提供的坐标系中自行定位。
 
 旧的 slot manifest、positioned overlay 和独立 position 通道已移除。框架不再让某些节点绕过 `LayoutPlan`，所有节点都在同一个 plan 中出现一次。
@@ -183,7 +183,7 @@ const tabbarLayout = {
 }
 ```
 
-设备框架把 chrome 渲染在 `dc-device-frame__chrome` 层中。`reserve.mode` 控制内容避让：
+设备框架只把 `position: fixed` 的 chrome 渲染在 `dc-device-frame__chrome` 层中。同一 edge 的 fixed 项从边缘向内堆叠；`avoidContent: true` 的 reserved stack 与累加 inset 对齐，`avoidContent: false` 的 overlay stack 独立覆盖。`sticky` 与 `flow` 留在内容 scrollport：`block-start/block-end` 分别位于业务 surface 上下，`inline-start/inline-end` 与业务 surface 组成三列布局；sticky 项在对应边界内吸附。`reserve.mode` 控制 fixed chrome 的内容避让：
 
 - `measure`：使用 `ResizeObserver` 测量 chrome 实际高度或宽度；如果提供 `size`，先用它作为首帧 fallback，测量完成后用真实尺寸覆盖。
 - `size`：使用物料声明的固定尺寸。
@@ -267,8 +267,9 @@ left: var(--dc-inset-inline-start);
 - 渲染 fixed/sticky chrome layer。
 - 测量 chrome 并写入 inset CSS variables。
 - 渲染 layer surfaces。
+- 把 renderer 传入的 `surfaceStyle` 只应用到内容 surface，并让 selection plane 位于业务 chrome/layer 之上。
 
-Shell 不读取 schema、不重新 resolve 节点、不创建业务 widget vnode。
+Shell 不读取 schema、不重新 resolve 节点、不创建业务 widget vnode。默认 Shell 使用 inset grid 缩进真实 content scrollport 边界，不使用 padding 模拟避让；Device Frame 采用等价的 top/right/bottom/left scrollport 边界。
 
 ## 拖拽排序
 

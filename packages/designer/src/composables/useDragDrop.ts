@@ -1,4 +1,4 @@
-import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
 import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
 import {
@@ -114,12 +114,15 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   })
   const isForbidden = ref(false)
   const forbiddenReason = ref<DropRejectionReason | null>(null)
+  const schemaSnapshot = computed<DesignerSchema>(() => {
+    void engine.store.schema.value
+    return engine.state.getSchema() as DesignerSchema
+  })
 
   // ── Sortable constraint computeds ──
 
   const lockedIndices = computed(() => {
-    void engine.store.schema.value
-    const schema = engine.state.getSchema()
+    const schema = schemaSnapshot.value
     const children = schema.root.children ?? []
     const sortScope = getActiveSortScope()
     if (sortScope === false)
@@ -131,7 +134,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const dragTarget = engine.store.dragTarget.value
     if (!dragTarget)
       return null
-    void engine.store.schema.value
     const sortScope = getActiveSortScope()
     if (sortScope === false)
       return null
@@ -148,7 +150,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       return { allowed: true }
     return resolveCreatable(meta.creatable, {
       widgetType: target.widgetType,
-      schema: engine.store.schema.value,
+      schema: schemaSnapshot.value,
     }, true)
   })
 
@@ -166,7 +168,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function getActiveSortScopeEntries(sortScope: string) {
-    const schema = engine.state.getSchema()
+    const schema = schemaSnapshot.value
     return getSortScopeEntries(
       createLayoutPlan(schema, engine.registry),
       sortScope,
@@ -178,10 +180,11 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (!target)
       return DEFAULT_SORT_SCOPE
     if (target.sourceNodeId) {
-      const node = engine.state.getNodeById(target.sourceNodeId)
+      const schema = schemaSnapshot.value
+      const node = buildSchemaIndex(schema).index.get(target.sourceNodeId)?.node
       if (!node)
         return false
-      return resolveNodeLayout(node, engine.registry, engine.state.getSchema()).sortScope
+      return resolveNodeLayout(node, engine.registry, schema).sortScope
     }
     if (target.widgetType) {
       const meta = engine.registry.getWidget(target.widgetType)
@@ -243,9 +246,8 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   function computeDropIndex(e: DragEvent, sortScope: string): number {
     const canvasEl = e.currentTarget as HTMLElement
-    const widgetEls = Array.from(
-      canvasEl.querySelectorAll<HTMLElement>('[data-dc-sort-scope]'),
-    ).filter(element => element.dataset.dcSortScope === sortScope)
+    const widgetEls = Array.from(canvasEl.querySelectorAll<HTMLElement>('[data-dc-sort-scope]'))
+      .filter(element => element.dataset.dcSortScope === sortScope)
     const mouseY = e.clientY
     for (let i = 0; i < widgetEls.length; i++) {
       const rect = widgetEls[i].getBoundingClientRect()
@@ -392,12 +394,15 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   function preflightContainerDestination(
     destination: Extract<NodeDestination, { kind: 'container' }>,
   ): PlacementDecision {
-    const schema = engine.state.getSchema()
+    const schema = schemaSnapshot.value
     const dragTarget = engine.store.dragTarget.value
     if (!dragTarget)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
+    const source = dragTarget.sourceNodeId
+      ? buildSchemaIndex(schema).index.get(dragTarget.sourceNodeId)
+      : undefined
     const child = dragTarget.sourceNodeId
-      ? engine.state.getNodeById(dragTarget.sourceNodeId)
+      ? source?.node
       : (() => {
           const meta = dragTarget.widgetType
             ? engine.registry.getWidget(dragTarget.widgetType) as RendererWidgetMeta | undefined
@@ -412,9 +417,6 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const target = targetResult.value
     if (!target.container || !target.definition || !target.variant || !target.region)
       return { allowed: false, code: 'CONTAINER_DESTINATION_REQUIRED' }
-    const source = dragTarget.sourceNodeId
-      ? buildSchemaIndex(schema).index.get(dragTarget.sourceNodeId)
-      : undefined
     const sameRegion = source?.owner === destination.containerId
       && source.regionId === destination.regionId
     return resolvePlacementDecision({

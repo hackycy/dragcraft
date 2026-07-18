@@ -1,4 +1,4 @@
-import type { CommandExecutionResult, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { CommandExecutionResult, DeepReadonly, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
@@ -17,7 +17,7 @@ export interface UsePropertyBindingOptions {
 
 export interface UsePropertyBindingReturn {
   /** The selected node, reactively derived */
-  selectedNode: ComputedRef<SchemaNode | null>
+  selectedNode: ComputedRef<DeepReadonly<SchemaNode> | null>
   /** The form schema for the selected node's widget type */
   selectedFormSchema: ComputedRef<FormSchema | null>
   /** The selected widget meta */
@@ -61,7 +61,7 @@ export function usePropertyBinding(
 ): UsePropertyBindingReturn {
   const translate = options.t ?? ((key: string, fallback?: string) => fallback ?? key)
 
-  const selectedNode = computed<SchemaNode | null>(() => {
+  const selectedNode = computed<DeepReadonly<SchemaNode> | null>(() => {
     const nodeId = engine.store.selectedNodeId.value
     if (!nodeId)
       return null

@@ -1,4 +1,4 @@
-import type { Command, DesignerSchema, SchemaNode } from '@dragcraft/core'
+import type { Command, DeepReadonly, DesignerSchema, SchemaNode } from '@dragcraft/core'
 import type { FieldBindingScope, FieldBindingTarget } from '@dragcraft/form-generator'
 import { CommandType } from '@dragcraft/core'
 
@@ -76,8 +76,8 @@ export function readPath(source: unknown, path: string): unknown {
 
 export function readBindingValue(
   binding: ResolvedFieldBinding,
-  schema: DesignerSchema,
-  node: SchemaNode | null,
+  schema: DeepReadonly<DesignerSchema>,
+  node: DeepReadonly<SchemaNode> | null,
 ): unknown {
   if (binding.scope === 'container')
     return node && binding.path === 'variant' ? node.container?.variant : undefined

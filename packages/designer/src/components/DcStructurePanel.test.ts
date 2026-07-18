@@ -375,4 +375,41 @@ describe('dcStructurePanel', () => {
       designer.dispose()
     }
   })
+
+  it('resolves root structure actions with one schema and lock pass per revision', async () => {
+    const nodeCount = 12
+    const sortable = vi.fn(() => true)
+    const unrelatedVisible = vi.fn(() => true)
+    const schema = makeSchema()
+    schema.root.children = Array.from({ length: nodeCount }, (_, index) => ({
+      id: `node-${index}`,
+      type: 'button',
+      props: {},
+    }))
+    const designer = createDesigner({
+      engineOptions: { initialSchema: schema },
+      widgetMetas: [makeMeta({ sortable })],
+      customActions: [{
+        key: 'unrelated',
+        label: 'Unrelated',
+        type: 'button',
+        order: 999,
+        visible: unrelatedVisible,
+      }],
+    })
+    const getSchema = vi.spyOn(designer.engine.state, 'getSchema')
+    const { app, host } = mountPanel(designer)
+
+    try {
+      await nextTick()
+      expect(host.querySelectorAll('[data-dc-component="structure-item"]')).toHaveLength(nodeCount)
+      expect(getSchema).toHaveBeenCalledOnce()
+      expect(sortable).toHaveBeenCalledTimes(nodeCount)
+      expect(unrelatedVisible).not.toHaveBeenCalled()
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
 })

@@ -2,6 +2,7 @@ import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core
 import type { RendererContext } from '../types'
 import { findNodeById } from '@dragcraft/core'
 import { describe, expect, it, vi } from 'vitest'
+import { computed } from 'vue'
 import { createNodeActionRegistry } from '../action-registry'
 import { useNodeActions } from './useNodeActions'
 
@@ -29,6 +30,7 @@ function makeContext(schema: DesignerSchema): RendererContext {
   } as unknown as DesignerEngine
   return {
     engine,
+    schema: computed(() => schema),
     actionRegistry: createNodeActionRegistry(),
     actionInterceptors: [],
   } as unknown as RendererContext

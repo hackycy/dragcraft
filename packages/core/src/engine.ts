@@ -8,12 +8,13 @@ import type {
   DesignerSchema,
   EngineOptions,
   EngineState,
+  EngineStore,
   RegistryInstance,
   SchemaDiagnostic,
   SchemaMigration,
-  SchemaStoreInstance,
   WidgetMeta,
 } from './types'
+import { readonly } from 'vue'
 import { createCommandBus } from './command-bus'
 import {
   addNodeHandler,
@@ -30,7 +31,7 @@ import { findNodeById } from './helpers'
 import { createHistoryManager } from './history-manager'
 import { createRegistry } from './registry'
 import { createSchemaStore } from './schema-store'
-import { cloneSchema } from './schema-utils'
+import { cloneSchema, deepFreeze } from './schema-utils'
 import { collectSchemaStructuralDiagnostics, validateSchema } from './schema-validation'
 
 export type SchemaImportResult
@@ -38,7 +39,7 @@ export type SchemaImportResult
     | { ok: false, diagnostics: SchemaDiagnostic[] }
 
 export interface DesignerEngine {
-  store: SchemaStoreInstance
+  store: EngineStore
   state: EngineState
   commandBus: CommandBusInstance
   history: HistoryManagerInstance
@@ -59,22 +60,32 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   const maxHistorySize = options?.maxHistorySize ?? DEFAULT_MAX_HISTORY_SIZE
 
   const eventHub = createEventHub()
-  const store = createSchemaStore(undefined, (id) => {
+  const schemaStore = createSchemaStore(undefined, (id) => {
     eventHub.emit(EventName.SELECTION_CHANGED, id)
   })
+  const store: EngineStore = {
+    schema: readonly(schemaStore.schema) as EngineStore['schema'],
+    selectedNodeId: readonly(schemaStore.selectedNodeId),
+    hoveredNodeId: readonly(schemaStore.hoveredNodeId),
+    dragTarget: readonly(schemaStore.dragTarget) as EngineStore['dragTarget'],
+    selectNode: schemaStore.selectNode,
+    hoverNode: schemaStore.hoverNode,
+    setDragTarget: schemaStore.setDragTarget,
+  }
   const registry = createRegistry()
-  const history = createHistoryManager(store, eventHub, maxHistorySize)
-  const commandBus = createCommandBus(store, registry, eventHub, history)
+  const history = createHistoryManager(schemaStore, eventHub, maxHistorySize)
+  const commandBus = createCommandBus(schemaStore, registry, eventHub, history)
+  const getSchemaSnapshot = () => deepFreeze(schemaStore.getSchema())
   const state: EngineState = {
-    getSchema: () => store.getSchema(),
+    getSchema: getSchemaSnapshot,
     getNodeById: (id) => {
-      const schema = store.getSchema()
-      return findNodeById(schema.root, id)
+      const schema = getSchemaSnapshot()
+      return findNodeById(schema.root as DesignerSchema['root'], id)
     },
     getSelectedNodeId: () => store.selectedNodeId.value,
     getHoveredNodeId: () => store.hoveredNodeId.value,
     getDragTarget: () => {
-      const target = store.dragTarget.value
+      const target = schemaStore.dragTarget.value
       return target ? { ...target } : null
     },
   }
@@ -125,7 +136,7 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   }
 
   function exportSchema(): DesignerSchema {
-    return store.getSchema()
+    return schemaStore.getSchema()
   }
 
   function importSchema(schema: DesignerSchema): SchemaImportResult {
@@ -142,18 +153,18 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
     if (!validation.valid)
       return { ok: false, diagnostics: validation.diagnostics }
 
-    store.setSchema(validation.schema)
+    schemaStore.setSchema(validation.schema)
     history.clear()
-    eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
+    eventHub.emit(EventName.SCHEMA_CHANGED, schemaStore.getSchema())
     return { ok: true, diagnostics: validation.diagnostics }
   }
 
   function dispose(): void {
     eventHub.clear()
     history.clear()
-    store.selectNode(null)
-    store.hoverNode(null)
-    store.setDragTarget(null)
+    schemaStore.selectNode(null)
+    schemaStore.hoverNode(null)
+    schemaStore.setDragTarget(null)
   }
 
   return {

@@ -1,4 +1,4 @@
-import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeDestination, NodeOwner, PlacementDecision, RegistryInstance, SchemaNode } from '@dragcraft/core'
+import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeDestination, NodeOwner, PlacementDecision, RegistryInstance, SchemaIndexResult, SchemaNode, StyleValueMap } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
@@ -245,7 +245,7 @@ export interface ContainerShellProps {
   layerVNodes: Record<string, VNode[]>
   forbiddenOverlayVNode?: VNode | null
   layoutPlan: LayoutPlan
-  schema: DesignerSchema
+  surfaceStyle?: StyleValueMap
   registry: RegistryInstance
   /** Registers shell-owned root, content, and viewport presentation planes. */
   selectionPresentation: NodeSelectionPresentationHost
@@ -383,6 +383,20 @@ export interface RendererOptions extends ContainerDropRendererOptions {
  */
 export interface RendererContext extends ContainerDropRendererOptions {
   engine: DesignerEngine
+  /** One safe schema snapshot shared by the renderer tree for each schema revision. */
+  schema: ComputedRef<DeepReadonly<DesignerSchema>>
+  /** Root layout projection cached for the current schema revision. */
+  layoutPlan: ComputedRef<LayoutPlan>
+  /** Ownership index cached for the current schema revision. */
+  schemaIndex: ComputedRef<SchemaIndexResult>
+  /** Resolves action geometry and lock constraints from revision-scoped caches. */
+  resolveNodeActionPosition?: (node: SchemaNode, owner: NodeOwner) => {
+    owner: NodeOwner
+    index: number
+    siblingCount: number
+    sortScope: string | false
+    lockedIndices: Set<number>
+  }
   componentMap: ComponentMap
   extensions: RendererExtensions
   eventHooks: RendererEventHooks

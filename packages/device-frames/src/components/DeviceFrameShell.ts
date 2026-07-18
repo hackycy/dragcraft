@@ -1,6 +1,7 @@
-import type { DesignerSchema, LayoutPlan, StyleValueMap } from '@dragcraft/core'
+import type { LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../types'
+import { DEFAULT_LAYOUT_REGION } from '@dragcraft/core'
 import { computed, defineComponent, h, inject } from 'vue'
 import { getDefaultPresets } from '../presets'
 import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
@@ -23,6 +24,10 @@ const DeviceFrameShell = defineComponent({
       type: Object as PropType<LayoutPlan>,
       default: undefined,
     },
+    regionVNodes: {
+      type: Object as PropType<Record<string, VNode[]>>,
+      default: () => ({}),
+    },
     chromeVNodes: {
       type: Array as PropType<VNode[]>,
       default: () => [],
@@ -35,8 +40,8 @@ const DeviceFrameShell = defineComponent({
       type: Object as PropType<VNode | null>,
       default: null,
     },
-    schema: {
-      type: Object as PropType<DesignerSchema>,
+    surfaceStyle: {
+      type: Object as PropType<StyleValueMap>,
       default: undefined,
     },
     selectionPresentation: {
@@ -57,15 +62,28 @@ const DeviceFrameShell = defineComponent({
       return preset?.frameComponent ?? fallbackFrame
     })
 
-    return () =>
-      h(activeFrame.value, {
+    return () => {
+      const additionalRegions = Object.entries(props.regionVNodes)
+        .filter(([region]) => region !== DEFAULT_LAYOUT_REGION)
+        .map(([region, nodes]) => h('div', {
+          'key': region,
+          'class': 'dc-device-frame__content-region',
+          'data-dc-layout-region': region,
+        }, nodes))
+      return h(activeFrame.value, {
         layoutPlan: props.layoutPlan,
         chromeVNodes: props.chromeVNodes,
         layerVNodes: props.layerVNodes,
         forbiddenOverlayVNode: props.forbiddenOverlayVNode,
-        surfaceStyle: props.schema?.root.style?.surface as StyleValueMap | undefined,
+        surfaceStyle: props.surfaceStyle,
         selectionPresentation: props.selectionPresentation,
-      }, slots)
+      }, {
+        default: () => [
+          ...(slots.default?.() ?? []),
+          ...additionalRegions,
+        ],
+      })
+    }
   },
 })
 

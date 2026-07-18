@@ -2,7 +2,7 @@ import type { LayoutEdge, LayoutNodeEntry, LayoutPlan, ResolvedChromePlacement, 
 import type { VNode, VNodeChild } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../types'
 import { h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
-import { normalizeStyle, pickBackgroundStyle } from './style-utils'
+import { normalizeStyle } from './style-utils'
 
 export interface FrameViewportOptions {
   content?: VNodeChild[]
@@ -93,26 +93,80 @@ function layerItemStyle(entry: LayoutNodeEntry): Record<string, string> | undefi
   return style
 }
 
+function renderChromeItem(entry: LayoutNodeEntry, vnode: VNode | undefined): VNode {
+  const placement = entry.layout.placement as ResolvedChromePlacement
+  return h('div', {
+    'key': entry.node.id,
+    'class': [
+      'dc-device-frame__chrome-item',
+      edgeClass(placement.edge),
+      `dc-device-frame__chrome-item--${placement.position}`,
+    ],
+    'data-node-id': entry.node.id,
+    'data-dc-chrome-edge': placement.edge,
+    'data-dc-chrome-position': placement.position,
+    'data-dc-reserve-mode': placement.reserve.mode,
+    'data-dc-avoid-content': String(placement.avoidContent),
+  }, [vnode])
+}
+
 function renderChrome(plan: LayoutPlan | undefined, chromeVNodes: VNode[]): VNodeChild | null {
   if (!plan || chromeVNodes.length === 0)
     return null
 
-  const children = plan.chrome.map((entry, index) => {
+  const groups: Record<LayoutEdge, { reserved: VNode[], overlay: VNode[] }> = {
+    'block-start': { reserved: [], overlay: [] },
+    'block-end': { reserved: [], overlay: [] },
+    'inline-start': { reserved: [], overlay: [] },
+    'inline-end': { reserved: [], overlay: [] },
+  }
+  for (const [index, entry] of plan.chrome.entries()) {
     const placement = entry.layout.placement as ResolvedChromePlacement
-    return h('div', {
-      'key': entry.node.id,
-      'class': [
-        'dc-device-frame__chrome-item',
-        edgeClass(placement.edge),
-        `dc-device-frame__chrome-item--${placement.position}`,
-      ],
-      'data-node-id': entry.node.id,
-      'data-dc-chrome-edge': placement.edge,
-      'data-dc-reserve-mode': placement.reserve.mode,
-    }, [chromeVNodes[index]])
-  })
+    if (placement.position === 'fixed') {
+      const stack = placement.avoidContent ? 'reserved' : 'overlay'
+      groups[placement.edge][stack].push(renderChromeItem(entry, chromeVNodes[index]))
+    }
+  }
+  const stacks = (Object.entries(groups) as Array<[
+    LayoutEdge,
+    { reserved: VNode[], overlay: VNode[] },
+  ]>).flatMap(([edge, edgeGroups]) => (['reserved', 'overlay'] as const).flatMap((stack) => {
+    const items = edgeGroups[stack]
+    return items.length > 0
+      ? [h('div', {
+          'key': `${edge}:${stack}`,
+          'class': [
+            'dc-device-frame__chrome-stack',
+            `dc-device-frame__chrome-stack--${edge}`,
+            `dc-device-frame__chrome-stack--${stack}`,
+          ],
+          'data-dc-chrome-edge': edge,
+          'data-dc-avoid-content-stack': String(stack === 'reserved'),
+        }, items)]
+      : []
+  }))
 
-  return h('div', { class: 'dc-device-frame__chrome' }, children)
+  return stacks.length > 0
+    ? h('div', { class: 'dc-device-frame__chrome' }, stacks)
+    : null
+}
+
+function groupContentChrome(
+  plan: LayoutPlan | undefined,
+  chromeVNodes: VNode[],
+): Record<LayoutEdge, VNode[]> {
+  const groups: Record<LayoutEdge, VNode[]> = {
+    'block-start': [],
+    'block-end': [],
+    'inline-start': [],
+    'inline-end': [],
+  }
+  for (const [index, entry] of (plan?.chrome ?? []).entries()) {
+    const placement = entry.layout.placement as ResolvedChromePlacement
+    if (placement.position !== 'fixed')
+      groups[placement.edge].push(renderChromeItem(entry, chromeVNodes[index]))
+  }
+  return groups
 }
 
 function renderLayers(plan: LayoutPlan | undefined, layerVNodes: Record<string, VNode[]>): VNodeChild[] {
@@ -162,7 +216,7 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
       'inline-end': 0,
     }
 
-    for (const item of Array.from(viewport.querySelectorAll<HTMLElement>('[data-dc-chrome-edge]'))) {
+    for (const item of Array.from(viewport.querySelectorAll<HTMLElement>('[data-dc-chrome-position="fixed"][data-dc-avoid-content="true"]'))) {
       if (item.dataset.dcReserveMode !== 'measure')
         continue
       const edge = item.dataset.dcChromeEdge as LayoutEdge
@@ -184,7 +238,7 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
     }
     observer?.disconnect()
     observer = new ResizeObserver(update)
-    for (const item of Array.from(viewport.querySelectorAll<HTMLElement>('[data-dc-chrome-edge]')))
+    for (const item of Array.from(viewport.querySelectorAll<HTMLElement>('[data-dc-chrome-position="fixed"][data-dc-avoid-content="true"]')))
       observer.observe(getChromeMeasureTarget(item))
     void nextTick(update)
   }
@@ -198,7 +252,12 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
 }
 
 function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
-  const contributors = plan?.insets.contributors ?? []
+  const fixedChromeIds = new Set((plan?.chrome ?? []).flatMap((entry) => {
+    const placement = entry.layout.placement as ResolvedChromePlacement
+    return placement.position === 'fixed' ? [entry.node.id] : []
+  }))
+  const contributors = (plan?.insets.contributors ?? [])
+    .filter(contributor => fixedChromeIds.has(contributor.sourceNodeId))
   const sizedTotals: Record<LayoutEdge, string[]> = {
     'block-start': [],
     'block-end': [],
@@ -315,45 +374,59 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
   return () => {
     const current = options()
     const surfaceStyle = normalizeStyle(current.surfaceStyle)
-    const backgroundStyle = pickBackgroundStyle(surfaceStyle)
+    const chromeVNodes = current.chromeVNodes ?? []
+    const contentChrome = groupContentChrome(current.plan, chromeVNodes)
     return h('div', {
       'ref': viewportRef,
       'class': 'dc-device-frame__viewport',
       'data-dc-overlay-boundary': '',
       'style': viewportStyle(current.plan),
     }, [
-      h('div', { class: 'dc-device-frame__content', style: backgroundStyle }, [
+      h('div', { class: 'dc-device-frame__content' }, [
         h('div', {
           ref: scrollerRef,
           class: 'dc-device-frame__content-scroller',
-          style: backgroundStyle,
           onScroll: updateScrollMetrics,
         }, [
-          h(
-            'div',
-            {
-              'class': 'dc-device-frame__content-surface',
-              'data-dc-component': 'container-shell',
-              'style': surfaceStyle,
-            },
-            [
-              ...(current.content ?? []),
-              h('div', {
-                'ref': (element: unknown) => {
-                  current.selectionPresentation?.registerPlane('content', element instanceof HTMLElement ? element : null)
+          h('div', { class: 'dc-device-frame__content-layout' }, [
+            ...contentChrome['block-start'],
+            h('div', { class: 'dc-device-frame__content-row' }, [
+              contentChrome['inline-start'].length > 0
+                ? h('div', {
+                    class: 'dc-device-frame__content-edge dc-device-frame__content-edge--inline-start',
+                  }, contentChrome['inline-start'])
+                : null,
+              h(
+                'div',
+                {
+                  'class': 'dc-device-frame__content-surface',
+                  'data-dc-component': 'container-shell',
+                  'style': surfaceStyle,
                 },
-                'class': 'dc-device-frame__selection-plane dc-device-frame__selection-plane--content',
-                'data-dc-selection-plane': 'content',
-                'aria-hidden': 'true',
-              }),
-            ],
-          ),
+                current.content ?? [],
+              ),
+              contentChrome['inline-end'].length > 0
+                ? h('div', {
+                    class: 'dc-device-frame__content-edge dc-device-frame__content-edge--inline-end',
+                  }, contentChrome['inline-end'])
+                : null,
+            ]),
+            ...contentChrome['block-end'],
+            h('div', {
+              'ref': (element: unknown) => {
+                current.selectionPresentation?.registerPlane('content', element instanceof HTMLElement ? element : null)
+              },
+              'class': 'dc-device-frame__selection-plane dc-device-frame__selection-plane--content',
+              'data-dc-selection-plane': 'content',
+              'aria-hidden': 'true',
+            }),
+          ]),
         ]),
         h('div', { 'class': 'dc-device-frame__scrollbar', 'aria-hidden': 'true' }, [
           h('div', { class: 'dc-device-frame__scrollbar-thumb', style: thumbStyle.value }),
         ]),
       ]),
-      renderChrome(current.plan, current.chromeVNodes ?? []),
+      renderChrome(current.plan, chromeVNodes),
       ...renderLayers(current.plan, current.layerVNodes ?? {}),
       h('div', {
         'ref': (element: unknown) => {

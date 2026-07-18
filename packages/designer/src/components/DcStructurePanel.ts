@@ -1,6 +1,6 @@
-import type { DesignerEngine, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { MaybePromise, NodeActionContext, ResolvedNodeAction, SelectHookPayload } from '@dragcraft/renderer'
-import { createContainerPlan, createLayoutPlan, getSortScopeEntries, resolveNodeLayout } from '@dragcraft/core'
+import { createContainerPlan, createLayoutPlan, getLockedIndicesFromNodes, resolveNodeLayout } from '@dragcraft/core'
 import { ActionKey } from '@dragcraft/renderer'
 import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
@@ -18,6 +18,7 @@ interface ContainerStructureRegion {
   title: string
   owner: Extract<NodeOwner, { kind: 'container' }>
   nodes: SchemaNode[]
+  lockedIndices: Set<number>
 }
 
 function isPromiseLike(value: unknown): value is Promise<unknown> {
@@ -28,6 +29,7 @@ function createContainerStructureRegions(
   node: SchemaNode,
   engine: DesignerEngine,
   t: (key: string, fallback?: string) => string,
+  schema: DesignerSchema,
 ): ContainerStructureRegion[] {
   const result = createContainerPlan(node, engine.registry)
   if (!result.ok)
@@ -44,6 +46,7 @@ function createContainerStructureRegions(
       regionId: region.definition.id,
     },
     nodes: region.nodes,
+    lockedIndices: getLockedIndicesFromNodes(region.nodes, engine.registry, schema),
   }))
 }
 
@@ -55,6 +58,10 @@ export default defineComponent({
     const { t } = useI18n()
     const { engine, actionRegistry, actionInterceptors, eventHooks } = ctx
     const selectPending = { value: false }
+    const schemaSnapshot = computed(() => {
+      void engine.store.schema.value
+      return engine.state.getSchema() as DesignerSchema
+    })
 
     const createStructureItem = (
       node: SchemaNode,
@@ -62,6 +69,8 @@ export default defineComponent({
       index: number,
       siblingCount: number,
       sortScope: string | false,
+      schema: DesignerSchema,
+      lockedIndices: Set<number>,
     ): StructureItem => {
       const meta = engine.registry.getWidget(node.type)
       const actionCtx: NodeActionContext = {
@@ -72,42 +81,61 @@ export default defineComponent({
         sortScope,
         meta,
         engine,
+        schema,
+        lockedIndices,
       }
-      const actions = actionRegistry.resolve(actionCtx, actionInterceptors)
+      const actions = actionRegistry.resolve(
+        actionCtx,
+        actionInterceptors,
+        owner.kind === 'root' ? [ActionKey.DELETE] : undefined,
+      )
 
       return {
         node,
         title: meta
           ? (meta.titleKey ? t(meta.titleKey, meta.title) : meta.title)
           : node.type,
-        actions: owner.kind === 'container'
-          ? actions
-          : actions.filter(action => action.key === ActionKey.DELETE),
-        regions: createContainerStructureRegions(node, engine, t),
+        actions,
+        regions: createContainerStructureRegions(node, engine, t, schema),
       }
     }
 
     const items = computed<StructureItem[]>(() => {
-      void engine.store.schema.value
-
-      const schema = engine.state.getSchema()
+      const schema = schemaSnapshot.value
       const children = schema.root.children ?? []
       const plan = createLayoutPlan(schema, engine.registry)
+      const positions = new Map<string, {
+        index: number
+        siblingCount: number
+        lockedIndices: Set<number>
+      }>()
+      for (const entries of plan.sortScopes.values()) {
+        const lockedIndices = getLockedIndicesFromNodes(
+          entries.map(entry => entry.node),
+          engine.registry,
+          schema,
+        )
+        entries.forEach((entry, index) => positions.set(entry.node.id, {
+          index,
+          siblingCount: entries.length,
+          lockedIndices,
+        }))
+      }
 
-      return children.map((node) => {
+      return children.map((node, rootIndex) => {
         const layout = resolveNodeLayout(node, engine.registry, schema)
-        const scopeEntries = layout.sortScope === false
-          ? []
-          : getSortScopeEntries(plan, layout.sortScope)
+        const position = positions.get(node.id)
         return createStructureItem(
           node,
           {
             kind: 'root',
             sortScope: layout.sortScope === false ? undefined : layout.sortScope,
           },
-          scopeEntries.findIndex(entry => entry.node.id === node.id),
-          scopeEntries.length,
+          position?.index ?? rootIndex,
+          position?.siblingCount ?? children.length,
           layout.sortScope,
+          schema,
+          position?.lockedIndices ?? new Set(),
         )
       })
     })
@@ -251,7 +279,15 @@ export default defineComponent({
       ]),
       region.nodes.length > 0
         ? h('div', { 'class': 'dc-structure-panel__children', 'data-dc-part': 'children' }, region.nodes.map((node, index) => {
-            const item = createStructureItem(node, region.owner, index, region.nodes.length, false)
+            const item = createStructureItem(
+              node,
+              region.owner,
+              index,
+              region.nodes.length,
+              false,
+              schemaSnapshot.value,
+              region.lockedIndices,
+            )
             return h('div', { key: node.id, class: 'dc-structure-panel__row' }, [renderItem(item)])
           }))
         : null,

@@ -1,5 +1,14 @@
 import type { Ref, ShallowRef } from 'vue'
 
+export type DeepReadonly<T>
+  = T extends (...args: infer Args) => infer Result
+    ? (...args: Args) => Result
+    : T extends readonly unknown[]
+      ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
+      : T extends object
+        ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
+        : T
+
 // ──────────────────────────────────────────
 // Node types
 // ──────────────────────────────────────────
@@ -237,9 +246,9 @@ export interface DragTarget {
  */
 export interface InstanceBehaviorContext {
   /** The specific node being evaluated */
-  node: SchemaNode
-  /** The current designer schema (read from reactive ref) */
-  schema: DesignerSchema
+  node: DeepReadonly<SchemaNode>
+  /** A deeply readonly snapshot of the current designer schema. */
+  schema: DeepReadonly<DesignerSchema>
 }
 
 /**
@@ -249,8 +258,8 @@ export interface InstanceBehaviorContext {
 export interface TypeBehaviorContext {
   /** The widget type identifier */
   widgetType: string
-  /** The current designer schema (read from reactive ref) */
-  schema: DesignerSchema
+  /** A deeply readonly snapshot of the current designer schema. */
+  schema: DeepReadonly<DesignerSchema>
 }
 
 /**
@@ -624,11 +633,21 @@ export interface EngineOptions {
 }
 
 export interface EngineState {
-  getSchema: () => DesignerSchema
-  getNodeById: (id: string) => SchemaNode | null
+  getSchema: () => DeepReadonly<DesignerSchema>
+  getNodeById: (id: string) => DeepReadonly<SchemaNode> | null
   getSelectedNodeId: () => string | null
   getHoveredNodeId: () => string | null
   getDragTarget: () => DragTarget | null
+}
+
+export interface EngineStore {
+  readonly schema: Readonly<ShallowRef<DeepReadonly<DesignerSchema>>>
+  readonly selectedNodeId: Readonly<Ref<string | null>>
+  readonly hoveredNodeId: Readonly<Ref<string | null>>
+  readonly dragTarget: Readonly<Ref<DeepReadonly<DragTarget> | null>>
+  selectNode: (id: string | null) => void
+  hoverNode: (id: string | null) => void
+  setDragTarget: (target: DragTarget | null) => void
 }
 
 // ──────────────────────────────────────────

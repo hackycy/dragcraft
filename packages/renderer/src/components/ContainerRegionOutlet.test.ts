@@ -324,6 +324,24 @@ describe('containerRegionOutlet', () => {
     }
   })
 
+  it('does not clone the full schema during repeated region drag-over events', () => {
+    const registeredResolveDropIndex = vi.fn(() => 0)
+    const { app, engine, region } = mountExternalSplit({ registeredResolveDropIndex })
+    const getNodeById = vi.spyOn(engine.state, 'getNodeById')
+    const getSchema = vi.spyOn(engine.state, 'getSchema')
+    try {
+      region.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
+      region.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
+
+      expect(registeredResolveDropIndex).toHaveBeenCalledTimes(2)
+      expect(getNodeById).not.toHaveBeenCalled()
+      expect(getSchema).not.toHaveBeenCalled()
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
   it('blocks drop when no resolver exists and does not guess append', () => {
     const { app, region, onContainerDragOver } = mountExternalSplit()
     try {

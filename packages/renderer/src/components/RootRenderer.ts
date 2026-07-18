@@ -1,13 +1,14 @@
-import type { CreationBlockReason, DesignerEngine, NodeDestination, PlacementDecision } from '@dragcraft/core'
+import type { CreationBlockReason, DeepReadonly, DesignerEngine, DesignerSchema, LayoutNodeEntry, LayoutPlan, NodeDestination, PlacementDecision } from '@dragcraft/core'
 import type { Component, PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
 import type { ActionInterceptor } from '../action-runtime'
 import type { RendererEventHooks } from '../event-hooks'
 import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions } from '../types'
-import { createLayoutPlan, DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE } from '@dragcraft/core'
+import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, resolveNodeLayout } from '@dragcraft/core'
 import { computed, defineComponent, h, provide } from 'vue'
 import { createRendererContext } from '../context'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
+import { normalizeStyle } from '../style-utils'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import DefaultContainerShell from './DefaultContainerShell'
 import DefaultDropIndicator from './DefaultDropIndicator'
@@ -17,6 +18,62 @@ import WidgetRenderer from './WidgetRenderer'
 
 function handlesForbiddenOverlay(component: Component): boolean {
   return Boolean((component as Component & { __dcHandlesForbiddenOverlay?: boolean }).__dcHandlesForbiddenOverlay)
+}
+
+function regionEntryIndex(plan: LayoutPlan, entry: LayoutNodeEntry): number {
+  return (plan.regions.get(entry.layout.region ?? DEFAULT_LAYOUT_REGION) ?? [])
+    .findIndex(candidate => candidate.node.id === entry.node.id)
+}
+
+function insertDropIndicator(
+  regionVNodes: Record<string, VNode[]>,
+  plan: LayoutPlan,
+  schema: DeepReadonly<DesignerSchema>,
+  engine: DesignerEngine,
+  destination: NodeDestination | null | undefined,
+  legacyIndex: number | null | undefined,
+  indicator: VNode,
+): void {
+  if (destination?.kind === 'container')
+    return
+
+  const sortScope = destination === undefined
+    ? DEFAULT_SORT_SCOPE
+    : destination?.sortScope
+  if (!sortScope)
+    return
+
+  const entries = plan.sortScopes.get(sortScope) ?? []
+  const requestedIndex = destination?.index ?? legacyIndex
+  const index = requestedIndex == null
+    ? entries.length
+    : Math.max(0, Math.min(requestedIndex, entries.length))
+
+  const dragTarget = engine.store.dragTarget.value
+  const draggedEntry = dragTarget?.sourceNodeId
+    ? plan.entries.find(entry => entry.node.id === dragTarget.sourceNodeId)
+    : undefined
+  const draggedLayout = !draggedEntry && dragTarget?.widgetType
+    ? resolveNodeLayout({ id: '__drop-indicator__', type: dragTarget.widgetType, props: {} }, engine.registry, schema as DesignerSchema)
+    : undefined
+  const inferredRegion = draggedEntry?.layout.region
+    ?? (draggedLayout?.placement.kind === 'flow' ? draggedLayout.region : undefined)
+  const adjacentEntry = index < entries.length ? entries[index] : entries.at(-1)
+  const region = inferredRegion ?? adjacentEntry?.layout.region ?? DEFAULT_LAYOUT_REGION
+  const regionNodes = regionVNodes[region] ?? (regionVNodes[region] = [])
+  const nextRegionEntry = entries.slice(index)
+    .find(entry => (entry.layout.region ?? DEFAULT_LAYOUT_REGION) === region)
+  const previousRegionEntry = entries.slice(0, index)
+    .findLast(entry => (entry.layout.region ?? DEFAULT_LAYOUT_REGION) === region)
+  if (!nextRegionEntry && !previousRegionEntry) {
+    regionNodes.push(indicator)
+    return
+  }
+
+  const insertIndex = nextRegionEntry
+    ? regionEntryIndex(plan, nextRegionEntry)
+    : regionEntryIndex(plan, previousRegionEntry!) + 1
+  regionNodes.splice(Math.max(0, insertIndex), 0, indicator)
 }
 
 export default defineComponent({
@@ -120,10 +177,9 @@ export default defineComponent({
     )
 
     return () => {
-      // Read schema.value to establish reactive dependency
-      const schema = props.engine.store.schema.value
+      const schema = ctx.schema.value
       const isDragOver = props.dragOverNodeId?.value === 'root'
-      const plan = createLayoutPlan(schema, props.engine.registry)
+      const plan = ctx.layoutPlan.value
 
       // Resolve drop indicator and empty state components
       const DropIndicator = props.extensions?.dropIndicator ?? DefaultDropIndicator
@@ -145,7 +201,10 @@ export default defineComponent({
         h(WidgetRenderer, {
           'key': entry.node.id,
           'node': entry.node,
-          'selectionPlane': 'viewport',
+          'selectionPlane': entry.layout.placement.kind === 'chrome'
+            && entry.layout.placement.position === 'fixed'
+            ? 'viewport'
+            : 'content',
           'data-dc-layout-placement': 'chrome',
         }),
       )
@@ -162,8 +221,6 @@ export default defineComponent({
         )
       }
 
-      const contentVNodes = regionVNodes[DEFAULT_LAYOUT_REGION] ?? []
-
       // Show forbidden overlay or drop indicator at the computed insertion index
       const isForbidden = props.isForbidden?.value ?? false
       const createForbiddenOverlayVNode = () =>
@@ -177,18 +234,21 @@ export default defineComponent({
         : null
 
       if (isDragOver && !isForbidden) {
-        const idx = props.dragOverIndex?.value
-        const scopeLength = plan.sortScopes.get(DEFAULT_SORT_SCOPE)?.length ?? contentVNodes.length
-        if (idx != null && idx >= 0 && idx <= scopeLength) {
-          contentVNodes.splice(idx, 0, h(DropIndicator, { key: '__drop-indicator__' }))
-        }
-        else {
-          contentVNodes.push(h(DropIndicator, { key: '__drop-indicator__' }))
-        }
+        insertDropIndicator(
+          regionVNodes,
+          plan,
+          schema,
+          props.engine,
+          props.activeDestination?.value,
+          props.dragOverIndex?.value,
+          h(DropIndicator, { key: '__drop-indicator__' }),
+        )
       }
 
-      // Empty state placeholder (only when no children and not dragging)
-      const isEmpty = contentVNodes.length === 0 && !isDragOver
+      const contentVNodes = regionVNodes[DEFAULT_LAYOUT_REGION] ?? []
+
+      // Empty state placeholder (only when the schema has no rendered nodes and not dragging)
+      const isEmpty = plan.entries.length === 0 && !isDragOver
       const ContainerShellComponent = ContainerShell.value
       const fallbackForbiddenOverlayVNode = forbiddenOverlayVNode && !handlesForbiddenOverlay(ContainerShellComponent)
         ? createForbiddenOverlayVNode()
@@ -213,7 +273,7 @@ export default defineComponent({
               layerVNodes,
               forbiddenOverlayVNode,
               layoutPlan: plan,
-              schema,
+              surfaceStyle: normalizeStyle(schema.root.style?.surface),
               registry: props.engine.registry,
               selectionPresentation,
             },

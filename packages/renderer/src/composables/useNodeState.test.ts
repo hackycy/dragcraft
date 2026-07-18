@@ -5,11 +5,19 @@ import { ref } from 'vue'
 import { useNodeState } from './useNodeState'
 
 function makeContext(overrides?: Partial<RendererContext>): RendererContext {
+  const selectedNodeId = ref<string | null>(null)
+  const hoveredNodeId = ref<string | null>(null)
   return {
     engine: {
       store: {
-        selectedNodeId: ref(null),
-        hoveredNodeId: ref(null),
+        selectedNodeId,
+        hoveredNodeId,
+        selectNode: (id: string | null) => {
+          selectedNodeId.value = id
+        },
+        hoverNode: (id: string | null) => {
+          hoveredNodeId.value = id
+        },
       },
     } as unknown as DesignerEngine,
     componentMap: {},
@@ -33,13 +41,13 @@ describe('useNodeState', () => {
     const state = useNodeState(() => 'node-1', ctx)
     expect(state.isSelected.value).toBe(false)
 
-    ctx.engine.store.selectedNodeId.value = 'node-1'
+    ctx.engine.store.selectNode('node-1')
     expect(state.isSelected.value).toBe(true)
   })
 
   it('isSelected is false for different node id', () => {
     const state = useNodeState(() => 'node-1', ctx)
-    ctx.engine.store.selectedNodeId.value = 'node-2'
+    ctx.engine.store.selectNode('node-2')
     expect(state.isSelected.value).toBe(false)
   })
 
@@ -47,7 +55,7 @@ describe('useNodeState', () => {
     const state = useNodeState(() => 'node-1', ctx)
     expect(state.isHovered.value).toBe(false)
 
-    ctx.engine.store.hoveredNodeId.value = 'node-1'
+    ctx.engine.store.hoverNode('node-1')
     expect(state.isHovered.value).toBe(true)
   })
 
@@ -68,8 +76,8 @@ describe('useNodeState', () => {
       'dc-node--drag-over': false,
     })
 
-    ctx.engine.store.selectedNodeId.value = 'node-1'
-    ctx.engine.store.hoveredNodeId.value = 'node-1'
+    ctx.engine.store.selectNode('node-1')
+    ctx.engine.store.hoverNode('node-1')
     ctx.dragOverNodeId.value = 'node-1'
 
     expect(state.interactionClasses.value).toEqual({
@@ -83,7 +91,7 @@ describe('useNodeState', () => {
     const nodeId = ref('node-1')
     const state = useNodeState(() => nodeId.value, ctx)
 
-    ctx.engine.store.selectedNodeId.value = 'node-1'
+    ctx.engine.store.selectNode('node-1')
     expect(state.isSelected.value).toBe(true)
 
     nodeId.value = 'node-2'

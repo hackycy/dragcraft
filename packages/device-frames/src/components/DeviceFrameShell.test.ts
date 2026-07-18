@@ -43,6 +43,81 @@ function makePlan(): LayoutPlan {
           visible: true,
         },
       },
+      {
+        node: { id: 'overlay', type: 'overlay', props: {} },
+        arrayIndex: 2,
+        layout: {
+          placement: {
+            kind: 'chrome',
+            edge: 'block-start',
+            position: 'fixed',
+            reserve: { mode: 'measure', size: 80 },
+            avoidContent: false,
+          },
+          sortScope: false,
+          visible: true,
+        },
+      },
+      {
+        node: { id: 'sticky', type: 'sticky', props: {} },
+        arrayIndex: 3,
+        layout: {
+          placement: {
+            kind: 'chrome',
+            edge: 'block-end',
+            position: 'sticky',
+            reserve: { mode: 'size', size: 70 },
+            avoidContent: true,
+          },
+          sortScope: false,
+          visible: true,
+        },
+      },
+      {
+        node: { id: 'sidebar', type: 'sidebar', props: {} },
+        arrayIndex: 4,
+        layout: {
+          placement: {
+            kind: 'chrome',
+            edge: 'inline-start',
+            position: 'sticky',
+            reserve: { mode: 'none' },
+            avoidContent: true,
+          },
+          sortScope: false,
+          visible: true,
+        },
+      },
+      {
+        node: { id: 'rail', type: 'rail', props: {} },
+        arrayIndex: 5,
+        layout: {
+          placement: {
+            kind: 'chrome',
+            edge: 'inline-end',
+            position: 'flow',
+            reserve: { mode: 'none' },
+            avoidContent: true,
+          },
+          sortScope: false,
+          visible: true,
+        },
+      },
+      {
+        node: { id: 'subnav', type: 'subnav', props: {} },
+        arrayIndex: 6,
+        layout: {
+          placement: {
+            kind: 'chrome',
+            edge: 'block-start',
+            position: 'fixed',
+            reserve: { mode: 'measure' },
+            avoidContent: true,
+          },
+          sortScope: false,
+          visible: true,
+        },
+      },
     ],
     layers: new Map([
       ['float', [
@@ -81,7 +156,9 @@ function makePlan(): LayoutPlan {
     insets: {
       contributors: [
         { edge: 'block-start', sourceNodeId: 'nav', reserve: { mode: 'measure' } },
+        { edge: 'block-start', sourceNodeId: 'subnav', reserve: { mode: 'measure' } },
         { edge: 'block-end', sourceNodeId: 'tab', reserve: { mode: 'size', size: 50 } },
+        { edge: 'block-end', sourceNodeId: 'sticky', reserve: { mode: 'size', size: 70 } },
       ],
     },
   }
@@ -94,10 +171,12 @@ describe('deviceFrameShell', () => {
     const frameBorderRule = css.match(/\.dc-device-frame::after\s*\{[^}]*\}/)?.[0]
     const frameSurfaceRule = css.match(/\.dc-device-frame__surface\s*\{[^}]*\}/)?.[0]
     const surfaceRule = css.match(/\.dc-device-frame__content-surface\s*\{[^}]*\}/)?.[0]
+    const contentLayoutRule = css.match(/\.dc-device-frame__content-layout\s*\{[^}]*\}/)?.[0]
+    const contentRowRule = css.match(/\.dc-device-frame__content-row\s*\{[^}]*\}/)?.[0]
     const viewportRule = css.match(/\.dc-device-frame__viewport\s*\{[^}]*\}/)?.[0]
     const chromeRule = css.match(/\.dc-device-frame__chrome\s*\{[^}]*\}/)?.[0]
-    const blockStartRule = css.match(/\.dc-device-frame__chrome--block-start\s*\{[^}]*\}/)?.[0]
-    const blockEndRule = css.match(/\.dc-device-frame__chrome--block-end\s*\{[^}]*\}/)?.[0]
+    const blockStartRule = css.match(/\.dc-device-frame__chrome-stack--block-start\s*\{[^}]*\}/)?.[0]
+    const blockEndRule = css.match(/\.dc-device-frame__chrome-stack--block-end\s*\{[^}]*\}/)?.[0]
     const layerRule = css.match(/\.dc-device-frame__layer\s*\{[^}]*\}/)?.[0]
 
     expect(frameRule).toContain('box-sizing: content-box')
@@ -111,7 +190,10 @@ describe('deviceFrameShell', () => {
     expect(frameSurfaceRule).toContain('border-radius: calc(var(--dc-device-frame-radius) - var(--dc-device-frame-border-width))')
     expect(surfaceRule).toContain('min-height: 100%')
     expect(surfaceRule).toContain('box-sizing: border-box')
+    expect(surfaceRule).not.toContain('display: grid')
     expect(surfaceRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
+    expect(contentLayoutRule).toContain('display: flex')
+    expect(contentRowRule).toContain('grid-template-columns: max-content minmax(0, 1fr) max-content')
     expect(viewportRule).not.toContain('--dc-selection-gutter')
     expect(viewportRule).toContain('--dc-inset-inline-start: calc(var(--dc-safe-area-inline-start) +')
     expect(viewportRule).toContain('--dc-inset-inline-end: calc(var(--dc-safe-area-inline-end) +')
@@ -121,26 +203,45 @@ describe('deviceFrameShell', () => {
     expect(layerRule).toContain('inset: 0;')
   })
 
+  it('keeps the shared shell marker isolated when renderer and frame styles load together', () => {
+    const style = document.createElement('style')
+    const frameCss = readFileSync(path.resolve(process.cwd(), 'src/styles/device-frame.css'), 'utf8')
+    const rendererCss = readFileSync(path.resolve(process.cwd(), '../renderer/styles/structure.css'), 'utf8')
+    style.textContent = `${frameCss}\n${rendererCss}`
+    document.head.appendChild(style)
+
+    const wrapper = mount(DeviceFrameShell)
+    try {
+      const surface = wrapper.find<HTMLElement>('.dc-device-frame__content-surface').element
+      const computed = getComputedStyle(surface)
+
+      expect(computed.display).not.toBe('grid')
+      expect(computed.gridTemplateColumns).toBe('')
+    }
+    finally {
+      wrapper.unmount()
+      style.remove()
+    }
+  })
+
   it('renders content, fixed chrome, and layer nodes from the layout plan', () => {
     const registerPlane = vi.fn()
     const wrapper = mount(DeviceFrameShell, {
       props: {
         selectionPresentation: { registerPlane },
         layoutPlan: makePlan(),
-        schema: {
-          version: '1.0.0',
-          globalConfig: {},
-          root: {
-            id: 'root',
-            type: 'root',
-            props: {},
-            style: { surface: { backgroundColor: '#fff7e6' } },
-            children: [],
-          },
+        regionVNodes: {
+          secondary: [h('div', { 'data-test-id': 'secondary' }, 'secondary')],
         },
+        surfaceStyle: { backgroundColor: '#fff7e6' },
         chromeVNodes: [
           h('div', { 'data-test-id': 'nav' }, 'nav'),
           h('div', { 'data-test-id': 'tab' }, 'tab'),
+          h('div', { 'data-test-id': 'overlay' }, 'overlay'),
+          h('div', { 'data-test-id': 'sticky' }, 'sticky'),
+          h('div', { 'data-test-id': 'sidebar' }, 'sidebar'),
+          h('div', { 'data-test-id': 'rail' }, 'rail'),
+          h('div', { 'data-test-id': 'subnav' }, 'subnav'),
         ],
         layerVNodes: {
           float: [
@@ -160,14 +261,25 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame__surface > .dc-device-frame__viewport').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-scroller [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="secondary"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content').classes()).not.toContain('dc-container-shell')
-    expect(wrapper.find<HTMLElement>('.dc-device-frame__content').element.style.backgroundColor).toBe('#fff7e6')
-    expect(wrapper.find<HTMLElement>('.dc-device-frame__content-scroller').element.style.backgroundColor).toBe('#fff7e6')
+    expect(wrapper.find<HTMLElement>('.dc-device-frame__content').element.style.backgroundColor).toBe('')
+    expect(wrapper.find<HTMLElement>('.dc-device-frame__content-scroller').element.style.backgroundColor).toBe('')
     expect(wrapper.find<HTMLElement>('.dc-device-frame__content-surface').element.style.backgroundColor).toBe('#fff7e6')
     expect(wrapper.find('.dc-device-frame__scrollbar').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport').attributes()).toHaveProperty('data-dc-overlay-boundary')
-    expect(wrapper.find('.dc-device-frame__chrome--block-start [data-test-id="nav"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__chrome--block-end [data-test-id="tab"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__chrome-stack--block-start [data-test-id="nav"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__chrome-stack--block-start [data-test-id="subnav"]').exists()).toBe(true)
+    expect(wrapper.findAll('.dc-device-frame__chrome-stack--block-start[data-dc-avoid-content-stack="true"] [data-dc-chrome-position="fixed"]')).toHaveLength(2)
+    expect(wrapper.findAll('.dc-device-frame__chrome-stack--block-start[data-dc-avoid-content-stack="false"] [data-dc-chrome-position="fixed"]')).toHaveLength(1)
+    expect(wrapper.find('.dc-device-frame__chrome-stack--block-end [data-test-id="tab"]').exists()).toBe(true)
+    expect(wrapper.find('[data-dc-avoid-content="false"] [data-test-id="overlay"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content-layout > [data-dc-chrome-position="sticky"] [data-test-id="sticky"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__chrome [data-test-id="sticky"]').exists()).toBe(false)
+    expect(wrapper.find('.dc-device-frame__content-row > .dc-device-frame__content-edge--inline-start [data-test-id="sidebar"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content-row > .dc-device-frame__content-edge--inline-end [data-test-id="rail"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="sidebar"]').exists()).toBe(false)
+    expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="rail"]').exists()).toBe(false)
     expect(wrapper.find('.dc-device-frame__layer-item--framework [data-test-id="fab"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__layer-item--self [data-test-id="custom"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport').attributes('style')).toContain('--dc-sized-inset-block-end: 50px')
@@ -202,14 +314,14 @@ describe('deviceFrameShell', () => {
     const wrapper = mount(DeviceFrameShell, {
       props: {
         layoutPlan: makePlan(),
-        schema: {
-          version: '1.0.0',
-          globalConfig: {},
-          root: { id: 'root', type: 'root', props: {}, children: [] },
-        },
         chromeVNodes: [
           h('div', { class: 'dc-node' }, [h('div', 'nav')]),
           h('div', { class: 'dc-node' }, [h('div', 'tab')]),
+          h('div', { class: 'dc-node' }, [h('div', 'overlay')]),
+          h('div', { class: 'dc-node' }, [h('div', 'sticky')]),
+          h('div', { class: 'dc-node' }, [h('div', 'sidebar')]),
+          h('div', { class: 'dc-node' }, [h('div', 'rail')]),
+          h('div', { class: 'dc-node' }, [h('div', 'subnav')]),
         ],
       },
     })
@@ -218,7 +330,7 @@ describe('deviceFrameShell', () => {
       await nextTick()
       await vi.waitFor(() => {
         const viewport = wrapper.find<HTMLElement>('.dc-device-frame__viewport').element
-        expect(viewport.style.getPropertyValue('--dc-measured-inset-block-start')).toBe('46px')
+        expect(viewport.style.getPropertyValue('--dc-measured-inset-block-start')).toBe('92px')
       })
 
       const style = wrapper.find('.dc-device-frame__viewport').attributes('style')

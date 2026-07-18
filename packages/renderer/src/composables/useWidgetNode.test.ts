@@ -1,7 +1,7 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { RendererContext } from '../types'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useWidgetNode } from './useWidgetNode'
 
 function makeNode(id: string, type = 'text'): SchemaNode {
@@ -21,16 +21,26 @@ function makeMeta(type: string, overrides?: Partial<WidgetMeta>): WidgetMeta {
 
 function makeContext(overrides?: Partial<RendererContext>): RendererContext {
   const schema: DesignerSchema = { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }
+  const selectedNodeId = ref<string | null>(null)
+  const hoveredNodeId = ref<string | null>(null)
+  const dragTarget = ref<{ sourceNodeId: string, widgetType: string | null } | null>(null)
   return {
     engine: {
       store: {
         schema: ref(schema),
-        selectedNodeId: ref(null),
-        hoveredNodeId: ref(null),
-        dragTarget: ref(null),
+        selectedNodeId,
+        hoveredNodeId,
+        dragTarget,
         getRawSchema: () => schema,
-        selectNode: vi.fn(),
-        hoverNode: vi.fn(),
+        selectNode: vi.fn((id: string | null) => {
+          selectedNodeId.value = id
+        }),
+        hoverNode: vi.fn((id: string | null) => {
+          hoveredNodeId.value = id
+        }),
+        setDragTarget: vi.fn((target: { sourceNodeId: string, widgetType: string | null } | null) => {
+          dragTarget.value = target
+        }),
       },
       state: {
         getSchema: () => schema,
@@ -43,6 +53,7 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
         getWidget: vi.fn(() => undefined),
       },
     } as unknown as DesignerEngine,
+    schema: computed(() => schema),
     componentMap: {},
     extensions: {},
     eventHooks: {},
@@ -207,7 +218,7 @@ describe('useWidgetNode', () => {
 
     it('includes dragging class for the active drag source', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
-      ctx.engine.store.dragTarget.value = { sourceNodeId: 'a', widgetType: null }
+      ctx.engine.store.setDragTarget({ sourceNodeId: 'a', widgetType: null })
       const node = useWidgetNode(() => makeNode('a'), ctx)
       const classObj = node.wrapperClasses.value.find(c => typeof c === 'object') as Record<string, boolean>
       expect(node.isDragging.value).toBe(true)
@@ -316,7 +327,8 @@ describe('useWidgetNode', () => {
 
     it('handleMouseLeave clears hover', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
-      ctx.engine.store.hoveredNodeId.value = 'a'
+      ctx.engine.store.hoverNode('a')
+      vi.mocked(ctx.engine.store.hoverNode).mockClear()
       const node = useWidgetNode(() => makeNode('a'), ctx)
       node.handleMouseLeave()
       expect(ctx.engine.store.hoverNode).toHaveBeenCalledWith(null)
@@ -324,7 +336,8 @@ describe('useWidgetNode', () => {
 
     it('does not clear hover owned by a deeper node', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text'))
-      ctx.engine.store.hoveredNodeId.value = 'child'
+      ctx.engine.store.hoverNode('child')
+      vi.mocked(ctx.engine.store.hoverNode).mockClear()
       const node = useWidgetNode(() => makeNode('parent'), ctx)
       node.handleMouseLeave()
       expect(ctx.engine.store.hoverNode).not.toHaveBeenCalled()

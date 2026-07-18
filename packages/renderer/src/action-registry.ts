@@ -1,4 +1,4 @@
-import type { Command, DesignerEngine, InstanceBehaviorContext, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { Command, DeepReadonly, DesignerEngine, DesignerSchema, InstanceBehaviorContext, NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
@@ -12,7 +12,7 @@ import { runActionPipeline } from './action-runtime'
  * Schema is already read reactively by the calling computed (in useNodeActions).
  */
 function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
-  return { node: ctx.node, schema: ctx.engine.state.getSchema() }
+  return { node: ctx.node, schema: ctx.schema }
 }
 
 function canReorder(ctx: NodeActionContext): boolean {
@@ -25,7 +25,10 @@ function canReorder(ctx: NodeActionContext): boolean {
 }
 
 function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
-  const schema = ctx.engine.state.getSchema()
+  if (ctx.lockedIndices)
+    return ctx.lockedIndices
+
+  const schema = ctx.schema as DesignerSchema
   if (ctx.owner.kind === 'container') {
     const containerOwner = ctx.owner
     const owner = schema.root.children?.find(node => node.id === containerOwner.containerId)
@@ -51,7 +54,7 @@ function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
  */
 export interface NodeActionContext {
   /** The schema node this action applies to */
-  node: SchemaNode
+  node: DeepReadonly<SchemaNode>
   /** Structural owner whose child array defines sibling ordering. */
   owner: NodeOwner
   /** The node's index among siblings */
@@ -64,6 +67,10 @@ export interface NodeActionContext {
   meta: RendererWidgetMeta | undefined
   /** The engine instance for executing commands */
   engine: DesignerEngine
+  /** Safe schema snapshot shared by all action predicates for this resolution. */
+  schema: DeepReadonly<DesignerSchema>
+  /** Precomputed lock set for the owning sort scope or container region. */
+  lockedIndices?: Set<number>
 }
 
 // ──────────────────────────────────────────
@@ -159,7 +166,7 @@ export interface NodeActionRegistry {
    * Resolve actions for a specific node, applying visibility/disabled predicates
    * and per-widget overrides from WidgetMeta.
    */
-  resolve: (ctx: NodeActionContext, actionInterceptors?: ActionInterceptor[]) => ResolvedNodeAction[]
+  resolve: (ctx: NodeActionContext, actionInterceptors?: ActionInterceptor[], keys?: readonly string[]) => ResolvedNodeAction[]
 }
 
 // ──────────────────────────────────────────
@@ -310,7 +317,7 @@ export function createNodeActionRegistry(
       actions.delete(key)
     },
 
-    resolve(ctx: NodeActionContext, actionInterceptors: ActionInterceptor[] = []): ResolvedNodeAction[] {
+    resolve(ctx: NodeActionContext, actionInterceptors: ActionInterceptor[] = [], keys?: readonly string[]): ResolvedNodeAction[] {
       // Get per-widget action overrides from WidgetMeta
       const widgetActions = ctx.meta?.actions
 
@@ -331,6 +338,10 @@ export function createNodeActionRegistry(
           actionDefs = [...actionDefs, ...widgetActions.extra]
             .sort((a, b) => a.order - b.order)
         }
+      }
+      if (keys) {
+        const requestedKeys = new Set(keys)
+        actionDefs = actionDefs.filter(action => requestedKeys.has(action.key))
       }
 
       return actionDefs

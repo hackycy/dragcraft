@@ -52,6 +52,6 @@ designer.engine.execute({
 })
 ```
 
-读取使用 `engine.state` 或 `useDesigner()`，写入使用 `engine.execute()`。`engine.store` 是 core 内部状态；业务代码直接修改它会跳过历史记录、事件和约束检查。
+读取使用 `engine.state` 或 `useDesigner()`，写入使用 `engine.execute()`。公开的 `engine.store` 只包含只读 refs 和 selection/hover/drag 交互方法，不提供 schema 写入口。
 
 关于整体分层，目前知道这些就够了。准备好之后，继续阅读 [Schema 与布局](/guide/schema-and-layout)。

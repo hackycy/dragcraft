@@ -51,7 +51,7 @@ execute({
 const snapshot = exportSchema()
 ```
 
-`execute()` 会统一接入约束、历史记录和 `schema:changed` 事件。不要直接改 `engine.store`；那会绕过这条链路。
+`execute()` 会统一接入约束、历史记录和 `schema:changed` 事件。公开的 `engine.store` 不提供 schema mutation API，因此页面修改统一走这条命令链路。
 
 ## 该准备哪些输入
 

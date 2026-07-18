@@ -1,4 +1,4 @@
-import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, NodeDestination, PlacementDecision, SchemaStoreInstance } from '@dragcraft/core'
+import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { ActionInterceptor, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/utils'
@@ -285,11 +285,11 @@ export type LeftPanelTabKey = 'materials' | 'structure'
  */
 export interface UseDesignerReturn {
   /** Reactive schema (from engine.store.schema ShallowRef) */
-  schema: SchemaStoreInstance['schema']
+  schema: EngineStore['schema']
   /** Currently selected node ID (reactive) */
-  selectedNodeId: SchemaStoreInstance['selectedNodeId']
+  selectedNodeId: EngineStore['selectedNodeId']
   /** Currently hovered node ID (reactive) */
-  hoveredNodeId: SchemaStoreInstance['hoveredNodeId']
+  hoveredNodeId: EngineStore['hoveredNodeId']
   /** Execute a command through the engine */
   execute: DesignerEngine['execute']
   /** Undo last change */

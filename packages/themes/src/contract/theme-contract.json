@@ -58,7 +58,19 @@
   },
   "integrationProperties": {
     "--dc-node-selection-root-block-overlap": { "description": "Root block-edge thickness painted outside material bounds without affecting layout." },
-    "--dc-node-selection-root-inline-overlap": { "description": "Root inline-edge width painted in the root-plane edge strips outside material bounds." }
+    "--dc-node-selection-root-inline-overlap": { "description": "Root inline-edge width painted in the root-plane edge strips outside material bounds." },
+    "--dc-sized-inset-block-start": { "description": "Explicit block-start space reserved by fixed chrome." },
+    "--dc-sized-inset-block-end": { "description": "Explicit block-end space reserved by fixed chrome." },
+    "--dc-sized-inset-inline-start": { "description": "Explicit inline-start space reserved by fixed chrome." },
+    "--dc-sized-inset-inline-end": { "description": "Explicit inline-end space reserved by fixed chrome." },
+    "--dc-measured-inset-block-start": { "description": "Measured block-start space reserved by fixed chrome." },
+    "--dc-measured-inset-block-end": { "description": "Measured block-end space reserved by fixed chrome." },
+    "--dc-measured-inset-inline-start": { "description": "Measured inline-start space reserved by fixed chrome." },
+    "--dc-measured-inset-inline-end": { "description": "Measured inline-end space reserved by fixed chrome." },
+    "--dc-inset-block-start": { "description": "Resolved block-start inset consumed by shell content and layers." },
+    "--dc-inset-block-end": { "description": "Resolved block-end inset consumed by shell content and layers." },
+    "--dc-inset-inline-start": { "description": "Resolved inline-start inset consumed by shell content and layers." },
+    "--dc-inset-inline-end": { "description": "Resolved inline-end inset consumed by shell content and layers." }
   },
   "components": {
     "designer": { "parts": ["backdrop", "body", "center-panel", "left-panel", "right-panel"], "states": ["compact", "left-open", "right-open", "wide"] },

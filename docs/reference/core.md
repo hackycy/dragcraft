@@ -30,6 +30,8 @@ console.log(schema.globalConfig.title)
 
 如果你在扩展布局、事件或拖拽约束，下一步再看 `createLayoutPlan()`、`EventName` 和 `resolveBehavior()` 这一组入口。关于这一层目前知道这些就够了。准备好之后，继续阅读 [Schema 与布局](/guide/schema-and-layout)。
 
+`engine.state.getSchema()` 与 `getNodeById()` 返回深冻结的只读快照。`engine.store` 只公开只读 refs 和 selection/hover/drag 交互方法，不包含 raw schema 或 schema mutation API；修改页面必须通过 `engine.execute()`，需要一份可编辑的导出对象时使用 `engine.exportSchema()`。
+
 ## Container public API
 
 `root.children` 包含页面节点，`flow/chrome/layer` 保持 root-only；容器 regions 拥有普通子节点，当前协议拒绝嵌套容器。`container` 是兼容现有文档的可选字段，因此 schema version 不变。

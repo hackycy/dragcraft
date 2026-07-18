@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CommandType, createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
 import { IconArrowDown, IconCopy, IconPhone } from '@dragcraft/icons'
-import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@dragcraft/designer'
+import type { DesignerExtensions, MaterialItemIcon, NodeActionContext, SchemaNode } from '@dragcraft/designer'
 import { cloneDeep, generateShortId } from '@dragcraft/utils'
 import {
   createDeviceFrameContext,
@@ -142,11 +142,11 @@ const designer = createDesigner({
           return true
         return resolveCreatable(ctx.meta.creatable, {
           widgetType: ctx.node.type,
-          schema: ctx.engine.store.getRawSchema(),
+          schema: ctx.schema,
         }, true).allowed
       },
       command: (ctx: NodeActionContext) => {
-        const clonedNode = cloneDeep(ctx.node)
+        const clonedNode = cloneDeep(ctx.node) as SchemaNode
         delete clonedNode.children
         clonedNode.id = generateShortId()
         return {

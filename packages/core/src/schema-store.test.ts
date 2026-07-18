@@ -94,6 +94,17 @@ describe('createSchemaStore', () => {
     expect(store.dragTarget.value).toBeNull()
   })
 
+  it('isolates dragTarget from later caller mutations', () => {
+    const store = createSchemaStore()
+    const target = { sourceNodeId: 'a', widgetType: null as string | null }
+    store.setDragTarget(target)
+
+    target.sourceNodeId = 'mutated'
+    target.widgetType = 'other'
+
+    expect(store.dragTarget.value).toEqual({ sourceNodeId: 'a', widgetType: null })
+  })
+
   it('getNodeById finds root and children', () => {
     const store = createSchemaStore(makeSchema([{ id: 'a', type: 'text', props: {} }]))
     expect(store.getNodeById('root')).toBeTruthy()

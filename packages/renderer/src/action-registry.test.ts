@@ -79,6 +79,7 @@ function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>)
     sortScope: 'content',
     meta: makeMeta(),
     engine,
+    schema: engine.state.getSchema(),
     ...overrides,
   }
 }
@@ -274,7 +275,7 @@ describe('resolve', () => {
   })
 
   it('allows reordering container-owned siblings without a page sort scope', () => {
-    engine.state.getSchema().root.children = [makeNode({ id: 'root-lock', type: 'locked' })]
+    ;(engine.state.getSchema() as DesignerSchema).root.children = [makeNode({ id: 'root-lock', type: 'locked' })]
     vi.mocked(getLockedIndices).mockReturnValue(new Set([0]))
     vi.mocked(isMoveAllowed).mockReturnValue(false)
     const registry = createNodeActionRegistry()

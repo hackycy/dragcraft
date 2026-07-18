@@ -1,9 +1,9 @@
 import type { Ref } from 'vue'
 import type { EventHub } from './event-hub'
-import type { DesignerSchema, HistoryEntry, SchemaStoreInstance } from './types'
+import type { DeepReadonly, DesignerSchema, HistoryEntry, SchemaStoreInstance } from './types'
 import { ref } from 'vue'
 import { EventName } from './constants'
-import { cloneSchemaRef } from './schema-utils'
+import { cloneSchema, cloneSchemaRef } from './schema-utils'
 
 export interface HistoryState {
   canUndo: boolean
@@ -14,7 +14,7 @@ export interface HistoryState {
 
 export interface HistoryManagerInstance {
   readonly state: Readonly<Ref<HistoryState>>
-  pushSnapshot: (label: string, before: DesignerSchema) => void
+  pushSnapshot: (label: string, before: DeepReadonly<DesignerSchema>) => void
   undo: () => void
   redo: () => void
   canUndo: () => boolean
@@ -24,6 +24,22 @@ export interface HistoryManagerInstance {
   discardTransaction: () => void
   isInTransaction: () => boolean
   clear: () => void
+}
+
+type OwnedSnapshotPusher = (label: string, before: DesignerSchema) => void
+
+const ownedSnapshotPushers = new WeakMap<HistoryManagerInstance, OwnedSnapshotPusher>()
+
+export function pushOwnedHistorySnapshot(
+  history: HistoryManagerInstance,
+  label: string,
+  before: DesignerSchema,
+): void {
+  const pushOwned = ownedSnapshotPushers.get(history)
+  if (pushOwned)
+    pushOwned(label, before)
+  else
+    history.pushSnapshot(label, before)
 }
 
 export function createHistoryManager(
@@ -72,12 +88,18 @@ export function createHistoryManager(
     eventHub.emit(EventName.HISTORY_CHANGED, nextState)
   }
 
-  function pushSnapshot(label: string, before: DesignerSchema): void {
+  function pushOwnedSnapshot(label: string, before: DesignerSchema): void {
     if (inTransaction)
       return
 
     pushUndo(label, before)
     emitChange()
+  }
+
+  function pushSnapshot(label: string, before: DeepReadonly<DesignerSchema>): void {
+    if (inTransaction)
+      return
+    pushOwnedSnapshot(label, cloneSchema(before))
   }
 
   function undo(): void {
@@ -169,7 +191,7 @@ export function createHistoryManager(
     emitChange()
   }
 
-  return {
+  const history: HistoryManagerInstance = {
     state,
     pushSnapshot,
     undo,
@@ -182,4 +204,6 @@ export function createHistoryManager(
     isInTransaction,
     clear,
   }
+  ownedSnapshotPushers.set(history, pushOwnedSnapshot)
+  return history
 }

@@ -60,7 +60,7 @@ export function createSchemaStore(
   }
 
   function setDragTarget(target: DragTarget | null): void {
-    dragTarget.value = target
+    dragTarget.value = target ? { ...target } : null
   }
 
   function getNodeById(id: string): SchemaNode | null {

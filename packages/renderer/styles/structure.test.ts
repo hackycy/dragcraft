@@ -34,3 +34,15 @@ it('paints root selection edges around the full-width root segment', () => {
   expect(inlineStart).toMatchObject({ left: '0' })
   expect(inlineEnd).toMatchObject({ right: '0' })
 })
+
+it('keeps default shell grid and inset state off the shared shell marker', () => {
+  const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
+  const defaultShell = declarations(css, ['.dc-container-shell'])
+  const sharedMarker = declarations(css, ['[data-dc-component="container-shell"]'])
+
+  expect(defaultShell.display).toBe('grid')
+  expect(defaultShell['--dc-inset-inline-start']).toContain('--dc-sized-inset-inline-start')
+  expect(sharedMarker.display).toBeUndefined()
+  expect(sharedMarker['grid-template-columns']).toBeUndefined()
+  expect(sharedMarker['--dc-inset-inline-start']).toBeUndefined()
+})

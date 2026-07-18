@@ -10,6 +10,7 @@ import type {
   SchemaStoreInstance,
 } from './types'
 import { CommandType, EventName } from './constants'
+import { pushOwnedHistorySnapshot } from './history-manager'
 import { cloneSchemaRef } from './schema-utils'
 
 const COMMAND_EVENT_MAP: Record<string, string> = {
@@ -87,7 +88,7 @@ export function createCommandBus(
         return normalized
       }
 
-      history.pushSnapshot(command.type, beforeSnapshot)
+      pushOwnedHistorySnapshot(history, command.type, beforeSnapshot)
       store.triggerUpdate()
 
       const specificEvent = COMMAND_EVENT_MAP[command.type]
