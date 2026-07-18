@@ -6,16 +6,17 @@
   "sideEffects": false,
   "scripts": {
     "build": "turbo build",
+    "build:packages": "turbo build --filter='./packages/**'",
     "dev": "turbo dev",
     "docs:dev": "pnpm --dir docs dev",
     "docs:build": "pnpm --dir docs build",
     "docs:preview": "pnpm --dir docs preview",
-    "play": "pnpm -F ./playground dev",
+    "play": "pnpm build:packages && pnpm -F ./playground dev",
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
     "release": "bumpp -r",
-    "test": "nr -r test",
-    "typecheck": "tsc",
+    "test": "pnpm build:packages && nr -r test",
+    "typecheck": "pnpm build:packages && tsc",
     "prepare": "simple-git-hooks"
   },
   "devDependencies": {

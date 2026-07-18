@@ -2,11 +2,7 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "jsxImportSource": "vue",
-    "paths": {
-      "@dragcraft/fields-ant-design-vue": ["../packages/fields/ant-design-vue/src"],
-      "@dragcraft/*": ["../packages/*/src"]
-    }
+    "jsxImportSource": "vue"
   },
   "include": ["src/**/*.ts", "src/**/*.vue"]
 }
