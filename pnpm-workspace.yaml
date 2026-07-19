@@ -19,7 +19,6 @@ packages:
 catalogs:
   cli:
     '@antfu/eslint-config': ^6.2.0
-    '@antfu/ni': ^27.0.1
     '@tsdown/css': ^0.22.8
     bumpp: ^10.3.1
     eslint: ^9.39.1

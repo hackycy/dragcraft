@@ -15,13 +15,12 @@
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
     "release": "bumpp -r",
-    "test": "pnpm build:packages && nr -r test",
+    "test": "pnpm build:packages && pnpm -r test",
     "typecheck": "pnpm build:packages && tsc",
     "prepare": "simple-git-hooks"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
-    "@antfu/ni": "catalog:cli",
     "@antfu/utils": "catalog:inlined",
     "@tsdown/css": "catalog:cli",
     "@types/node": "catalog:types",

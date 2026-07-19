@@ -30,7 +30,7 @@
     "build": "tsdown",
     "dev": "tsdown --watch",
     "lint": "eslint",
-    "prepublishOnly": "nr build",
+    "prepublishOnly": "pnpm build",
     "release": "bumpp",
     "start": "tsx src/index.ts",
     "test": "vitest",
