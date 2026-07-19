@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/icons",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "SVG icon components for @dragcraft",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",

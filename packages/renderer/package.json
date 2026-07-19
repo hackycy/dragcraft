@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/renderer",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "@dragcraft/renderer",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",

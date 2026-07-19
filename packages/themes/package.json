@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/themes",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Product-grade Standard and Google Material themes for dragcraft",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",

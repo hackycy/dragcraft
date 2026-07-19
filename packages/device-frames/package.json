@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/device-frames",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Device frame shells for @dragcraft designer canvas",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
