@@ -16,7 +16,7 @@
     &nbsp;|&nbsp;
     <a href="https://www.npmjs.com/package/@dragcraft/designer"><img src="https://img.shields.io/npm/dm/%40dragcraft%2Fdesigner?logo=npm&label=downloads" alt="npm monthly downloads"></a>
     &nbsp;|&nbsp;
-    <a href="https://github.com/hackycy/dragcraft/blob/main/LICENSE">MIT License</a>
+    <a href="https://github.com/hackycy/dragcraft/blob/main/LICENSE"><img src="https://img.shields.io/github/license/hackycy/dragcraft?label=license" alt="MIT License"></a>
   </p>
 </div>
 
