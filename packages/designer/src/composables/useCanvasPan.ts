@@ -1,5 +1,5 @@
 import type { ComputedRef, Ref } from 'vue'
-import { computed, onBeforeUnmount, onMounted, onUpdated, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 export type CanvasInteractionMode = 'pointer' | 'hand'
 
@@ -87,6 +87,7 @@ export function useCanvasPan(
   let startOffsetY = 0
   let suppressClick = false
   let resizeObserver: ResizeObserver | null = null
+  let pixelSnapFrame: number | null = null
 
   function updatePixelSnap(): void {
     const viewport = viewportRef.value
@@ -112,6 +113,24 @@ export function useCanvasPan(
 
     if (next.x !== pixelSnap.value.x || next.y !== pixelSnap.value.y)
       pixelSnap.value = next
+  }
+
+  function schedulePixelSnap(): void {
+    if (pixelSnapFrame !== null)
+      return
+    pixelSnapFrame = window.requestAnimationFrame(() => {
+      pixelSnapFrame = null
+      updatePixelSnap()
+    })
+  }
+
+  function observePixelGeometry(viewport: HTMLElement | null, stage: HTMLElement | null): void {
+    resizeObserver?.disconnect()
+    if (viewport)
+      resizeObserver?.observe(viewport)
+    if (stage)
+      resizeObserver?.observe(stage)
+    schedulePixelSnap()
   }
 
   function setMode(nextMode: CanvasInteractionMode): void {
@@ -205,27 +224,27 @@ export function useCanvasPan(
     window.addEventListener('keydown', handleWindowKeydown)
     window.addEventListener('keyup', handleWindowKeyup)
     window.addEventListener('blur', resetTemporaryMode)
-    window.addEventListener('resize', updatePixelSnap)
+    window.addEventListener('resize', schedulePixelSnap)
     if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(updatePixelSnap)
-      if (viewportRef.value)
-        resizeObserver.observe(viewportRef.value)
-      if (stageRef.value)
-        resizeObserver.observe(stageRef.value)
+      resizeObserver = new ResizeObserver(schedulePixelSnap)
     }
-    updatePixelSnap()
+    observePixelGeometry(viewportRef.value, stageRef.value)
   })
 
   onBeforeUnmount(() => {
     window.removeEventListener('keydown', handleWindowKeydown)
     window.removeEventListener('keyup', handleWindowKeyup)
     window.removeEventListener('blur', resetTemporaryMode)
-    window.removeEventListener('resize', updatePixelSnap)
+    window.removeEventListener('resize', schedulePixelSnap)
     resizeObserver?.disconnect()
+    if (pixelSnapFrame !== null)
+      window.cancelAnimationFrame(pixelSnapFrame)
   })
 
-  onUpdated(updatePixelSnap)
-  watch(offset, updatePixelSnap, { flush: 'sync' })
+  watch([viewportRef, stageRef], ([viewport, stage]) => {
+    observePixelGeometry(viewport, stage)
+  }, { flush: 'post' })
+  watch(offset, schedulePixelSnap, { flush: 'sync' })
 
   return {
     mode,

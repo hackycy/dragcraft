@@ -9,9 +9,10 @@ import type {
   RegistryInstance,
   SchemaStoreInstance,
 } from './types'
+import { readonly } from 'vue'
 import { CommandType, EventName } from './constants'
 import { pushOwnedHistorySnapshot } from './history-manager'
-import { cloneSchemaRef } from './schema-utils'
+import { cloneSchema } from './schema-utils'
 
 const COMMAND_EVENT_MAP: Record<string, string> = {
   [CommandType.ADD_NODE]: EventName.NODE_ADDED,
@@ -31,9 +32,11 @@ export interface CommandBusInstance {
 function normalizeHandlerResult(result: CommandResult): CommandExecutionResult {
   if (result === false)
     return { ok: false, code: 'COMMAND_REJECTED' }
-  if (result)
+  if (!result)
+    return { ok: true, changed: true }
+  if (!result.ok)
     return result
-  return { ok: true }
+  return { ...result, changed: result.changed ?? true }
 }
 
 export function createCommandBus(
@@ -45,7 +48,12 @@ export function createCommandBus(
   const handlers = new Map<string, CommandHandler<any>>()
   let executing = false
 
-  const ctx: CommandContext = { store, registry }
+  const interactionStore = {
+    selectedNodeId: readonly(store.selectedNodeId),
+    hoveredNodeId: readonly(store.hoveredNodeId),
+    selectNode: store.selectNode,
+    hoverNode: store.hoverNode,
+  }
 
   function registerHandler<T = unknown>(
     type: string,
@@ -66,15 +74,21 @@ export function createCommandBus(
         return { ok: false, code: 'COMMAND_HANDLER_MISSING' }
       }
 
-      const beforeSnapshot = cloneSchemaRef(store.schema)
+      const beforeSnapshot = store.getSnapshot()
+      const draft = cloneSchema(beforeSnapshot)
+      const ctx: CommandContext = {
+        schema: beforeSnapshot,
+        draft,
+        store: interactionStore,
+        registry,
+      }
       let result: CommandResult
 
       try {
         result = handler(ctx, command.payload)
       }
       catch (error) {
-        store.setSchema(beforeSnapshot)
-        console.error(`[dragcraft/core] Command "${command.type}" failed, rolling back:`, error)
+        console.error(`[dragcraft/core] Command "${command.type}" failed, discarding draft:`, error)
         return {
           ok: false,
           code: 'COMMAND_HANDLER_FAILED',
@@ -83,19 +97,19 @@ export function createCommandBus(
       }
 
       const normalized = normalizeHandlerResult(result)
-      if (!normalized.ok) {
-        store.setSchema(beforeSnapshot)
+      if (!normalized.ok)
         return normalized
-      }
+      if (!normalized.changed)
+        return normalized
 
+      const snapshot = store.commitSchema(draft)
       pushOwnedHistorySnapshot(history, command.type, beforeSnapshot)
-      store.triggerUpdate()
 
       const specificEvent = COMMAND_EVENT_MAP[command.type]
       if (specificEvent) {
         eventHub.emit(specificEvent, normalized.eventPayload ?? command.payload)
       }
-      eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
+      eventHub.emit(EventName.SCHEMA_CHANGED, snapshot)
       return normalized
     }
     finally {

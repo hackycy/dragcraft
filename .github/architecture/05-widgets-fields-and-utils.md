@@ -1,6 +1,6 @@
 # 物料、字段与工具包
 
-本章覆盖 `@dragcraft/widgets`、字段 adapter、内置字段包、`@dragcraft/icons` 和 `@dragcraft/utils`。
+本章覆盖 `@dragcraft/widgets`、字段 adapter、内置字段包、`@dragcraft/icons`、`@dragcraft/i18n` 和 `@dragcraft/utils`。
 
 ## 物料协议包
 
@@ -169,6 +169,19 @@ playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueF
 - 支持 size、color、class 等通用属性。
 - 不承载业务状态。
 
+## I18n 包
+
+`@dragcraft/i18n` 提供 Vue UI 包共享的响应式国际化上下文。
+
+当前能力：
+
+- `createI18n()`：创建 locale、翻译查询与运行时消息合并能力。
+- `I18N_KEY`：供宿主和 UI 包共享同一实例的 injection key。
+- `useI18n()`：读取上下文，并在未注入时提供 fallback 行为。
+- `I18nInstance`、`LocaleMessages`、`MessageTree` 等公共类型。
+
+它可以被 designer、renderer、form-generator 和业务应用消费；因为依赖 Vue 响应式与注入 API，不属于纯函数 utils。
+
 ## Utils 包
 
 `@dragcraft/utils` 提供跨包复用的纯函数工具。
@@ -187,5 +200,6 @@ playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueF
 
 使用约束：
 
-- 可被 core、designer、renderer、form-generator、widgets 等包共同复用。
+- 可被 core、designer、renderer 和业务应用等包共同复用。
 - 不承载业务语义逻辑，业务逻辑应留在上层包。
+- 不包含 Vue、DOM 或具体 UI 包依赖。

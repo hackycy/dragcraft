@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, ref } from 'vue'
 import { resolveCanvasStagePixelSnap, useCanvasPan } from './useCanvasPan'
 
@@ -22,11 +22,12 @@ function mountPan() {
     },
   }))
   app.mount(host)
-  return { app, host, viewport, pan }
+  return { app, host, viewport, stage, pan }
 }
 
 describe('useCanvasPan', () => {
   afterEach(() => {
+    vi.restoreAllMocks()
     document.body.innerHTML = ''
   })
 
@@ -77,6 +78,36 @@ describe('useCanvasPan', () => {
 
     pan.reset()
     expect(pan.offset.value).toEqual({ x: 0, y: 0 })
+    app.unmount()
+  })
+
+  it('measures canvas geometry at most once per animation frame', () => {
+    const callbacks: FrameRequestCallback[] = []
+    const requestFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callbacks.push(callback)
+      return callbacks.length
+    })
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+    const { app, viewport, stage, pan } = mountPan()
+    const viewportRect = vi.spyOn(viewport, 'getBoundingClientRect')
+    const stageRect = vi.spyOn(stage, 'getBoundingClientRect')
+
+    callbacks.shift()!(0)
+    requestFrame.mockClear()
+    viewportRect.mockClear()
+    stageRect.mockClear()
+    pan.setMode('hand')
+    pan.handlePointerDown(new PointerEvent('pointerdown', { button: 0, pointerId: 1, clientX: 0, clientY: 0 }))
+    pan.handlePointerMove(new PointerEvent('pointermove', { pointerId: 1, clientX: 10, clientY: 10 }))
+    pan.handlePointerMove(new PointerEvent('pointermove', { pointerId: 1, clientX: 20, clientY: 20 }))
+    pan.handlePointerMove(new PointerEvent('pointermove', { pointerId: 1, clientX: 30, clientY: 30 }))
+
+    expect(requestFrame).toHaveBeenCalledOnce()
+    expect(viewportRect).not.toHaveBeenCalled()
+    expect(stageRect).not.toHaveBeenCalled()
+    callbacks.shift()!(16)
+    expect(viewportRect).toHaveBeenCalledOnce()
+    expect(stageRect).toHaveBeenCalledOnce()
     app.unmount()
   })
 

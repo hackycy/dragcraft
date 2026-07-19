@@ -1,7 +1,7 @@
 import type { Component } from 'vue'
 import type { LeftPanelTabKey } from '../types'
+import { useI18n } from '@dragcraft/i18n'
 import { IconChevronLeft, IconChevronRight, IconMaterial, IconStructureTree } from '@dragcraft/icons'
-import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import DcMaterialPanel from './DcMaterialPanel'

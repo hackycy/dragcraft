@@ -15,6 +15,7 @@
 | `@dragcraft/themes` | 工作台主题聚合、令牌与视觉配方 |
 | `@dragcraft/device-frames` | 设备容器框架 |
 | `@dragcraft/icons` | SVG 图标组件库 |
+| `@dragcraft/i18n` | Vue UI 包共享的响应式国际化上下文 |
 | `@dragcraft/utils` | 跨包复用纯函数工具 |
 
 ## @dragcraft/core
@@ -31,6 +32,7 @@
 - `createEngine()`。
 - `CommandType`。
 - `resolveBehavior()`。
+- `normalizeStyleValueMap()`。
 - Schema、command、event、registry、widget 相关类型。
 
 依赖与协作：
@@ -77,6 +79,7 @@
 - `RootRenderer`。
 - `createNodeActionRegistry()`。
 - `createDefaultActions()`。
+- `hideNativeDragImage()`。
 - `useWidgetNode()`、`useNodeActions()`、`useNodeDrag()`、`useToolbarPosition()`。
 
 依赖与协作：
@@ -210,6 +213,27 @@
 - peer 依赖 Vue。
 - 不承载业务逻辑。
 
+## @dragcraft/i18n
+
+职责：
+
+- 提供 UI 包共享的响应式 locale 与翻译查询。
+- 维护 Vue injection key 和运行时消息合并。
+- 集中 designer、renderer、form-generator 使用的国际化协议与类型。
+
+主要入口：
+
+- `createI18n()`。
+- `useI18n()`。
+- `I18N_KEY`。
+- `I18nInstance`、`LocaleMessages`、`MessageTree`。
+
+依赖与协作：
+
+- peer 依赖 Vue。
+- 被 designer、renderer、form-generator 和业务应用消费。
+- 不包含具体产品文案；各消费包或宿主负责合并消息树。
+
 ## @dragcraft/utils
 
 职责：
@@ -238,19 +262,24 @@
       -> @dragcraft/core
       -> @dragcraft/renderer
   -> @dragcraft/form-generator
+  -> @dragcraft/i18n
   -> @dragcraft/fields-ant-design-vue
   -> @dragcraft/themes
   -> @dragcraft/widgets
   -> @dragcraft/device-frames
   -> @dragcraft/icons
 
-@dragcraft/utils 可被多个基础包复用
+@dragcraft/core -> @dragcraft/utils
+@dragcraft/designer -> @dragcraft/utils
+@dragcraft/renderer -> @dragcraft/utils
 ```
 
 依赖规则：
 
 - core 不依赖 UI 组件包。
 - form-generator 不依赖 core。
+- i18n 只依赖 Vue，不依赖任何 dragcraft UI 组件包。
+- utils 不依赖 Vue 或 DOM。
 - renderer 不直接持久化业务状态。
 - designer 负责包组合与对外简化。
 - 业务应用负责提供物料实现，并选择内置字段包或自定义字段 adapter。

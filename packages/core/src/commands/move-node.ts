@@ -1,4 +1,4 @@
-import type { CommandContext, CommandResult, MoveNodePayload } from '../types'
+import type { CommandContext, CommandResult, DesignerSchema, MoveNodePayload } from '../types'
 import { cloneDeep } from '@dragcraft/utils'
 import { resolveBehavior } from '../behavior'
 import { resolvePlacementDecision } from '../container-placement'
@@ -14,6 +14,7 @@ import {
   stripPageLayout,
 } from '../layout'
 import { buildSchemaIndex } from '../schema-index'
+import { cloneSchema, deepFreeze } from '../schema-utils'
 import { validateSchema } from '../schema-validation'
 import {
   getLockedIndicesFromEntries,
@@ -24,13 +25,13 @@ import {
 } from '../sortable'
 
 export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): CommandResult {
-  const { store, registry } = ctx
-  const rawSchema = store.getRawSchema()
-  const indexed = buildSchemaIndex(rawSchema)
-  const sourceResult = resolveNodeSource(rawSchema, indexed, payload.nodeId)
+  const { draft: rawSchema, registry } = ctx
+  const safeSchema = ctx.schema as DesignerSchema
+  const indexed = buildSchemaIndex(safeSchema)
+  const sourceResult = resolveNodeSource(safeSchema, indexed, payload.nodeId)
   if (!sourceResult.ok)
     return sourceResult
-  const targetResult = resolveDestination(rawSchema, registry, payload.destination)
+  const targetResult = resolveDestination(safeSchema, registry, payload.destination)
   if (!targetResult.ok)
     return targetResult
 
@@ -41,7 +42,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
     return { ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' }
 
   const sourceMeta = registry.getWidget(node.type)
-  const behaviorContext = { node, schema: rawSchema }
+  const behaviorContext = { node, schema: safeSchema }
   if (!resolveBehavior(sourceMeta?.draggable, behaviorContext)
     || !resolveBehavior(sourceMeta?.sortable, behaviorContext)) {
     return { ok: false, code: 'NODE_NOT_MOVABLE' }
@@ -72,10 +73,10 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
   if (sameRegion && source.index < requestedIndex)
     requestedIndex -= 1
   if (sameRegion && source.index === requestedIndex)
-    return { ok: false, code: 'MOVE_NOOP' }
+    return { ok: true, changed: false }
 
   if (source.destination.kind === 'container') {
-    const sourceLocks = getLockedIndicesFromNodes(source.children, registry, rawSchema)
+    const sourceLocks = getLockedIndicesFromNodes(source.children, registry, safeSchema)
     if (sameRegion) {
       if (!isMoveAllowed(source.index, requestedIndex, sourceLocks))
         return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
@@ -85,7 +86,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
     }
   }
   if (payload.destination.kind === 'container' && !sameRegion) {
-    const targetLocks = getLockedIndicesFromNodes(target.children, registry, rawSchema)
+    const targetLocks = getLockedIndicesFromNodes(target.children, registry, safeSchema)
     if (!isInsertAllowed(requestedIndex, targetLocks))
       return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
   }
@@ -100,7 +101,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
       targetCount,
       callbackContext: {
         operation: 'move',
-        schema: rawSchema,
+        schema: safeSchema,
         container: target.container,
         variant: target.variant,
         region: target.region,
@@ -129,7 +130,7 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
     : undefined
   const targetUsesSortScope = typeof targetScope === 'string'
   const targetEntriesBefore = payload.destination.kind === 'root' && targetUsesSortScope
-    ? getSortScopeEntries(createLayoutPlan(rawSchema, registry), targetScope)
+    ? getSortScopeEntries(createLayoutPlan(safeSchema, registry), targetScope)
     : []
   if (payload.destination.kind === 'root') {
     requestedIndex = clampInsertIndex(
@@ -143,14 +144,14 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
       return { ok: false, code: 'NODE_NOT_SORTABLE' }
     const sourceEntries = sourceScope === false
       ? []
-      : getSortScopeEntries(createLayoutPlan(rawSchema, registry), sourceScope)
+      : getSortScopeEntries(createLayoutPlan(safeSchema, registry), sourceScope)
     const sourceScopeIndex = sourceEntries.findIndex(entry => entry.node.id === node.id)
-    const sourceLocks = getLockedIndicesFromEntries(sourceEntries, registry, rawSchema)
+    const sourceLocks = getLockedIndicesFromEntries(sourceEntries, registry, safeSchema)
     if (payload.destination.kind === 'root' && targetScope === sourceScope) {
       if (sourceScopeIndex < requestedIndex)
         requestedIndex -= 1
       if (sourceScopeIndex === requestedIndex)
-        return { ok: false, code: 'MOVE_NOOP' }
+        return { ok: true, changed: false }
       if (!isMoveAllowed(sourceScopeIndex, requestedIndex, sourceLocks))
         return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
     }
@@ -159,28 +160,40 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
     }
   }
   if (payload.destination.kind === 'root' && targetUsesSortScope && targetScope !== sourceScope) {
-    const targetLocks = getLockedIndicesFromEntries(targetEntriesBefore, registry, rawSchema)
+    const targetLocks = getLockedIndicesFromEntries(targetEntriesBefore, registry, safeSchema)
     if (!isInsertAllowed(requestedIndex, targetLocks))
       return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
   }
 
-  const sameOwnerArray = target.children === source.children
-  const sourceBefore = cloneDeep(source.children)
-  const targetBefore = sameOwnerArray ? null : cloneDeep(target.children)
-  const [removed] = source.children.splice(source.index, 1)
+  const draftIndexed = buildSchemaIndex(rawSchema)
+  const draftSourceResult = resolveNodeSource(rawSchema, draftIndexed, payload.nodeId)
+  if (!draftSourceResult.ok)
+    return draftSourceResult
+  const draftTargetResult = resolveDestination(rawSchema, registry, payload.destination)
+  if (!draftTargetResult.ok)
+    return draftTargetResult
+  const draftSource = draftSourceResult.value
+  const draftTarget = draftTargetResult.value
+  const sameOwnerArray = draftTarget.children === draftSource.children
+  const sourceBefore = cloneDeep(draftSource.children)
+  const targetBefore = sameOwnerArray ? null : cloneDeep(draftTarget.children)
+  const [removed] = draftSource.children.splice(draftSource.index, 1)
   const inserted = payload.destination.kind === 'container'
     ? stripPageLayout(removed)
     : cloneDeep(removed)
   const insertedIndex = payload.destination.kind === 'root'
     ? (targetUsesSortScope
         ? getSortableArrayIndexForInsert(
-            getSortScopeEntries(createLayoutPlan(rawSchema, registry), targetScope),
-            target.children,
+            getSortScopeEntries(createLayoutPlan(
+              deepFreeze(cloneSchema(rawSchema)) as DesignerSchema,
+              registry,
+            ), targetScope),
+            draftTarget.children,
             requestedIndex,
           )
-        : clampInsertIndex(requestedIndex, target.children.length))
-    : clampInsertIndex(requestedIndex, target.children.length)
-  target.children.splice(insertedIndex, 0, inserted)
+        : clampInsertIndex(requestedIndex, draftTarget.children.length))
+    : clampInsertIndex(requestedIndex, draftTarget.children.length)
+  draftTarget.children.splice(insertedIndex, 0, inserted)
   const validation = validateSchema(rawSchema, registry)
   const movedNodeIds = collectSubtreeIds(inserted)
   const candidateDiagnostics = validation.diagnostics.filter(diagnostic =>
@@ -188,9 +201,9 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
     || (diagnostic.ownerId !== undefined && movedNodeIds.has(diagnostic.ownerId)),
   )
   if (candidateDiagnostics.some(diagnostic => diagnostic.severity === 'error')) {
-    source.children.splice(0, source.children.length, ...sourceBefore)
+    draftSource.children.splice(0, draftSource.children.length, ...sourceBefore)
     if (targetBefore)
-      target.children.splice(0, target.children.length, ...targetBefore)
+      draftTarget.children.splice(0, draftTarget.children.length, ...targetBefore)
     return {
       ok: false,
       code: 'SCHEMA_CANDIDATE_INVALID',

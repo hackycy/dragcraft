@@ -555,16 +555,31 @@ export interface Command<T = unknown> {
   payload: T
 }
 
+export interface CommandInteractionStore {
+  readonly selectedNodeId: Readonly<Ref<string | null>>
+  readonly hoveredNodeId: Readonly<Ref<string | null>>
+  selectNode: (id: string | null) => void
+  hoverNode: (id: string | null) => void
+}
+
 export interface CommandContext {
-  store: SchemaStoreInstance
+  /** Frozen schema at the start of this command. Safe for user callbacks. */
+  schema: DeepReadonly<DesignerSchema>
+  /** Command-owned mutable draft. Committed only when the command changes state. */
+  draft: DesignerSchema
+  store: CommandInteractionStore
   registry: RegistryInstance
 }
 
 export type CommandExecutionResult
-  = | { ok: true, eventPayload?: unknown }
+  = | { ok: true, changed: boolean, eventPayload?: unknown }
     | ({ ok: false, code: string } & CreationBlockReason & { details?: Record<string, unknown> })
 
-export type CommandResult = false | void | CommandExecutionResult
+export type CommandResult
+  = | false
+    | void
+    | { ok: true, changed?: boolean, eventPayload?: unknown }
+    | Extract<CommandExecutionResult, { ok: false }>
 
 export function commandFailure(
   code: string,
@@ -621,7 +636,7 @@ export interface SetGlobalConfigPayload {
 
 export interface HistoryEntry {
   label: string
-  snapshot: DesignerSchema
+  snapshot: DeepReadonly<DesignerSchema>
 }
 
 // ──────────────────────────────────────────
@@ -671,19 +686,19 @@ export interface SchemaMigration {
 // ──────────────────────────────────────────
 
 export interface SchemaStoreInstance {
-  readonly schema: ShallowRef<DesignerSchema>
+  readonly schema: ShallowRef<DeepReadonly<DesignerSchema>>
   readonly selectedNodeId: Ref<string | null>
   readonly hoveredNodeId: Ref<string | null>
   readonly dragTarget: Ref<DragTarget | null>
   getSchema: () => DesignerSchema
-  getRawSchema: () => DesignerSchema
+  getSnapshot: () => DeepReadonly<DesignerSchema>
   setSchema: (schema: DesignerSchema) => void
+  commitSchema: (schema: DesignerSchema) => DeepReadonly<DesignerSchema>
+  restoreSnapshot: (schema: DeepReadonly<DesignerSchema>) => void
   selectNode: (id: string | null) => void
   hoverNode: (id: string | null) => void
   setDragTarget: (target: DragTarget | null) => void
-  getNodeById: (id: string) => SchemaNode | null
-  applyTransientPatch: (nodeId: string, partial: Partial<Pick<SchemaNode, 'props' | 'style'>>) => void
-  triggerUpdate: () => void
+  getNodeById: (id: string) => DeepReadonly<SchemaNode> | null
 }
 
 export interface RegistryInstance {

@@ -1,9 +1,9 @@
 import type { FormSchemaShape } from '@dragcraft/core'
-import type { MessageTree } from '@dragcraft/utils'
+import type { MessageTree } from '@dragcraft/i18n'
 import type { DesignerInstance, DesignerOptions } from './types'
 import { createEngine } from '@dragcraft/core'
+import { createI18n } from '@dragcraft/i18n'
 import { createDefaultActions, createNodeActionRegistry, rendererMessages } from '@dragcraft/renderer'
-import { createI18n } from '@dragcraft/utils'
 import { designerMessages } from './messages'
 import { createDesignerWorkspace } from './workspace'
 

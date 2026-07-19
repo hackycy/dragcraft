@@ -42,6 +42,7 @@
   "dependencies": {
     "@dragcraft/core": "workspace:*",
     "@dragcraft/form-generator": "workspace:*",
+    "@dragcraft/i18n": "workspace:*",
     "@dragcraft/icons": "workspace:*",
     "@dragcraft/renderer": "workspace:*",
     "@dragcraft/utils": "workspace:*"

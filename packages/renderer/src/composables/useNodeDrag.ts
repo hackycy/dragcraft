@@ -1,6 +1,6 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { RendererContext } from '../types'
-import { hideNativeDragImage } from '@dragcraft/utils'
+import { hideNativeDragImage } from '../drag-image'
 import { fireAfterHook } from '../event-hooks'
 
 export interface UseNodeDragReturn {

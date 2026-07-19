@@ -9,6 +9,7 @@ jobs:
   release:
     uses: sxzz/workflows/.github/workflows/release.yml@v1
     with:
+      build: pnpm build:packages
       publish: true
     permissions:
       contents: write

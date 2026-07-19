@@ -1,8 +1,8 @@
 import type { LayoutEdge, LayoutNodeEntry, LayoutPlan, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from '@dragcraft/core'
 import type { VNode, VNodeChild } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../types'
+import { normalizeStyleValueMap } from '@dragcraft/core'
 import { h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
-import { normalizeStyle } from './style-utils'
 
 export interface FrameViewportOptions {
   content?: VNodeChild[]
@@ -199,6 +199,8 @@ function renderLayers(plan: LayoutPlan | undefined, layerVNodes: Record<string, 
 
 function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): void {
   let observer: ResizeObserver | null = null
+  let observedTargets = new Set<HTMLElement>()
+  let updateFrame: number | null = null
 
   function getChromeMeasureTarget(item: HTMLElement): HTMLElement {
     return item.querySelector<HTMLElement>(':scope > .dc-node') ?? item
@@ -228,19 +230,37 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
       viewport.style.setProperty(measureVar(edge as LayoutEdge), `${value}px`)
   }
 
+  function scheduleUpdate(): void {
+    if (updateFrame !== null)
+      return
+    updateFrame = window.requestAnimationFrame(() => {
+      updateFrame = null
+      update()
+    })
+  }
+
   function refreshObserver(): void {
     const viewport = viewportRef.value
     if (!viewport)
       return
     if (typeof ResizeObserver === 'undefined') {
-      update()
+      scheduleUpdate()
       return
     }
-    observer?.disconnect()
-    observer = new ResizeObserver(update)
-    for (const item of Array.from(viewport.querySelectorAll<HTMLElement>('[data-dc-chrome-position="fixed"][data-dc-avoid-content="true"]')))
-      observer.observe(getChromeMeasureTarget(item))
-    void nextTick(update)
+    observer ??= new ResizeObserver(scheduleUpdate)
+    const nextTargets = new Set(Array.from(
+      viewport.querySelectorAll<HTMLElement>('[data-dc-chrome-position="fixed"][data-dc-avoid-content="true"]'),
+      getChromeMeasureTarget,
+    ))
+    const targetsChanged = nextTargets.size !== observedTargets.size
+      || [...nextTargets].some(target => !observedTargets.has(target))
+    if (targetsChanged) {
+      observer.disconnect()
+      for (const target of nextTargets)
+        observer.observe(target)
+      observedTargets = nextTargets
+    }
+    void nextTick(scheduleUpdate)
   }
 
   onMounted(refreshObserver)
@@ -248,6 +268,8 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
 
   onBeforeUnmount(() => {
     observer?.disconnect()
+    if (updateFrame !== null)
+      window.cancelAnimationFrame(updateFrame)
   })
 }
 
@@ -301,6 +323,8 @@ function useScrollMetrics(scrollerRef: { value: HTMLElement | null }) {
     display: 'none',
   })
   let observer: ResizeObserver | null = null
+  let observedTarget: HTMLElement | null = null
+  let updateFrame: number | null = null
 
   function setThumbStyle(next: Record<string, string>): void {
     const prev = thumbStyle.value
@@ -337,32 +361,46 @@ function useScrollMetrics(scrollerRef: { value: HTMLElement | null }) {
     })
   }
 
+  function scheduleUpdate(): void {
+    if (updateFrame !== null)
+      return
+    updateFrame = window.requestAnimationFrame(() => {
+      updateFrame = null
+      update()
+    })
+  }
+
   function refreshObserver(): void {
     const scroller = scrollerRef.value
     if (!scroller)
       return
 
     if (typeof ResizeObserver === 'undefined') {
-      update()
+      scheduleUpdate()
       return
     }
 
-    observer?.disconnect()
-    observer = new ResizeObserver(update)
-    if (scroller.firstElementChild instanceof HTMLElement)
-      observer.observe(scroller.firstElementChild)
-    else
-      observer.observe(scroller)
-    void nextTick(update)
+    observer ??= new ResizeObserver(scheduleUpdate)
+    const nextTarget = scroller.firstElementChild instanceof HTMLElement
+      ? scroller.firstElementChild
+      : scroller
+    if (nextTarget !== observedTarget) {
+      observer.disconnect()
+      observer.observe(nextTarget)
+      observedTarget = nextTarget
+    }
+    void nextTick(scheduleUpdate)
   }
 
   onMounted(refreshObserver)
   onUpdated(refreshObserver)
   onBeforeUnmount(() => {
     observer?.disconnect()
+    if (updateFrame !== null)
+      window.cancelAnimationFrame(updateFrame)
   })
 
-  return { thumbStyle, update }
+  return { thumbStyle, update: scheduleUpdate }
 }
 
 export function useFrameViewport(options: () => FrameViewportOptions): () => VNodeChild {
@@ -373,7 +411,7 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
 
   return () => {
     const current = options()
-    const surfaceStyle = normalizeStyle(current.surfaceStyle)
+    const surfaceStyle = normalizeStyleValueMap(current.surfaceStyle)
     const chromeVNodes = current.chromeVNodes ?? []
     const contentChrome = groupContentChrome(current.plan, chromeVNodes)
     return h('div', {

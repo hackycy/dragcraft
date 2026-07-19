@@ -4,11 +4,10 @@ import type { NodeActionRegistry } from '../action-registry'
 import type { ActionInterceptor } from '../action-runtime'
 import type { RendererEventHooks } from '../event-hooks'
 import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions } from '../types'
-import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, resolveNodeLayout } from '@dragcraft/core'
+import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, normalizeStyleValueMap, resolveNodeLayout } from '@dragcraft/core'
 import { computed, defineComponent, h, provide } from 'vue'
 import { createRendererContext } from '../context'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
-import { normalizeStyle } from '../style-utils'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import DefaultContainerShell from './DefaultContainerShell'
 import DefaultDropIndicator from './DefaultDropIndicator'
@@ -273,7 +272,7 @@ export default defineComponent({
               layerVNodes,
               forbiddenOverlayVNode,
               layoutPlan: plan,
-              surfaceStyle: normalizeStyle(schema.root.style?.surface),
+              surfaceStyle: normalizeStyleValueMap(schema.root.style?.surface),
               registry: props.engine.registry,
               selectionPresentation,
             },

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import type { ContainerDefinition, DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import { CommandType, createEngine } from '@dragcraft/core'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useDragDrop } from './useDragDrop'
 
 function makeNode(id: string, type = 'text', layout?: SchemaNode['layout']): SchemaNode {
@@ -100,6 +100,10 @@ describe('useDragDrop', () => {
       throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
   })
 
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('initial state has no drag-over', () => {
     const dd = useDragDrop(engine)
     expect(dd.dragOverNodeId.value).toBeNull()
@@ -125,6 +129,50 @@ describe('useDragDrop', () => {
 
     expect(() => dd.handleCanvasDragOver(event)).not.toThrow()
     expect(dd.activeDestination.value).toEqual({ kind: 'root', sortScope, index: 0 })
+  })
+
+  it('measures sortable geometry once per animation frame', () => {
+    const callbacks: FrameRequestCallback[] = []
+    const requestFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callbacks.push(callback)
+      return callbacks.length
+    })
+    const meta = makeMeta('image')
+    engine.registerWidget(meta)
+    const dd = useDragDrop(engine)
+    dd.handleMaterialDragStart(mockDragEvent(), meta)
+    const canvas = document.createElement('div')
+    const child = document.createElement('div')
+    child.dataset.dcSortScope = 'content'
+    const rect = vi.spyOn(child, 'getBoundingClientRect').mockReturnValue({ top: 100, height: 40 } as DOMRect)
+    const query = vi.spyOn(canvas, 'querySelectorAll')
+    canvas.appendChild(child)
+    const event = mockDragEvent({ currentTarget: canvas, target: canvas, clientY: 110 })
+
+    dd.handleCanvasDragOver(event)
+    dd.handleCanvasDragOver(event)
+    dd.handleCanvasDragOver(event)
+
+    expect(requestFrame).toHaveBeenCalledOnce()
+    expect(query).toHaveBeenCalledOnce()
+    expect(rect).toHaveBeenCalledOnce()
+    callbacks.shift()!(16)
+    dd.handleCanvasDragOver(event)
+    expect(query).toHaveBeenCalledTimes(2)
+    expect(rect).toHaveBeenCalledTimes(2)
+  })
+
+  it('treats a same-position drop as a successful no-op', () => {
+    const dd = useDragDrop(engine)
+    engine.store.setDragTarget({ sourceNodeId: 'a', widgetType: 'text' })
+    dd.dragOverIndex.value = 0
+
+    const result = dd.commitDrop()
+
+    expect(result).toEqual({ ok: true, changed: false })
+    expect(dd.isForbidden.value).toBe(false)
+    expect(engine.store.dragTarget.value).toBeNull()
+    expect(engine.exportSchema().root.children!.map(node => node.id)).toEqual(['a', 'b'])
   })
 
   it('handleMaterialDragStart sets dragTarget with widgetType even when creatable is false', () => {

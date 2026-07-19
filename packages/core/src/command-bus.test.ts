@@ -62,9 +62,9 @@ describe('createCommandBus', () => {
     expect(history.canUndo()).toBe(true)
   })
 
-  it('execute calls store.triggerUpdate', () => {
+  it('execute commits the command draft', () => {
     const { commandBus, store } = setup()
-    const spy = vi.spyOn(store, 'triggerUpdate')
+    const spy = vi.spyOn(store, 'commitSchema')
     commandBus.registerHandler('TEST', () => {})
     commandBus.execute({ type: 'TEST', payload: null })
     expect(spy).toHaveBeenCalled()
@@ -117,9 +117,8 @@ describe('createCommandBus', () => {
     )
     const originalSchema = store.getSchema()
 
-    commandBus.registerHandler('FAILING', () => {
-      // Mutate the schema before throwing
-      store.getRawSchema().root.children![0]!.props.label = 'mutated'
+    commandBus.registerHandler('FAILING', ({ draft }) => {
+      draft.root.children![0]!.props.label = 'mutated'
       throw new Error('handler failed')
     })
 
@@ -134,7 +133,7 @@ describe('createCommandBus', () => {
     })
     expect(store.getSchema()).toEqual(originalSchema)
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('rolling back'),
+      expect.stringContaining('discarding draft'),
       expect.any(Error),
     )
     errorSpy.mockRestore()
@@ -145,14 +144,14 @@ describe('createCommandBus', () => {
       makeSchema([{ id: 'a', type: 'text', props: { label: 'original' } }]),
     )
     const originalSchema = store.getSchema()
-    const triggerUpdate = vi.spyOn(store, 'triggerUpdate')
+    const commitSchema = vi.spyOn(store, 'commitSchema')
     const schemaChanged = vi.fn()
     const nodeAdded = vi.fn()
     eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
     eventHub.on(EventName.NODE_ADDED, nodeAdded)
 
-    commandBus.registerHandler(CommandType.ADD_NODE, () => {
-      store.getRawSchema().root.children![0]!.props.label = 'mutated'
+    commandBus.registerHandler(CommandType.ADD_NODE, ({ draft }) => {
+      draft.root.children![0]!.props.label = 'mutated'
       return false
     })
 
@@ -161,7 +160,7 @@ describe('createCommandBus', () => {
     expect(result).toEqual({ ok: false, code: 'COMMAND_REJECTED' })
     expect(store.getSchema()).toEqual(originalSchema)
     expect(history.canUndo()).toBe(false)
-    expect(triggerUpdate).not.toHaveBeenCalled()
+    expect(commitSchema).not.toHaveBeenCalled()
     expect(schemaChanged).not.toHaveBeenCalled()
     expect(nodeAdded).not.toHaveBeenCalled()
   })
@@ -170,7 +169,7 @@ describe('createCommandBus', () => {
     const { commandBus, eventHub, history, store } = setup(
       makeSchema([{ id: 'a', type: 'text', props: { label: 'original' } }]),
     )
-    const triggerUpdate = vi.spyOn(store, 'triggerUpdate')
+    const commitSchema = vi.spyOn(store, 'commitSchema')
     const schemaChanged = vi.fn()
     eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
@@ -179,22 +178,41 @@ describe('createCommandBus', () => {
 
     expect(result).toEqual({ ok: false, code: 'COMMAND_REJECTED' })
     expect(history.canUndo()).toBe(false)
-    expect(triggerUpdate).not.toHaveBeenCalled()
+    expect(commitSchema).not.toHaveBeenCalled()
+    expect(schemaChanged).not.toHaveBeenCalled()
+  })
+
+  it('discards a mutated draft when the handler reports changed false', () => {
+    const { commandBus, eventHub, history, store } = setup(
+      makeSchema([{ id: 'a', type: 'text', props: { label: 'original' } }]),
+    )
+    const schemaChanged = vi.fn()
+    eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+    commandBus.registerHandler('NOOP', ({ draft }) => {
+      draft.root.children![0].props.label = 'discarded'
+      return { ok: true, changed: false }
+    })
+
+    const result = commandBus.execute({ type: 'NOOP', payload: null })
+
+    expect(result).toEqual({ ok: true, changed: false })
+    expect(store.getSnapshot().root.children![0].props.label).toBe('original')
+    expect(history.canUndo()).toBe(false)
     expect(schemaChanged).not.toHaveBeenCalled()
   })
 
   it('execute records void handlers as changed commands', () => {
     const { commandBus, eventHub, history, store } = setup()
-    const triggerUpdate = vi.spyOn(store, 'triggerUpdate')
+    const commitSchema = vi.spyOn(store, 'commitSchema')
     const schemaChanged = vi.fn()
     eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
 
     commandBus.registerHandler('CHANGED', () => {})
     const result = commandBus.execute({ type: 'CHANGED', payload: null })
 
-    expect(result).toEqual({ ok: true })
+    expect(result).toEqual({ ok: true, changed: true })
     expect(history.canUndo()).toBe(true)
-    expect(triggerUpdate).toHaveBeenCalledTimes(1)
+    expect(commitSchema).toHaveBeenCalledTimes(1)
     expect(schemaChanged).toHaveBeenCalledTimes(1)
   })
 
@@ -222,8 +240,8 @@ describe('createCommandBus', () => {
     const nodeAdded = vi.fn()
     eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
     eventHub.on(EventName.NODE_ADDED, nodeAdded)
-    commandBus.registerHandler(CommandType.ADD_NODE, ({ store }) => {
-      store.getRawSchema().root.children = []
+    commandBus.registerHandler(CommandType.ADD_NODE, ({ draft }) => {
+      draft.root.children = []
       return { ok: false, code: 'DENIED', message: 'No change' }
     })
 
@@ -248,7 +266,7 @@ describe('createCommandBus', () => {
       payload: { nodeId: 'requested' },
     })
 
-    expect(result).toEqual({ ok: true, eventPayload })
+    expect(result).toEqual({ ok: true, changed: true, eventPayload })
     expect(nodeAdded).toHaveBeenCalledOnce()
     expect(nodeAdded).toHaveBeenCalledWith(eventPayload)
   })

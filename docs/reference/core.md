@@ -30,7 +30,7 @@ console.log(schema.globalConfig.title)
 
 如果你在扩展布局、事件或拖拽约束，下一步再看 `createLayoutPlan()`、`EventName` 和 `resolveBehavior()` 这一组入口。关于这一层目前知道这些就够了。准备好之后，继续阅读 [Schema 与布局](/guide/schema-and-layout)。
 
-`engine.state.getSchema()` 与 `getNodeById()` 返回深冻结的只读快照。`engine.store` 只公开只读 refs 和 selection/hover/drag 交互方法，不包含 raw schema 或 schema mutation API；修改页面必须通过 `engine.execute()`，需要一份可编辑的导出对象时使用 `engine.exportSchema()`。
+`engine.state.getSchema()` 与 `getNodeById()` 返回当前已提交的深冻结只读快照；在下一条有效变更命令前，重复读取会得到相同引用。`engine.store` 只公开只读 refs 和 selection/hover/drag 交互方法，不包含 schema mutation API；修改页面必须通过 `engine.execute()`，需要一份可编辑的导出对象时使用 `engine.exportSchema()`。成功结果中的 `changed: false` 表示命令没有产生提交、历史或 `schema:changed` 事件。
 
 ## Container public API
 

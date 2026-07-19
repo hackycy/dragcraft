@@ -1,6 +1,6 @@
 import type { PropType } from 'vue'
+import { useI18n } from '@dragcraft/i18n'
 import { IconPlus } from '@dragcraft/icons'
-import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 
 /**

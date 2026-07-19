@@ -147,16 +147,11 @@ describe('createHistoryManager', () => {
   })
 
   describe('transactions', () => {
-    it('transaction suppresses pushSnapshot', () => {
-      const { store, history } = setup()
+    it('does not create a history entry for an unchanged transaction', () => {
+      const { history } = setup()
       history.beginTransaction()
-      history.pushSnapshot('a', store.getSchema())
-      history.pushSnapshot('b', store.getSchema())
       history.commitTransaction()
 
-      // Only one undo entry (from commit)
-      expect(history.canUndo()).toBe(true)
-      history.undo()
       expect(history.canUndo()).toBe(false)
     })
 

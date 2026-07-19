@@ -1,6 +1,6 @@
 import type { PropType } from 'vue'
 import type { DesignerContext, DesignerInstance } from '../types'
-import { I18N_KEY } from '@dragcraft/utils'
+import { I18N_KEY } from '@dragcraft/i18n'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useDragDrop } from '../composables/useDragDrop'
 import { DESIGNER_CONTEXT_KEY } from '../types'

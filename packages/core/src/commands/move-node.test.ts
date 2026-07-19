@@ -19,7 +19,7 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
 function setup(children: SchemaNode[]) {
   const store = createSchemaStore(makeSchema(children))
   const registry = createRegistry()
-  const ctx: CommandContext = { store, registry }
+  const ctx: CommandContext = { schema: store.getSnapshot(), draft: store.getSchema(), store, registry }
   return { store, registry, ctx }
 }
 
@@ -79,48 +79,48 @@ function setupWithContainer(rootNodes: SchemaNode[]) {
 
 describe('moveNodeHandler', () => {
   it('moves node from one position to another', () => {
-    const { ctx, store } = setup([makeNode('a'), makeNode('b'), makeNode('c')])
+    const { ctx } = setup([makeNode('a'), makeNode('b'), makeNode('c')])
     moveNodeHandler(ctx, { nodeId: 'a', destination: { kind: 'root', index: 3 } })
-    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    const ids = ctx.draft.root.children!.map(c => c.id)
     expect(ids).toEqual(['b', 'c', 'a'])
   })
 
   it('moves node to same position (no-op)', () => {
-    const { ctx, store } = setup([makeNode('a'), makeNode('b')])
+    const { ctx } = setup([makeNode('a'), makeNode('b')])
     moveNodeHandler(ctx, { nodeId: 'a', destination: { kind: 'root', index: 0 } })
-    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    const ids = ctx.draft.root.children!.map(c => c.id)
     expect(ids).toEqual(['a', 'b'])
   })
 
   it('does nothing when node not found', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { ctx, store } = setup([makeNode('a')])
+    const { ctx } = setup([makeNode('a')])
     moveNodeHandler(ctx, { nodeId: 'missing', destination: { kind: 'root', index: 0 } })
-    expect(store.getRawSchema().root.children).toHaveLength(1)
+    expect(ctx.draft.root.children).toHaveLength(1)
     warn.mockRestore()
   })
 
   it('does nothing when children is undefined', () => {
-    const { ctx, store } = setup([])
-    store.getRawSchema().root.children = undefined as any
+    const { ctx } = setup([])
+    ctx.draft.root.children = undefined as any
     moveNodeHandler(ctx, { nodeId: 'a', destination: { kind: 'root', index: 0 } })
     // Should not throw
   })
 
   it('blocks move when sortable constraint violated (moving locked widget)', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { ctx, registry, store } = setup([makeNode('a'), makeNode('b')])
+    const { ctx, registry } = setup([makeNode('a'), makeNode('b')])
     registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] }, sortable: false })
 
     // Both are locked (sortable=false). Moving 'a' should be blocked.
     moveNodeHandler(ctx, { nodeId: 'a', destination: { kind: 'root', index: 2 } })
-    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    const ids = ctx.draft.root.children!.map(c => c.id)
     expect(ids).toEqual(['a', 'b']) // unchanged
     warn.mockRestore()
   })
 
   it('moves nodes by sort-scope index while preserving chrome nodes', () => {
-    const { ctx, store } = setup([
+    const { ctx } = setup([
       makeNode('a'),
       makeNode('tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
       makeNode('b'),
@@ -129,27 +129,27 @@ describe('moveNodeHandler', () => {
 
     moveNodeHandler(ctx, { nodeId: 'a', destination: { kind: 'root', index: 3 } })
 
-    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    const ids = ctx.draft.root.children!.map(c => c.id)
     expect(ids).toEqual(['tabbar', 'b', 'c', 'a'])
   })
 
   it('blocks moving nodes outside sortable scopes', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { ctx, store } = setup([
+    const { ctx } = setup([
       makeNode('a'),
       makeNode('tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
     ])
 
     moveNodeHandler(ctx, { nodeId: 'tabbar', destination: { kind: 'root', index: 0 } })
 
-    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    const ids = ctx.draft.root.children!.map(c => c.id)
     expect(ids).toEqual(['a', 'tabbar'])
     warn.mockRestore()
   })
 
   it('moves a root widget into a region and strips page placement', () => {
     const text = makeNode('text', { placement: { kind: 'flow', region: 'hero' }, order: 3 })
-    const { ctx, store } = setupWithContainer([text, makeContainer()])
+    const { ctx } = setupWithContainer([text, makeContainer()])
 
     const result = moveNodeHandler(ctx, {
       nodeId: 'text',
@@ -157,8 +157,8 @@ describe('moveNodeHandler', () => {
     })
 
     expect(result).toMatchObject({ ok: true })
-    expect(store.getRawSchema().root.children!.map(node => node.id)).toEqual(['layout'])
-    expect(store.getRawSchema().root.children![0].container!.regions.open[0]).toMatchObject({
+    expect(ctx.draft.root.children!.map(node => node.id)).toEqual(['layout'])
+    expect(ctx.draft.root.children![0].container!.regions.open[0]).toMatchObject({
       id: 'text',
       layout: {},
     })
@@ -220,7 +220,7 @@ describe('moveNodeHandler', () => {
       full: [],
       open: [makeNode('a'), makeNode('b'), makeNode('c')],
     })
-    const { ctx, store } = setupWithContainer([container])
+    const { ctx } = setupWithContainer([container])
 
     const result = moveNodeHandler(ctx, {
       nodeId: 'a',
@@ -228,7 +228,7 @@ describe('moveNodeHandler', () => {
     })
 
     expect(result).toMatchObject({ ok: true })
-    expect(store.getRawSchema().root.children![0].container!.regions.open.map(node => node.id))
+    expect(ctx.draft.root.children![0].container!.regions.open.map(node => node.id))
       .toEqual(['b', 'c', 'a'])
   })
 
@@ -284,7 +284,7 @@ describe('moveNodeHandler', () => {
       full: [],
       open: [makeNode('child')],
     })
-    const { ctx, store } = setupWithContainer([container])
+    const { ctx } = setupWithContainer([container])
 
     const result = moveNodeHandler(ctx, {
       nodeId: 'child',
@@ -292,8 +292,8 @@ describe('moveNodeHandler', () => {
     })
 
     expect(result).toMatchObject({ ok: true })
-    expect(store.getRawSchema().root.children!.map(node => node.id)).toEqual(['layout', 'child'])
-    expect(store.getRawSchema().root.children![0].container!.regions.open).toEqual([])
+    expect(ctx.draft.root.children!.map(node => node.id)).toEqual(['layout', 'child'])
+    expect(ctx.draft.root.children![0].container!.regions.open).toEqual([])
   })
 
   it('moves an unsorted region widget to a raw root index without content locks', () => {
@@ -304,7 +304,7 @@ describe('moveNodeHandler', () => {
       open: [child],
     })
     const locked = { ...makeNode('locked'), type: 'locked' }
-    const { ctx, registry, store } = setupWithContainer([locked, container])
+    const { ctx, registry } = setupWithContainer([locked, container])
     registry.registerWidget({
       type: 'locked',
       title: 'Locked',
@@ -320,8 +320,8 @@ describe('moveNodeHandler', () => {
     })
 
     expect(result).toMatchObject({ ok: true })
-    expect(store.getRawSchema().root.children!.map(node => node.id)).toEqual(['child', 'locked', 'layout'])
-    expect(store.getRawSchema().root.children![0].layout?.placement).toEqual({
+    expect(ctx.draft.root.children!.map(node => node.id)).toEqual(['child', 'locked', 'layout'])
+    expect(ctx.draft.root.children![0].layout?.placement).toEqual({
       kind: 'chrome',
       edge: 'block-end',
     })

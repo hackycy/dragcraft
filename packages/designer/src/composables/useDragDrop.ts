@@ -17,7 +17,8 @@ import {
   resolveNodeLayout,
   resolvePlacementDecision,
 } from '@dragcraft/core'
-import { generateShortId, hideNativeDragImage } from '@dragcraft/utils'
+import { hideNativeDragImage } from '@dragcraft/renderer'
+import { generateShortId } from '@dragcraft/utils'
 import { computed, ref, watch } from 'vue'
 
 // ──────────────────────────────────────────
@@ -114,6 +115,12 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   })
   const isForbidden = ref(false)
   const forbiddenReason = ref<DropRejectionReason | null>(null)
+  let dropGeometry: {
+    canvas: HTMLElement
+    sortScope: string
+    midpoints: number[]
+  } | null = null
+  let dropGeometryFrame: number | null = null
   const schemaSnapshot = computed<DesignerSchema>(() => {
     void engine.store.schema.value
     return engine.state.getSchema() as DesignerSchema
@@ -200,8 +207,17 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     forbiddenReason.value = null
   }
 
+  function clearDropGeometry(cancelFrame = false): void {
+    dropGeometry = null
+    if (cancelFrame && dropGeometryFrame !== null) {
+      window.cancelAnimationFrame(dropGeometryFrame)
+      dropGeometryFrame = null
+    }
+  }
+
   function resetDragState(): void {
     clearDragOverState()
+    clearDropGeometry(true)
     engine.store.setDragTarget(null)
   }
 
@@ -246,22 +262,40 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   function computeDropIndex(e: DragEvent, sortScope: string): number {
     const canvasEl = e.currentTarget as HTMLElement
-    const widgetEls = Array.from(canvasEl.querySelectorAll<HTMLElement>('[data-dc-sort-scope]'))
-      .filter(element => element.dataset.dcSortScope === sortScope)
-    const mouseY = e.clientY
-    for (let i = 0; i < widgetEls.length; i++) {
-      const rect = widgetEls[i].getBoundingClientRect()
-      const midY = rect.top + rect.height / 2
-      if (mouseY < midY) {
-        return i
+    if (!dropGeometry || dropGeometry.canvas !== canvasEl || dropGeometry.sortScope !== sortScope) {
+      const midpoints = Array.from(canvasEl.querySelectorAll<HTMLElement>('[data-dc-sort-scope]'))
+        .filter(element => element.dataset.dcSortScope === sortScope)
+        .map((element) => {
+          const rect = element.getBoundingClientRect()
+          return rect.top + rect.height / 2
+        })
+      dropGeometry = { canvas: canvasEl, sortScope, midpoints }
+      if (dropGeometryFrame === null) {
+        dropGeometryFrame = window.requestAnimationFrame(() => {
+          dropGeometryFrame = null
+          dropGeometry = null
+        })
       }
     }
-    return widgetEls.length
+
+    const mouseY = e.clientY
+    const midpoints = dropGeometry.midpoints
+    let low = 0
+    let high = midpoints.length
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2)
+      if (mouseY < midpoints[middle])
+        high = middle
+      else
+        low = middle + 1
+    }
+    return low
   }
 
   // ── Drag start handlers ──
 
   function handleMaterialDragStart(e: DragEvent, meta: RendererWidgetMeta): void {
+    clearDropGeometry(true)
     engine.store.setDragTarget({
       sourceNodeId: null,
       widgetType: meta.type,

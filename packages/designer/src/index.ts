@@ -112,6 +112,10 @@ export type {
   ValidationRule,
 } from '@dragcraft/form-generator'
 
+// ── Re-exports: @dragcraft/i18n ─────────
+export { createI18n, I18N_KEY, useI18n } from '@dragcraft/i18n'
+export type { FlatMessages, I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/i18n'
+
 // ── Re-exports: @dragcraft/renderer ─────
 export {
   ActionKey,
@@ -165,7 +169,3 @@ export type {
   UseNodeInteractionGeometryReturn,
   WidgetFallbackProps,
 } from '@dragcraft/renderer'
-
-// ── Re-exports: @dragcraft/utils ────────
-export { createI18n, I18N_KEY, useI18n } from '@dragcraft/utils'
-export type { FlatMessages, I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/utils'

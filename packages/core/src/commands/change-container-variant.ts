@@ -106,7 +106,7 @@ export function changeContainerVariantHandler(
   ctx: CommandContext,
   payload: ChangeContainerVariantPayload,
 ): CommandResult {
-  const rawSchema = ctx.store.getRawSchema()
+  const rawSchema = ctx.draft
   const indexed = buildSchemaIndex(rawSchema).index.get(payload.containerId)
   const definition = indexed && ctx.registry.getWidget(indexed.node.type)?.container
   if (!indexed?.node.container || !definition)

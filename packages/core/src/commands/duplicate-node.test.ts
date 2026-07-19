@@ -7,8 +7,8 @@ function mutateSchema(
   engine: ReturnType<typeof createEngine>,
   mutate: (schema: DesignerSchema) => void,
 ): void {
-  engine.registerHandler('__TEST_MUTATE_SCHEMA__', ({ store }) => {
-    mutate(store.getRawSchema())
+  engine.registerHandler('__TEST_MUTATE_SCHEMA__', ({ draft }) => {
+    mutate(draft)
   })
   const result = engine.execute({ type: '__TEST_MUTATE_SCHEMA__', payload: null })
   if (!result.ok)

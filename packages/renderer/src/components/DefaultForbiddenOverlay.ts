@@ -1,6 +1,6 @@
 import type { CreationBlockReason } from '@dragcraft/core'
 import type { PropType } from 'vue'
-import { useI18n } from '@dragcraft/utils'
+import { useI18n } from '@dragcraft/i18n'
 import { defineComponent, h } from 'vue'
 
 /**

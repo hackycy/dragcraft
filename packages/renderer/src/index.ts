@@ -49,6 +49,7 @@ export type { ContainerRuntime } from './container-runtime'
 // ── Context ──────────────────────────────
 export { createRendererContext, useRendererContext } from './context'
 
+export { hideNativeDragImage } from './drag-image'
 // ── Event Hooks ─────────────────────────
 export { createDefaultEventHooks, fireAfterHook, resolveBeforeHook } from './event-hooks'
 

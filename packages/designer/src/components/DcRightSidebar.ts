@@ -1,7 +1,7 @@
 import type { Component } from 'vue'
 import type { PropertyTabKey } from '../types'
+import { useI18n } from '@dragcraft/i18n'
 import { IconChevronLeft, IconChevronRight, IconGlobalConfig, IconProperties } from '@dragcraft/icons'
-import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import DcPropertyPanel from './DcPropertyPanel'

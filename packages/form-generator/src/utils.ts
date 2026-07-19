@@ -1,4 +1,4 @@
-import type { I18nInstance } from '@dragcraft/utils'
+import type { I18nInstance } from '@dragcraft/i18n'
 import type { FieldSchema, FormContext } from './types'
 
 export type FormValues = Record<string, unknown>
@@ -9,6 +9,11 @@ export function createFormContext(values: FormValues): FormContext {
 
 export function copyFormValues(values: FormValues): FormValues {
   return { ...values }
+}
+
+export function resolveFieldModelValue(field: FieldSchema, values: FormValues): unknown {
+  const value = values[field.key]
+  return value === undefined ? field.defaultValue : value
 }
 
 export function syncReactiveRecord(target: FormValues, source: FormValues): void {

@@ -1,12 +1,10 @@
-import type { CommandContext, SetGlobalConfigPayload } from '../types'
+import type { CommandContext, CommandResult, SetGlobalConfigPayload } from '../types'
 import { mergeRecord } from '../merge-record'
 
 export function setGlobalConfigHandler(
   ctx: CommandContext,
   payload: SetGlobalConfigPayload,
-): void {
-  const { store } = ctx
-  const rawSchema = store.getRawSchema()
-
-  mergeRecord(rawSchema.globalConfig, payload.config)
+): CommandResult {
+  const changed = mergeRecord(ctx.draft.globalConfig, payload.config)
+  return { ok: true, changed }
 }

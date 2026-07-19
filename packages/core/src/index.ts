@@ -58,11 +58,10 @@ export { createRegistry } from './registry'
 
 // ── Schema ownership ─────────────────────
 export { buildSchemaIndex, findIndexedNode } from './schema-index'
-
 // ── Subsystem factories ───────────────────
 export { createDefaultSchema } from './schema-store'
-export { validateSchema } from './schema-validation'
 
+export { validateSchema } from './schema-validation'
 // ── Sortable constraints ─────────────────
 export {
   findNearestValidIndex,
@@ -73,6 +72,8 @@ export {
   isMoveAllowed,
   isRemoveAllowed,
 } from './sortable'
+
+export { normalizeStyleValueMap } from './style'
 // ── Types ─────────────────────────────────
 export { commandFailure } from './types'
 export type {

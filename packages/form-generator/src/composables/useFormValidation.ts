@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import type { FieldSchema, FormContext, FormSchema, ValidationError } from '../types'
 import { ref } from 'vue'
-import { createFormContext, evaluateBoolean } from '../utils'
+import { createFormContext, evaluateBoolean, resolveFieldModelValue } from '../utils'
 
 /**
  * Form-level validation interface.
@@ -148,7 +148,7 @@ export function useFormValidation(
       return undefined
 
     const values = getValues()
-    const value = values[key]
+    const value = resolveFieldModelValue(field, values)
     const formCtx: FormContext = createFormContext(values)
     if (!shouldValidateField(field, formCtx)) {
       fieldErrors.value = { ...fieldErrors.value, [key]: undefined }
@@ -170,7 +170,7 @@ export function useFormValidation(
     for (const section of currentSchema().sections) {
       for (const field of section.fields) {
         const resolved = resolveField?.(field.key) ?? field
-        const value = values[resolved.key]
+        const value = resolveFieldModelValue(resolved, values)
         if (!shouldValidateField(resolved, formCtx)) {
           newFieldErrors[resolved.key] = undefined
           continue

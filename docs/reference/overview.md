@@ -12,4 +12,5 @@
 - `@dragcraft/form-generator`：右侧表单引擎
 - `@dragcraft/device-frames`：设备外壳
 - `@dragcraft/widgets` 与 `@dragcraft/fields-ant-design-vue`：物料整理和字段 adapter
-- `@dragcraft/themes` 与 `@dragcraft/utils`：主题和工具函数
+- `@dragcraft/i18n`：Vue UI 包共享的国际化上下文
+- `@dragcraft/themes` 与 `@dragcraft/utils`：主题和纯函数工具

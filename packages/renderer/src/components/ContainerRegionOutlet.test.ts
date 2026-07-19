@@ -3,7 +3,7 @@ import type { NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/
 import type { Component, Ref } from 'vue'
 import type { RendererWidgetMeta, ResolveContainerDropIndex } from '../types'
 import { CommandType, createEngine } from '@dragcraft/core'
-import { createI18n, I18N_KEY } from '@dragcraft/utils'
+import { createI18n, I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { rendererMessages } from '../messages'

@@ -120,6 +120,7 @@ describe('createEngine', () => {
     })
     expect(result).toEqual({
       ok: true,
+      changed: true,
       eventPayload: {
         nodeId: 'a',
         destination: { kind: 'root', sortScope: 'content', index: 0 },
@@ -157,6 +158,34 @@ describe('createEngine', () => {
     expect(nodeAdded).not.toHaveBeenCalled()
     expect(schemaChanged).not.toHaveBeenCalled()
     warn.mockRestore()
+    engine.dispose()
+  })
+
+  it('does not expose live schema state to creatable predicates', () => {
+    const engine = createEngine()
+    let leakedSchema: DesignerSchema | undefined
+    engine.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'basic',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      creatable: ({ schema }) => {
+        leakedSchema = schema as DesignerSchema
+        return true
+      },
+    })
+
+    const result = engine.execute({
+      type: CommandType.ADD_NODE,
+      payload: { node: makeNode('a') },
+    })
+
+    expect(result).toMatchObject({ ok: true, changed: true })
+    expect(() => {
+      leakedSchema!.globalConfig.outsideCommand = true
+    }).toThrow(TypeError)
+    expect(engine.exportSchema().globalConfig.outsideCommand).toBeUndefined()
     engine.dispose()
   })
 
@@ -272,6 +301,31 @@ describe('createEngine', () => {
   })
 
   it.each([
+    [CommandType.UPDATE_PROPS, { nodeId: 'a', props: { label: 'same' } }],
+    [CommandType.SET_GLOBAL_CONFIG, { config: { theme: 'light' } }],
+  ])('execute %s treats an identical patch as a successful no-op', (type, payload) => {
+    const schema = makeSchema([makeNode('a')])
+    schema.root.children![0].props.label = 'same'
+    schema.globalConfig.theme = 'light'
+    const engine = createImportedEngine(schema)
+    const schemaChanged = vi.fn()
+    const nodeUpdated = vi.fn()
+    const globalConfigChanged = vi.fn()
+    engine.eventHub.on(EventName.SCHEMA_CHANGED, schemaChanged)
+    engine.eventHub.on(EventName.NODE_UPDATED, nodeUpdated)
+    engine.eventHub.on(EventName.GLOBAL_CONFIG_CHANGED, globalConfigChanged)
+
+    const result = engine.execute({ type, payload })
+
+    expect(result).toEqual({ ok: true, changed: false })
+    expect(engine.history.canUndo()).toBe(false)
+    expect(schemaChanged).not.toHaveBeenCalled()
+    expect(nodeUpdated).not.toHaveBeenCalled()
+    expect(globalConfigChanged).not.toHaveBeenCalled()
+    engine.dispose()
+  })
+
+  it.each([
     [CommandType.UPDATE_PROPS, { nodeId: 'a', props: JSON.parse('{"__proto__":{"dragcraftPolluted":true}}') }],
     [CommandType.SET_GLOBAL_CONFIG, { config: JSON.parse('{"__proto__":{"dragcraftPolluted":true}}') }],
   ])('execute %s does not pollute object prototypes', (type, payload) => {
@@ -379,6 +433,7 @@ describe('createEngine', () => {
 
     expect(result).toEqual({
       ok: true,
+      changed: true,
       eventPayload: {
         containerId: 'layout',
         fromVariant: 'split',
@@ -625,6 +680,24 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
+  it('reuses a schema snapshot until a changed command commits', () => {
+    const engine = createImportedEngine(makeSchema([makeNode('a')]))
+    const before = engine.state.getSchema()
+
+    expect(engine.state.getSchema()).toBe(before)
+    engine.execute({
+      type: CommandType.UPDATE_PROPS,
+      payload: { nodeId: 'a', props: { label: 'updated' } },
+    })
+
+    const after = engine.state.getSchema()
+    expect(after).not.toBe(before)
+    expect(engine.state.getSchema()).toBe(after)
+    expect(before.root.children![0].props.label).toBeUndefined()
+    expect(after.root.children![0].props.label).toBe('updated')
+    engine.dispose()
+  })
+
   it('state.getNodeById returns a deeply frozen snapshot', () => {
     const engine = createImportedEngine(makeSchema([makeNode('a')]))
 
@@ -669,7 +742,9 @@ describe('createEngine', () => {
       expect(engine.store).not.toHaveProperty('getRawSchema')
       expect(engine.store).not.toHaveProperty('triggerUpdate')
 
-      ;(engine.store.schema.value.root.props as Record<string, unknown>).mutated = true
+      expect(() => {
+        ;(engine.store.schema.value.root.props as Record<string, unknown>).mutated = true
+      }).toThrow(TypeError)
       expect(engine.exportSchema().root.props.mutated).toBeUndefined()
     }
     finally {

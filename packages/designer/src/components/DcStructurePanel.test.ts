@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import type { DesignerInstance, DesignerSchema, WidgetMeta } from '..'
 import type { DesignerContext } from '../types'
-import { I18N_KEY } from '@dragcraft/utils'
+import { I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { CommandType, createDesigner, DESIGNER_CONTEXT_KEY } from '..'

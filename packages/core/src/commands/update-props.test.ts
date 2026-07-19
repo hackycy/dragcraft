@@ -15,38 +15,38 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
 function setup(children: SchemaNode[]) {
   const store = createSchemaStore(makeSchema(children))
   const registry = createRegistry()
-  const ctx: CommandContext = { store, registry }
+  const ctx: CommandContext = { schema: store.getSnapshot(), draft: store.getSchema(), store, registry }
   return { store, ctx }
 }
 
 describe('updatePropsHandler', () => {
   it('merges props onto node', () => {
-    const { ctx, store } = setup([makeNode('a', { label: 'old', color: 'blue' })])
+    const { ctx } = setup([makeNode('a', { label: 'old', color: 'blue' })])
     updatePropsHandler(ctx, { nodeId: 'a', props: { label: 'new' } })
-    const node = store.getRawSchema().root.children![0]
+    const node = ctx.draft.root.children![0]
     expect(node.props).toEqual({ label: 'new', color: 'blue' })
   })
 
   it('merges style onto node', () => {
-    const { ctx, store } = setup([makeNode('a')])
+    const { ctx } = setup([makeNode('a')])
     updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { content: { color: 'red' } } })
-    const node = store.getRawSchema().root.children![0]
+    const node = ctx.draft.root.children![0]
     expect(node.style).toEqual({ content: { color: 'red' } })
   })
 
   it('initializes style if missing', () => {
-    const { ctx, store } = setup([makeNode('a')])
-    expect(store.getRawSchema().root.children![0].style).toBeUndefined()
+    const { ctx } = setup([makeNode('a')])
+    expect(ctx.draft.root.children![0].style).toBeUndefined()
     updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { container: { marginTop: '10px' } } })
-    expect(store.getRawSchema().root.children![0].style).toEqual({ container: { marginTop: '10px' } })
+    expect(ctx.draft.root.children![0].style).toEqual({ container: { marginTop: '10px' } })
   })
 
   it('merges into existing style', () => {
     const node = makeNode('a')
     node.style = { container: { marginTop: '10px' }, content: { color: 'red' } }
-    const { ctx, store } = setup([node])
+    const { ctx } = setup([node])
     updatePropsHandler(ctx, { nodeId: 'a', props: {}, style: { container: { marginBottom: '4px' } } })
-    expect(store.getRawSchema().root.children![0].style).toEqual({
+    expect(ctx.draft.root.children![0].style).toEqual({
       container: { marginTop: '10px', marginBottom: '4px' },
       content: { color: 'red' },
     })
@@ -61,8 +61,8 @@ describe('updatePropsHandler', () => {
   })
 
   it('updates root node props', () => {
-    const { ctx, store } = setup([])
+    const { ctx } = setup([])
     updatePropsHandler(ctx, { nodeId: 'root', props: { title: 'My Page' } })
-    expect(store.getRawSchema().root.props.title).toBe('My Page')
+    expect(ctx.draft.root.props.title).toBe('My Page')
   })
 })

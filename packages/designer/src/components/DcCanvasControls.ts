@@ -1,7 +1,7 @@
 import type { Component, PropType, VNodeChild } from 'vue'
 import type { CanvasInteractionMode } from '../composables/useCanvasPan'
+import { useI18n } from '@dragcraft/i18n'
 import { IconCenter, IconHand, IconPointer, IconRedo, IconUndo } from '@dragcraft/icons'
-import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 

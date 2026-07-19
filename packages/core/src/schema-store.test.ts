@@ -43,11 +43,13 @@ describe('createSchemaStore', () => {
     expect(a).not.toBe(b)
   })
 
-  it('getRawSchema returns same reference', () => {
+  it('getSnapshot returns a stable frozen reference', () => {
     const store = createSchemaStore(makeSchema())
-    const a = store.getRawSchema()
-    const b = store.getRawSchema()
+    const a = store.getSnapshot()
+    const b = store.getSnapshot()
     expect(a).toBe(b)
+    expect(Object.isFrozen(a)).toBe(true)
+    expect(Object.isFrozen(a.root)).toBe(true)
   })
 
   it('setSchema replaces schema (cloned)', () => {
@@ -125,37 +127,15 @@ describe('createSchemaStore', () => {
     expect(store.getNodeById('nested')?.id).toBe('nested')
   })
 
-  it('applyTransientPatch updates props', () => {
-    const store = createSchemaStore(makeSchema([{ id: 'a', type: 'text', props: { label: 'old' } }]))
-    store.applyTransientPatch('a', { props: { label: 'new' } })
-    expect(store.getNodeById('a')!.props.label).toBe('new')
-  })
-
-  it('applyTransientPatch updates style', () => {
-    const store = createSchemaStore(makeSchema([{ id: 'a', type: 'text', props: {} }]))
-    store.applyTransientPatch('a', { style: { content: { color: 'red' } } })
-    expect(store.getNodeById('a')!.style).toEqual({ content: { color: 'red' } })
-  })
-
-  it('applyTransientPatch deep merges style scopes', () => {
-    const store = createSchemaStore(makeSchema([{
-      id: 'a',
-      type: 'text',
-      props: {},
-      style: { container: { marginTop: -8 } },
-    }]))
-    store.applyTransientPatch('a', { style: { container: { marginBottom: 12 } } })
-    expect(store.getNodeById('a')!.style).toEqual({ container: { marginTop: -8, marginBottom: 12 } })
-  })
-
-  it('applyTransientPatch does nothing for missing node', () => {
+  it('commitSchema adopts and freezes a command-owned draft', () => {
     const store = createSchemaStore(makeSchema())
-    store.applyTransientPatch('missing', { props: { x: 1 } })
-    // Should not throw
-  })
+    const draft = store.getSchema()
+    draft.globalConfig.theme = 'dark'
 
-  it('triggerUpdate does not throw', () => {
-    const store = createSchemaStore()
-    store.triggerUpdate()
+    const snapshot = store.commitSchema(draft)
+
+    expect(store.getSnapshot()).toBe(snapshot)
+    expect(store.getSnapshot().globalConfig.theme).toBe('dark')
+    expect(Object.isFrozen(draft)).toBe(true)
   })
 })

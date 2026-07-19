@@ -1,4 +1,4 @@
-import type { AddNodePayload, CommandContext, CommandResult } from '../types'
+import type { AddNodePayload, CommandContext, CommandResult, DesignerSchema } from '../types'
 import { cloneDeep } from '@dragcraft/utils'
 import { resolveCreatable } from '../behavior'
 import { createContainerState, createRegisteredNode, resolvePlacementDecision } from '../container-placement'
@@ -10,15 +10,15 @@ import { validateSchema } from '../schema-validation'
 import { getLockedIndicesFromEntries, getLockedIndicesFromNodes, isInsertAllowed } from '../sortable'
 
 export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): CommandResult {
-  const { store, registry } = ctx
-  const rawSchema = store.getRawSchema()
+  const { draft: rawSchema, registry } = ctx
+  const safeSchema = ctx.schema as DesignerSchema
   const meta = registry.getWidget(payload.node.type)
   const destination = payload.destination ?? { kind: 'root' as const }
 
   const createDecision = meta
     ? resolveCreatable(meta.creatable, {
         widgetType: payload.node.type,
-        schema: rawSchema,
+        schema: ctx.schema,
       }, true)
     : { allowed: true }
 
@@ -47,7 +47,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
   if (meta?.container && !node.container) {
     const initialized = createContainerState(
       node,
-      rawSchema,
+      safeSchema,
       registry,
       createRegisteredNode(registry),
     )
@@ -56,7 +56,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
     node.container = initialized.state
   }
 
-  const idCandidate = cloneSchema(rawSchema)
+  const idCandidate = cloneSchema(safeSchema)
   idCandidate.root.children ??= []
   idCandidate.root.children.push(cloneDeep(node))
   const idDiagnostics = buildSchemaIndex(idCandidate).diagnostics.filter(
@@ -71,7 +71,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
   }
 
   if (node.container) {
-    const candidate = cloneSchema(rawSchema)
+    const candidate = cloneSchema(safeSchema)
     candidate.root.children ??= []
     candidate.root.children.push(cloneDeep(node))
     const validation = validateSchema(candidate, registry)
@@ -89,7 +89,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
   }
 
   if (destination.kind === 'container') {
-    const targetResult = resolveDestination(rawSchema, registry, destination)
+    const targetResult = resolveDestination(safeSchema, registry, destination)
     if (!targetResult.ok)
       return targetResult
     const target = targetResult.value
@@ -97,7 +97,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
       return { ok: false, code: 'CONTAINER_DESTINATION_REQUIRED' }
 
     const index = clampInsertIndex(destination.index, target.children.length)
-    const lockedIndices = getLockedIndicesFromNodes(target.children, registry, rawSchema)
+    const lockedIndices = getLockedIndicesFromNodes(target.children, registry, safeSchema)
     if (!isInsertAllowed(index, lockedIndices))
       return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
     const decision = resolvePlacementDecision({
@@ -108,7 +108,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
       targetCount: target.children.length,
       callbackContext: {
         operation: 'add',
-        schema: rawSchema,
+        schema: safeSchema,
         container: target.container,
         variant: target.variant,
         region: target.region,
@@ -126,7 +126,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
       }
     }
 
-    const candidate = cloneSchema(rawSchema)
+    const candidate = cloneSchema(safeSchema)
     const candidateTarget = resolveDestination(candidate, registry, destination)
     if (!candidateTarget.ok)
       return candidateTarget
@@ -144,7 +144,10 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
       }
     }
 
-    target.children.splice(index, 0, stripPageLayout(node))
+    const draftTarget = resolveDestination(rawSchema, registry, destination)
+    if (!draftTarget.ok)
+      return draftTarget
+    draftTarget.value.children.splice(index, 0, stripPageLayout(node))
     return {
       ok: true,
       eventPayload: { nodeId: node.id, destination: { ...destination, index } },
@@ -158,8 +161,8 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
     ?? (nodeLayout.sortScope === false ? undefined : nodeLayout.sortScope)
   let resolvedArrayIndex = rootChildren.length
   if (destination.index !== undefined && resolvedScope !== undefined) {
-    const scopeEntries = getSortScopeEntries(createLayoutPlan(rawSchema, registry), resolvedScope)
-    const lockedIndices = getLockedIndicesFromEntries(scopeEntries, registry, rawSchema)
+    const scopeEntries = getSortScopeEntries(createLayoutPlan(safeSchema, registry), resolvedScope)
+    const lockedIndices = getLockedIndicesFromEntries(scopeEntries, registry, safeSchema)
     if (!isInsertAllowed(destination.index, lockedIndices))
       return { ok: false, code: 'SORTABLE_LOCK_VIOLATION' }
     resolvedArrayIndex = getSortableArrayIndexForInsert(
@@ -172,7 +175,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
     resolvedArrayIndex = clampInsertIndex(destination.index, rootChildren.length)
   }
 
-  const candidate = cloneSchema(rawSchema)
+  const candidate = cloneSchema(safeSchema)
   candidate.root.children ??= []
   candidate.root.children.splice(resolvedArrayIndex, 0, cloneDeep(node))
   const validation = validateSchema(candidate, registry)

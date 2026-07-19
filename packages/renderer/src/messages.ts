@@ -1,4 +1,4 @@
-import type { MessageTree } from '@dragcraft/utils'
+import type { MessageTree } from '@dragcraft/i18n'
 
 export const rendererMessages: Record<string, MessageTree> = {
   'zh-CN': {

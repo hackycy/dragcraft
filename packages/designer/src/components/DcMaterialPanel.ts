@@ -1,6 +1,6 @@
 import type { DesignerWidgetMeta } from '../types'
+import { useI18n } from '@dragcraft/i18n'
 import { IconClose, IconSearch } from '@dragcraft/icons'
-import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import { materialItemMatchesQuery, resolveMaterialItem } from '../material'

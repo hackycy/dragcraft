@@ -11,33 +11,33 @@ function makeSchema(globalConfig: Record<string, unknown> = {}): DesignerSchema 
 function setup(globalConfig?: Record<string, unknown>) {
   const store = createSchemaStore(makeSchema(globalConfig))
   const registry = createRegistry()
-  const ctx: CommandContext = { store, registry }
+  const ctx: CommandContext = { schema: store.getSnapshot(), draft: store.getSchema(), store, registry }
   return { store, ctx }
 }
 
 describe('setGlobalConfigHandler', () => {
   it('merges config into globalConfig', () => {
-    const { ctx, store } = setup({ theme: 'light' })
+    const { ctx } = setup({ theme: 'light' })
     setGlobalConfigHandler(ctx, { config: { fontSize: 14 } })
-    expect(store.getRawSchema().globalConfig).toEqual({ theme: 'light', fontSize: 14 })
+    expect(ctx.draft.globalConfig).toEqual({ theme: 'light', fontSize: 14 })
   })
 
   it('overwrites existing keys', () => {
-    const { ctx, store } = setup({ theme: 'light' })
+    const { ctx } = setup({ theme: 'light' })
     setGlobalConfigHandler(ctx, { config: { theme: 'dark' } })
-    expect(store.getRawSchema().globalConfig.theme).toBe('dark')
+    expect(ctx.draft.globalConfig.theme).toBe('dark')
   })
 
   it('works with empty initial config', () => {
-    const { ctx, store } = setup()
+    const { ctx } = setup()
     setGlobalConfigHandler(ctx, { config: { lang: 'zh-CN' } })
-    expect(store.getRawSchema().globalConfig).toEqual({ lang: 'zh-CN' })
+    expect(ctx.draft.globalConfig).toEqual({ lang: 'zh-CN' })
   })
 
   it('deep merges nested config objects', () => {
-    const { ctx, store } = setup({ theme: { mode: 'light', tokens: { radius: 4 } } })
+    const { ctx } = setup({ theme: { mode: 'light', tokens: { radius: 4 } } })
     setGlobalConfigHandler(ctx, { config: { theme: { tokens: { color: '#1677ff' } } } })
-    expect(store.getRawSchema().globalConfig).toEqual({
+    expect(ctx.draft.globalConfig).toEqual({
       theme: { mode: 'light', tokens: { radius: 4, color: '#1677ff' } },
     })
   })

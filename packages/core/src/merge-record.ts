@@ -10,16 +10,19 @@ export function isPlainRecord(value: unknown): value is Record<string, unknown> 
 export function mergeRecord(
   target: Record<string, unknown>,
   patch: Record<string, unknown>,
-): void {
+): boolean {
+  let changed = false
   for (const [key, value] of Object.entries(patch)) {
     if (BLOCKED_RECORD_KEYS.has(key))
       continue
     const current = target[key]
     if (Object.hasOwn(target, key) && isPlainRecord(current) && isPlainRecord(value)) {
-      mergeRecord(current, value)
+      changed = mergeRecord(current, value) || changed
     }
-    else {
+    else if (!Object.hasOwn(target, key) || !Object.is(current, value)) {
       target[key] = value
+      changed = true
     }
   }
+  return changed
 }

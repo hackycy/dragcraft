@@ -42,7 +42,6 @@ function makeEngine(overrides?: Partial<DesignerEngine>): DesignerEngine {
       selectedNodeId: { value: null },
       hoveredNodeId: { value: null },
       dragTarget: { value: null },
-      getRawSchema: () => schema,
     } as unknown as DesignerEngine['store'],
     state: {
       getSchema: () => schema,

@@ -1,7 +1,7 @@
 import type { NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPlane } from '../selection-presentation'
-import { createContainerPlan } from '@dragcraft/core'
+import { createContainerPlan, normalizeStyleValueMap } from '@dragcraft/core'
 import { computed, defineComponent, h, inject, provide, ref, Teleport } from 'vue'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
@@ -13,7 +13,6 @@ import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from '../contai
 import { useRendererContext } from '../context'
 import { resolveNodeInteractionPresentation } from '../node-interaction'
 import { NODE_SELECTION_PLANE_KEY } from '../selection-presentation'
-import { normalizeStyle } from '../style-utils'
 import { createWidgetRuntimeContext, WIDGET_RUNTIME_CONTEXT_KEY } from '../widget-runtime'
 import DefaultContainerFallback from './DefaultContainerFallback'
 import DefaultNodeHandle from './DefaultNodeHandle'
@@ -202,8 +201,8 @@ export default defineComponent({
 
       // Render widget content
       const widgetProps = { ...node.props }
-      const wrapperStyle = normalizeStyle(node.style?.container)
-      let contentStyle = normalizeStyle(node.style?.content)
+      const wrapperStyle = normalizeStyleValueMap(node.style?.container)
+      let contentStyle = normalizeStyleValueMap(node.style?.content)
 
       // When a blocking mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index

@@ -27,11 +27,10 @@ import {
 } from './commands'
 import { CommandType, DEFAULT_MAX_HISTORY_SIZE, EventName } from './constants'
 import { createEventHub } from './event-hub'
-import { findNodeById } from './helpers'
 import { createHistoryManager } from './history-manager'
 import { createRegistry } from './registry'
 import { createSchemaStore } from './schema-store'
-import { cloneSchema, deepFreeze } from './schema-utils'
+import { cloneSchema } from './schema-utils'
 import { collectSchemaStructuralDiagnostics, validateSchema } from './schema-validation'
 
 export type SchemaImportResult
@@ -75,12 +74,11 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
   const registry = createRegistry()
   const history = createHistoryManager(schemaStore, eventHub, maxHistorySize)
   const commandBus = createCommandBus(schemaStore, registry, eventHub, history)
-  const getSchemaSnapshot = () => deepFreeze(schemaStore.getSchema())
+  const getSchemaSnapshot = schemaStore.getSnapshot
   const state: EngineState = {
     getSchema: getSchemaSnapshot,
     getNodeById: (id) => {
-      const schema = getSchemaSnapshot()
-      return findNodeById(schema.root as DesignerSchema['root'], id)
+      return schemaStore.getNodeById(id)
     },
     getSelectedNodeId: () => store.selectedNodeId.value,
     getHoveredNodeId: () => store.hoveredNodeId.value,
@@ -155,7 +153,7 @@ export function createEngine(options?: EngineOptions): DesignerEngine {
 
     schemaStore.setSchema(validation.schema)
     history.clear()
-    eventHub.emit(EventName.SCHEMA_CHANGED, schemaStore.getSchema())
+    eventHub.emit(EventName.SCHEMA_CHANGED, schemaStore.getSnapshot())
     return { ok: true, diagnostics: validation.diagnostics }
   }
 

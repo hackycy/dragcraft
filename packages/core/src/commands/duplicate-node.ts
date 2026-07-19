@@ -1,4 +1,4 @@
-import type { CommandContext, CommandResult, DuplicateNodePayload, NodeDestination } from '../types'
+import type { CommandContext, CommandResult, DesignerSchema, DuplicateNodePayload, NodeDestination } from '../types'
 import { generateShortId } from '@dragcraft/utils'
 import { cloneNodeSubtree } from '../helpers'
 import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout, resolveNodeSource } from '../layout'
@@ -9,7 +9,7 @@ export function duplicateNodeHandler(
   ctx: CommandContext,
   payload: DuplicateNodePayload,
 ): CommandResult {
-  const schema = ctx.store.getRawSchema()
+  const schema = ctx.schema as DesignerSchema
   const indexed = buildSchemaIndex(schema)
   const sourceResult = resolveNodeSource(schema, indexed, payload.nodeId)
   if (!sourceResult.ok)

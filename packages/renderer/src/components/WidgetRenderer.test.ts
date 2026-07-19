@@ -48,7 +48,6 @@ function makeContext(meta: WidgetMeta): RendererContext {
         selectedNodeId,
         hoveredNodeId,
         dragTarget,
-        getRawSchema: () => schema,
         selectNode,
         hoverNode,
       },

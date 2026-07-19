@@ -1,7 +1,7 @@
 import type { PropType } from 'vue'
 import type { SectionSchema } from '../types'
+import { useI18n } from '@dragcraft/i18n'
 import { IconChevronDown } from '@dragcraft/icons'
-import { useI18n } from '@dragcraft/utils'
 import { defineComponent, h, ref, watch } from 'vue'
 import FormField from './FormField'
 

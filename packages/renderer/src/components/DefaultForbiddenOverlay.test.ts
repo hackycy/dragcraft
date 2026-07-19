@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { createI18n, I18N_KEY } from '@dragcraft/utils'
+import { createI18n, I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h, provide } from 'vue'
 import { rendererMessages } from '../messages'

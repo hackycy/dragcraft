@@ -1,6 +1,6 @@
 import type { PropType } from 'vue'
 import type { DesignerWidgetMeta, MaterialItemIcon } from '../types'
-import { useI18n } from '@dragcraft/utils'
+import { useI18n } from '@dragcraft/i18n'
 import { defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
 import { resolveMaterialItem } from '../material'

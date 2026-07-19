@@ -15,7 +15,7 @@ function makeSchema(children: SchemaNode[] = []): DesignerSchema {
 function setup(children: SchemaNode[]) {
   const store = createSchemaStore(makeSchema(children))
   const registry = createRegistry()
-  const ctx: CommandContext = { store, registry }
+  const ctx: CommandContext = { schema: store.getSnapshot(), draft: store.getSchema(), store, registry }
   return { store, registry, ctx }
 }
 
@@ -63,17 +63,17 @@ function setupWithContainer(container: SchemaNode) {
 
 describe('removeNodeHandler', () => {
   it('removes node by id', () => {
-    const { ctx, store } = setup([makeNode('a'), makeNode('b')])
+    const { ctx } = setup([makeNode('a'), makeNode('b')])
     removeNodeHandler(ctx, { nodeId: 'a' })
-    expect(store.getRawSchema().root.children).toHaveLength(1)
-    expect(store.getRawSchema().root.children![0].id).toBe('b')
+    expect(ctx.draft.root.children).toHaveLength(1)
+    expect(ctx.draft.root.children![0].id).toBe('b')
   })
 
   it('warns when trying to remove root', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { ctx, store } = setup([makeNode('a')])
+    const { ctx } = setup([makeNode('a')])
     removeNodeHandler(ctx, { nodeId: 'root' })
-    expect(store.getRawSchema().root.children).toHaveLength(1)
+    expect(ctx.draft.root.children).toHaveLength(1)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('cannot remove root'))
     warn.mockRestore()
   })
@@ -102,18 +102,18 @@ describe('removeNodeHandler', () => {
 
   it('blocks remove when sortable constraint violated', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { ctx, registry, store } = setup([makeNode('a'), makeNode('b')])
+    const { ctx, registry } = setup([makeNode('a'), makeNode('b')])
     // Register 'text' as non-sortable (locked)
     registry.registerWidget({ type: 'text', title: 'Text', group: 'g', defaultProps: {}, formSchema: { sections: [] }, sortable: false })
 
     // Removing 'a' (index 0) would shift locked 'b' (index 1) -> blocked
     removeNodeHandler(ctx, { nodeId: 'a' })
-    expect(store.getRawSchema().root.children).toHaveLength(2)
+    expect(ctx.draft.root.children).toHaveLength(2)
     warn.mockRestore()
   })
 
   it('does not let chrome nodes affect content removal constraints', () => {
-    const { ctx, registry, store } = setup([
+    const { ctx, registry } = setup([
       makeNode('tabbar', { placement: { kind: 'chrome', edge: 'block-end' } }),
       makeNode('locked'),
       makeNode('free'),
@@ -122,7 +122,7 @@ describe('removeNodeHandler', () => {
 
     removeNodeHandler(ctx, { nodeId: 'tabbar' })
 
-    const ids = store.getRawSchema().root.children!.map(c => c.id)
+    const ids = ctx.draft.root.children!.map(c => c.id)
     expect(ids).toEqual(['locked', 'free'])
   })
 
@@ -139,7 +139,7 @@ describe('removeNodeHandler', () => {
         source: { kind: 'root', index: 0 },
       },
     })
-    expect(store.getRawSchema().root.children).toEqual([])
+    expect(ctx.draft.root.children).toEqual([])
     expect(store.selectedNodeId.value).toBeNull()
     expect(store.hoveredNodeId.value).toBeNull()
   })
@@ -154,7 +154,7 @@ describe('removeNodeHandler', () => {
     store.hoverNode('child')
 
     expect(removeNodeHandler(ctx, { nodeId: 'child' })).toMatchObject({ ok: true })
-    expect(store.getRawSchema().root.children![0].container!.regions.open.map(node => node.id)).toEqual(['first'])
+    expect(ctx.draft.root.children![0].container!.regions.open.map(node => node.id)).toEqual(['first'])
     expect(store.selectedNodeId.value).toBeNull()
     expect(store.hoveredNodeId.value).toBeNull()
   })
@@ -203,8 +203,8 @@ describe('removeNodeHandler', () => {
     }],
   ])('rejects removal from an unresolved source %s without mutation', (_, makeUnresolved) => {
     const container = makeContainer({ required: [makeNode('required')], open: [makeNode('child')] })
+    makeUnresolved(container)
     const { ctx, store } = setupWithContainer(container)
-    makeUnresolved(store.getRawSchema().root.children![0])
     const before = store.getSchema()
 
     expect(removeNodeHandler(ctx, { nodeId: 'child' })).toEqual({
@@ -227,7 +227,7 @@ describe('removeNodeHandler', () => {
   })
 
   it('honors deletable behavior before removing a node', () => {
-    const { ctx, registry, store } = setup([makeNode('fixed')])
+    const { ctx, registry } = setup([makeNode('fixed')])
     registry.registerWidget({
       type: 'text',
       title: 'Text',
@@ -241,6 +241,6 @@ describe('removeNodeHandler', () => {
       ok: false,
       code: 'NODE_NOT_DELETABLE',
     })
-    expect(store.getRawSchema().root.children!.map(node => node.id)).toEqual(['fixed'])
+    expect(ctx.draft.root.children!.map(node => node.id)).toEqual(['fixed'])
   })
 })

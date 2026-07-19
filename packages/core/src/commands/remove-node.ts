@@ -1,4 +1,4 @@
-import type { CommandContext, CommandResult, RemoveNodePayload } from '../types'
+import type { CommandContext, CommandResult, DesignerSchema, RemoveNodePayload } from '../types'
 import { resolveBehavior } from '../behavior'
 import { collectSubtreeIds } from '../helpers'
 import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout, resolveNodeSource } from '../layout'
@@ -7,7 +7,7 @@ import { getLockedIndicesFromEntries, getLockedIndicesFromNodes, isRemoveAllowed
 
 export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayload): CommandResult {
   const { store, registry } = ctx
-  const rawSchema = store.getRawSchema()
+  const rawSchema = ctx.schema as DesignerSchema
 
   if (payload.nodeId === rawSchema.root.id) {
     console.warn('[dragcraft/core] REMOVE_NODE: cannot remove root node')
@@ -66,7 +66,11 @@ export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayloa
   }
 
   const removedIds = collectSubtreeIds(node)
-  source.children.splice(source.index, 1)
+  const draftIndex = buildSchemaIndex(ctx.draft)
+  const draftSource = resolveNodeSource(ctx.draft, draftIndex, payload.nodeId)
+  if (!draftSource.ok)
+    return draftSource
+  draftSource.value.children.splice(draftSource.value.index, 1)
   if (store.selectedNodeId.value && removedIds.has(store.selectedNodeId.value))
     store.selectNode(null)
   if (store.hoveredNodeId.value && removedIds.has(store.hoveredNodeId.value))

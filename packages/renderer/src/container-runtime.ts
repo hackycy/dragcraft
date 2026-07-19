@@ -20,6 +20,12 @@ function deepFreeze<T>(value: T): DeepReadonly<T> {
   return value as DeepReadonly<T>
 }
 
+function toReadonlySnapshot<T>(value: T): DeepReadonly<T> {
+  return Object.isFrozen(value)
+    ? value as DeepReadonly<T>
+    : deepFreeze(cloneDeep(value))
+}
+
 export interface ContainerRuntime {
   nodeId: ComputedRef<string>
   variant: ComputedRef<ContainerVariantId>
@@ -43,12 +49,21 @@ export function createContainerRuntime(
   return {
     nodeId: computed(() => resolveNode().id),
     variant: computed(() => resolveNode().container?.variant ?? ''),
-    regionDefinitions: computed(() => deepFreeze(cloneDeep(
-      plan.value.ok ? plan.value.plan.variant.regions : [],
-    ))),
-    getRegionNodes: regionId => deepFreeze(cloneDeep(
-      resolveNode().container?.regions[regionId] ?? [],
+    regionDefinitions: computed(() => deepFreeze(
+      plan.value.ok
+        ? plan.value.plan.variant.regions.map(region => ({
+            ...region,
+            constraints: region.constraints
+              ? {
+                  ...region.constraints,
+                  includeTypes: region.constraints.includeTypes ? [...region.constraints.includeTypes] : undefined,
+                  excludeTypes: region.constraints.excludeTypes ? [...region.constraints.excludeTypes] : undefined,
+                }
+              : undefined,
+          }))
+        : [],
     )),
+    getRegionNodes: regionId => toReadonlySnapshot(resolveNode().container?.regions[regionId] ?? []),
     requestVariantChange: variant => ctx.engine.execute({
       type: CommandType.CHANGE_CONTAINER_VARIANT,
       payload: { containerId: getNode().id, variant },

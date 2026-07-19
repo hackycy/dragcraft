@@ -1,10 +1,9 @@
 import type { Ref, ShallowRef } from 'vue'
-import type { DesignerSchema, DragTarget, SchemaNode, SchemaStoreInstance } from './types'
-import { ref, shallowRef, toRaw, triggerRef } from 'vue'
+import type { DeepReadonly, DesignerSchema, DragTarget, SchemaIndexResult, SchemaNode, SchemaStoreInstance } from './types'
+import { ref, shallowRef } from 'vue'
 import { DEFAULT_SCHEMA_VERSION } from './constants'
-import { mergeRecord } from './merge-record'
 import { buildSchemaIndex } from './schema-index'
-import { cloneRawSchema, cloneSchema } from './schema-utils'
+import { cloneSchema, deepFreeze } from './schema-utils'
 
 export function createDefaultSchema(): DesignerSchema {
   return {
@@ -23,31 +22,39 @@ export function createSchemaStore(
   initialSchema?: DesignerSchema,
   onSelectionChange?: (id: string | null) => void,
 ): SchemaStoreInstance {
-  const schema: ShallowRef<DesignerSchema> = shallowRef(
-    initialSchema ? cloneSchema(initialSchema) : createDefaultSchema(),
+  const schema: ShallowRef<DeepReadonly<DesignerSchema>> = shallowRef(
+    deepFreeze(initialSchema ? cloneSchema(initialSchema) : createDefaultSchema()),
   )
   const selectedNodeId: Ref<string | null> = ref(null)
   const hoveredNodeId: Ref<string | null> = ref(null)
   const dragTarget: Ref<DragTarget | null> = ref(null)
+  let schemaIndex: SchemaIndexResult | null = null
 
   function getSchema(): DesignerSchema {
-    return cloneRawSchema(schema.value)
+    return cloneSchema(schema.value)
   }
 
-  /**
-   * Returns the raw (unwrapped) schema object **without** cloning.
-   *
-   * **Warning:** Mutations on the returned object directly modify internal state
-   * without triggering history snapshots or events. Intended for internal use
-   * by command handlers that need efficient in-place edits. External callers
-   * should prefer `getSchema()` which returns a deep clone.
-   */
-  function getRawSchema(): DesignerSchema {
-    return toRaw(schema.value)
+  function getSnapshot(): DeepReadonly<DesignerSchema> {
+    return schema.value
+  }
+
+  function replaceSnapshot(snapshot: DeepReadonly<DesignerSchema>): void {
+    schemaIndex = null
+    schema.value = snapshot
   }
 
   function setSchema(newSchema: DesignerSchema): void {
-    schema.value = cloneSchema(newSchema)
+    replaceSnapshot(deepFreeze(cloneSchema(newSchema)))
+  }
+
+  function commitSchema(newSchema: DesignerSchema): DeepReadonly<DesignerSchema> {
+    const snapshot = deepFreeze(newSchema)
+    replaceSnapshot(snapshot)
+    return snapshot
+  }
+
+  function restoreSnapshot(snapshot: DeepReadonly<DesignerSchema>): void {
+    replaceSnapshot(snapshot)
   }
 
   function selectNode(id: string | null): void {
@@ -63,40 +70,11 @@ export function createSchemaStore(
     dragTarget.value = target ? { ...target } : null
   }
 
-  function getNodeById(id: string): SchemaNode | null {
+  function getNodeById(id: string): DeepReadonly<SchemaNode> | null {
     if (schema.value.root.id === id)
       return schema.value.root
-    return buildSchemaIndex(schema.value).index.get(id)?.node ?? null
-  }
-
-  /**
-   * Lightweight node mutation that bypasses the command bus.
-   *
-   * **Note:** This method does NOT create a history snapshot and does NOT
-   * emit `NODE_UPDATED` / `SCHEMA_CHANGED` events. Use it for transient
-   * or high-frequency updates where undo/redo tracking is undesirable.
-   * For undoable mutations, go through `commandBus.execute(UPDATE_PROPS)`.
-   */
-  function applyTransientPatch(
-    nodeId: string,
-    partial: Partial<Pick<SchemaNode, 'props' | 'style'>>,
-  ): void {
-    const node = getNodeById(nodeId)
-    if (!node)
-      return
-    if (partial.props) {
-      mergeRecord(node.props, partial.props)
-    }
-    if (partial.style) {
-      if (!node.style)
-        node.style = {}
-      mergeRecord(node.style as Record<string, unknown>, partial.style as Record<string, unknown>)
-    }
-    triggerRef(schema)
-  }
-
-  function triggerUpdate(): void {
-    triggerRef(schema)
+    schemaIndex ??= buildSchemaIndex(schema.value as DesignerSchema)
+    return schemaIndex.index.get(id)?.node ?? null
   }
 
   return {
@@ -105,13 +83,13 @@ export function createSchemaStore(
     hoveredNodeId,
     dragTarget,
     getSchema,
-    getRawSchema,
+    getSnapshot,
     setSchema,
+    commitSchema,
+    restoreSnapshot,
     selectNode,
     hoverNode,
     setDragTarget,
     getNodeById,
-    applyTransientPatch,
-    triggerUpdate,
   }
 }

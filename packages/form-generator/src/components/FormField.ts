@@ -1,11 +1,11 @@
 import type { PropType } from 'vue'
 import type { FieldSchema } from '../types'
-import { useI18n } from '@dragcraft/utils'
+import { useI18n } from '@dragcraft/i18n'
 import { computed, defineComponent, h } from 'vue'
 import { useFieldDependencies } from '../composables/useFieldDependencies'
 import { useFieldState } from '../composables/useFieldState'
 import { useFormGeneratorContext } from '../context'
-import { createFormContext, resolveFieldComponentProps } from '../utils'
+import { createFormContext, resolveFieldComponentProps, resolveFieldModelValue } from '../utils'
 
 export default defineComponent({
   name: 'DcFormField',
@@ -26,9 +26,8 @@ export default defineComponent({
 
     const value = computed(() => {
       const field = resolvedField.value
-      const currentValue = ctx.getFieldValue(field.key)
-      const rawValue = currentValue === undefined ? field.defaultValue : currentValue
-      return field.valueFormat?.(rawValue, createFormContext(ctx.values)) ?? rawValue
+      const modelValue = resolveFieldModelValue(field, ctx.values)
+      return field.valueFormat?.(modelValue, createFormContext(ctx.values)) ?? modelValue
     })
     const componentProps = computed(() =>
       resolveFieldComponentProps(resolvedField.value, createFormContext(ctx.values), t),

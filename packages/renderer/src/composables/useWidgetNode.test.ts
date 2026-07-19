@@ -31,7 +31,6 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
         selectedNodeId,
         hoveredNodeId,
         dragTarget,
-        getRawSchema: () => schema,
         selectNode: vi.fn((id: string | null) => {
           selectedNodeId.value = id
         }),

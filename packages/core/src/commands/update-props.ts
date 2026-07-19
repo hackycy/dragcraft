@@ -3,8 +3,7 @@ import { findNodeById } from '../helpers'
 import { mergeRecord } from '../merge-record'
 
 export function updatePropsHandler(ctx: CommandContext, payload: UpdatePropsPayload): CommandResult {
-  const { store } = ctx
-  const rawSchema = store.getRawSchema()
+  const rawSchema = ctx.draft
   const node = findNodeById(rawSchema.root, payload.nodeId)
 
   if (!node) {
@@ -12,11 +11,14 @@ export function updatePropsHandler(ctx: CommandContext, payload: UpdatePropsPayl
     return false
   }
 
-  mergeRecord(node.props, payload.props)
+  let changed = mergeRecord(node.props, payload.props)
 
   if (payload.style) {
-    if (!node.style)
-      node.style = {}
-    mergeRecord(node.style as Record<string, unknown>, payload.style as Record<string, unknown>)
+    const style = node.style ?? {}
+    const styleChanged = mergeRecord(style as Record<string, unknown>, payload.style as Record<string, unknown>)
+    if (!node.style && styleChanged)
+      node.style = style
+    changed = styleChanged || changed
   }
+  return { ok: true, changed }
 }

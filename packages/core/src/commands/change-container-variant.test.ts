@@ -1,4 +1,4 @@
-import type { ContainerDefinition, DesignerSchema, SchemaNode } from '../types'
+import type { CommandContext, ContainerDefinition, DesignerSchema, SchemaNode } from '../types'
 import { describe, expect, it, vi } from 'vitest'
 import { createRegistry } from '../registry'
 import { createSchemaStore } from '../schema-store'
@@ -61,11 +61,12 @@ function setup(definition = makeDefinition()) {
     formSchema: { sections: [] },
     container: definition,
   })
+  const ctx: CommandContext = { schema: store.getSnapshot(), draft: store.getSchema(), store, registry }
   return {
-    container: store.getRawSchema().root.children![0],
+    container: ctx.draft.root.children![0],
     store,
     registry,
-    ctx: { store, registry },
+    ctx,
   }
 }
 

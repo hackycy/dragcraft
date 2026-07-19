@@ -1,6 +1,6 @@
 import type { FieldChangePayload } from '@dragcraft/form-generator'
 import { FormGenerator } from '@dragcraft/form-generator'
-import { useI18n } from '@dragcraft/utils'
+import { useI18n } from '@dragcraft/i18n'
 import { defineComponent, h, watch } from 'vue'
 import { usePropertyBinding } from '../composables/usePropertyBinding'
 import { useDesignerContext } from '../context'

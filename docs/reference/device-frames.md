@@ -4,23 +4,28 @@
 
 先看一个最小示例：
 
-```ts
+```vue
+<script setup lang="ts">
+import { provide } from 'vue'
 import {
   createDeviceFrameContext,
+  DEVICE_FRAME_CONTEXT_KEY,
   DevicePicker,
   DeviceFrameShell,
 } from '@dragcraft/device-frames'
 
 const deviceCtx = createDeviceFrameContext({ initialDevice: 'iphone' })
+provide(DEVICE_FRAME_CONTEXT_KEY, deviceCtx)
 
 const extensions = {
   rendererExtensions: {
     containerShell: DeviceFrameShell,
   },
 }
+</script>
 ```
 
-这段代码先创建设备上下文，再把 `DeviceFrameShell` 放进 `rendererExtensions.containerShell`。需要切换设备时，宿主在自己的界面中渲染：
+这段代码先创建设备上下文并提供给设备组件，再把 `DeviceFrameShell` 放进 `rendererExtensions.containerShell`。`provide()` 必须位于承载 Designer 与 `DevicePicker` 的共同祖先组件中。需要切换设备时，宿主在自己的界面中渲染：
 
 ```vue
 <DevicePicker :context="deviceCtx" />

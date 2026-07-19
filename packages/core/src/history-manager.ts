@@ -3,7 +3,7 @@ import type { EventHub } from './event-hub'
 import type { DeepReadonly, DesignerSchema, HistoryEntry, SchemaStoreInstance } from './types'
 import { ref } from 'vue'
 import { EventName } from './constants'
-import { cloneSchema, cloneSchemaRef } from './schema-utils'
+import { cloneSchema, deepFreeze } from './schema-utils'
 
 export interface HistoryState {
   canUndo: boolean
@@ -26,14 +26,14 @@ export interface HistoryManagerInstance {
   clear: () => void
 }
 
-type OwnedSnapshotPusher = (label: string, before: DesignerSchema) => void
+type OwnedSnapshotPusher = (label: string, before: DeepReadonly<DesignerSchema>) => void
 
 const ownedSnapshotPushers = new WeakMap<HistoryManagerInstance, OwnedSnapshotPusher>()
 
 export function pushOwnedHistorySnapshot(
   history: HistoryManagerInstance,
   label: string,
-  before: DesignerSchema,
+  before: DeepReadonly<DesignerSchema>,
 ): void {
   const pushOwned = ownedSnapshotPushers.get(history)
   if (pushOwned)
@@ -58,7 +58,7 @@ export function createHistoryManager(
 
   let inTransaction = false
   let transactionLabel = ''
-  let transactionSnapshot: DesignerSchema | null = null
+  let transactionSnapshot: DeepReadonly<DesignerSchema> | null = null
 
   function resetTransaction(): void {
     inTransaction = false
@@ -71,7 +71,7 @@ export function createHistoryManager(
       undoStack.splice(0, undoStack.length - maxSize)
   }
 
-  function pushUndo(label: string, snapshot: DesignerSchema): void {
+  function pushUndo(label: string, snapshot: DeepReadonly<DesignerSchema>): void {
     undoStack.push({ label, snapshot })
     trimUndoStack()
     redoStack.length = 0
@@ -88,7 +88,7 @@ export function createHistoryManager(
     eventHub.emit(EventName.HISTORY_CHANGED, nextState)
   }
 
-  function pushOwnedSnapshot(label: string, before: DesignerSchema): void {
+  function pushOwnedSnapshot(label: string, before: DeepReadonly<DesignerSchema>): void {
     if (inTransaction)
       return
 
@@ -99,7 +99,7 @@ export function createHistoryManager(
   function pushSnapshot(label: string, before: DeepReadonly<DesignerSchema>): void {
     if (inTransaction)
       return
-    pushOwnedSnapshot(label, cloneSchema(before))
+    pushOwnedSnapshot(label, deepFreeze(cloneSchema(before)))
   }
 
   function undo(): void {
@@ -107,13 +107,13 @@ export function createHistoryManager(
       return
 
     const entry = undoStack.pop()!
-    const currentSnapshot = cloneSchemaRef(store.schema)
+    const currentSnapshot = store.getSnapshot()
     redoStack.push({ label: entry.label, snapshot: currentSnapshot })
 
-    store.setSchema(entry.snapshot)
+    store.restoreSnapshot(entry.snapshot)
 
     emitChange()
-    eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
+    eventHub.emit(EventName.SCHEMA_CHANGED, store.getSnapshot())
   }
 
   function redo(): void {
@@ -121,14 +121,14 @@ export function createHistoryManager(
       return
 
     const entry = redoStack.pop()!
-    const currentSnapshot = cloneSchemaRef(store.schema)
+    const currentSnapshot = store.getSnapshot()
     undoStack.push({ label: entry.label, snapshot: currentSnapshot })
     trimUndoStack()
 
-    store.setSchema(entry.snapshot)
+    store.restoreSnapshot(entry.snapshot)
 
     emitChange()
-    eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
+    eventHub.emit(EventName.SCHEMA_CHANGED, store.getSnapshot())
   }
 
   function canUndo(): boolean {
@@ -146,7 +146,7 @@ export function createHistoryManager(
     }
     inTransaction = true
     transactionLabel = label ?? 'transaction'
-    transactionSnapshot = cloneSchemaRef(store.schema)
+    transactionSnapshot = store.getSnapshot()
   }
 
   function commitTransaction(): void {
@@ -155,7 +155,7 @@ export function createHistoryManager(
       return
     }
 
-    if (transactionSnapshot) {
+    if (transactionSnapshot && transactionSnapshot !== store.getSnapshot()) {
       pushUndo(transactionLabel, transactionSnapshot)
     }
 
@@ -169,15 +169,14 @@ export function createHistoryManager(
       return
     }
 
-    const restored = transactionSnapshot !== null
-    if (transactionSnapshot) {
-      store.setSchema(transactionSnapshot)
-    }
+    const restored = transactionSnapshot !== null && transactionSnapshot !== store.getSnapshot()
+    if (restored)
+      store.restoreSnapshot(transactionSnapshot!)
 
     resetTransaction()
     emitChange()
     if (restored)
-      eventHub.emit(EventName.SCHEMA_CHANGED, store.getSchema())
+      eventHub.emit(EventName.SCHEMA_CHANGED, store.getSnapshot())
   }
 
   function isInTransaction(): boolean {

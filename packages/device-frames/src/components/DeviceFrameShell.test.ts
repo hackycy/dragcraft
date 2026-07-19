@@ -294,6 +294,60 @@ describe('deviceFrameShell', () => {
     expect(registerPlane).toHaveBeenCalledWith('viewport', expect.any(HTMLElement))
   })
 
+  it('keeps resize observers stable while scroll updates are frame-coalesced', async () => {
+    const callbacks: FrameRequestCallback[] = []
+    const requestFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callbacks.push(callback)
+      return callbacks.length
+    })
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+    const disconnect = vi.fn()
+    const observe = vi.fn()
+    const observerConstructor = vi.fn()
+    class MockResizeObserver {
+      constructor(_callback: ResizeObserverCallback) {
+        observerConstructor()
+      }
+
+      disconnect = disconnect
+      observe = observe
+      unobserve = vi.fn()
+    }
+    vi.stubGlobal('ResizeObserver', MockResizeObserver)
+    const wrapper = mount(DeviceFrameShell)
+
+    try {
+      await nextTick()
+      while (callbacks.length > 0)
+        callbacks.shift()!(0)
+      await nextTick()
+      const scroller = wrapper.find<HTMLElement>('.dc-device-frame__content-scroller').element
+      Object.defineProperties(scroller, {
+        clientHeight: { configurable: true, value: 200 },
+        scrollHeight: { configurable: true, value: 800 },
+        scrollTop: { configurable: true, value: 100 },
+      })
+      const initialConstructors = observerConstructor.mock.calls.length
+      const initialDisconnects = disconnect.mock.calls.length
+      requestFrame.mockClear()
+
+      scroller.dispatchEvent(new Event('scroll'))
+      scroller.dispatchEvent(new Event('scroll'))
+      scroller.dispatchEvent(new Event('scroll'))
+
+      expect(requestFrame).toHaveBeenCalledOnce()
+      callbacks.shift()!(16)
+      await nextTick()
+      expect(observerConstructor).toHaveBeenCalledTimes(initialConstructors)
+      expect(disconnect).toHaveBeenCalledTimes(initialDisconnects)
+    }
+    finally {
+      wrapper.unmount()
+      vi.unstubAllGlobals()
+      vi.restoreAllMocks()
+    }
+  })
+
   it('reserves the complete chrome wrapper without selection gutters', async () => {
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
     HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {

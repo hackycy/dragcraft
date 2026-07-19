@@ -26,6 +26,7 @@ root
 │   ├── themes           # 工作台主题聚合、令牌与视觉配方
 │   ├── device-frames    # 设备容器框架
 │   ├── icons            # SVG 图标组件库
+│   ├── i18n             # Vue 国际化上下文
 │   └── utils            # 通用纯函数工具
 ├── playground           # 本地演示与联调
 └── .github/architecture # 架构文档统一入口
@@ -44,7 +45,7 @@ root
 - 事件总线：拖拽生命周期、选中变化、schema 变更通知。
 
 所有 schema 写操作必须通过 core 的命令系统进入，UI 层不能直接修改 schema。
-`engine.state` 是对外读取 schema 与运行时状态的安全入口，返回深冻结快照；`engine.store` 只公开只读 refs 与 selection/hover/drag 交互方法。raw schema、`setSchema()` 和 `triggerUpdate()` 只存在于 Core 内部 store，业务侧无法绕过命令系统写 schema。
+`engine.state` 是对外读取 schema 与运行时状态的安全入口，返回当前已提交的深冻结快照；快照引用在下一条有效变更命令前保持稳定。`engine.store` 只公开只读 refs 与 selection/hover/drag 交互方法。Core 内部只允许命令拥有可写 draft，业务侧无法绕过命令系统写 schema。
 
 ### UI Shell
 

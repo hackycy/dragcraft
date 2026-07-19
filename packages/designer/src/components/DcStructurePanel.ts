@@ -1,8 +1,8 @@
 import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { MaybePromise, NodeActionContext, ResolvedNodeAction, SelectHookPayload } from '@dragcraft/renderer'
 import { createContainerPlan, createLayoutPlan, getLockedIndicesFromNodes, resolveNodeLayout } from '@dragcraft/core'
+import { useI18n } from '@dragcraft/i18n'
 import { ActionKey } from '@dragcraft/renderer'
-import { useI18n } from '@dragcraft/utils'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 

@@ -108,6 +108,43 @@ describe('useFormValidation', () => {
       expect(validateField('name')).toBe('This field is required')
     })
 
+    it('validates the default model value when the stored value is undefined', () => {
+      const schema = makeSchema({
+        name: {
+          defaultValue: 'Default name',
+          rules: [{ required: true }],
+        },
+      })
+      const { validateField } = useFormValidation(schema, () => ({}))
+
+      expect(validateField('name')).toBeUndefined()
+    })
+
+    it('does not replace an explicit null with the default value during validation', () => {
+      const schema = makeSchema({
+        name: {
+          defaultValue: 'Default name',
+          rules: [{ required: true }],
+        },
+      })
+      const { validateField } = useFormValidation(schema, () => ({ name: null }))
+
+      expect(validateField('name')).toBe('This field is required')
+    })
+
+    it('validates model values before applying valueFormat', () => {
+      const schema = makeSchema({
+        name: {
+          defaultValue: 'model-value',
+          valueFormat: () => '',
+          rules: [{ required: true }],
+        },
+      })
+      const { validateField } = useFormValidation(schema, () => ({}))
+
+      expect(validateField('name')).toBeUndefined()
+    })
+
     it('passes required validation with non-empty value', () => {
       const schema = makeSchemaWithValidation()
       const values = { name: 'John', email: 'test@example.com', age: 25 }
