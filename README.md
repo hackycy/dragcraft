@@ -12,11 +12,11 @@
     <a href="https://github.com/hackycy/dragcraft">GitHub</a>
   </p>
   <p align="center">
+    <a href="https://www.npmjs.com/package/@dragcraft/designer"><img src="https://img.shields.io/npm/v/%40dragcraft%2Fdesigner?logo=npm&label=npm" alt="npm version"></a>
+    &nbsp;|&nbsp;
+    <a href="https://www.npmjs.com/package/@dragcraft/designer"><img src="https://img.shields.io/npm/dm/%40dragcraft%2Fdesigner?logo=npm&label=downloads" alt="npm monthly downloads"></a>
+    &nbsp;|&nbsp;
     <a href="https://github.com/hackycy/dragcraft/blob/main/LICENSE">MIT License</a>
-    &nbsp;|&nbsp;
-    Vue 3
-    &nbsp;|&nbsp;
-    TypeScript
   </p>
 </div>
 
@@ -53,6 +53,24 @@ import '@dragcraft/themes'
 ```
 
 随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[快速开始](https://hackycy.github.io/dragcraft/guide/getting-started)。
+
+## Packages
+
+版本和下载量由 npm 动态提供。各包的职责、接入方式和 API 请查看[文档参考](https://hackycy.github.io/dragcraft/reference/overview)。
+
+| Packages | Version | Downloads |
+| --- | --- | --- |
+| [`@dragcraft/designer`](https://www.npmjs.com/package/@dragcraft/designer) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fdesigner)](https://www.npmjs.com/package/@dragcraft/designer) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fdesigner)](https://www.npmjs.com/package/@dragcraft/designer) |
+| [`@dragcraft/core`](https://www.npmjs.com/package/@dragcraft/core) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fcore)](https://www.npmjs.com/package/@dragcraft/core) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fcore)](https://www.npmjs.com/package/@dragcraft/core) |
+| [`@dragcraft/renderer`](https://www.npmjs.com/package/@dragcraft/renderer) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Frenderer)](https://www.npmjs.com/package/@dragcraft/renderer) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Frenderer)](https://www.npmjs.com/package/@dragcraft/renderer) |
+| [`@dragcraft/form-generator`](https://www.npmjs.com/package/@dragcraft/form-generator) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fform-generator)](https://www.npmjs.com/package/@dragcraft/form-generator) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fform-generator)](https://www.npmjs.com/package/@dragcraft/form-generator) |
+| [`@dragcraft/widgets`](https://www.npmjs.com/package/@dragcraft/widgets) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fwidgets)](https://www.npmjs.com/package/@dragcraft/widgets) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fwidgets)](https://www.npmjs.com/package/@dragcraft/widgets) |
+| [`@dragcraft/fields-ant-design-vue`](https://www.npmjs.com/package/@dragcraft/fields-ant-design-vue) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Ffields-ant-design-vue)](https://www.npmjs.com/package/@dragcraft/fields-ant-design-vue) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Ffields-ant-design-vue)](https://www.npmjs.com/package/@dragcraft/fields-ant-design-vue) |
+| [`@dragcraft/themes`](https://www.npmjs.com/package/@dragcraft/themes) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fthemes)](https://www.npmjs.com/package/@dragcraft/themes) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fthemes)](https://www.npmjs.com/package/@dragcraft/themes) |
+| [`@dragcraft/device-frames`](https://www.npmjs.com/package/@dragcraft/device-frames) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fdevice-frames)](https://www.npmjs.com/package/@dragcraft/device-frames) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fdevice-frames)](https://www.npmjs.com/package/@dragcraft/device-frames) |
+| [`@dragcraft/i18n`](https://www.npmjs.com/package/@dragcraft/i18n) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fi18n)](https://www.npmjs.com/package/@dragcraft/i18n) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fi18n)](https://www.npmjs.com/package/@dragcraft/i18n) |
+| [`@dragcraft/icons`](https://www.npmjs.com/package/@dragcraft/icons) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Ficons)](https://www.npmjs.com/package/@dragcraft/icons) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Ficons)](https://www.npmjs.com/package/@dragcraft/icons) |
+| [`@dragcraft/utils`](https://www.npmjs.com/package/@dragcraft/utils) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Futils)](https://www.npmjs.com/package/@dragcraft/utils) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Futils)](https://www.npmjs.com/package/@dragcraft/utils) |
 
 ## 核心能力
 
