@@ -32,6 +32,7 @@
     "build": "pnpm generate:contract && pnpm check && tsdown",
     "check": "node scripts/validate-theme-contract.mjs && node scripts/validate-theme-interactions.mjs",
     "generate:contract": "node scripts/generate-theme-custom-data.mjs",
+    "prepublishOnly": "pnpm build",
     "test": "pnpm check",
     "dev": "tsdown --watch"
   },

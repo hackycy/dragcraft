@@ -12,6 +12,7 @@
     "@dragcraft/device-frames": "workspace:*",
     "@dragcraft/fields-ant-design-vue": "workspace:*",
     "@dragcraft/form-generator": "workspace:*",
+    "@dragcraft/i18n": "workspace:*",
     "@dragcraft/icons": "workspace:*",
     "@dragcraft/themes": "workspace:*",
     "@dragcraft/utils": "workspace:*",

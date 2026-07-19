@@ -2,8 +2,8 @@ import type { FieldComponentMap, FieldSchema, FormContext } from '@dragcraft/for
 import type { Component, PropType } from 'vue'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 import { FORM_GENERATOR_CONTEXT_KEY, resolveFieldComponentProps } from '@dragcraft/form-generator'
+import { useI18n } from '@dragcraft/i18n'
 import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@dragcraft/icons'
-import { useI18n } from '@dragcraft/utils'
 import { Button, Input, InputNumber, Select, Slider } from 'ant-design-vue'
 import { computed, defineComponent, h, inject, ref } from 'vue'
 

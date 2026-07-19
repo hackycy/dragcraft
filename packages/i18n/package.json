@@ -1,8 +1,8 @@
 {
-  "name": "@dragcraft/utils",
+  "name": "@dragcraft/i18n",
   "type": "module",
   "version": "0.0.0",
-  "description": "@dragcraft/utils",
+  "description": "Reactive internationalization context for @dragcraft UI packages",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
   "homepage": "https://github.com/hackycy/dragcraft#readme",
@@ -29,15 +29,14 @@
     "lint": "eslint",
     "prepublishOnly": "nr build",
     "release": "bumpp",
-    "start": "tsx src/index.ts",
     "test": "vitest",
     "typecheck": "tsc"
   },
-  "dependencies": {
-    "lodash-es": "catalog:shared"
+  "peerDependencies": {
+    "vue": ">=3.0.0"
   },
   "devDependencies": {
-    "@types/lodash-es": "catalog:types",
-    "vitest": "catalog:testing"
+    "vitest": "catalog:testing",
+    "vue": "catalog:vue"
   }
 }
