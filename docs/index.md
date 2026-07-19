@@ -26,8 +26,8 @@ features:
     details: 页面顶层节点由 root.children 描述，再通过 LayoutPlan 投影到内容流、结构 chrome 和浮层；外部容器把普通子节点保存在自己的 regions 中。
   - title: Core Engine 统一写入
     details: 新增、移动、删除、属性更新和全局配置都通过 engine.execute() 进入命令系统，天然接入历史、事件和行为约束。
-  - title: 设计器开箱接入
-    details: '@dragcraft/designer 负责组合 core、renderer 和 form-generator，业务侧只需要传入物料、组件映射和字段 adapter。'
+  - title: 标准设计器入口
+    details: '@dragcraft/designer 组合 core、renderer 和 form-generator；业务应用传入物料、组件映射和字段 adapter。'
   - title: 可主题化 UI Shell
     details: '组件包拥有必要结构样式，@dragcraft/themes 提供完整默认 token 和共享视觉配方，业务通过稳定主题契约增量定制。'
   - title: 面向平台化扩展
@@ -107,7 +107,7 @@ dragcraft 的架构边界刻意保持清晰：core 管状态和命令，designer
 | 接入业务物料和右侧属性表单 | [物料与字段](/guide/materials-and-fields) |
 | 实现 flex、grid 或分栏等可承载子节点的物料 | [外部容器物料](/guide/container-materials) |
 | 自定义字段 adapter、联动与 Schema 绑定 | [配置表单与字段](/guide/forms-and-fields) |
-| 替换面板、扩展 rail 或节点动作 | [扩展设计器交互](/guide/extending-the-designer) |
+| 替换面板、扩展 rail 或节点动作 | [动作与视图扩展](/guide/extending-the-designer) |
 | 增加设备预览和工作台主题 | [主题与设备框架](/guide/themes-and-device-frames) |
 | 接入编辑器语言包 | [编辑器国际化](/guide/i18n) |
 | 保存草稿、处理版本冲突并发布 | [保存草稿与发布](/guide/saving-and-publishing) |

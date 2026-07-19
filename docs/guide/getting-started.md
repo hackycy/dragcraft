@@ -1,6 +1,6 @@
 # 快速开始
 
-这一页会把一个可拖入文本物料的设计器挂到 Vue 3 页面中。
+先把一个可拖入文本物料的设计器挂到 Vue 3 页面中。
 
 先安装依赖：
 
@@ -69,4 +69,4 @@ import { designer } from './designer'
 > [!TIP]
 > 默认入口与 `@dragcraft/themes/standard` 都包含必要结构样式和 Standard 视觉；Google Material 3 使用 `@dragcraft/themes/material`。完整自定义工作台时导入 `@dragcraft/themes/structure`，再基于公开主题契约编写视觉配方，不能省略结构 CSS。
 
-关于最小接入，目前知道这些就够了。接下来阅读 [集成设计器](/guide/designer-integration)，把初始 Schema、全局配置和业务页面接进来。
+接下来在 [集成设计器](/guide/designer-integration) 中配置初始 Schema、全局配置和工作台布局。

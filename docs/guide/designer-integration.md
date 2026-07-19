@@ -1,6 +1,6 @@
 # 集成设计器
 
-`createDesigner()` 把 core、renderer 和 form-generator 组装为一个设计器实例。业务应用只需要提供物料、渲染组件和字段 adapter。
+`createDesigner()` 把 core、renderer 和 form-generator 组装为一个设计器实例。业务应用提供物料、渲染组件和字段 adapter。
 
 先看一个带初始页面和全局配置的实例：
 
@@ -59,6 +59,6 @@ const snapshot = exportSchema()
 | --- | --- | --- |
 | `widgetMetas` + `componentMap` | 能创建什么，以及节点怎么渲染 | [自定义物料](/guide/materials-and-fields) |
 | `fieldComponentMap` + `FormSchema` | 右侧如何编辑页面和物料属性 | [配置表单与字段](/guide/forms-and-fields) |
-| `extensions`、hooks、actions | 替换面板、画布外壳与操作行为 | [扩展设计器交互](/guide/extending-the-designer) |
+| `extensions`、hooks、actions | 替换面板、画布外壳与操作行为 | [动作与视图扩展](/guide/extending-the-designer) |
 
-关于标准集成，目前知道这些就够了。准备好之后，继续阅读 [自定义物料](/guide/materials-and-fields)。
+接下来在 [自定义物料](/guide/materials-and-fields) 中定义业务组件的默认属性、表单和创建约束。

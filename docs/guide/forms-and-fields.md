@@ -171,4 +171,4 @@ Vue 函数式组件和 render factory 在运行时都是函数，无法可靠区
 
 `visible` 不满足时字段不渲染；`show` 只隐藏 DOM，适合需要保留控件状态的场景。需要按照其他字段动态改写 placeholder、选项或规则时使用 `dependencies`，但不能借此改变字段的 `key` 或 `component`。
 
-关于配置表单，目前知道这些就够了。准备好之后，继续阅读 [扩展设计器交互](/guide/extending-the-designer)。
+需要定制节点动作、确认流程或属性栏本身时，继续阅读 [动作与视图扩展](/guide/extending-the-designer)。

@@ -101,4 +101,4 @@ interface FieldRenderContext {
 
 具体选择和交互示例见 [配置表单与字段](/guide/forms-and-fields#直接渲染一次性字段内容)。
 
-如果你要继续看字段组件、绑定范围和字段联动，下一页就是更直接的入口。关于 form-generator，目前知道这些就够了。准备好之后，继续阅读 [配置表单与字段](/guide/forms-and-fields)。
+字段 adapter、Schema 绑定范围和字段联动的接入方式见 [配置表单与字段](/guide/forms-and-fields)。

@@ -62,4 +62,4 @@ core 先从节点和物料默认布局生成 `LayoutPlan`，renderer 再按 plan
 - `chrome`：导航栏、Tab 栏等结构节点，可声明固定、sticky 和内容避让。
 - `layer`：悬浮按钮、助手等覆盖层，可由框架或物料自行定位。
 
-关于 Schema 与布局，目前知道这些就够了。准备好之后，继续阅读 [集成设计器](/guide/designer-integration)。
+需要把这份 Schema 接入 Vue 应用时，继续阅读 [集成设计器](/guide/designer-integration)。

@@ -25,6 +25,6 @@ const nodeId = generateShortId()
 
 `/standard`、`/material` 与 `/structure` 都是自包含 CSS 入口。使用者不需要再单独导入 designer、renderer 或 form-generator 的结构样式，也不会依赖 monorepo 内部路径。
 
-视觉 recipe 只使用契约中的 `data-dc-component`、`data-dc-part`、`data-dc-state`，并使用普通 selector 与 CSS 导入顺序处理覆盖。官方主题禁止零 specificity 技巧、`!important` 和内部 `.dc-*` selector。具体写法与共享折叠 header 约束见[主题与设备框架](/guide/themes-and-device-frames#编写可覆盖的-recipe)。
+视觉 recipe 只使用契约中的 `data-dc-component`、`data-dc-part`、`data-dc-state`，并使用普通 selector 与 CSS 导入顺序处理覆盖。官方主题禁止零 specificity 技巧、`!important` 和内部 `.dc-*` selector。具体写法与共享折叠 header 约束见 [主题与设备框架](/guide/themes-and-device-frames#编写可覆盖的-recipe)。
 
-如果你现在正在处理语言包合并，下一页更接近你的操作路径；Schema 的读写则在生命周期指南中说明。关于这一层，目前知道这些就够了。准备好之后，继续阅读 [编辑器国际化](/guide/i18n) 和 [Schema 生命周期](/guide/import-export-and-i18n)。
+语言包合并和 locale 切换见 [编辑器国际化](/guide/i18n)；Schema 的导入、导出和版本处理见 [Schema 生命周期](/guide/import-export-and-i18n)。

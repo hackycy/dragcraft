@@ -35,4 +35,4 @@ const extensions = {
 
 `DeviceFrameShell` 还消费 Renderer 传入的 `selectionPresentation`，注册三个 selected 呈现平面：root 平面是 Frame 根元素的直接子节点并覆盖完整设备外框，内容平面位于 scroller surface 内并随页面滚动，视口平面固定在设备 viewport 内。preset 的宽高始终是完整可用 viewport 尺寸；Frame 本体和内部 surface 共享同一内容坐标，设备边框由 Frame 外侧的独立视觉层绘制，不通过 Frame border/padding、content inset、content surface padding 或 node border 移动物料。root 选框通过独立平面覆盖完整外壳。Frame 仍按完整 chrome wrapper 计算真实内容 reserve，并且不读取 selected 状态或计算投影范围。
 
-如果你还没有把主题和设备框架一起接进设计器，下一页会把完整链路串起来。关于这一层，目前知道这些就够了。准备好之后，继续阅读 [主题与设备框架](/guide/themes-and-device-frames)。
+设备框架与主题的导入顺序、选中投影和画布行为见 [主题与设备框架](/guide/themes-and-device-frames)。

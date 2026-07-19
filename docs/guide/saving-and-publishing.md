@@ -67,4 +67,4 @@ async function publish() {
 > [!WARNING]
 > 不要在每次 `schema:changed` 时无节流地直接请求 API。自动保存时应由宿主加防抖、单请求队列与失败重试策略，并保留用户可见的“未保存”状态。
 
-关于保存与发布，目前知道这些就够了。准备好之后，继续阅读 [运行时集成边界](/guide/runtime-integration)。
+发布后的 Schema 如何由生产运行时消费，见 [运行时集成边界](/guide/runtime-integration)。

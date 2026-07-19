@@ -53,4 +53,4 @@ const schema = {
 
 `undo()` 与 `redo()` 只服务于当前浏览器中的编辑会话。草稿版本、发布版本、审核记录和并发冲突应由业务服务管理。
 
-关于 Schema 生命周期，目前知道这些就够了。准备好之后，继续阅读 [保存草稿与发布](/guide/saving-and-publishing)。
+服务端保存草稿、解决版本冲突和发布页面的流程见 [保存草稿与发布](/guide/saving-and-publishing)。

@@ -33,7 +33,7 @@ export default defineConfig({
             { text: '自定义物料', link: '/guide/materials-and-fields' },
             { text: '外部容器物料', link: '/guide/container-materials' },
             { text: '配置表单与字段', link: '/guide/forms-and-fields' },
-            { text: '扩展设计器交互', link: '/guide/extending-the-designer' },
+            { text: '动作与视图扩展', link: '/guide/extending-the-designer' },
             { text: '主题与设备框架', link: '/guide/themes-and-device-frames' },
             { text: '编辑器国际化', link: '/guide/i18n' },
           ],
