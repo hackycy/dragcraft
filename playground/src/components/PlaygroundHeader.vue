@@ -41,6 +41,14 @@ const emit = defineEmits<{
     <div class="playground-header__spacer" />
 
     <div class="playground-header__actions">
+      <a
+        class="playground-header__btn"
+        href="https://hackycy.github.io/dragcraft/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Docs
+      </a>
       <button class="playground-header__btn" @click="emit('importOpen')">
         Import
       </button>

@@ -14,6 +14,7 @@ export default defineConfig({
     nav: [
       { text: '指南', link: '/guide/getting-started' },
       { text: '参考', link: '/reference/overview' },
+      { text: 'Playground', link: 'https://hackycy.github.io/dragcraft/playground' },
       { text: '架构', link: 'https://github.com/hackycy/dragcraft/tree/main/.github/architecture' },
     ],
     sidebar: {
