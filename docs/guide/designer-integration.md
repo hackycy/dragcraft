@@ -1,3 +1,7 @@
+---
+description: "在 Vue 应用中创建、挂载并控制 dragcraft 设计器，配置页面、物料、字段与工作台。"
+---
+
 # 集成设计器
 
 `createDesigner()` 把 core、renderer 和 form-generator 组装为一个设计器实例。业务应用提供物料、渲染组件和字段 adapter。

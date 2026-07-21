@@ -1,3 +1,7 @@
+---
+description: "@dragcraft/core 的 Schema、命令、状态、历史、事件和外部容器协议参考。"
+---
+
 # @dragcraft/core
 
 `@dragcraft/core` 负责 schema、命令和历史记录。

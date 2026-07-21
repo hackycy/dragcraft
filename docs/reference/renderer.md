@@ -1,3 +1,7 @@
+---
+description: "@dragcraft/renderer 的 Schema 画布渲染、节点交互扩展、选中投影和容器 region API 参考。"
+---
+
 # @dragcraft/renderer
 
 `@dragcraft/renderer` 负责把 schema 节点渲染成真正的 Vue 节点树。

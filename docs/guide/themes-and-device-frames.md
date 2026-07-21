@@ -1,3 +1,7 @@
+---
+description: "选择和定制 dragcraft 工作台主题、结构 CSS、公开样式契约与设备预览框架。"
+---
+
 # 主题与设备框架
 
 dragcraft 的 UI 是可主题化 Shell：组件包拥有必要结构样式，`@dragcraft/themes` 提供完整默认 token、共享视觉配方和 Material 差异。内部 `dc-*` class 不属于主题 API。

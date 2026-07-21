@@ -1,3 +1,7 @@
+---
+description: "@dragcraft/widgets 的物料整理工具与 @dragcraft/fields-ant-design-vue 字段 adapter API 参考。"
+---
+
 # widgets 与 fields
 
 这两个入口分别解决“如何整理物料”和“如何接入字段组件”。

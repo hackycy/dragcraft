@@ -1,3 +1,7 @@
+---
+description: "@dragcraft/form-generator 的 FormSchema 渲染、字段 adapter、render factory 和变更事件 API 参考。"
+---
+
 # @dragcraft/form-generator
 
 `@dragcraft/form-generator` 负责根据 `FormSchema` 渲染配置表单。

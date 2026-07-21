@@ -1,3 +1,7 @@
+---
+description: "扩展节点动作、拦截器、设计器面板和渲染部件，并通过命令系统保持 Schema 写入一致。"
+---
+
 # 动作与视图扩展
 
 `createDesigner()` 的 `customActions`、`actionInterceptors` 和 `extensions` 分别处理节点操作、操作前后的业务流程，以及 Designer 和画布的视觉部件。它们不修改 Schema 协议；需要写入页面时，动作仍应返回 Core command。

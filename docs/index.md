@@ -1,5 +1,6 @@
 ---
 layout: home
+description: "dragcraft 是面向小程序装修场景的可视化页面搭建引擎，提供 Schema、设计器和可扩展渲染能力。"
 
 hero:
   name: dragcraft

@@ -1,3 +1,7 @@
+---
+description: "导入、导出和校验页面 Schema，区分浏览器编辑历史与业务草稿、发布版本。"
+---
+
 # Schema 生命周期
 
 Schema 是设计器和业务服务之间交换的页面快照。使用 `exportSchema()` 导出，使用 `importSchema()` 在打开页面时加载。

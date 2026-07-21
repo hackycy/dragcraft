@@ -1,3 +1,7 @@
+---
+description: "@dragcraft/device-frames 的设备预览外壳、设备选择器和选中投影平面 API 参考。"
+---
+
 # @dragcraft/device-frames
 
 `@dragcraft/device-frames` 提供设备预览外壳和可选的设备选择器。

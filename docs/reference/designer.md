@@ -1,3 +1,7 @@
+---
+description: "@dragcraft/designer 的标准入口、工作台控制器、组合 API、动作扩展和容器设计器 API 参考。"
+---
+
 # @dragcraft/designer
 
 这是默认入口包。

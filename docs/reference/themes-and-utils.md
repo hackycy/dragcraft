@@ -1,3 +1,7 @@
+---
+description: "@dragcraft/themes、@dragcraft/i18n 与 @dragcraft/utils 的主题入口、国际化上下文和工具 API 参考。"
+---
+
 # themes、i18n 与 utils
 
 `@dragcraft/themes` 负责结构 CSS 聚合与默认工作台视觉，`@dragcraft/i18n` 提供 Vue UI 包共享的响应式国际化上下文，`@dragcraft/utils` 只保留跨包复用的纯函数。

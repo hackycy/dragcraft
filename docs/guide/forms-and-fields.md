@@ -1,3 +1,7 @@
+---
+description: "使用 FormSchema、字段 adapter 和 render factory 构建设计器属性面板，并将字段值绑定到 Schema。"
+---
+
 # 配置表单与字段
 
 右侧属性面板由 `FormSchema` 描述。可复用字段由 adapter map 提供，一次性内容则可以直接写成 render factory。
