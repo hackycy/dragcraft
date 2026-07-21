@@ -1,5 +1,6 @@
 import process from 'node:process'
 import { defineConfig } from 'vitepress'
+import llmstxt, { copyOrDownloadAsMarkdownButtons } from 'vitepress-plugin-llms'
 
 export default defineConfig({
   base: process.env.VITE_BASE ?? '/',
@@ -9,6 +10,12 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   srcExclude: ['superpowers/**'],
+  vite: {
+    plugins: [llmstxt()],
+    server: {
+      host: '0.0.0.0',
+    },
+  },
   themeConfig: {
     siteTitle: 'dragcraft',
     nav: [
@@ -83,5 +90,10 @@ export default defineConfig({
     socialLinks: [
       { icon: 'github', link: 'https://github.com/hackycy/dragcraft' },
     ],
+  },
+  markdown: {
+    config(md) {
+      md.use(copyOrDownloadAsMarkdownButtons)
+    },
   },
 })

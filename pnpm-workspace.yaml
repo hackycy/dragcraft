@@ -34,6 +34,7 @@ catalogs:
     vite: ^7.2.1
   docs:
     vitepress: next
+    vitepress-plugin-llms: ^1.13.3
   inlined:
     '@antfu/utils': ^9.3.0
   shared:
