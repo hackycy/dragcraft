@@ -1,8 +1,8 @@
 # 主题与设备容器
 
-本章覆盖 `@dragcraft/themes` 与 `@dragcraft/device-frames`。前者聚合可主题化 UI Shell 的结构样式与工作台视觉，后者提供画布容器的设备外壳。
+本章覆盖 `@dragcraft/themes` 与 `@dragcraft/device-frames`。前者聚合可主题化设计工作台的结构样式与工作台视觉，后者提供画布容器的设备外壳。
 
-## 可主题化 UI Shell
+## 可主题化设计工作台
 
 dragcraft 的组件包拥有自己的 DOM 与必要结构样式：
 

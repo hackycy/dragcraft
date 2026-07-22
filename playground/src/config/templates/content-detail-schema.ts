@@ -75,7 +75,7 @@ export const contentDetailSchema: DesignerSchema = {
               {
                 id: 'body-1',
                 type: 'text',
-                props: { content: 'Dragcraft 是一个面向小程序装修场景的可视化页面搭建引擎。采用 Core Engine + UI Shell + Headless Themes 架构，构建核心与 UI 分离的页面设计引擎。', fontSize: 15, fontWeight: 'normal', color: '#333333', textAlign: 'left' },
+                props: { content: 'Dragcraft 是一个面向小程序装修场景的可视化页面搭建引擎。采用 Core Engine + Vue Visual Builder Workbench + Workbench Themes 架构，构建核心与 UI 分离的页面设计引擎。', fontSize: 15, fontWeight: 'normal', color: '#333333', textAlign: 'left' },
                 style: { content: { lineHeight: '1.8' } },
               },
               {

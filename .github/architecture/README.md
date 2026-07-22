@@ -17,7 +17,7 @@
    - Widget 行为控制与位置锁定
 
 3. [Designer 与 Renderer](./03-designer-and-renderer.md)
-   - 三栏 UI Shell
+   - 三栏设计工作台
    - 画布拖拽、选中、mask 与 toolbar
    - Renderer 渲染管线
    - 扩展点、event hooks 与 node action 系统
@@ -33,7 +33,7 @@
    - icons 与 utils 包职责
 
 6. [主题与设备容器](./06-themes-and-device-frames.md)
-   - 可主题化 UI Shell 与公共主题契约
+   - 可主题化设计工作台与公共主题契约
    - Design Tokens
    - 设备容器与 toolbar 集成
 

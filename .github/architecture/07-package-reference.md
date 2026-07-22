@@ -47,7 +47,7 @@
 
 - 标准业务接入入口。
 - 组合 core、renderer、form-generator。
-- 提供可折叠 Dock、可平移画布和 Inspector 的响应式 UI Shell。
+- 提供可折叠 Dock、可平移画布和 Inspector 的响应式 Vue 可视化搭建工作台。
 - 管理基于容器宽度的 wide/compact 模式与互斥抽屉。
 - 管理拖拽、属性绑定、扩展点和事件 hooks 透传。
 - 通过 `bindings/field-binding.ts` 纯函数 helpers 翻译属性面板字段绑定。

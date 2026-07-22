@@ -1,6 +1,6 @@
 # Designer 与 Renderer
 
-`@dragcraft/designer` 是标准业务接入的 UI Shell，`@dragcraft/renderer` 是 schema 到 Vue 组件树的渲染层。二者共同承担设计器交互，但 schema 写入始终回到 core command。
+`@dragcraft/designer` 是标准业务接入的 Vue 可视化搭建工作台，`@dragcraft/renderer` 是 schema 到 Vue 组件树的渲染层。二者共同承担设计器交互，但 schema 写入始终回到 core command。
 
 ## Designer 定位
 
@@ -45,7 +45,7 @@ src/
     └── DcRightSidebar.ts
 ```
 
-## UI Shell 工作台结构
+## Vue 可视化搭建工作台结构
 
 `DcDesigner` 由左侧 Dock、画布和右侧 Inspector 组成。根节点只占宿主给出的高度，不读取 `100vh`；历史、指针、抓手和重置位置控件悬浮在画布内，不额外占用布局高度。
 

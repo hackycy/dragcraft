@@ -2,7 +2,7 @@
   <h1 align="center">dragcraft</h1>
   <p align="center">面向小程序装修场景的可视化页面搭建引擎</p>
   <p align="center">
-    用可视化设计器、结构化 Schema 和可扩展的 Vue UI Shell，构建可维护的页面装修后台。
+    用可视化设计器、结构化 Schema 和可扩展的 Vue 可视化搭建工作台，构建可维护的页面装修后台。
   </p>
   <p align="center">
     <a href="https://hackycy.github.io/dragcraft/"><strong>阅读文档</strong></a>
