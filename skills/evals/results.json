@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "runs": [
+    {
+      "id": "integration",
+      "workflow": "integration",
+      "status": "passed",
+      "executedAt": "2026-07-22T16:06:32Z",
+      "runner": { "agent": "Codex coding agent", "model": "GPT-5" },
+      "record": "results/integration.md"
+    },
+    {
+      "id": "widgets",
+      "workflow": "widgets",
+      "status": "passed",
+      "executedAt": "2026-07-22T16:06:32Z",
+      "runner": { "agent": "Codex coding agent", "model": "GPT-5" },
+      "record": "results/widgets.md"
+    },
+    {
+      "id": "containers",
+      "workflow": "containers",
+      "status": "passed",
+      "executedAt": "2026-07-22T16:06:32Z",
+      "runner": { "agent": "Codex coding agent", "model": "GPT-5" },
+      "record": "results/containers.md"
+    },
+    {
+      "id": "forms",
+      "workflow": "forms",
+      "status": "passed",
+      "executedAt": "2026-07-22T16:06:32Z",
+      "runner": { "agent": "Codex coding agent", "model": "GPT-5" },
+      "record": "results/forms.md"
+    },
+    {
+      "id": "shell",
+      "workflow": "shell",
+      "status": "passed",
+      "executedAt": "2026-07-22T16:06:32Z",
+      "runner": { "agent": "Codex coding agent", "model": "GPT-5" },
+      "record": "results/shell.md"
+    },
+    {
+      "id": "lifecycle",
+      "workflow": "lifecycle",
+      "status": "passed",
+      "executedAt": "2026-07-22T16:06:32Z",
+      "runner": { "agent": "Codex coding agent", "model": "GPT-5" },
+      "record": "results/lifecycle.md"
+    },
+    {
+      "id": "version-mismatch",
+      "workflow": "integration",
+      "status": "passed",
+      "executedAt": "2026-07-22T16:06:32Z",
+      "runner": { "agent": "Codex coding agent", "model": "GPT-5" },
+      "record": "results/version-mismatch.md"
+    }
+  ]
+}

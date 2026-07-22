@@ -15,6 +15,8 @@
     "lint": "eslint --cache .",
     "prepublishOnly": "pnpm build",
     "release": "bumpp -r",
+    "skills:check": "node skills/check.mjs",
+    "skills:test": "vitest run skills/check.test.mjs",
     "test": "pnpm build:packages && pnpm -r test",
     "typecheck": "pnpm build:packages && tsc",
     "prepare": "simple-git-hooks"

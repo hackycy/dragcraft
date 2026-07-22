@@ -1,0 +1,6 @@
+interface:
+  display_name: DragCraft 集成开发
+  short_description: 遵循证据链完成 DragCraft 的集成与高级扩展
+  default_prompt: 使用 $dragcraft 为当前 Vue 项目接入或扩展 DragCraft。
+policy:
+  allow_implicit_invocation: false

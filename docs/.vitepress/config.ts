@@ -37,6 +37,7 @@ export default defineConfig({
             { text: '核心心智模型', link: '/guide/mental-model' },
             { text: 'Schema 与布局', link: '/guide/schema-and-layout' },
             { text: '集成设计器', link: '/guide/designer-integration' },
+            { text: 'AI 辅助接入', link: '/guide/ai-assisted-development' },
           ],
         },
         {
