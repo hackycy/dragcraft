@@ -8,8 +8,6 @@
     <a href="https://hackycy.github.io/dragcraft/"><strong>阅读文档</strong></a>
     &nbsp;|&nbsp;
     <a href="https://hackycy.github.io/dragcraft/playground"><strong>在线体验</strong></a>
-    &nbsp;|&nbsp;
-    <a href="https://github.com/hackycy/dragcraft">GitHub</a>
   </p>
   <p align="center">
     <a href="https://www.npmjs.com/package/@dragcraft/designer"><img src="https://img.shields.io/npm/v/%40dragcraft%2Fdesigner?logo=npm&label=npm" alt="npm version"></a>
