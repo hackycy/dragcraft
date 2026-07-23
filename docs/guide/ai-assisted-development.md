@@ -32,7 +32,11 @@ mkdir -p .claude/skills
 ln -s ../../skills/dragcraft .claude/skills/dragcraft
 ```
 
-外部项目可以克隆 DragCraft 仓库，再把其中的 `skills/dragcraft` 复制或链接到相同目录。外部宿主优先读取已安装包的类型和 source map 中的官方 URL；skill 只有确认 DragCraft 源码 checkout 后才读取仓库内路径。该 skill 随框架版本演进；项目升级 DragCraft 时应同步更新 skill。
+外部项目可以克隆 DragCraft 仓库，再把其中的 `skills/dragcraft` 复制或链接到相同目录。外部宿主优先读取已安装包的类型和 source map 中的官方 URL；skill 只有确认 DragCraft 源码 checkout 后才读取仓库内路径。该 skill 随框架版本演进；项目升级 DragCraft 时应同步更新 skill。或
+
+```bash
+npx skills@latest add hackycy/dragcraft
+```
 
 ## 证据链
 

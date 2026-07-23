@@ -7,7 +7,13 @@
 将本仓库的 `skills/dragcraft` 保留为唯一源。仓库内开发时，为使用的 agent 创建链接：
 
 ```bash
-npx skills@latest add hackycy/dragcraft
+mkdir -p .agents/skills
+ln -s ../../skills/dragcraft .agents/skills/dragcraft
+```
+
+```bash
+mkdir -p .claude/skills
+ln -s ../../skills/dragcraft .claude/skills/dragcraft
 ```
 
 外部项目可先克隆本仓库，再把该项目中的 `skills/dragcraft` 复制或链接到相同的目标目录。skill 在外部宿主中优先读取已安装包的类型和 source map 的官方 URL；只有检测到 DragCraft 源码 checkout 时才读取仓库路径。更新 DragCraft 时同步更新该目录。
