@@ -136,6 +136,7 @@ export default defineComponent({
       kind: interactionPresentation.selectionKind,
       plane: projectionPlane,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
+      viewScale: ctx.viewScale,
     })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
       interactionBoundary: ctx.interactionBoundary,
@@ -145,6 +146,7 @@ export default defineComponent({
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
       placement: interactionPresentation.toolbarPlacement,
       orientation: interactionPresentation.toolbarOrientation,
+      viewScale: ctx.viewScale,
     })
     const {
       geometry: handleGeometry,
@@ -160,6 +162,7 @@ export default defineComponent({
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
       placement: 'left-start',
       orientation: 'vertical',
+      viewScale: ctx.viewScale,
     })
 
     function isDirectNodeHit(event: MouseEvent): boolean {

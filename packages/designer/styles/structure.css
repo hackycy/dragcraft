@@ -44,6 +44,7 @@
 .dc-canvas-controls,
 .dc-canvas-controls__history,
 .dc-canvas-controls__button,
+.dc-canvas-controls__scale,
 .dc-canvas__viewport,
 .dc-canvas__stage,
 .dc-canvas__content,
@@ -63,6 +64,17 @@
 .dc-canvas-controls__history,
 .dc-canvas-controls__button {
   border: 1px solid transparent;
+}
+
+.dc-canvas-controls__scale {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: var(--dc-control-height-sm, 28px);
+  padding: 0 2px;
+  user-select: none;
+  white-space: nowrap;
 }
 
 .dc-sidebar-rail__extension {
@@ -638,7 +650,8 @@
   transform:
     translate3d(-50%, -50%, 0)
     translate3d(var(--_dc-canvas-pan-x, 0px), var(--_dc-canvas-pan-y, 0px), 0)
-    translate3d(var(--_dc-canvas-snap-x, 0px), var(--_dc-canvas-snap-y, 0px), 0);
+    translate3d(var(--_dc-canvas-snap-x, 0px), var(--_dc-canvas-snap-y, 0px), 0)
+    scale(var(--_dc-canvas-view-scale, 1));
   transform-origin: center;
   will-change: transform;
 }

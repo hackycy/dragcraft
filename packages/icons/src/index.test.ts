@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { IconCenter, IconChevronDown, IconClose, IconComponent, IconGlobalConfig, IconHand, IconPanelLeft, IconPanelRight, IconPhone, IconPointer, IconProperties, IconSearch, IconSettings } from './index'
+import { IconCenter, IconChevronDown, IconClose, IconComponent, IconFit, IconGlobalConfig, IconHand, IconMinus, IconPanelLeft, IconPanelRight, IconPhone, IconPointer, IconProperties, IconSearch, IconSettings } from './index'
 
 describe('icons exports', () => {
   it('exports icon render functions with svg vnode output', () => {
@@ -15,7 +15,7 @@ describe('icons exports', () => {
   })
 
   it('exports workbench control icons', () => {
-    const icons = [IconPanelLeft, IconPanelRight, IconChevronDown, IconSearch, IconClose, IconSettings, IconComponent, IconGlobalConfig, IconProperties, IconPointer, IconHand, IconCenter]
+    const icons = [IconPanelLeft, IconPanelRight, IconChevronDown, IconSearch, IconClose, IconSettings, IconComponent, IconGlobalConfig, IconProperties, IconPointer, IconHand, IconCenter, IconMinus, IconFit]
 
     for (const icon of icons)
       expect(icon().type).toBe('svg')

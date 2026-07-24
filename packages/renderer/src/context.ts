@@ -111,6 +111,7 @@ export function createRendererContext(options: RendererOptions): RendererContext
     onContainerDragLeave: options.onContainerDragLeave,
     onContainerDrop: options.onContainerDrop,
     interactionBoundary: options.interactionBoundary,
+    viewScale: options.viewScale ?? ref(1),
   }
 }
 
