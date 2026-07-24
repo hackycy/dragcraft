@@ -180,4 +180,50 @@ describe('useNodeSelectionProjection', () => {
       app.unmount()
     }
   })
+
+  it('restores scaled visual rectangles to the selection plane local coordinates', async () => {
+    const node = document.createElement('div')
+    const plane = document.createElement('div')
+    const mountPoint = document.createElement('div')
+    document.body.append(node, plane, mountPoint)
+    mockRect(node, { top: 70, right: 170, bottom: 110, left: 50, width: 120, height: 40 })
+    mockRect(plane, { top: 20, right: 210, bottom: 320, left: 10, width: 200, height: 300 })
+
+    const presentation = createNodeSelectionPresentation()
+    presentation.registerPlane('root', plane)
+    let result: UseNodeSelectionProjectionReturn | undefined
+    const viewScale = ref(0.5)
+    const Consumer = defineComponent({
+      setup() {
+        result = useNodeSelectionProjection(ref(node), ref(true), {
+          kind: 'root-segment',
+          plane: ref('root'),
+          viewScale,
+        })
+        return () => null
+      },
+    })
+    const app = createApp(defineComponent({
+      setup() {
+        provide(NODE_SELECTION_PRESENTATION_KEY, presentation)
+        return () => h(Consumer as Component)
+      },
+    }))
+
+    try {
+      app.mount(mountPoint)
+      await nextTick()
+      result?.update()
+
+      expect(result?.projection.value).toEqual({
+        kind: 'root-segment',
+        plane: 'root',
+        materialBounds: { top: 100, left: 80, width: 240, height: 80 },
+        bounds: { top: 100, left: 0, width: 400, height: 80 },
+      })
+    }
+    finally {
+      app.unmount()
+    }
+  })
 })

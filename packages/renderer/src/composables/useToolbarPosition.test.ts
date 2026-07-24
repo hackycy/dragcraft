@@ -216,4 +216,42 @@ describe('useToolbarPosition', () => {
       visible: true,
     })
   })
+
+  it('repositions a floating control when the canvas view scale changes', async () => {
+    let top = 100
+    const referenceEl = mockElement({
+      top,
+      bottom: top + 100,
+      left: 100,
+      right: 200,
+      width: 100,
+      height: 100,
+    })
+    referenceEl.getBoundingClientRect = vi.fn(() => ({
+      top,
+      left: 100,
+      right: 200,
+      bottom: top + 100,
+      width: 100,
+      height: 100,
+      x: 100,
+      y: top,
+      toJSON: () => {},
+    }) as DOMRect)
+    const floatingEl = mockElement({ top: 0, left: 0, right: 36, bottom: 150, width: 36, height: 150 })
+    const viewScale = ref(1)
+    document.body.append(referenceEl, floatingEl)
+    const { position, update } = useToolbarPosition(ref(referenceEl), ref(floatingEl), ref(true), { viewScale })
+
+    await nextTick()
+    await update()
+    expect(position.value.y).toBe(100)
+
+    top = 240
+    viewScale.value = 0.5
+    await nextTick()
+
+    expect(position.value.y).toBe(240)
+    expect(referenceEl.getBoundingClientRect).toHaveBeenCalled()
+  })
 })
