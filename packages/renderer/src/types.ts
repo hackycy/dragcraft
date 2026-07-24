@@ -367,8 +367,6 @@ export interface RendererOptions extends ContainerDropRendererOptions {
   dragOverIndex?: Ref<number | null>
   /** Optional canvas viewport used as the collision boundary for floating controls. */
   interactionBoundary?: Ref<HTMLElement | null>
-  /** Optional reactive canvas view scale used to normalize interaction geometry. */
-  viewScale?: Ref<number>
   /**
    * Optional reactive ref indicating the current drag-over is forbidden.
    * When true and dragOverNodeId is 'root', the forbidden overlay is shown
@@ -409,8 +407,6 @@ export interface RendererContext extends ContainerDropRendererOptions {
   containerDropDecision: Ref<PlacementDecision | null>
   /** Optional canvas viewport used as the collision boundary for floating controls. */
   interactionBoundary?: Ref<HTMLElement | null>
-  /** Reactive canvas view scale used to normalize interaction geometry. */
-  viewScale: Ref<number>
 }
 
 /**

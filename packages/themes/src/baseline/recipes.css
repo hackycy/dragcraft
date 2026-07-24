@@ -353,12 +353,6 @@
   background: var(--dc-color-border-subtle);
 }
 
-[data-dc-component="canvas-controls"] [data-dc-part="scale"] {
-  color: var(--dc-color-text-muted);
-  font-size: var(--dc-font-size-xs);
-  font-variant-numeric: tabular-nums;
-}
-
 [data-dc-component="canvas-controls"] [data-dc-part="button"]:hover:not(:disabled) {
   color: var(--dc-color-text);
   background: var(--dc-color-surface-muted);

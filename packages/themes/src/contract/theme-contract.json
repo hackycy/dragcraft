@@ -75,7 +75,7 @@
   "components": {
     "designer": { "parts": ["backdrop", "body", "center-panel", "left-panel", "right-panel"], "states": ["compact", "left-open", "right-open", "wide"] },
     "canvas": { "parts": ["content", "interaction-layer", "stage", "viewport"], "states": ["dragging", "forbidden", "hand", "panning"] },
-    "canvas-controls": { "parts": ["button", "divider", "scale", "toolbar"], "states": [] },
+    "canvas-controls": { "parts": ["button", "divider", "toolbar"], "states": [] },
     "left-sidebar": { "parts": ["content", "rail", "rail-extension", "surface", "tab", "toggle"], "states": ["closed", "open"] },
     "right-sidebar": { "parts": ["content", "rail", "rail-extension", "surface", "tab", "toggle"], "states": ["closed", "open"] },
     "material-panel": { "parts": ["groups", "header", "heading", "search", "search-clear", "search-icon", "search-input"], "states": [] },

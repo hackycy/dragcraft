@@ -35,7 +35,6 @@ export function renderDeviceFrame(
   return h('div', {
     'class': ['dc-device-frame', modifierClass],
     'data-dc-toolbar-boundary': '',
-    'data-dc-canvas-fit': 'contain',
   }, [
     h('div', { class: 'dc-device-frame__surface' }, children),
     frameOverlay,

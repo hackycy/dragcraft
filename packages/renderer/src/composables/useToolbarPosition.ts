@@ -16,7 +16,6 @@ export interface UseToolbarPositionOptions {
   interactionGeometryUpdate?: () => void
   placement?: NodeToolbarPlacement
   orientation?: NodeToolbarOrientation
-  viewScale?: Ref<number>
 }
 
 export interface UseToolbarPositionReturn {
@@ -200,11 +199,6 @@ export function useToolbarPosition(
       applyPosition({ ...position.value, visible: false })
     }
   }, { immediate: true, flush: 'post' })
-
-  watch(() => options.viewScale?.value, () => {
-    if (isActive.value)
-      void update()
-  }, { flush: 'post' })
 
   onBeforeUnmount(stopAutoUpdate)
 

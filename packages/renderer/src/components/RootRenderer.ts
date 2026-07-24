@@ -135,10 +135,6 @@ export default defineComponent({
       type: Object as PropType<Ref<HTMLElement | null>>,
       default: undefined,
     },
-    viewScale: {
-      type: Object as PropType<Ref<number>>,
-      default: undefined,
-    },
     isForbidden: {
       type: Object as PropType<Ref<boolean>>,
       default: undefined,
@@ -165,7 +161,6 @@ export default defineComponent({
       onContainerDragLeave: props.onContainerDragLeave,
       onContainerDrop: props.onContainerDrop,
       interactionBoundary: props.interactionBoundary,
-      viewScale: props.viewScale,
     })
     provide(RENDERER_CONTEXT_KEY, ctx)
     const selectionPresentation = createNodeSelectionPresentation()

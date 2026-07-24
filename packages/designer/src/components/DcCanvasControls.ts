@@ -1,12 +1,12 @@
 import type { Component, PropType, VNodeChild } from 'vue'
-import type { CanvasInteractionMode } from '../composables/useCanvasView'
+import type { CanvasInteractionMode } from '../composables/useCanvasPan'
 import { useI18n } from '@dragcraft/i18n'
-import { IconCenter, IconFit, IconHand, IconMinus, IconPlus, IconPointer, IconRedo, IconUndo } from '@dragcraft/icons'
+import { IconCenter, IconHand, IconPointer, IconRedo, IconUndo } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 
 interface ControlButtonOptions {
-  key: 'undo' | 'redo' | 'pointer' | 'hand' | 'zoom-out' | 'zoom-in' | 'fit' | 'center'
+  key: 'undo' | 'redo' | 'pointer' | 'hand' | 'center'
   label: string
   icon: Component
   disabled?: boolean
@@ -22,29 +22,10 @@ export default defineComponent({
       type: String as PropType<CanvasInteractionMode>,
       required: true,
     },
-    showZoomControls: {
-      type: Boolean,
-      default: false,
-    },
-    viewScale: {
-      type: Number,
-      default: 1,
-    },
-    canZoomIn: {
-      type: Boolean,
-      default: false,
-    },
-    canZoomOut: {
-      type: Boolean,
-      default: false,
-    },
   },
 
   emits: {
     modeChange: (_mode: CanvasInteractionMode) => true,
-    zoomIn: () => true,
-    zoomOut: () => true,
-    fitView: () => true,
     resetView: () => true,
   },
 
@@ -52,7 +33,7 @@ export default defineComponent({
     const { t } = useI18n()
     const { engine } = useDesignerContext()
 
-    const renderControlButton = (options: ControlButtonOptions): VNodeChild => h('button', {
+    const renderHistoryButton = (options: ControlButtonOptions): VNodeChild => h('button', {
       'type': 'button',
       'class': 'dc-canvas-controls__button',
       'data-dc-part': 'button',
@@ -66,42 +47,6 @@ export default defineComponent({
 
     return () => {
       const history = engine.history.state.value
-      const zoomText = `${Math.round(props.viewScale * 100)}%`
-      const zoomLabel = t('workspace.canvas.zoom', '当前缩放')
-      const viewControls: VNodeChild[] = props.showZoomControls
-        ? [
-            h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
-            renderControlButton({
-              key: 'zoom-out',
-              label: t('workspace.canvas.zoom-out', '缩小'),
-              icon: IconMinus,
-              disabled: !props.canZoomOut,
-              onClick: () => emit('zoomOut'),
-            }),
-            h('span', {
-              'class': 'dc-canvas-controls__scale',
-              'data-dc-part': 'scale',
-              'aria-label': `${zoomLabel}: ${zoomText}`,
-              'aria-live': 'polite',
-            }, zoomText),
-            renderControlButton({
-              key: 'zoom-in',
-              label: t('workspace.canvas.zoom-in', '放大'),
-              icon: IconPlus,
-              disabled: !props.canZoomIn,
-              onClick: () => emit('zoomIn'),
-            }),
-            h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
-            renderControlButton({
-              key: 'fit',
-              label: t('workspace.canvas.fit', '适配画布'),
-              icon: IconFit,
-              onClick: () => emit('fitView'),
-            }),
-            h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
-          ]
-        : [h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' })]
-
       return h('div', { 'class': 'dc-canvas-controls', 'data-dc-component': 'canvas-controls' }, [
         h('div', {
           'class': 'dc-canvas-controls__history',
@@ -109,14 +54,14 @@ export default defineComponent({
           'role': 'toolbar',
           'aria-label': t('workspace.canvas.controls', '画布工具'),
         }, [
-          renderControlButton({
+          renderHistoryButton({
             key: 'undo',
             label: t('workspace.history.undo', '撤销'),
             icon: IconUndo,
             disabled: !history.canUndo,
             onClick: () => engine.history.undo(),
           }),
-          renderControlButton({
+          renderHistoryButton({
             key: 'redo',
             label: t('workspace.history.redo', '重做'),
             icon: IconRedo,
@@ -124,24 +69,24 @@ export default defineComponent({
             onClick: () => engine.history.redo(),
           }),
           h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
-          renderControlButton({
+          renderHistoryButton({
             key: 'pointer',
             label: t('workspace.canvas.pointer', '指针模式'),
             icon: IconPointer,
             active: props.interactionMode === 'pointer',
             onClick: () => emit('modeChange', 'pointer'),
           }),
-          renderControlButton({
+          renderHistoryButton({
             key: 'hand',
             label: t('workspace.canvas.hand', '抓手模式（按住空格）'),
             icon: IconHand,
             active: props.interactionMode === 'hand',
             onClick: () => emit('modeChange', 'hand'),
           }),
-          ...viewControls,
-          renderControlButton({
+          h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
+          renderHistoryButton({
             key: 'center',
-            label: t('workspace.canvas.center', '居中画布'),
+            label: t('workspace.canvas.reset', '重置画布位置'),
             icon: IconCenter,
             onClick: () => emit('resetView'),
           }),

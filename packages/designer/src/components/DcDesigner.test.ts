@@ -3,7 +3,7 @@ import type { Component } from 'vue'
 import type { DesignerSchema, DesignerWidgetMeta, WidgetMeta } from '..'
 import { ContainerRegionOutlet } from '@dragcraft/renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, ref } from 'vue'
+import { createApp, defineComponent, h, nextTick } from 'vue'
 import { createDesigner } from '..'
 import DcDesigner from './DcDesigner'
 
@@ -80,9 +80,6 @@ describe('dcDesigner', () => {
       expect(host.querySelector('[data-dc-workspace-control="pointer"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="hand"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="center"]')).not.toBeNull()
-      expect(host.querySelector('[data-dc-workspace-control="zoom-out"]')).toBeNull()
-      expect(host.querySelector('[data-dc-workspace-control="zoom-in"]')).toBeNull()
-      expect(host.querySelector('[data-dc-workspace-control="fit"]')).toBeNull()
       const root = host.querySelector<HTMLElement>('[data-dc-component="designer"]')
       expect(root?.dataset.dcState?.split(' ')).toContain('compact')
       expect(root?.style.getPropertyValue('--_dc-workspace-left-width')).toBe('280px')
@@ -236,105 +233,6 @@ describe('dcDesigner', () => {
       app.unmount()
       designer.dispose()
       host.remove()
-    }
-  })
-
-  it('fits marked device shells on initial render and device switches without exposing zoom controls for ordinary shells', async () => {
-    const callbacks: FrameRequestCallback[] = []
-    const requestFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      callbacks.push(callback)
-      return callbacks.length
-    })
-    const cancelFrame = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
-    const activeDevice = ref<'phone' | 'tablet'>('phone')
-    const frameSizes = {
-      phone: { width: 400, height: 1000 },
-      tablet: { width: 1000, height: 400 },
-    }
-    const FitShell = defineComponent({
-      setup(_, { slots }) {
-        return () => {
-          const size = frameSizes[activeDevice.value]
-          return h('div', {
-            'key': activeDevice.value,
-            'ref': (element: unknown) => {
-              if (!(element instanceof HTMLElement))
-                return
-              Object.defineProperties(element, {
-                offsetWidth: { configurable: true, value: size.width },
-                offsetHeight: { configurable: true, value: size.height },
-              })
-            },
-            'data-dc-toolbar-boundary': '',
-            'data-dc-canvas-fit': 'contain',
-          }, slots.default?.())
-        }
-      },
-    })
-    const designer = createDesigner({
-      engineOptions: { initialSchema: makeSchema() },
-      extensions: {
-        rendererExtensions: {
-          containerShell: FitShell,
-        },
-      },
-    })
-    const host = document.createElement('div')
-    document.body.appendChild(host)
-    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
-
-    function flushFrames(): void {
-      while (callbacks.length > 0)
-        callbacks.shift()!(0)
-    }
-
-    try {
-      app.mount(host)
-      await nextTick()
-      await nextTick()
-      const viewport = host.querySelector<HTMLElement>('.dc-canvas__viewport')!
-      Object.defineProperties(viewport, {
-        clientWidth: { configurable: true, value: 800 },
-        clientHeight: { configurable: true, value: 700 },
-      })
-      await Promise.resolve()
-      flushFrames()
-      await nextTick()
-
-      const stage = host.querySelector<HTMLElement>('[data-dc-canvas-stage]')!
-      const zoomOut = host.querySelector<HTMLButtonElement>('[data-dc-workspace-control="zoom-out"]')!
-      const zoomIn = host.querySelector<HTMLButtonElement>('[data-dc-workspace-control="zoom-in"]')!
-      const fit = host.querySelector<HTMLButtonElement>('[data-dc-workspace-control="fit"]')!
-
-      expect(zoomOut).not.toBeNull()
-      expect(zoomIn).not.toBeNull()
-      expect(fit).not.toBeNull()
-      expect(stage.style.getPropertyValue('--_dc-canvas-view-scale')).toBe('0.636')
-      expect(host.querySelector('[data-dc-part="scale"]')?.textContent).toBe('64%')
-
-      zoomIn.click()
-      await nextTick()
-      expect(stage.style.getPropertyValue('--_dc-canvas-view-scale')).toBe('0.74')
-
-      fit.click()
-      await nextTick()
-      expect(stage.style.getPropertyValue('--_dc-canvas-view-scale')).toBe('0.636')
-
-      activeDevice.value = 'tablet'
-      await nextTick()
-      await Promise.resolve()
-      flushFrames()
-      await nextTick()
-
-      expect(stage.style.getPropertyValue('--_dc-canvas-view-scale')).toBe('0.736')
-      expect(zoomOut.disabled).toBe(false)
-    }
-    finally {
-      app.unmount()
-      designer.dispose()
-      host.remove()
-      requestFrame.mockRestore()
-      cancelFrame.mockRestore()
     }
   })
 

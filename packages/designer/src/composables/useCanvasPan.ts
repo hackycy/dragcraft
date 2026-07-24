@@ -8,34 +8,14 @@ export interface CanvasPanOffset {
   y: number
 }
 
-export interface CanvasFitGeometry {
-  viewport: {
-    width: number
-    height: number
-  }
-  frame: {
-    width: number
-    height: number
-  }
-  gutter?: number
-}
-
-export interface UseCanvasViewReturn {
+export interface UseCanvasPanReturn {
   mode: Ref<CanvasInteractionMode>
   offset: Ref<CanvasPanOffset>
-  scale: Ref<number>
   pixelSnap: Ref<CanvasPanOffset>
   panEnabled: ComputedRef<boolean>
   isPanning: Ref<boolean>
-  canZoomIn: ComputedRef<boolean>
-  canZoomOut: ComputedRef<boolean>
   setMode: (mode: CanvasInteractionMode) => void
-  setFitTarget: (target: HTMLElement | null) => void
-  center: () => void
   reset: () => void
-  fit: () => boolean
-  zoomIn: () => void
-  zoomOut: () => void
   handlePointerEnter: () => void
   handlePointerLeave: () => void
   handlePointerDown: (event: PointerEvent) => void
@@ -58,13 +38,7 @@ export interface CanvasStagePixelGeometry {
   offset: CanvasPanOffset
 }
 
-export const CANVAS_FIT_GUTTER = 32
-export const CANVAS_ZOOM_MIN = 0.1
-export const CANVAS_ZOOM_MAX = 2
-export const CANVAS_ZOOM_STEP = 0.1
-
 const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable="true"], [contenteditable=""]'
-const SCALE_EPSILON = 1e-7
 
 function isEditableTarget(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest(EDITABLE_SELECTOR))
@@ -75,30 +49,6 @@ function resolvePixelCorrection(value: number, devicePixelRatio: number): number
   const snapped = Math.floor(value * ratio + 0.5 - 1e-7) / ratio
   const correction = snapped - value
   return Math.abs(correction) < 1e-7 ? 0 : correction
-}
-
-function roundScale(value: number): number {
-  return Math.round(value * 100 + SCALE_EPSILON) / 100
-}
-
-export function resolveCanvasFitScale(geometry: CanvasFitGeometry): number | null {
-  const gutter = Math.max(0, geometry.gutter ?? CANVAS_FIT_GUTTER)
-  const availableWidth = Math.max(0, geometry.viewport.width - gutter * 2)
-  const availableHeight = Math.max(0, geometry.viewport.height - gutter * 2)
-  if (
-    geometry.frame.width <= 0
-    || geometry.frame.height <= 0
-    || availableWidth <= 0
-    || availableHeight <= 0
-  ) {
-    return null
-  }
-
-  return Math.min(
-    1,
-    availableWidth / geometry.frame.width,
-    availableHeight / geometry.frame.height,
-  )
 }
 
 export function resolveCanvasStagePixelSnap(
@@ -118,22 +68,18 @@ export function resolveCanvasStagePixelSnap(
   }
 }
 
-export function useCanvasView(
+export function useCanvasPan(
   viewportRef: Ref<HTMLElement | null>,
   stageRef: Ref<HTMLElement | null>,
-): UseCanvasViewReturn {
+): UseCanvasPanReturn {
   const mode = ref<CanvasInteractionMode>('pointer')
   const offset = ref<CanvasPanOffset>({ x: 0, y: 0 })
-  const scale = ref(1)
   const pixelSnap = ref<CanvasPanOffset>({ x: 0, y: 0 })
   const spacePressed = ref(false)
   const isPanning = ref(false)
   const pointerInside = ref(false)
   const panEnabled = computed(() => mode.value === 'hand' || spacePressed.value)
-  const canZoomIn = computed(() => scale.value < CANVAS_ZOOM_MAX - SCALE_EPSILON)
-  const canZoomOut = computed(() => scale.value > CANVAS_ZOOM_MIN + SCALE_EPSILON)
 
-  let fitTarget: HTMLElement | null = null
   let pointerId: number | null = null
   let startX = 0
   let startY = 0
@@ -191,56 +137,8 @@ export function useCanvasView(
     mode.value = nextMode
   }
 
-  function setFitTarget(target: HTMLElement | null): void {
-    fitTarget = target
-  }
-
-  function center(): void {
-    offset.value = { x: 0, y: 0 }
-  }
-
   function reset(): void {
-    center()
-    scale.value = 1
-  }
-
-  function fit(): boolean {
-    center()
-    const viewport = viewportRef.value
-    if (!viewport || !fitTarget)
-      return false
-
-    const nextScale = resolveCanvasFitScale({
-      viewport: {
-        width: viewport.clientWidth,
-        height: viewport.clientHeight,
-      },
-      frame: {
-        width: fitTarget.offsetWidth,
-        height: fitTarget.offsetHeight,
-      },
-    })
-    if (nextScale === null)
-      return false
-
-    scale.value = nextScale
-    return true
-  }
-
-  function zoomIn(): void {
-    if (!canZoomIn.value)
-      return
-
-    scale.value = scale.value < CANVAS_ZOOM_MIN
-      ? CANVAS_ZOOM_MIN
-      : Math.min(CANVAS_ZOOM_MAX, roundScale(scale.value + CANVAS_ZOOM_STEP))
-  }
-
-  function zoomOut(): void {
-    if (!canZoomOut.value)
-      return
-
-    scale.value = Math.max(CANVAS_ZOOM_MIN, roundScale(scale.value - CANVAS_ZOOM_STEP))
+    offset.value = { x: 0, y: 0 }
   }
 
   function handleWindowKeydown(event: KeyboardEvent): void {
@@ -327,8 +225,9 @@ export function useCanvasView(
     window.addEventListener('keyup', handleWindowKeyup)
     window.addEventListener('blur', resetTemporaryMode)
     window.addEventListener('resize', schedulePixelSnap)
-    if (typeof ResizeObserver !== 'undefined')
+    if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(schedulePixelSnap)
+    }
     observePixelGeometry(viewportRef.value, stageRef.value)
   })
 
@@ -345,24 +244,16 @@ export function useCanvasView(
   watch([viewportRef, stageRef], ([viewport, stage]) => {
     observePixelGeometry(viewport, stage)
   }, { flush: 'post' })
-  watch([offset, scale], schedulePixelSnap, { flush: 'sync' })
+  watch(offset, schedulePixelSnap, { flush: 'sync' })
 
   return {
     mode,
     offset,
-    scale,
     pixelSnap,
     panEnabled,
     isPanning,
-    canZoomIn,
-    canZoomOut,
     setMode,
-    setFitTarget,
-    center,
     reset,
-    fit,
-    zoomIn,
-    zoomOut,
     handlePointerEnter,
     handlePointerLeave,
     handlePointerDown,
