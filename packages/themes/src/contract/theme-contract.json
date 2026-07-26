@@ -54,7 +54,14 @@
     "--dc-material-item-hover-shadow": { "kind": "component", "default": "var(--dc-shadow-sm)", "description": "Hovered material-item shadow." },
     "--dc-material-search-radius": { "kind": "component", "default": "var(--dc-radius-md)", "description": "Material-panel search input radius." },
     "--dc-node-selection-stroke-width": { "kind": "component", "default": "2px", "description": "Node selection stroke width." },
-    "--dc-node-toolbar-shadow": { "kind": "component", "default": "0 4px 12px var(--dc-color-accent-ring)", "description": "Floating node-toolbar shadow." }
+    "--dc-node-toolbar-shadow": { "kind": "component", "default": "0 4px 12px var(--dc-color-accent-ring)", "description": "Floating node-toolbar shadow." },
+    "--dc-scroll-area-track-size": { "kind": "component", "default": "8px", "description": "Interactive width of the overlay scroll-area track." },
+    "--dc-scroll-area-track-offset": { "kind": "component", "default": "0px", "description": "Inset between the scroll-area track and its block and inline edges." },
+    "--dc-scroll-area-thumb-size": { "kind": "component", "default": "4px", "description": "Visual width of the vertical scroll-area thumb." },
+    "--dc-scroll-area-thumb-min-size": { "kind": "component", "default": "24px", "description": "Minimum visual length of the scroll-area thumb." },
+    "--dc-scroll-area-thumb-color": { "kind": "component", "default": "rgba(9, 9, 11, 0.28)", "description": "Default scroll-area thumb color." },
+    "--dc-scroll-area-thumb-hover-color": { "kind": "component", "default": "rgba(9, 9, 11, 0.42)", "description": "Hovered scroll-area thumb color." },
+    "--dc-scroll-area-thumb-active-color": { "kind": "component", "default": "rgba(9, 9, 11, 0.56)", "description": "Dragged scroll-area thumb color." }
   },
   "integrationProperties": {
     "--dc-node-selection-root-block-overlap": { "description": "Root block-edge thickness painted outside material bounds without affecting layout." },
@@ -73,6 +80,7 @@
     "--dc-inset-inline-end": { "description": "Resolved inline-end inset consumed by shell content and layers." }
   },
   "components": {
+    "scroll-area": { "parts": ["content", "scrollbar", "thumb", "viewport"], "states": ["dragging", "hidden", "overflowing", "scrolling", "visible"] },
     "designer": { "parts": ["backdrop", "body", "center-panel", "left-panel", "right-panel"], "states": ["compact", "left-open", "right-open", "wide"] },
     "canvas": { "parts": ["content", "interaction-layer", "stage", "viewport"], "states": ["dragging", "forbidden", "hand", "panning"] },
     "canvas-controls": { "parts": ["button", "divider", "toolbar"], "states": [] },

@@ -60,6 +60,8 @@ src/
 - `Materials`：物料区。
 - `Structure`：结构树区。
 
+物料列表、结构树列表和右侧属性内容统一通过 `@dragcraft/ui` 的 `DcScrollArea` 提供纵向原生滚动。滚动条覆盖在 viewport 上方，不参与面板宽度计算；可见策略、thumb 几何、拖动和轨道交互由共享模块维护，面板只保留各自的内容 padding 与业务渲染。
+
 物料 tab 使用 `DcMaterialPanel`，提供：
 
 - widget 分组展示。

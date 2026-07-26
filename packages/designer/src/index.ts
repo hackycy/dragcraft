@@ -169,3 +169,6 @@ export type {
   UseNodeInteractionGeometryReturn,
   WidgetFallbackProps,
 } from '@dragcraft/renderer'
+
+export { DcScrollArea } from '@dragcraft/ui'
+export type { ScrollAreaProps, ScrollAreaType } from '@dragcraft/ui'

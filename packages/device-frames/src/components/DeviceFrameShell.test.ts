@@ -259,14 +259,14 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame__content [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame > .dc-device-frame__surface').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__surface > .dc-device-frame__viewport').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__content-scroller [data-test-id="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content [data-dc-part="viewport"] [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface [data-test-id="secondary"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content').classes()).not.toContain('dc-container-shell')
     expect(wrapper.find<HTMLElement>('.dc-device-frame__content').element.style.backgroundColor).toBe('')
-    expect(wrapper.find<HTMLElement>('.dc-device-frame__content-scroller').element.style.backgroundColor).toBe('')
+    expect(wrapper.find<HTMLElement>('.dc-device-frame__content [data-dc-part="viewport"]').element.style.backgroundColor).toBe('')
     expect(wrapper.find<HTMLElement>('.dc-device-frame__content-surface').element.style.backgroundColor).toBe('#fff7e6')
-    expect(wrapper.find('.dc-device-frame__scrollbar').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content[data-dc-component="scroll-area"] > [data-dc-part="scrollbar"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport').attributes()).toHaveProperty('data-dc-overlay-boundary')
     expect(wrapper.find('.dc-device-frame__chrome-stack--block-start [data-test-id="nav"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__chrome-stack--block-start [data-test-id="subnav"]').exists()).toBe(true)
@@ -287,64 +287,26 @@ describe('deviceFrameShell', () => {
     expect(wrapper.find('.dc-device-frame > .dc-forbidden-overlay[data-test-id="forbidden"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__content-surface .dc-forbidden-overlay').exists()).toBe(false)
     expect(wrapper.find('.dc-device-frame > [data-dc-selection-plane="root"]').exists()).toBe(true)
-    expect(wrapper.find('.dc-device-frame__content-scroller [data-dc-selection-plane="content"]').exists()).toBe(true)
+    expect(wrapper.find('.dc-device-frame__content [data-dc-part="viewport"] [data-dc-selection-plane="content"]').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport > [data-dc-selection-plane="viewport"]').exists()).toBe(true)
     expect(registerPlane).toHaveBeenCalledWith('root', expect.any(HTMLElement))
     expect(registerPlane).toHaveBeenCalledWith('content', expect.any(HTMLElement))
     expect(registerPlane).toHaveBeenCalledWith('viewport', expect.any(HTMLElement))
   })
 
-  it('keeps resize observers stable while scroll updates are frame-coalesced', async () => {
-    const callbacks: FrameRequestCallback[] = []
-    const requestFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      callbacks.push(callback)
-      return callbacks.length
-    })
-    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
-    const disconnect = vi.fn()
-    const observe = vi.fn()
-    const observerConstructor = vi.fn()
-    class MockResizeObserver {
-      constructor(_callback: ResizeObserverCallback) {
-        observerConstructor()
-      }
-
-      disconnect = disconnect
-      observe = observe
-      unobserve = vi.fn()
-    }
-    vi.stubGlobal('ResizeObserver', MockResizeObserver)
+  it('uses the shared scroll-area module for frame content', async () => {
     const wrapper = mount(DeviceFrameShell)
 
     try {
       await nextTick()
-      while (callbacks.length > 0)
-        callbacks.shift()!(0)
-      await nextTick()
-      const scroller = wrapper.find<HTMLElement>('.dc-device-frame__content-scroller').element
-      Object.defineProperties(scroller, {
-        clientHeight: { configurable: true, value: 200 },
-        scrollHeight: { configurable: true, value: 800 },
-        scrollTop: { configurable: true, value: 100 },
-      })
-      const initialConstructors = observerConstructor.mock.calls.length
-      const initialDisconnects = disconnect.mock.calls.length
-      requestFrame.mockClear()
-
-      scroller.dispatchEvent(new Event('scroll'))
-      scroller.dispatchEvent(new Event('scroll'))
-      scroller.dispatchEvent(new Event('scroll'))
-
-      expect(requestFrame).toHaveBeenCalledOnce()
-      callbacks.shift()!(16)
-      await nextTick()
-      expect(observerConstructor).toHaveBeenCalledTimes(initialConstructors)
-      expect(disconnect).toHaveBeenCalledTimes(initialDisconnects)
+      expect(wrapper.find('.dc-device-frame__content[data-dc-component="scroll-area"]').exists()).toBe(true)
+      expect(wrapper.find('.dc-device-frame__content > [data-dc-part="viewport"]').exists()).toBe(true)
+      expect(wrapper.find('.dc-device-frame__content > [data-dc-part="scrollbar"] > [data-dc-part="thumb"]').exists()).toBe(true)
+      expect(wrapper.find('.dc-device-frame__content-scroller').exists()).toBe(false)
+      expect(wrapper.find('.dc-device-frame__scrollbar').exists()).toBe(false)
     }
     finally {
       wrapper.unmount()
-      vi.unstubAllGlobals()
-      vi.restoreAllMocks()
     }
   })
 

@@ -1,0 +1,22 @@
+[data-dc-component="scroll-area"] > [data-dc-part="scrollbar"] {
+  opacity: 0;
+  transition: opacity var(--dc-duration-fast, 120ms);
+}
+
+[data-dc-component="scroll-area"] > [data-dc-part="scrollbar"][data-dc-state~="visible"] {
+  opacity: 1;
+}
+
+[data-dc-component="scroll-area"] > [data-dc-part="scrollbar"] > [data-dc-part="thumb"] {
+  background: var(--dc-scroll-area-thumb-color, rgba(9, 9, 11, 0.28));
+  border-radius: var(--dc-radius-full, 999px);
+  transition: background-color var(--dc-duration-fast, 120ms);
+}
+
+[data-dc-component="scroll-area"] > [data-dc-part="scrollbar"]:hover > [data-dc-part="thumb"] {
+  background: var(--dc-scroll-area-thumb-hover-color, rgba(9, 9, 11, 0.42));
+}
+
+[data-dc-component="scroll-area"][data-dc-state~="dragging"] > [data-dc-part="scrollbar"] > [data-dc-part="thumb"] {
+  background: var(--dc-scroll-area-thumb-active-color, rgba(9, 9, 11, 0.56));
+}

@@ -1,0 +1,59 @@
+.dc-scroll-area {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dc-scroll-area__viewport {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dc-scroll-area__viewport::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.dc-scroll-area__content {
+  box-sizing: border-box;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.dc-scroll-area__scrollbar {
+  position: absolute;
+  top: var(--dc-scroll-area-track-offset, 0px);
+  right: var(--dc-scroll-area-track-offset, 0px);
+  bottom: var(--dc-scroll-area-track-offset, 0px);
+  z-index: 1;
+  width: var(--dc-scroll-area-track-size, 8px);
+  padding: 0;
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.dc-scroll-area[data-dc-state~="overflowing"] > .dc-scroll-area__scrollbar[data-dc-state~="visible"] {
+  pointer-events: auto;
+}
+
+.dc-scroll-area__thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: var(--dc-scroll-area-thumb-size, 4px);
+  height: var(--_dc-scroll-area-thumb-height, 0px);
+  min-height: var(--dc-scroll-area-thumb-min-size, 24px);
+  transform: translateY(var(--_dc-scroll-area-thumb-offset, 0px));
+  will-change: transform;
+}

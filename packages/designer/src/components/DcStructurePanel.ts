@@ -3,6 +3,7 @@ import type { MaybePromise, NodeActionContext, ResolvedNodeAction, SelectHookPay
 import { createContainerPlan, createLayoutPlan, getLockedIndicesFromNodes, resolveNodeLayout } from '@dragcraft/core'
 import { useI18n } from '@dragcraft/i18n'
 import { ActionKey } from '@dragcraft/renderer'
+import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 
@@ -309,7 +310,9 @@ export default defineComponent({
       ]),
       items.value.length === 0
         ? h('div', { 'class': 'dc-structure-panel__empty', 'data-dc-part': 'empty' }, t('panel.structure.empty', '暂无结构'))
-        : h('div', { 'class': 'dc-structure-panel__list', 'data-dc-part': 'list' }, items.value.map(renderStructureItem)),
+        : h(DcScrollArea, { 'class': 'dc-structure-panel__list', 'data-dc-part': 'list' }, {
+            default: () => h('div', { class: 'dc-structure-panel__list-content' }, items.value.map(renderStructureItem)),
+          }),
     ])
   },
 })

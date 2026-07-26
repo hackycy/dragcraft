@@ -2,6 +2,7 @@ import type { LayoutEdge, LayoutNodeEntry, LayoutPlan, ResolvedChromePlacement, 
 import type { VNode, VNodeChild } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../types'
 import { normalizeStyleValueMap } from '@dragcraft/core'
+import { DcScrollArea } from '@dragcraft/ui'
 import { h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
 
 export interface FrameViewportOptions {
@@ -318,96 +319,9 @@ function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
   return style
 }
 
-function useScrollMetrics(scrollerRef: { value: HTMLElement | null }) {
-  const thumbStyle = ref<Record<string, string>>({
-    display: 'none',
-  })
-  let observer: ResizeObserver | null = null
-  let observedTarget: HTMLElement | null = null
-  let updateFrame: number | null = null
-
-  function setThumbStyle(next: Record<string, string>): void {
-    const prev = thumbStyle.value
-    const keys = new Set([...Object.keys(prev), ...Object.keys(next)])
-    for (const key of keys) {
-      if (prev[key] !== next[key]) {
-        thumbStyle.value = next
-        return
-      }
-    }
-  }
-
-  function update(): void {
-    const scroller = scrollerRef.value
-    if (!scroller) {
-      setThumbStyle({ display: 'none' })
-      return
-    }
-
-    const { clientHeight, scrollHeight, scrollTop } = scroller
-    if (scrollHeight <= clientHeight + 1) {
-      setThumbStyle({ display: 'none' })
-      return
-    }
-
-    const thumbHeight = Math.max(24, clientHeight * clientHeight / scrollHeight)
-    const maxThumbTop = Math.max(0, clientHeight - thumbHeight)
-    const maxScrollTop = Math.max(1, scrollHeight - clientHeight)
-    const thumbTop = maxThumbTop * (scrollTop / maxScrollTop)
-
-    setThumbStyle({
-      height: `${thumbHeight}px`,
-      transform: `translateY(${thumbTop}px)`,
-    })
-  }
-
-  function scheduleUpdate(): void {
-    if (updateFrame !== null)
-      return
-    updateFrame = window.requestAnimationFrame(() => {
-      updateFrame = null
-      update()
-    })
-  }
-
-  function refreshObserver(): void {
-    const scroller = scrollerRef.value
-    if (!scroller)
-      return
-
-    if (typeof ResizeObserver === 'undefined') {
-      scheduleUpdate()
-      return
-    }
-
-    observer ??= new ResizeObserver(scheduleUpdate)
-    const nextTarget = scroller.firstElementChild instanceof HTMLElement
-      ? scroller.firstElementChild
-      : scroller
-    if (nextTarget !== observedTarget) {
-      observer.disconnect()
-      observer.observe(nextTarget)
-      observedTarget = nextTarget
-    }
-    void nextTick(scheduleUpdate)
-  }
-
-  onMounted(refreshObserver)
-  onUpdated(refreshObserver)
-  onBeforeUnmount(() => {
-    observer?.disconnect()
-    if (updateFrame !== null)
-      window.cancelAnimationFrame(updateFrame)
-  })
-
-  return { thumbStyle, update: scheduleUpdate }
-}
-
 export function useFrameViewport(options: () => FrameViewportOptions): () => VNodeChild {
   const viewportRef = ref<HTMLElement | null>(null)
-  const scrollerRef = ref<HTMLElement | null>(null)
   useMeasuredChromeInsets(viewportRef)
-  const { thumbStyle, update: updateScrollMetrics } = useScrollMetrics(scrollerRef)
 
   return () => {
     const current = options()
@@ -420,12 +334,8 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
       'data-dc-overlay-boundary': '',
       'style': viewportStyle(current.plan),
     }, [
-      h('div', { class: 'dc-device-frame__content' }, [
-        h('div', {
-          ref: scrollerRef,
-          class: 'dc-device-frame__content-scroller',
-          onScroll: updateScrollMetrics,
-        }, [
+      h(DcScrollArea, { class: 'dc-device-frame__content' }, {
+        default: () => [
           h('div', { class: 'dc-device-frame__content-layout' }, [
             ...contentChrome['block-start'],
             h('div', { class: 'dc-device-frame__content-row' }, [
@@ -459,11 +369,8 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
               'aria-hidden': 'true',
             }),
           ]),
-        ]),
-        h('div', { 'class': 'dc-device-frame__scrollbar', 'aria-hidden': 'true' }, [
-          h('div', { class: 'dc-device-frame__scrollbar-thumb', style: thumbStyle.value }),
-        ]),
-      ]),
+        ],
+      }),
       renderChrome(current.plan, chromeVNodes),
       ...renderLayers(current.plan, current.layerVNodes ?? {}),
       h('div', {

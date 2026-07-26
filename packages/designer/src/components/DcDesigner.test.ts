@@ -87,6 +87,7 @@ describe('dcDesigner', () => {
       expect(host.querySelector('[data-dc-component="canvas-controls"] [data-dc-part="toolbar"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="material-panel"] [data-dc-part="search-input"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="material-panel"] [data-dc-part="search-icon"] svg')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="material-panel"] > [data-dc-part="groups"][data-dc-component="scroll-area"]')).not.toBeNull()
       const materialGroup = host.querySelector<HTMLElement>('[data-dc-component="material-group"]')
       const materialGroupHeader = materialGroup?.querySelector<HTMLButtonElement>(':scope > [data-dc-part="header"]')
       expect(materialGroupHeader?.querySelector('[data-dc-part="toggle"] svg')).not.toBeNull()
@@ -94,7 +95,7 @@ describe('dcDesigner', () => {
       await nextTick()
       expect(materialGroup?.getAttribute('data-dc-state')).toBe('collapsed')
       expect(materialGroup?.querySelector('[data-dc-part="toggle"]')?.classList.contains('dc-material-group__toggle--collapsed')).toBe(true)
-      expect(host.querySelector('[data-dc-component="property-panel"] > [data-dc-part="content"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="property-panel"] > [data-dc-part="content"][data-dc-component="scroll-area"]')).not.toBeNull()
     }
     finally {
       app.unmount()

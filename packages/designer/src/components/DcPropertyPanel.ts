@@ -1,6 +1,7 @@
 import type { FieldChangePayload } from '@dragcraft/form-generator'
 import { FormGenerator } from '@dragcraft/form-generator'
 import { useI18n } from '@dragcraft/i18n'
+import { DcScrollArea } from '@dragcraft/ui'
 import { defineComponent, h, watch } from 'vue'
 import { usePropertyBinding } from '../composables/usePropertyBinding'
 import { useDesignerContext } from '../context'
@@ -73,13 +74,15 @@ export default defineComponent({
       }
 
       return h('div', { 'class': 'dc-property-panel', 'data-dc-component': 'property-panel' }, [
-        h('div', {
+        h(DcScrollArea, {
           'id': `dc-property-panel-${effectiveTab}`,
           'class': 'dc-property-panel__content',
           'data-dc-part': 'content',
           'role': 'tabpanel',
           'aria-labelledby': `dc-property-tab-${effectiveTab}`,
-        }, [tabContent]),
+        }, {
+          default: () => h('div', { class: 'dc-property-panel__content-inner' }, [tabContent]),
+        }),
       ])
     }
   },

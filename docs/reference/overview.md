@@ -16,6 +16,7 @@ description: "按 package 查阅 dragcraft 的设计器、内核、渲染、表�
 | [@dragcraft/core](/reference/core) | Schema、命令、历史、事件和容器协议 |
 | [@dragcraft/renderer](/reference/renderer) | 画布节点渲染、交互扩展和容器 region |
 | [@dragcraft/form-generator](/reference/form-generator) | 右侧表单字段和 render factory |
+| [@dragcraft/ui](/reference/ui) | 共享 Vue UI 模块与统一覆盖层滚动区域 |
 | [@dragcraft/device-frames](/reference/device-frames) | 设备预览外壳和设备选择器 |
 | [widgets 与 fields](/reference/widgets-and-fields) | 物料定义整理和 Ant Design Vue 字段 adapter |
 | [themes、i18n 与 utils](/reference/themes-and-utils) | 主题入口、国际化上下文和纯函数工具 |

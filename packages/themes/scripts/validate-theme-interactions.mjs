@@ -6,6 +6,7 @@ import postcss from 'postcss'
 
 const packageRoot = path.resolve(import.meta.dirname, '..')
 const recipes = parse('src/baseline/recipes.css')
+const uiRecipe = parse('../ui/styles/recipe.css')
 const designerStructure = parse(import.meta.resolve('@dragcraft/designer/structure.css'))
 const formStructure = parse(import.meta.resolve('@dragcraft/form-generator/structure.css'))
 const rendererStructure = parse(import.meta.resolve('@dragcraft/renderer/structure.css'))
@@ -94,6 +95,15 @@ function sharedHeaderSelector(suffix = '') {
     `[data-dc-component="form-section"] > [data-dc-part="header"]${suffix}`,
   ].join(',\n')
 }
+
+expectDeclarations('scroll area thumb', uiRecipe, '[data-dc-component="scroll-area"] > [data-dc-part="scrollbar"] > [data-dc-part="thumb"]', {
+  'background': 'var(--dc-scroll-area-thumb-color, rgba(9, 9, 11, 0.28))',
+  'border-radius': 'var(--dc-radius-full, 999px)',
+})
+
+expectDeclarations('active scroll area thumb', uiRecipe, '[data-dc-component="scroll-area"][data-dc-state~="dragging"] > [data-dc-part="scrollbar"] > [data-dc-part="thumb"]', {
+  background: 'var(--dc-scroll-area-thumb-active-color, rgba(9, 9, 11, 0.56))',
+})
 
 expectDeclarations('shared collapsible header', recipes, sharedHeaderSelector(), {
   'color': 'var(--dc-color-text-muted)',

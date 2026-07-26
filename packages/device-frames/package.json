@@ -41,7 +41,8 @@
   },
   "dependencies": {
     "@dragcraft/core": "workspace:*",
-    "@dragcraft/icons": "workspace:*"
+    "@dragcraft/icons": "workspace:*",
+    "@dragcraft/ui": "workspace:*"
   },
   "devDependencies": {
     "@vue/test-utils": "catalog:testing",

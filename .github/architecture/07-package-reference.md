@@ -12,6 +12,7 @@
 | `@dragcraft/form-generator` | 配置面板 schema 表单引擎 |
 | `@dragcraft/fields-ant-design-vue` | Ant Design Vue 字段 adapter 包 |
 | `@dragcraft/widgets` | 物料协议与通用工具函数 |
+| `@dragcraft/ui` | 共享 Vue UI 模块与统一滚动区域 |
 | `@dragcraft/themes` | 工作台主题聚合、令牌与视觉配方 |
 | `@dragcraft/device-frames` | 设备容器框架 |
 | `@dragcraft/icons` | SVG 图标组件库 |
@@ -151,11 +152,32 @@
 - 依赖 core 类型和 Vue Component 类型。
 - designer 不强依赖本包，业务可以直接传入 meta 和 componentMap。
 
+## @dragcraft/ui
+
+职责：
+
+- 提供 designer、device-frames 与宿主扩展复用的基础 Vue UI 模块。
+- 统一原生滚动 viewport、覆盖层 scrollbar、thumb 几何和 pointer 交互。
+- 发布结构 CSS、视觉 recipe 与完整默认样式入口。
+
+主要入口：
+
+- `DcScrollArea`。
+- `ScrollAreaProps` 与 `ScrollAreaType`。
+- `@dragcraft/ui/styles`。
+- `@dragcraft/ui/structure.css` 与 `@dragcraft/ui/recipe.css`。
+
+依赖与协作：
+
+- 只 peer 依赖 Vue，不依赖 designer、renderer 或 device-frames。
+- 被 designer 的物料、结构树和属性面板消费，也被 device-frames 的内容 viewport 消费。
+- `@dragcraft/themes` 聚合其结构层、视觉 recipe 和公开 token 契约。
+
 ## @dragcraft/themes
 
 职责：
 
-- 聚合 designer、renderer 与 form-generator 的必要结构 CSS。
+- 聚合 ui、designer、renderer 与 form-generator 的必要结构 CSS。
 - 提供完整 Standard 默认令牌、共享基线视觉配方与 Material 差异。
 - 发布机器可读主题契约；不负责画布内业务 widget 的内容主题。
 
@@ -169,7 +191,7 @@
 依赖与协作：
 
 - 不改变组件逻辑。
-- 构建时通过 designer、renderer、form-generator 的公开 `structure.css` 子路径聚合结构层；发布的每个主题 CSS 都是可独立导入的完整文件。
+- 构建时通过 ui、designer、renderer、form-generator 的公开 `structure.css` 子路径聚合结构层，并引入 ui 的公共视觉 recipe；发布的每个主题 CSS 都是可独立导入的完整文件。
 - 业务优先增量覆盖 token，必要时使用公开 component/part/state 编写差异配方。
 
 ## @dragcraft/device-frames
@@ -191,7 +213,7 @@
 
 依赖与协作：
 
-- 依赖 Vue、`@dragcraft/core` layout/schema 类型和 `@dragcraft/icons`，不依赖 designer 或 renderer。
+- 依赖 Vue、`@dragcraft/core` layout/schema 类型、`@dragcraft/icons` 与 `@dragcraft/ui`，不依赖 designer 或 renderer。
 - 设备选择器是可选宿主组件，由业务放在应用顶栏或其他产品区域；designer 默认不提供设备选择。
 - 与 renderer 通过 `containerShell` 集成。
 - 样式自包含，不依赖 themes。
@@ -265,12 +287,15 @@
   -> @dragcraft/i18n
   -> @dragcraft/fields-ant-design-vue
   -> @dragcraft/themes
+  -> @dragcraft/ui
   -> @dragcraft/widgets
   -> @dragcraft/device-frames
   -> @dragcraft/icons
 
 @dragcraft/core -> @dragcraft/utils
+@dragcraft/designer -> @dragcraft/ui
 @dragcraft/designer -> @dragcraft/utils
+@dragcraft/device-frames -> @dragcraft/ui
 @dragcraft/renderer -> @dragcraft/utils
 ```
 

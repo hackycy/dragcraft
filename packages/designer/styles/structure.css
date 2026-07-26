@@ -364,9 +364,10 @@
 .dc-material-panel__groups {
   flex: 1;
   min-height: 0;
+}
+
+.dc-material-panel__groups-content {
   padding: 0 8px 12px;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 
 .dc-material-group + .dc-material-group {
@@ -460,8 +461,10 @@
 .dc-structure-panel__list {
   flex: 1;
   min-height: 0;
+}
+
+.dc-structure-panel__list-content {
   padding: 4px 8px 12px;
-  overflow-y: auto;
 }
 
 .dc-structure-panel__row {
@@ -568,8 +571,11 @@
 .dc-property-panel__content {
   flex: 1;
   min-height: 0;
+}
+
+.dc-property-panel__content-inner {
+  min-height: 100%;
   padding: 8px 0 16px;
-  overflow-y: auto;
 }
 
 .dc-property-panel__empty {

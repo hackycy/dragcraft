@@ -1,6 +1,7 @@
 import type { DesignerWidgetMeta } from '../types'
 import { useI18n } from '@dragcraft/i18n'
 import { IconClose, IconSearch } from '@dragcraft/icons'
+import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import { materialItemMatchesQuery, resolveMaterialItem } from '../material'
@@ -78,15 +79,17 @@ export default defineComponent({
         ]),
         // Widget groups
         h(
-          'div',
+          DcScrollArea,
           { 'class': 'dc-material-panel__groups', 'data-dc-part': 'groups' },
-          filteredGroups.value.map(group =>
-            h(DcMaterialGroup, {
-              key: group.name,
-              title: group.titleKey ? t(group.titleKey, group.title) : group.title,
-              widgets: group.widgets,
-            }),
-          ),
+          {
+            default: () => h('div', { class: 'dc-material-panel__groups-content' }, filteredGroups.value.map(group =>
+              h(DcMaterialGroup, {
+                key: group.name,
+                title: group.titleKey ? t(group.titleKey, group.title) : group.title,
+                widgets: group.widgets,
+              }),
+            )),
+          },
         ),
       ])
   },

@@ -4,6 +4,8 @@ description: "@dragcraft/device-frames 的设备预览外壳、设备选择器�
 
 # @dragcraft/device-frames
 
+Device Frame 内容区使用 `@dragcraft/ui` 的 `DcScrollArea` 作为唯一纵向原生滚动 viewport。`@dragcraft/device-frames/styles` 已内联共享 ScrollArea 的结构与默认 recipe，单独使用 Device Frame 时不需要额外导入 UI 样式；与 `@dragcraft/themes` 一起使用时，滚动条会消费相同的 `--dc-scroll-area-*` token。
+
 `@dragcraft/device-frames` 提供设备预览外壳和可选的分组设备选择器。
 
 先看一个最小示例：

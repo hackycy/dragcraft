@@ -1,3 +1,4 @@
+@import '@dragcraft/ui/styles';
 @import './tokens.css';
 @import './device-frame.css';
 @import './iphone.css';

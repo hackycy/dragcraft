@@ -69,6 +69,7 @@ export default defineConfig({
             { text: '@dragcraft/core', link: '/reference/core' },
             { text: '@dragcraft/renderer', link: '/reference/renderer' },
             { text: '@dragcraft/form-generator', link: '/reference/form-generator' },
+            { text: '@dragcraft/ui', link: '/reference/ui' },
             { text: '@dragcraft/device-frames', link: '/reference/device-frames' },
             { text: 'widgets 与 fields', link: '/reference/widgets-and-fields' },
             { text: 'themes 与 utils', link: '/reference/themes-and-utils' },

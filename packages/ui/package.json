@@ -1,8 +1,8 @@
 {
-  "name": "@dragcraft/designer",
+  "name": "@dragcraft/ui",
   "type": "module",
   "version": "0.0.1",
-  "description": "@dragcraft/designer",
+  "description": "Shared Vue UI modules for dragcraft",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
   "homepage": "https://github.com/hackycy/dragcraft#readme",
@@ -10,15 +10,19 @@
     "type": "git",
     "url": "git+https://github.com/hackycy/dragcraft.git"
   },
-  "bugs": "https://github.com/hackycy/dragcraft/issues",
+  "bugs": {
+    "url": "https://github.com/hackycy/dragcraft/issues"
+  },
   "keywords": [],
   "sideEffects": [
     "**/*.css"
   ],
   "exports": {
     ".": "./dist/index.mjs",
-    "./package.json": "./package.json",
-    "./structure.css": "./dist/structure.css"
+    "./styles": "./dist/styles.css",
+    "./structure.css": "./dist/structure.css",
+    "./recipe.css": "./dist/recipe.css",
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -32,23 +36,14 @@
     "lint": "eslint",
     "prepublishOnly": "pnpm build",
     "release": "bumpp",
-    "start": "tsx src/index.ts",
     "test": "vitest",
     "typecheck": "tsc"
   },
   "peerDependencies": {
     "vue": ">=3.0.0"
   },
-  "dependencies": {
-    "@dragcraft/core": "workspace:*",
-    "@dragcraft/form-generator": "workspace:*",
-    "@dragcraft/i18n": "workspace:*",
-    "@dragcraft/icons": "workspace:*",
-    "@dragcraft/renderer": "workspace:*",
-    "@dragcraft/ui": "workspace:*",
-    "@dragcraft/utils": "workspace:*"
-  },
   "devDependencies": {
+    "@vue/test-utils": "catalog:testing",
     "happy-dom": "catalog:testing",
     "vitest": "catalog:testing",
     "vue": "catalog:vue"

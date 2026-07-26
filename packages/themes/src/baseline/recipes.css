@@ -1,3 +1,5 @@
+@import '@dragcraft/ui/recipe.css';
+
 /* Shared workbench typography */
 [data-dc-component="left-sidebar"],
 [data-dc-component="right-sidebar"],

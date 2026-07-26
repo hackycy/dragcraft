@@ -270,6 +270,41 @@
       "name": "--dc-node-toolbar-shadow",
       "description": "Floating node-toolbar shadow.",
       "syntax": "*"
+    },
+    {
+      "name": "--dc-scroll-area-track-size",
+      "description": "Interactive width of the overlay scroll-area track.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-scroll-area-track-offset",
+      "description": "Inset between the scroll-area track and its block and inline edges.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-scroll-area-thumb-size",
+      "description": "Visual width of the vertical scroll-area thumb.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-scroll-area-thumb-min-size",
+      "description": "Minimum visual length of the scroll-area thumb.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-scroll-area-thumb-color",
+      "description": "Default scroll-area thumb color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-scroll-area-thumb-hover-color",
+      "description": "Hovered scroll-area thumb color.",
+      "syntax": "*"
+    },
+    {
+      "name": "--dc-scroll-area-thumb-active-color",
+      "description": "Dragged scroll-area thumb color.",
+      "syntax": "*"
     }
   ]
 }

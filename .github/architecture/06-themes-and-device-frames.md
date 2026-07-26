@@ -6,6 +6,7 @@
 
 dragcraft 的组件包拥有自己的 DOM 与必要结构样式：
 
+- `@dragcraft/ui/structure.css` 提供共享基础 UI 的布局与交互几何，`@dragcraft/ui/recipe.css` 提供可独立复用的默认视觉 recipe。
 - `@dragcraft/designer/structure.css`、`@dragcraft/renderer/structure.css` 与 `@dragcraft/form-generator/structure.css` 分别保证所属组件的布局与交互几何。
 - `@dragcraft/themes` 聚合结构样式、完整默认 token 与共享基线视觉配方。
 - 外部主题只依赖公开 token 与精选的 `data-dc-component`、`data-dc-part`、`data-dc-state`，内部 BEM 是私有实现。
@@ -79,6 +80,9 @@ import './my-workbench-theme.css'
 | `--dc-shadow-sm` / `md` / `lg` | 表面层级 |
 | `--dc-duration-fast` / `normal` | 动效时长 |
 | `--dc-ease-standard` | 标准缓动 |
+| `--dc-scroll-area-track-size` / `track-offset` | 覆盖层滚动轨道尺寸与边缘偏移 |
+| `--dc-scroll-area-thumb-size` / `thumb-min-size` | 滚动 thumb 宽度与最小长度 |
+| `--dc-scroll-area-thumb-color` / `hover-color` / `active-color` | 滚动 thumb 的默认、hover 与拖动态颜色 |
 
 工作台面板宽度、响应式断点和层级关系不属于主题 token。宽度与断点通过 `DesignerWorkspaceOptions` 配置；z-index 与运行时几何由结构样式拥有。Device Frame 需要协作的选区 overlap 变量属于结构集成契约，而不是视觉主题。
 
@@ -101,7 +105,7 @@ src/
     └── index.css
 ```
 
-`tsdown.config.ts` 把 `structure`、`standard`、`material` 作为三个独立 CSS 构建入口。三个发布文件都必须自包含，不能把共同的结构层或基线配方抽成需要消费者额外加载的共享 chunk。`src/structure.css` 只通过 `@dragcraft/designer/structure.css`、`@dragcraft/renderer/structure.css` 与 `@dragcraft/form-generator/structure.css` 公共子路径聚合样式，tsdown 在构建时将它们内联；主题契约 JSON 同样由 tsdown 复制到 `dist`。PostCSS 仅用于 AST 契约校验，不参与 CSS 打包或 watch。
+`tsdown.config.ts` 把 `structure`、`standard`、`material` 作为三个独立 CSS 构建入口。三个发布文件都必须自包含，不能把共同的结构层或基线配方抽成需要消费者额外加载的共享 chunk。`src/structure.css` 通过 `@dragcraft/ui/structure.css`、`@dragcraft/designer/structure.css`、`@dragcraft/renderer/structure.css` 与 `@dragcraft/form-generator/structure.css` 公共子路径聚合样式，基线 recipe 同时聚合 `@dragcraft/ui/recipe.css`；tsdown 在构建时将它们内联。主题契约 JSON 同样由 tsdown 复制到 `dist`。PostCSS 仅用于 AST 契约校验，不参与 CSS 打包或 watch。
 
 自定义工作台主题有两种方式：
 

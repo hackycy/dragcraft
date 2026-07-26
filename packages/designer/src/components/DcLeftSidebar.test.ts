@@ -119,6 +119,7 @@ describe('dcLeftSidebar', () => {
 
       expect(ctx.leftPanelActiveTab.value).toBe('structure')
       expect(host.querySelector('.dc-structure-panel')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="structure-panel"] > [data-dc-part="list"][data-dc-component="scroll-area"]')).not.toBeNull()
     }
     finally {
       app.unmount()

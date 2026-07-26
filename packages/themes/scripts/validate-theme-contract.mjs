@@ -13,6 +13,7 @@ const customDataPath = path.join(packageRoot, 'src/contract/css-custom-data.json
 const contract = JSON.parse(fs.readFileSync(contractPath, 'utf8'))
 const errors = []
 const structureEntries = [
+  '@dragcraft/ui/structure.css',
   '@dragcraft/designer/structure.css',
   '@dragcraft/renderer/structure.css',
   '@dragcraft/form-generator/structure.css',
@@ -151,6 +152,7 @@ function validateEntry(relativePath, expectedImports) {
 
 function validateRenderedHooks() {
   const roots = [
+    'packages/ui/src/components',
     'packages/designer/src/components',
     'packages/renderer/src/components',
     'packages/form-generator/src/components',
@@ -189,7 +191,7 @@ function validateRenderedHooks() {
 }
 
 function validatePackageStyleExports() {
-  for (const packageName of ['designer', 'renderer', 'form-generator']) {
+  for (const packageName of ['ui', 'designer', 'renderer', 'form-generator']) {
     const packageRoot = path.join(repoRoot, 'packages', packageName)
     const packageJson = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'))
     if (packageJson.exports?.['./structure.css'] !== './dist/structure.css')
@@ -200,6 +202,12 @@ function validatePackageStyleExports() {
       errors.push(`packages/${packageName}/package.json: CSS side effects are not declared`)
     if (!fs.existsSync(path.join(packageRoot, 'styles/structure.css')))
       errors.push(`packages/${packageName}: styles/structure.css does not exist`)
+    if (packageName === 'ui') {
+      if (packageJson.exports?.['./recipe.css'] !== './dist/recipe.css')
+        errors.push('packages/ui/package.json: missing ./recipe.css export')
+      if (packageJson.exports?.['./styles'] !== './dist/styles.css')
+        errors.push('packages/ui/package.json: missing ./styles export')
+    }
   }
 
   const packageJson = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'))
@@ -221,6 +229,7 @@ for (const entry of structureEntries)
   validateStructure(fileURLToPath(import.meta.resolve(entry)))
 validateRecipe('src/baseline/recipes.css')
 validateRecipe('src/material/recipes.css')
+validateRecipe(fileURLToPath(import.meta.resolve('@dragcraft/ui/recipe.css')))
 validatePublicProperties(readCss('src/material/tokens.css'))
 validateEntry('src/standard/index.css', ['../structure.css', '../baseline/tokens.css', '../baseline/recipes.css'])
 validateEntry('src/material/index.css', ['../structure.css', '../baseline/tokens.css', './tokens.css', '../baseline/recipes.css', './recipes.css'])

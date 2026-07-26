@@ -64,4 +64,11 @@
   --dc-material-search-radius: var(--dc-radius-md);
   --dc-node-selection-stroke-width: 2px;
   --dc-node-toolbar-shadow: 0 4px 12px var(--dc-color-accent-ring);
+  --dc-scroll-area-track-size: 8px;
+  --dc-scroll-area-track-offset: 0px;
+  --dc-scroll-area-thumb-size: 4px;
+  --dc-scroll-area-thumb-min-size: 24px;
+  --dc-scroll-area-thumb-color: rgba(9, 9, 11, 0.28);
+  --dc-scroll-area-thumb-hover-color: rgba(9, 9, 11, 0.42);
+  --dc-scroll-area-thumb-active-color: rgba(9, 9, 11, 0.56);
 }
