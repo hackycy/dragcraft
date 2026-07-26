@@ -65,6 +65,13 @@
   font-size: 12px;
 }
 
+.dc-system-icon {
+  display: block;
+  flex: none;
+  color: currentColor;
+  overflow: visible;
+}
+
 .dc-device-frame__content {
   position: absolute;
   top: var(--dc-inset-block-start);
@@ -316,45 +323,49 @@
 /* ── Device Picker ──────────────────────── */
 
 .dc-device-picker {
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: 16px minmax(0, 1fr);
   align-items: center;
-  gap: var(--dc-device-picker-gap);
+  gap: 5px;
+  box-sizing: border-box;
+  height: 30px;
   border: 1px solid var(--dc-color-border, #d4d4d8);
   border-radius: var(--dc-radius-md, 6px);
-  padding: 2px;
+  padding: 0 6px;
   background: var(--dc-color-surface, #ffffff);
-}
-
-.dc-device-picker__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  height: 24px;
-  padding: 0 8px;
-  font-size: 12px;
-  font-family: var(--dc-font-sans, inherit);
-  border: none;
-  border-radius: var(--dc-radius-sm, 4px);
-  background: var(--dc-device-picker-btn-bg);
-  color: var(--dc-device-picker-btn-color);
-  cursor: pointer;
-  transition: all var(--dc-duration-normal, 180ms);
-  white-space: nowrap;
-}
-
-.dc-device-picker__btn:hover {
-  background: var(--dc-color-surface-muted, #f4f4f5);
   color: var(--dc-color-text, #09090b);
 }
 
-.dc-device-picker__btn--active {
-  background: var(--dc-device-picker-btn-active-bg);
-  color: var(--dc-device-picker-btn-active-color);
+.dc-device-picker__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--dc-color-text-muted, #52525b);
+  pointer-events: none;
 }
 
-.dc-device-picker__btn--active:hover {
-  background: var(--dc-device-picker-btn-active-bg);
-  color: var(--dc-device-picker-btn-active-color);
-  opacity: 0.9;
+.dc-device-picker__icon svg {
+  display: block;
+}
+
+.dc-device-picker__select {
+  min-width: 0;
+  max-width: 180px;
+  height: 28px;
+  margin: 0;
+  padding: 0 22px 0 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 12px;
+  font-family: var(--dc-font-sans, inherit);
+  cursor: pointer;
+}
+
+.dc-device-picker:focus-within {
+  border-color: var(--dc-color-focus-ring, #2563eb);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--dc-color-focus-ring, #2563eb) 20%, transparent);
 }

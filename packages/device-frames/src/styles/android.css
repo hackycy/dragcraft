@@ -1,23 +1,94 @@
-/* ── Android Frame ───────────────────────── */
+/* Generic Android */
 
 .dc-device-frame--android {
   width: 360px;
   --dc-device-frame-radius: 20px;
+  --dc-device-frame-nav-height: 40px;
 }
 
 .dc-device-frame--android .dc-device-frame__viewport {
-  height: 800px;
+  height: 720px;
 }
 
-/* Navigation bar */
+.dc-device-frame--android .dc-device-frame__status-bar {
+  height: var(--dc-device-frame-status-height);
+  padding: 0 24px;
+}
+
+/* Galaxy A50-era waterdrop Android */
+
+.dc-device-frame--android-waterdrop {
+  width: 360px;
+  --dc-device-frame-radius: 24px;
+  --dc-device-frame-nav-height: 48px;
+}
+
+.dc-device-frame--android-waterdrop .dc-device-frame__viewport {
+  height: 720px;
+}
+
+.dc-device-frame--android-waterdrop .dc-device-frame__status-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+  box-sizing: border-box;
+  height: 24px;
+  padding: 0 12px;
+  border-bottom: 0;
+  font-size: 12px;
+}
+
+.dc-device-frame__notch--waterdrop {
+  position: relative;
+  align-self: start;
+  width: 28px;
+  height: 20px;
+  border-radius: 0 0 15px 15px;
+}
+
+.dc-phone-status__camera {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  display: block;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%);
+}
+
+.dc-device-frame--android .dc-system-icon--cellular,
+.dc-device-frame--android-waterdrop .dc-system-icon--cellular {
+  width: 14px;
+  height: 12px;
+}
+
+.dc-device-frame--android .dc-system-icon--wifi,
+.dc-device-frame--android-waterdrop .dc-system-icon--wifi {
+  width: 15px;
+  height: 11px;
+}
+
+.dc-device-frame--android .dc-system-icon--battery,
+.dc-device-frame--android-waterdrop .dc-system-icon--battery {
+  width: 22px;
+  height: 12px;
+}
+
+.dc-device-frame--android-waterdrop .dc-device-frame__status-icons {
+  gap: 4px;
+}
+
+/* Android three-button system navigation */
+
 .dc-device-frame__nav-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 48px);
   align-items: center;
-  justify-content: center;
-  gap: 48px;
+  justify-content: space-around;
+  box-sizing: border-box;
   height: var(--dc-device-frame-nav-height);
   background: var(--dc-device-frame-nav-bg);
   border-top: 1px solid #f0f0f0;
+  color: #777;
   user-select: none;
 }
 
@@ -25,10 +96,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #999;
-  cursor: default;
+  width: 48px;
+  height: 100%;
 }
 
-.dc-device-frame__nav-btn svg {
+.dc-device-frame__nav-icon {
   display: block;
+  width: 18px;
+  height: 18px;
+  overflow: visible;
 }

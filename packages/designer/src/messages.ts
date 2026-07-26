@@ -33,7 +33,17 @@ export const designerMessages: Record<string, MessageTree> = {
       right: { label: '属性检查器', open: '展开属性栏', close: '收起属性栏' },
       drawer: { close: '关闭面板' },
     },
-    device: { group: '预览设备', iphone: 'iPhone', android: 'Android', tablet: '平板', desktop: '桌面' },
+    device: {
+      group: '预览设备',
+      groups: { iphone: 'iPhone', android: 'Android', other: '其他设备' },
+      iphone: 'iPhone 15 Pro',
+      iphoneX: 'iPhone X',
+      iphone8: 'iPhone 8',
+      android: 'Android',
+      androidWaterdrop: 'Android 水滴屏',
+      tablet: '平板',
+      desktop: '桌面',
+    },
   },
   'en': {
     panel: {
@@ -67,6 +77,16 @@ export const designerMessages: Record<string, MessageTree> = {
       right: { label: 'Inspector', open: 'Open inspector', close: 'Collapse inspector' },
       drawer: { close: 'Close panel' },
     },
-    device: { group: 'Preview device', iphone: 'iPhone', android: 'Android', tablet: 'Tablet', desktop: 'Desktop' },
+    device: {
+      group: 'Preview device',
+      groups: { iphone: 'iPhone', android: 'Android', other: 'Other devices' },
+      iphone: 'iPhone 15 Pro',
+      iphoneX: 'iPhone X',
+      iphone8: 'iPhone 8',
+      android: 'Android',
+      androidWaterdrop: 'Android Waterdrop',
+      tablet: 'Tablet',
+      desktop: 'Desktop',
+    },
   },
 }

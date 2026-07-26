@@ -14,7 +14,14 @@ export interface DeviceFrameSelectionPresentationHost {
 /**
  * Supported device frame identifiers.
  */
-export type DeviceType = 'iphone' | 'android' | 'tablet' | 'desktop'
+export type DeviceType
+  = 'iphone'
+    | 'iphone-x'
+    | 'iphone-8'
+    | 'android'
+    | 'android-waterdrop'
+    | 'tablet'
+    | 'desktop'
 
 // ──────────────────────────────────────────
 // Device preset

@@ -176,7 +176,7 @@
 
 职责：
 
-- 提供 iPhone、Android、Tablet、Desktop 画布设备容器。
+- 提供 iPhone 15 Pro、iPhone X、iPhone 8、普通与水滴屏 Android、Tablet、Desktop 画布设备容器。
 - 提供设备上下文和独立设备选择组件。
 - 作为 renderer `containerShell` 扩展点使用。
 

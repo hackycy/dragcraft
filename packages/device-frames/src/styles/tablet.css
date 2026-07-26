@@ -8,3 +8,17 @@
 .dc-device-frame--tablet .dc-device-frame__viewport {
   height: 1024px;
 }
+
+.dc-device-frame--tablet .dc-device-frame__status-icons {
+  gap: 5px;
+}
+
+.dc-device-frame--tablet .dc-system-icon--wifi {
+  width: 16px;
+  height: 12px;
+}
+
+.dc-device-frame--tablet .dc-system-icon--battery {
+  width: 26px;
+  height: 13px;
+}

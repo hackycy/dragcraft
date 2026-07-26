@@ -148,7 +148,7 @@ Renderer 固定 selection projection 的位置和尺寸。默认 `DefaultNodeSel
 
 目标：
 
-- 提供 iPhone、Android、平板、桌面浏览器四种常见设备容器。
+- 提供多个年代的 iPhone、Android，以及平板、桌面浏览器设备容器。
 - 支持运行时动态切换设备类型。
 - 提供独立 `DevicePicker`，由宿主决定放在应用顶栏或其他产品区域。
 - 不依赖 designer 或 renderer；依赖 Vue、`@dragcraft/core` 的 layout/schema 类型，以及 `@dragcraft/icons` 的设备切换图标。
@@ -187,7 +187,7 @@ const designer = createDesigner({
 })
 ```
 
-设备选择不是 Designer 的默认能力。宿主可以直接渲染 `<DevicePicker :context="deviceCtx" />`；Playground 把它放在应用顶栏，不占用画布交互区。
+设备选择不是 Designer 的默认能力。宿主可以直接渲染 `<DevicePicker :context="deviceCtx" />`；内置选择器按 iPhone、Android、其他设备分组显示紧凑原生菜单，Playground 把它放在应用顶栏，不占用画布交互区。
 
 ## Device Frames 文件结构
 
@@ -202,8 +202,12 @@ src/
 │   ├── DeviceFrameShell.ts
 │   ├── DevicePicker.ts
 │   └── frames/
+│       ├── phone-frame.ts
 │       ├── IPhoneFrame.ts
+│       ├── IPhoneXFrame.ts
+│       ├── IPhone8Frame.ts
 │       ├── AndroidFrame.ts
+│       ├── AndroidWaterdropFrame.ts
 │       ├── TabletFrame.ts
 │       └── DesktopFrame.ts
 ├── styles/
@@ -234,10 +238,15 @@ interface DevicePreset {
 
 | 设备 | type | 尺寸 | 视觉特征 |
 | --- | --- | --- | --- |
-| iPhone | `iphone` | 375x812 | Dynamic Island、状态栏、Home Indicator |
-| Android | `android` | 360x800 | 状态栏、底部导航栏 |
+| iPhone 15 Pro | `iphone` | 393x852 | Dynamic Island、现代 iOS 状态栏、Home Indicator |
+| iPhone X | `iphone-x` | 375x812 | 刘海屏状态栏、Home Indicator |
+| iPhone 8 | `iphone-8` | 375x667 | 经典三栏 iOS 状态栏、无屏内导航 |
+| Android | `android` | 360x720 | 普通状态栏、底部三键导航 |
+| Android 水滴屏 | `android-waterdrop` | 360x720 | 水滴开孔状态栏、底部三键导航 |
 | Tablet | `tablet` | 768x1024 | 简洁状态栏、薄边框 |
 | Desktop | `desktop` | 1280x800 | 浏览器标题栏、交通灯、URL 栏 |
+
+`iphone` 与 `android` 保留为兼容 ID；`iphone` 对应的 viewport 已校正为 iPhone 15 Pro 的 393x852。手机 Frame 共享包内 `phone-frame` implementation，由私有 profile 决定状态栏和可选底部系统导航，不向 preset interface 暴露渲染参数。
 
 ## DeviceFrameContext
 

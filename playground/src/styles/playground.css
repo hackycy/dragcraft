@@ -375,13 +375,8 @@ body {
 }
 
 @container (max-width: 980px) {
-  .playground-header__preview-controls .dc-device-picker__label {
-    display: none;
-  }
-
-  .playground-header__preview-controls .dc-device-picker__btn {
-    width: 28px;
-    padding: 0;
+  .playground-header__preview-controls .dc-device-picker__select {
+    max-width: 112px;
   }
 }
 

@@ -1,9 +1,9 @@
 import type { LayoutPlan, StyleValueMap } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import type { DeviceFrameSelectionPresentationHost } from '../../types'
-import { IconSignal, IconSignalBar } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
 import { renderDeviceFrame, useFrameViewport } from '../frame-viewport'
+import { renderSystemBattery, renderSystemWifi } from './system-icons'
 
 /**
  * Tablet / iPad frame with minimal chrome and thin bezels.
@@ -55,8 +55,8 @@ export default defineComponent({
         h('div', { class: 'dc-device-frame__status-bar' }, [
           h('span', { class: 'dc-device-frame__status-time' }, '9:41'),
           h('span', { class: 'dc-device-frame__status-icons' }, [
-            h('span', null, h(IconSignal, { size: 10 })),
-            h('span', null, h(IconSignalBar, { size: 10 })),
+            renderSystemWifi('ios-modern'),
+            renderSystemBattery('ios-modern'),
           ]),
         ]),
         renderViewport(),

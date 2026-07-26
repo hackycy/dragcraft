@@ -124,6 +124,6 @@ const designer = createDesigner({
 <DcDesigner :instance="designer" />
 ```
 
-不渲染 `DevicePicker` 时不会出现设备选择。Designer 画布只保留撤销、重做、指针、抓手和重置位置；frame 会以外框中心对齐画布中心，并通过独立 stage 支持无滚动边界的二维拖动。
+`DevicePicker` 使用紧凑原生菜单，按 iPhone、Android、其他设备分组展示内置预设；`iphone` 兼容 ID 当前对应 iPhone 15 Pro，经典机型可使用 `iphone-x`、`iphone-8` 与 `android-waterdrop`。不渲染 `DevicePicker` 时不会出现设备选择。Designer 画布只保留撤销、重做、指针、抓手和重置位置；frame 会以外框中心对齐画布中心，并通过独立 stage 支持无滚动边界的二维拖动。
 
 需要为物料标题、字段标签和编辑器操作提供多语言文案时，继续阅读 [编辑器国际化](/guide/i18n)。

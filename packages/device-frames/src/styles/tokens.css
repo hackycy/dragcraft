@@ -22,14 +22,8 @@
   --dc-device-frame-titlebar-bg: #e8e8e8;
   --dc-device-frame-urlbar-bg: #ffffff;
 
-  /* ── Android Nav ──────────────────────── */
+  /* Android navigation */
   --dc-device-frame-nav-height: 40px;
   --dc-device-frame-nav-bg: #fafafa;
 
-  /* ── Device Picker ────────────────────── */
-  --dc-device-picker-gap: 2px;
-  --dc-device-picker-btn-bg: transparent;
-  --dc-device-picker-btn-color: var(--dc-color-text-muted, #52525b);
-  --dc-device-picker-btn-active-bg: var(--dc-color-accent, #18181b);
-  --dc-device-picker-btn-active-color: #ffffff;
 }
