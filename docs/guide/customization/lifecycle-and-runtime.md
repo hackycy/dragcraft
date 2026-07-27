@@ -28,4 +28,4 @@ description: "管理 Schema 导入导出、版本迁移、草稿发布与生产�
 
 **完成检查**：保存使用 revision 拒绝旧版本；加载先通过当前注册表校验；生产运行时不导入 `RootRenderer`、`ContainerRegionOutlet` 或编辑器容器组件。
 
-下一步：按需查阅 [API 参考](/reference/overview)，相关核心入口见 [@dragcraft/core](/reference/core)。
+下一步：按需查阅 [API 参考](/reference/overview)，相关入口见 [Designer Schema 与命令](/reference/designer-schema)。

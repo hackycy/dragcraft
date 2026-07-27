@@ -11,14 +11,10 @@
     "@dragcraft/designer": "workspace:*",
     "@dragcraft/device-frames": "workspace:*",
     "@dragcraft/fields-ant-design-vue": "workspace:*",
-    "@dragcraft/themes": "workspace:*",
-    "@dragcraft/utils": "workspace:*",
-    "@dragcraft/widgets": "workspace:*",
     "ant-design-vue": "catalog:vue",
     "vue": "catalog:vue"
   },
   "devDependencies": {
-    "@dragcraft/form-generator": "workspace:*",
     "@vitejs/plugin-vue": "catalog:vue",
     "vite": "catalog:cli",
     "vitest": "catalog:testing"

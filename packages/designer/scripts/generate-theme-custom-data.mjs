@@ -3,8 +3,8 @@ import path from 'node:path'
 import process from 'node:process'
 
 const packageRoot = path.resolve(import.meta.dirname, '..')
-const manifestPath = path.join(packageRoot, 'src/contract/theme-contract.json')
-const outputPath = path.join(packageRoot, 'src/contract/css-custom-data.json')
+const manifestPath = path.join(packageRoot, 'theme/contract/theme-contract.json')
+const outputPath = path.join(packageRoot, 'theme/contract/css-custom-data.json')
 
 export function createCssCustomData(contract) {
   return {

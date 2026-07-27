@@ -1,6 +1,5 @@
-import { createDesigner } from '@dragcraft/designer'
+import { buildComponentMap, createDesigner, getWidgetMetas } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
-import { buildComponentMap, getWidgetMetas } from '@dragcraft/widgets'
 import { textWidgetDefinition } from '../domain/widgets/text'
 
 // #region tutorial-minimal-designer

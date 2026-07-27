@@ -2,7 +2,7 @@
 
 ## 证据链
 
-读取物料指南、`@dragcraft/widgets` 与 `@dragcraft/designer` 的声明，并在 Playground 中找到同类组件。确定现有物料注册表和类型命名约定。
+读取物料指南与 `@dragcraft/designer` 的声明，并在 Playground 中找到同类组件。确定现有物料注册表和类型命名约定。
 
 ## 实施
 

@@ -10,7 +10,7 @@ description: "使用公开主题契约、设备 Frame 上下文和消息包定�
 
 随后将 `DeviceFrameShell` 传给 `rendererExtensions.containerShell`，并在宿主顶栏渲染 `DevicePicker`。不渲染选择器时，Designer 不会自行添加设备控制。
 
-主题先导入 `@dragcraft/themes`。日常品牌调整使用公开 CSS token；只有 token 无法表达的局部视觉才使用 `data-dc-component`、`data-dc-part` 和 `data-dc-state`。
+工作台先导入 `@dragcraft/designer/styles` 加载 Standard 主题。日常品牌调整使用公开 CSS token；只有 token 无法表达的局部视觉才使用 `data-dc-component`、`data-dc-part` 和 `data-dc-state`。
 
 ```css
 :root {
@@ -23,8 +23,8 @@ description: "使用公开主题契约、设备 Frame 上下文和消息包定�
 | --- | --- |
 | 结构 CSS、默认 recipe、设备壳和编辑器消息解析 | 品牌主题、画布内业务主题、设备选择位置和业务语言包 |
 
-不要依赖 `.dc-*` 私有 class，也不要省略 `@dragcraft/themes/structure` 后再实现完整自定义视觉。语言包通过 `createDesigner({ locale, messages })` 合并，业务页面正文仍由你的应用翻译。
+不要依赖 `.dc-*` 私有 class。只有完全自定义视觉时才改为导入 `@dragcraft/designer/styles/structure`，并负责补齐主题契约中的全部 token 和视觉 recipe。语言包通过 `createDesigner({ locale, messages })` 合并，业务页面正文仍由你的应用翻译。
 
 **完成检查**：切换 DevicePicker 后画布使用对应 viewport；品牌覆盖只使用 token 或公开 data hook；编辑器消息与业务正文分别由各自的消息系统提供。
 
-下一步：[生命周期与运行时](/guide/customization/lifecycle-and-runtime)。查看 [主题与 utils](/reference/themes-and-utils) 和 [device frames](/reference/device-frames) 的完整入口。
+下一步：[生命周期与运行时](/guide/customization/lifecycle-and-runtime)。查看 [Designer 样式与国际化](/reference/designer-styles) 和 [device frames](/reference/device-frames) 的完整入口。

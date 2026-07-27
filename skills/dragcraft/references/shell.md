@@ -6,7 +6,7 @@
 
 ## 实施
 
-1. 颜色、密度与局部视觉优先使用主题 token 和公开 `data-dc-*` hook；完整自定义主题先加载 `@dragcraft/themes/structure`。
+1. 颜色、密度与局部视觉优先使用主题 token 和公开 `data-dc-*` hook；完整自定义主题先加载 `@dragcraft/designer/styles/structure`。
 2. 使用最窄的 `extensions` 字段处理物料卡片、空态、节点包裹层、工具栏、选择投影或 rail；保留 Designer 管理的交互和命令管线。
 3. 用 `customActions` 返回 Schema command，用 `actionInterceptors` 处理确认、权限、审计和错误，用 `eventHooks` 监听画布交互。
 4. 编写 `containerShell` 时渲染内容流、chrome、layer 和禁止放置提示，并通过 `selectionPresentation.registerPlane()` 注册 root、content、viewport 平面。

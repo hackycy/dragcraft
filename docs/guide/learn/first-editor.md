@@ -9,7 +9,7 @@ description: "安装 DragCraft，并在 Vue 应用中挂载可拖入文本物料
 安装依赖：
 
 ```bash
-pnpm add @dragcraft/designer @dragcraft/themes @dragcraft/fields-ant-design-vue ant-design-vue vue
+pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
 ```
 
 最小实例来自贯穿示例：

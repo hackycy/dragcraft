@@ -8,13 +8,13 @@ import { createCssCustomData } from './generate-theme-custom-data.mjs'
 
 const packageRoot = path.resolve(import.meta.dirname, '..')
 const repoRoot = path.resolve(packageRoot, '../..')
-const contractPath = path.join(packageRoot, 'src/contract/theme-contract.json')
-const customDataPath = path.join(packageRoot, 'src/contract/css-custom-data.json')
+const contractPath = path.join(packageRoot, 'theme/contract/theme-contract.json')
+const customDataPath = path.join(packageRoot, 'theme/contract/css-custom-data.json')
 const contract = JSON.parse(fs.readFileSync(contractPath, 'utf8'))
 const errors = []
 const structureEntries = [
   '@dragcraft/ui/structure.css',
-  '@dragcraft/designer/structure.css',
+  '../styles/structure.css',
   '@dragcraft/renderer/structure.css',
   '@dragcraft/form-generator/structure.css',
 ]
@@ -120,7 +120,7 @@ function validateStructure(relativePath) {
 }
 
 function validateDefaultTokens() {
-  const root = readCss('src/baseline/tokens.css')
+  const root = readCss('theme/baseline/tokens.css')
   const definitions = new Map()
   root.walkDecls(/^--dc-/, (decl) => {
     const values = definitions.get(decl.prop) ?? []
@@ -131,13 +131,13 @@ function validateDefaultTokens() {
   for (const [name, token] of Object.entries(contract.tokens)) {
     const values = definitions.get(name) ?? []
     if (values.length !== 1)
-      errors.push(`src/baseline/tokens.css: ${name} must have exactly one default, found ${values.length}`)
+      errors.push(`theme/baseline/tokens.css: ${name} must have exactly one default, found ${values.length}`)
     else if (values[0] !== token.default)
-      errors.push(`src/baseline/tokens.css: ${name} default differs from manifest (${values[0]} != ${token.default})`)
+      errors.push(`theme/baseline/tokens.css: ${name} default differs from manifest (${values[0]} != ${token.default})`)
   }
   for (const name of definitions.keys()) {
     if (!knownTokens.has(name))
-      errors.push(`src/baseline/tokens.css: default provided for unknown token ${name}`)
+      errors.push(`theme/baseline/tokens.css: default provided for unknown token ${name}`)
   }
 }
 
@@ -191,16 +191,16 @@ function validateRenderedHooks() {
 }
 
 function validatePackageStyleExports() {
-  for (const packageName of ['ui', 'designer', 'renderer', 'form-generator']) {
-    const packageRoot = path.join(repoRoot, 'packages', packageName)
-    const packageJson = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'))
+  for (const packageName of ['ui', 'renderer', 'form-generator']) {
+    const currentPackageRoot = path.join(repoRoot, 'packages', packageName)
+    const packageJson = JSON.parse(fs.readFileSync(path.join(currentPackageRoot, 'package.json'), 'utf8'))
     if (packageJson.exports?.['./structure.css'] !== './dist/structure.css')
       errors.push(`packages/${packageName}/package.json: missing ./structure.css export`)
     if (!packageJson.files?.includes('dist'))
       errors.push(`packages/${packageName}/package.json: dist must be published`)
     if (!Array.isArray(packageJson.sideEffects) || !packageJson.sideEffects.includes('**/*.css'))
       errors.push(`packages/${packageName}/package.json: CSS side effects are not declared`)
-    if (!fs.existsSync(path.join(packageRoot, 'styles/structure.css')))
+    if (!fs.existsSync(path.join(currentPackageRoot, 'styles/structure.css')))
       errors.push(`packages/${packageName}: styles/structure.css does not exist`)
     if (packageName === 'ui') {
       if (packageJson.exports?.['./recipe.css'] !== './dist/recipe.css')
@@ -211,29 +211,29 @@ function validatePackageStyleExports() {
   }
 
   const packageJson = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'))
-  for (const entry of ['./structure', './theme-contract.json', './css-custom-data.json']) {
+  for (const entry of ['./styles', './styles/structure', './theme-contract.json', './css-custom-data.json']) {
     if (!packageJson.exports?.[entry])
-      errors.push(`packages/themes/package.json: missing ${entry} export`)
+      errors.push(`packages/designer/package.json: missing ${entry} export`)
   }
+  if (!fs.existsSync(path.join(packageRoot, 'styles/structure.css')))
+    errors.push('packages/designer: styles/structure.css does not exist')
 }
 
 function validateGeneratedCustomData() {
   const expected = `${JSON.stringify(createCssCustomData(contract), null, 2)}\n`
   const actual = fs.existsSync(customDataPath) ? fs.readFileSync(customDataPath, 'utf8') : ''
   if (actual !== expected)
-    errors.push('src/contract/css-custom-data.json is stale; run pnpm generate:contract')
+    errors.push('theme/contract/css-custom-data.json is stale; run pnpm generate:theme-contract')
 }
 
 validateDefaultTokens()
-for (const entry of structureEntries)
+for (const entry of structureEntries.filter(entry => entry.startsWith('@dragcraft/')))
   validateStructure(fileURLToPath(import.meta.resolve(entry)))
-validateRecipe('src/baseline/recipes.css')
-validateRecipe('src/material/recipes.css')
+validateStructure('styles/structure.css')
+validateRecipe('theme/baseline/recipes.css')
 validateRecipe(fileURLToPath(import.meta.resolve('@dragcraft/ui/recipe.css')))
-validatePublicProperties(readCss('src/material/tokens.css'))
-validateEntry('src/standard/index.css', ['../structure.css', '../baseline/tokens.css', '../baseline/recipes.css'])
-validateEntry('src/material/index.css', ['../structure.css', '../baseline/tokens.css', './tokens.css', '../baseline/recipes.css', './recipes.css'])
-validateEntry('src/structure.css', structureEntries)
+validateEntry('theme/standard.css', ['./structure.css', './baseline/tokens.css', './baseline/recipes.css'])
+validateEntry('theme/structure.css', structureEntries)
 validateRenderedHooks()
 validateGeneratedCustomData()
 validatePackageStyleExports()

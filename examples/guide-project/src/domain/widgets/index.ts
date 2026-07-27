@@ -1,6 +1,5 @@
-import type { DesignerWidgetMeta, WidgetGroupConfig } from '@dragcraft/designer'
-import type { WidgetDefinition } from '@dragcraft/widgets'
-import { buildComponentMap, getWidgetMetas } from '@dragcraft/widgets'
+import type { DesignerWidgetMeta, WidgetDefinition, WidgetGroupConfig } from '@dragcraft/designer'
+import { buildComponentMap, getWidgetMetas } from '@dragcraft/designer'
 import { columnContainerDefinition } from './container'
 import { noticeWidgetDefinition } from './notice'
 import { textWidgetDefinition } from './text'

@@ -1,11 +1,10 @@
-import type { FieldComponentMap, FieldSchema, FormContext } from '@dragcraft/form-generator'
+import type { FieldComponentMap, FieldSchema, FormContext } from '@dragcraft/designer'
 import type { Component, PropType } from 'vue'
+import { resolveFieldComponentProps, useFormGeneratorContext, useI18n } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
-import { FORM_GENERATOR_CONTEXT_KEY, resolveFieldComponentProps } from '@dragcraft/form-generator'
-import { useI18n } from '@dragcraft/i18n'
-import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '@dragcraft/icons'
 import { Button, Input, InputNumber, Select, Slider } from 'ant-design-vue'
-import { computed, defineComponent, h, inject, ref } from 'vue'
+import { computed, defineComponent, h, ref } from 'vue'
+import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '../icons'
 
 interface ArrayFieldConfig {
   itemFields?: FieldSchema[]
@@ -152,9 +151,9 @@ export const ArrayField = defineComponent({
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     const { t } = useI18n()
-    const ctx = inject(FORM_GENERATOR_CONTEXT_KEY, null)
+    const ctx = useFormGeneratorContext()
     const expandedKeys = ref<string[]>(['0'])
-    const fieldComponentMap = computed<FieldComponentMap>(() => ctx?.fieldComponentMap ?? {})
+    const fieldComponentMap = computed<FieldComponentMap>(() => ctx.fieldComponentMap)
     const config = computed<ArrayFieldConfig>(() => ({
       itemFields: props.itemFields,
       title: props.title,

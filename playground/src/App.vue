@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { CommandType, createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
-import { IconArrowDown, IconCopy, IconPhone } from '@dragcraft/icons'
-import type { DesignerExtensions, MaterialItemIcon, NodeActionContext, SchemaNode } from '@dragcraft/designer'
-import { cloneDeep, generateShortId } from '@dragcraft/utils'
+import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@dragcraft/designer'
 import {
   createDeviceFrameContext,
   DEVICE_FRAME_CONTEXT_KEY,
@@ -13,6 +11,7 @@ import { Modal } from 'ant-design-vue'
 import { defineComponent, h, provide } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
 import { buildPlaygroundFieldComponentMap } from './components/fields'
+import { IconArrowDown, IconCopy, IconPhone } from './components/icons'
 import {
   playgroundComponentMap,
   playgroundWidgetGroups,
@@ -146,14 +145,10 @@ const designer = createDesigner({
         }, true).allowed
       },
       command: (ctx: NodeActionContext) => {
-        const clonedNode = cloneDeep(ctx.node) as SchemaNode
-        delete clonedNode.children
-        clonedNode.id = generateShortId()
         return {
-          type: CommandType.ADD_NODE,
+          type: CommandType.DUPLICATE_NODE,
           payload: {
-            node: clonedNode,
-            destination: { ...ctx.owner, index: ctx.index + 1 },
+            nodeId: ctx.node.id,
           },
         }
       },

@@ -2,6 +2,7 @@ import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, Desig
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
 import type { ActionInterceptor, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
+import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
@@ -41,23 +42,6 @@ export interface DesignerWorkspaceController {
 
 export interface DesignerEngineOptions extends EngineOptions {
   initialSchema?: DesignerSchema
-}
-
-// ──────────────────────────────────────────
-// Widget group config (inline definition to avoid @dragcraft/widgets dependency)
-// ──────────────────────────────────────────
-
-/**
- * Widget group configuration with display title.
- * Used by DcMaterialPanel to organize widgets into named groups.
- */
-export interface WidgetGroupConfig {
-  /** Group identifier (matches WidgetMeta.group) */
-  name: string
-  /** Display title shown in the material panel */
-  title: string
-  /** i18n message key for title; overrides `title` when i18n is active */
-  titleKey?: string
 }
 
 // ──────────────────────────────────────────

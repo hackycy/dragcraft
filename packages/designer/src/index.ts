@@ -55,7 +55,6 @@ export type {
   PropertyTabKey,
   ResolvedMaterialItem,
   UseDesignerReturn,
-  WidgetGroupConfig,
 } from './types'
 export { DESIGNER_CONTEXT_KEY } from './types'
 
@@ -63,6 +62,7 @@ export { createDesignerWorkspace } from './workspace'
 // ── Re-exports: @dragcraft/core ─────────
 export {
   CommandType,
+  createContainerPlan,
   createEngine,
   EventName,
   resolveBehavior,
@@ -101,12 +101,18 @@ export type {
 // ── Re-exports: @dragcraft/form-generator ─
 export {
   FormGenerator,
+  resolveFieldComponentProps,
+  useFormGeneratorContext,
 } from '@dragcraft/form-generator'
 
 export type {
   FieldChangePayload,
+  FieldComponentDefinition,
   FieldComponentMap,
+  FieldRenderFactory,
   FieldSchema,
+  FormContext,
+  FormGeneratorContext,
   FormSchema,
   SectionSchema,
   ValidationRule,
@@ -172,3 +178,17 @@ export type {
 
 export { DcScrollArea } from '@dragcraft/ui'
 export type { ScrollAreaProps, ScrollAreaType } from '@dragcraft/ui'
+
+// ── Re-exports: @dragcraft/widgets ───────
+export {
+  buildComponentMap,
+  defineContainerWidget,
+  filterByGroup,
+  getWidgetMetas,
+  registerWidgets,
+} from '@dragcraft/widgets'
+export type {
+  WidgetDefinition,
+  WidgetGroup,
+  WidgetGroupConfig,
+} from '@dragcraft/widgets'

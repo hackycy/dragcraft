@@ -4,7 +4,7 @@
 
 ## 物料协议包
 
-`@dragcraft/widgets` 提供物料协议定义与通用工具函数。
+`@dragcraft/widgets` 是提供物料协议定义与通用工具函数的内部 implementation module；其业务扩展接口由 `@dragcraft/designer` 聚合导出。
 
 目标：
 
@@ -75,10 +75,10 @@ const meta: WidgetMeta = {
 
 ## 物料实现位置
 
-仓库不再提供可发布的默认物料实现包。业务应用直接维护自己的 `WidgetDefinition[]`，并通过 `@dragcraft/widgets` 的工具函数生成注册数据。
+仓库不再提供可发布的默认物料实现包。业务应用直接维护自己的 `WidgetDefinition[]`，并通过 `@dragcraft/designer` 聚合的工具函数生成注册数据。
 
 ```ts
-import { buildComponentMap, getWidgetMetas } from '@dragcraft/widgets'
+import { buildComponentMap, createDesigner, getWidgetMetas } from '@dragcraft/designer'
 
 const designer = createDesigner({
   widgetMetas: getWidgetMetas(myWidgetDefinitions),
@@ -113,7 +113,7 @@ playground 作为本仓库的产品级示例，在 `playground/src/components/wi
 
 实现约束：
 
-- package 层只定义协议与工具，不承载具体物料。
+- 内部 package 层只定义协议与工具，不承载具体物料；业务侧只从 designer seam 使用这些能力。
 - 物料 `formSchema` 遵循 form-generator 的运行时结构。
 - 业务应用负责维护物料组件、样式和多语言文案。
 
@@ -180,7 +180,7 @@ playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueF
 - `useI18n()`：读取上下文，并在未注入时提供 fallback 行为。
 - `I18nInstance`、`LocaleMessages`、`MessageTree` 等公共类型。
 
-它可以被 designer、renderer、form-generator 和业务应用消费；因为依赖 Vue 响应式与注入 API，不属于纯函数 utils。
+它被 designer、renderer 和 form-generator 内部消费；业务应用通过 designer 聚合的国际化接口使用，因为依赖 Vue 响应式与注入接口，不属于纯函数 utils。
 
 ## Utils 包
 
@@ -200,6 +200,6 @@ playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueF
 
 使用约束：
 
-- 可被 core、designer、renderer 和业务应用等包共同复用。
+- 可被 core、designer、renderer 等内部模块共同复用，不向业务应用提供直接导入接口。
 - 不承载业务语义逻辑，业务逻辑应留在上层包。
 - 不包含 Vue、DOM 或具体 UI 包依赖。

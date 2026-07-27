@@ -22,4 +22,4 @@ description: "定义稳定的业务物料标识、默认属性、行为约束、
 
 **完成检查**：新 `type` 出现在物料栏，拖入后按默认 props 渲染，且右侧只显示该物料声明的字段。
 
-下一步：[表单与字段](/guide/customization/forms-and-fields)；公开类型见 [widgets 与 fields](/reference/widgets-and-fields)。
+下一步：[表单与字段](/guide/customization/forms-and-fields)；公开类型见 [@dragcraft/designer](/reference/designer)。

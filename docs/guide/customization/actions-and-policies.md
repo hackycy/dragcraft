@@ -24,4 +24,4 @@ description: "使用节点动作、拦截器和事件 hooks 接入权限、确�
 
 **完成检查**：公告动作只能在允许的节点出现；删除时会先经过宿主确认，并且取消不会写入 Schema。
 
-下一步：[面板与画布](/guide/customization/panels-and-canvas)；精确字段见 [@dragcraft/renderer](/reference/renderer)。
+下一步：[面板与画布](/guide/customization/panels-and-canvas)；精确字段见 [Designer 渲染与容器](/reference/designer-rendering)。

@@ -7,8 +7,7 @@ import type {
   SchemaNode,
 } from '@dragcraft/designer'
 import type { PropType } from 'vue'
-import { ContainerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
-import { defineContainerWidget } from '@dragcraft/widgets'
+import { ContainerRegionOutlet, defineContainerWidget, useContainerRuntime } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
 
 type FlexDirection = 'row' | 'column'

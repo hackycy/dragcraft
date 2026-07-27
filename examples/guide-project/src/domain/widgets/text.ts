@@ -1,5 +1,4 @@
-import type { DesignerWidgetMeta } from '@dragcraft/designer'
-import type { WidgetDefinition } from '@dragcraft/widgets'
+import type { DesignerWidgetMeta, WidgetDefinition } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
 
 export const GuideTextWidget = defineComponent({

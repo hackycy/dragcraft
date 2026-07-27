@@ -1,14 +1,16 @@
 # 项目总览
 
-dragcraft 是面向小程序装修场景的可视化页面搭建引擎。它采用 `Core Engine + Vue Visual Builder Workbench + Workbench Themes` 的分层架构，用拖拽式物料编排和 Schema 驱动渲染帮助业务方快速搭建页面。
+dragcraft 是面向小程序装修场景的可视化页面搭建引擎。它采用 `Core Engine + Vue Visual Builder Workbench + Standard Workbench Theme` 的分层架构，用拖拽式物料编排和 Schema 驱动渲染帮助业务方快速搭建页面。
 
 ## 产品目标
 
-- 开箱即用：业务方引入 `@dragcraft/designer`、`@dragcraft/themes` 和内置字段包，并显式传入自己的物料与配置 schema，即可完成设计器接入。
+- 开箱即用：业务方引入 `@dragcraft/designer` 和内置字段包，并显式传入自己的物料与配置 schema，即可完成设计器接入。
 - 完全可定制：业务方可以自行实现物料、字段 adapter、内容主题和工作台主题差异。
 - 可主题化设计工作台：组件包拥有 DOM、结构行为与必要结构 CSS，工作台主题只通过稳定 token 与精选 component/part/state 钩子定制视觉。
 - 单一入口：标准业务接入以 `@dragcraft/designer` 为统一入口，designer 负责组合 core、renderer 与 form-generator。
 - 强内核：`@dragcraft/core` 不包含 UI，负责状态、命令、历史、注册和事件语义。
+
+公开支持面只有 `@dragcraft/designer`、`@dragcraft/device-frames` 和 `@dragcraft/fields-ant-design-vue`。其他 workspace package 是内部 implementation module；它们可以作为传递依赖发布，但 README、公开文档、examples 和 playground 不得直接导入。
 
 ## Monorepo 结构
 
@@ -23,7 +25,6 @@ root
 │   ├── form-generator   # Schema 表单引擎
 │   ├── fields           # UI 库字段 adapter 包
 │   ├── widgets          # 物料协议与工具函数
-│   ├── themes           # 工作台主题聚合、令牌与视觉配方
 │   ├── device-frames    # 设备容器框架
 │   ├── icons            # SVG 图标组件库
 │   ├── i18n             # Vue 国际化上下文
@@ -63,19 +64,19 @@ root
 
 `@dragcraft/form-generator` 根据 FormSchema 渲染配置表单。它不依赖 core，不执行命令，只通过 `change` 事件向 designer 报告字段变更，由 designer 转发为 core 命令。
 
-### Workbench Themes
+### Standard Workbench Theme
 
-`@dragcraft/themes` 提供与组件结构行为分层的工作台主题：
+`@dragcraft/designer/styles` 提供与组件结构行为分层的 Standard 工作台主题：
 
 - designer、renderer 与 form-generator 分别发布自身必要的结构 CSS。
-- Standard 提供完整默认 token 与共享基线视觉配方，Material 只维护差异。
+- Designer 聚合完整默认 token、共享基线视觉配方和机器可读主题契约。
 - 外部主题通过公开 token 和精选 hook 增量覆盖；内部 BEM 不属于公共契约。
 - 工作台主题不样式化画布内业务物料，内容主题由宿主独立拥有。
 
 ## 标准接入模式
 
 ```ts
-import '@dragcraft/themes'
+import '@dragcraft/designer/styles'
 import { createDesigner, DcDesigner } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 
@@ -88,7 +89,7 @@ const designer = createDesigner({
 
 标准流程：
 
-1. 导入 `@dragcraft/designer` 和一套主题样式。
+1. 导入 `@dragcraft/designer` 和 Standard 主题样式。
 2. 显式传入 `widgetMetas` 与 `componentMap`。
 3. 传入字段 adapter map，可直接使用内置字段包，也可合并业务自定义字段。
 4. 在 Vue3 中挂载 `<DcDesigner />`。
@@ -97,7 +98,8 @@ const designer = createDesigner({
 ## 跨包设计约束
 
 - Runtime 一致性：schema 写操作必须通过 core command；无效或被拒绝的命令不写入 history，也不触发 `schema:changed`。
-- 主题一致性：UI 包拥有结构样式，Themes 拥有视觉配方；公共主题契约不暴露内部 BEM。
+- 主题一致性：内部 UI 模块拥有结构样式，Designer 聚合 Standard 视觉配方；公共主题契约不暴露内部 BEM。
+- 公开入口一致性：业务应用、公开文档与示例只能直接引用三个公开 package；内部 package 依赖只存在于 workspace implementation 中。
 - 可扩展性：左栏物料、画布容器、节点渲染、节点工具栏、空状态、右栏表单都通过显式扩展点替换。
 - 可测试性：core 可独立单元测试，UI 层通过集成测试覆盖交互。
 - Schema 版本化：schema 必须携带版本号，后续结构演进应显式识别语义。

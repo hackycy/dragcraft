@@ -1,4 +1,4 @@
-import type { MessageTree } from '@dragcraft/i18n'
+import type { MessageTree } from '@dragcraft/designer'
 
 export const playgroundWidgetMessages: Record<string, MessageTree> = {
   'zh-CN': {

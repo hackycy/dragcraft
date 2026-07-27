@@ -20,4 +20,4 @@ description: "用 LayoutPlan 和外部容器协议实现页面 chrome、浮层�
 
 **完成检查**：切换单列和双列时，子节点顺序保持可预测；容量超限时得到稳定拒绝 code，Schema 不变。
 
-下一步：需要接入权限或确认时阅读 [动作与业务策略](/guide/customization/actions-and-policies)。`flow`、`chrome`、`layer` 的完整投影规则见 [布局系统 Architecture Map](https://github.com/hackycy/dragcraft/blob/main/.github/architecture/08-layout-system.md)，公开 API 见 [@dragcraft/core](/reference/core) 与 [@dragcraft/renderer](/reference/renderer)。
+下一步：需要接入权限或确认时阅读 [动作与业务策略](/guide/customization/actions-and-policies)。`flow`、`chrome`、`layer` 的完整投影规则见 [布局系统 Architecture Map](https://github.com/hackycy/dragcraft/blob/main/.github/architecture/08-layout-system.md)，公开接口见 [Designer Schema 与命令](/reference/designer-schema) 和 [Designer 渲染与容器](/reference/designer-rendering)。

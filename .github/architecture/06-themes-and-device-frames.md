@@ -1,38 +1,33 @@
 # 主题与设备容器
 
-本章覆盖 `@dragcraft/themes` 与 `@dragcraft/device-frames`。前者聚合可主题化设计工作台的结构样式与工作台视觉，后者提供画布容器的设备外壳。
+本章覆盖 `@dragcraft/designer` 内置的 Standard 工作台主题与 `@dragcraft/device-frames`。前者聚合工作台结构样式、token 和视觉 recipe，后者提供画布容器的设备外壳。
 
 ## 可主题化设计工作台
 
-dragcraft 的组件包拥有自己的 DOM 与必要结构样式：
+dragcraft 的内部 UI module 拥有自己的 DOM 与必要结构样式：
 
 - `@dragcraft/ui/structure.css` 提供共享基础 UI 的布局与交互几何，`@dragcraft/ui/recipe.css` 提供可独立复用的默认视觉 recipe。
-- `@dragcraft/designer/structure.css`、`@dragcraft/renderer/structure.css` 与 `@dragcraft/form-generator/structure.css` 分别保证所属组件的布局与交互几何。
-- `@dragcraft/themes` 聚合结构样式、完整默认 token 与共享基线视觉配方。
+- designer、renderer 与 form-generator 源码中的 `styles/structure.css` 分别保证所属模块的布局与交互几何。
+- `@dragcraft/designer/styles` 聚合结构样式、完整 Standard token 与共享视觉配方。
 - 外部主题只依赖公开 token 与精选的 `data-dc-component`、`data-dc-part`、`data-dc-state`，内部 BEM 是私有实现。
 - 工作台主题不负责 `data-dc-node-surface` 内的业务物料；内容主题由宿主独立拥有。
 
 结构样式是 `DcDesigner` 的必要依赖。完整主题已经包含结构样式；只导入 JavaScript 而不加载结构 CSS 不属于支持模式。
 
-## 内置主题
+## Standard 主题
 
-| 主题 | 导入路径 | 风格描述 |
-| --- | --- | --- |
-| Standard | `@dragcraft/themes` 或 `@dragcraft/themes/standard` | 企业蓝主色、紧凑密度、低阴影，适合高信息密度工作台 |
-| Google Material 3 | `@dragcraft/themes/material` | Material 3 色彩角色、舒适密度、圆润形状与分层阴影 |
+Designer 只发布 Standard 这一套完整主题，采用企业蓝主色、紧凑密度和低阴影，面向高信息密度工作台。
 
 使用方式：
 
 ```ts
-import '@dragcraft/themes'
-// 或
-import '@dragcraft/themes/material'
+import '@dragcraft/designer/styles'
 ```
 
 完全自定义视觉配方：
 
 ```ts
-import '@dragcraft/themes/structure'
+import '@dragcraft/designer/styles/structure'
 import './my-workbench-theme.css'
 ```
 
@@ -50,7 +45,7 @@ import './my-workbench-theme.css'
 
 ## Design Tokens
 
-主题令牌按产品语义与组件角色分层。Standard 为每个公共 token 提供完整默认值，Material 和业务主题只覆盖差异。完整机器契约由 `@dragcraft/themes/theme-contract.json` 发布，编辑器 CSS custom data 由 `@dragcraft/themes/css-custom-data.json` 发布。
+主题令牌按产品语义与组件角色分层。Standard 为每个公共 token 提供完整默认值，业务主题在其后覆盖差异。完整机器契约由 `@dragcraft/designer/theme-contract.json` 发布，编辑器 CSS custom data 由 `@dragcraft/designer/css-custom-data.json` 发布。
 
 ### 颜色角色
 
@@ -86,31 +81,26 @@ import './my-workbench-theme.css'
 
 工作台面板宽度、响应式断点和层级关系不属于主题 token。宽度与断点通过 `DesignerWorkspaceOptions` 配置；z-index 与运行时几何由结构样式拥有。Device Frame 需要协作的选区 overlap 变量属于结构集成契约，而不是视觉主题。
 
-## Themes 文件结构
+## Designer 主题文件结构
 
 ```plaintext
-src/
+theme/
 ├── structure.css
+├── standard.css
 ├── contract/
 │   ├── theme-contract.json
 │   └── css-custom-data.json
-├── baseline/
-│   ├── tokens.css
-│   └── recipes.css
-├── standard/
-│   └── index.css
-└── material/
+└── baseline/
     ├── tokens.css
-    ├── recipes.css
-    └── index.css
+    └── recipes.css
 ```
 
-`tsdown.config.ts` 把 `structure`、`standard`、`material` 作为三个独立 CSS 构建入口。三个发布文件都必须自包含，不能把共同的结构层或基线配方抽成需要消费者额外加载的共享 chunk。`src/structure.css` 通过 `@dragcraft/ui/structure.css`、`@dragcraft/designer/structure.css`、`@dragcraft/renderer/structure.css` 与 `@dragcraft/form-generator/structure.css` 公共子路径聚合样式，基线 recipe 同时聚合 `@dragcraft/ui/recipe.css`；tsdown 在构建时将它们内联。主题契约 JSON 同样由 tsdown 复制到 `dist`。PostCSS 仅用于 AST 契约校验，不参与 CSS 打包或 watch。
+Designer 的 `tsdown.config.ts` 把 `styles/standard.css` 与 `styles/structure.css` 作为两个独立 CSS 构建产物。两个发布文件都必须自包含，不能把共同结构抽成需要消费者额外加载的 chunk。`theme/structure.css` 聚合 ui、designer、renderer 与 form-generator 的内部结构样式，基线 recipe 同时聚合 ui 的默认 recipe；tsdown 在构建时将依赖内联。主题契约 JSON 同样复制到 `dist`。PostCSS 仅用于 AST 契约校验，不参与 CSS 打包或 watch。
 
 自定义工作台主题有两种方式：
 
-- 常规方式：导入 `@dragcraft/themes`，覆盖所需 token，并只在 token 无法表达时增加公开 hook recipe。
-- 高级方式：导入 `@dragcraft/themes/structure`，基于 manifest 实现完整视觉配方。
+- 常规方式：导入 `@dragcraft/designer/styles`，覆盖所需 token，并只在 token 无法表达时增加公开 hook recipe。
+- 高级方式：导入 `@dragcraft/designer/styles/structure`，基于 manifest 实现完整视觉配方。
 
 ## 公共主题契约
 
@@ -125,7 +115,7 @@ src/
 }
 ```
 
-官方 recipe 使用普通的公开 component/part/state selector，并按“结构、token、基线 recipe、主题差异 recipe、宿主覆盖”的导入顺序构建。业务优先覆盖 token；token 无法表达时，在主题之后使用相同公开 selector 覆盖 recipe。主题不使用零 specificity 技巧，也禁止 `!important` 和内部 `.dc-*` class，因此维护者只需理解公开 hook 与 CSS 导入顺序。manifest、PostCSS AST 校验和渲染测试共同保证 hook、级联顺序与真实 DOM 一致。
+官方 recipe 使用普通的公开 component/part/state selector，并按“结构、Standard token、基线 recipe、宿主覆盖”的导入顺序构建。业务优先覆盖 token；token 无法表达时，在主题之后使用相同公开 selector 覆盖 recipe。主题不使用零 specificity 技巧，也禁止 `!important` 和内部 `.dc-*` class，因此维护者只需理解公开 hook 与 CSS 导入顺序。manifest、PostCSS AST 校验和渲染测试共同保证 hook、级联顺序与真实 DOM 一致。
 
 ### 节点选中投影
 

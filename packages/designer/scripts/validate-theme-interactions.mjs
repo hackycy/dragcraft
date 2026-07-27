@@ -5,9 +5,9 @@ import { fileURLToPath } from 'node:url'
 import postcss from 'postcss'
 
 const packageRoot = path.resolve(import.meta.dirname, '..')
-const recipes = parse('src/baseline/recipes.css')
+const recipes = parse('theme/baseline/recipes.css')
 const uiRecipe = parse('../ui/styles/recipe.css')
-const designerStructure = parse(import.meta.resolve('@dragcraft/designer/structure.css'))
+const designerStructure = parse('styles/structure.css')
 const formStructure = parse(import.meta.resolve('@dragcraft/form-generator/structure.css'))
 const rendererStructure = parse(import.meta.resolve('@dragcraft/renderer/structure.css'))
 const errors = []

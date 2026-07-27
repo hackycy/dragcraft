@@ -1,7 +1,7 @@
 import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
-import { IconMaterial, IconNavBack, IconNavHome, IconNavRecent, IconPlus } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
+import { IconMaterial, IconNavBack, IconNavHome, IconNavRecent, IconPlus } from '../icons'
 
 interface TabItem {
   label: string

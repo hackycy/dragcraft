@@ -182,15 +182,6 @@ importers:
       '@dragcraft/fields-ant-design-vue':
         specifier: workspace:*
         version: link:../../packages/fields/ant-design-vue
-      '@dragcraft/themes':
-        specifier: workspace:*
-        version: link:../../packages/themes
-      '@dragcraft/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
-      '@dragcraft/widgets':
-        specifier: workspace:*
-        version: link:../../packages/widgets
       ant-design-vue:
         specifier: catalog:vue
         version: 4.2.6(vue@3.5.39(typescript@5.9.3))
@@ -198,9 +189,6 @@ importers:
         specifier: catalog:vue
         version: 3.5.39(typescript@5.9.3)
     devDependencies:
-      '@dragcraft/form-generator':
-        specifier: workspace:*
-        version: link:../../packages/form-generator
       '@vitejs/plugin-vue':
         specifier: catalog:vue
         version: 6.0.7(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.9.0))(vue@3.5.39(typescript@5.9.3))
@@ -247,10 +235,19 @@ importers:
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
+      '@dragcraft/widgets':
+        specifier: workspace:*
+        version: link:../widgets
     devDependencies:
       happy-dom:
         specifier: catalog:testing
         version: 20.10.6
+      postcss:
+        specifier: catalog:cli
+        version: 8.5.15
+      postcss-selector-parser:
+        specifier: catalog:cli
+        version: 7.1.4
       vitest:
         specifier: catalog:testing
         version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -367,27 +364,6 @@ importers:
         specifier: catalog:vue
         version: 3.5.39(typescript@5.9.3)
 
-  packages/themes:
-    devDependencies:
-      '@dragcraft/designer':
-        specifier: workspace:*
-        version: link:../designer
-      '@dragcraft/form-generator':
-        specifier: workspace:*
-        version: link:../form-generator
-      '@dragcraft/renderer':
-        specifier: workspace:*
-        version: link:../renderer
-      '@dragcraft/ui':
-        specifier: workspace:*
-        version: link:../ui
-      postcss:
-        specifier: catalog:cli
-        version: 8.5.15
-      postcss-selector-parser:
-        specifier: catalog:cli
-        version: 7.1.4
-
   packages/ui:
     devDependencies:
       '@vue/test-utils':
@@ -440,24 +416,6 @@ importers:
       '@dragcraft/fields-ant-design-vue':
         specifier: workspace:*
         version: link:../packages/fields/ant-design-vue
-      '@dragcraft/form-generator':
-        specifier: workspace:*
-        version: link:../packages/form-generator
-      '@dragcraft/i18n':
-        specifier: workspace:*
-        version: link:../packages/i18n
-      '@dragcraft/icons':
-        specifier: workspace:*
-        version: link:../packages/icons
-      '@dragcraft/themes':
-        specifier: workspace:*
-        version: link:../packages/themes
-      '@dragcraft/utils':
-        specifier: workspace:*
-        version: link:../packages/utils
-      '@dragcraft/widgets':
-        specifier: workspace:*
-        version: link:../packages/widgets
       ant-design-vue:
         specifier: catalog:vue
         version: 4.2.6(vue@3.5.39(typescript@5.9.3))

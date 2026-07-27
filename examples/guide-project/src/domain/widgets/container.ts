@@ -5,10 +5,9 @@ import type {
   DesignerWidgetMeta,
   ResolveContainerDropIndexContext,
   SchemaNode,
+  WidgetDefinition,
 } from '@dragcraft/designer'
-import type { WidgetDefinition } from '@dragcraft/widgets'
-import { ContainerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
-import { defineContainerWidget } from '@dragcraft/widgets'
+import { ContainerRegionOutlet, defineContainerWidget, useContainerRuntime } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
 
 export function resolveVerticalDropIndex(ctx: ResolveContainerDropIndexContext): number {

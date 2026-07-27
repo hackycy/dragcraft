@@ -38,14 +38,14 @@
 安装设计器和默认主题：
 
 ```bash
-pnpm add @dragcraft/designer @dragcraft/themes @dragcraft/fields-ant-design-vue ant-design-vue vue
+pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
 ```
 
 在 Vue 应用入口加载字段样式与 dragcraft 主题：
 
 ```ts
 import 'ant-design-vue/dist/reset.css'
-import '@dragcraft/themes'
+import '@dragcraft/designer/styles'
 ```
 
 随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。
@@ -57,16 +57,8 @@ import '@dragcraft/themes'
 | Packages | Version | Downloads |
 | --- | --- | --- |
 | [`@dragcraft/designer`](https://www.npmjs.com/package/@dragcraft/designer) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fdesigner)](https://www.npmjs.com/package/@dragcraft/designer) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fdesigner)](https://www.npmjs.com/package/@dragcraft/designer) |
-| [`@dragcraft/core`](https://www.npmjs.com/package/@dragcraft/core) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fcore)](https://www.npmjs.com/package/@dragcraft/core) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fcore)](https://www.npmjs.com/package/@dragcraft/core) |
-| [`@dragcraft/renderer`](https://www.npmjs.com/package/@dragcraft/renderer) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Frenderer)](https://www.npmjs.com/package/@dragcraft/renderer) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Frenderer)](https://www.npmjs.com/package/@dragcraft/renderer) |
-| [`@dragcraft/form-generator`](https://www.npmjs.com/package/@dragcraft/form-generator) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fform-generator)](https://www.npmjs.com/package/@dragcraft/form-generator) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fform-generator)](https://www.npmjs.com/package/@dragcraft/form-generator) |
-| [`@dragcraft/widgets`](https://www.npmjs.com/package/@dragcraft/widgets) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fwidgets)](https://www.npmjs.com/package/@dragcraft/widgets) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fwidgets)](https://www.npmjs.com/package/@dragcraft/widgets) |
 | [`@dragcraft/fields-ant-design-vue`](https://www.npmjs.com/package/@dragcraft/fields-ant-design-vue) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Ffields-ant-design-vue)](https://www.npmjs.com/package/@dragcraft/fields-ant-design-vue) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Ffields-ant-design-vue)](https://www.npmjs.com/package/@dragcraft/fields-ant-design-vue) |
-| [`@dragcraft/themes`](https://www.npmjs.com/package/@dragcraft/themes) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fthemes)](https://www.npmjs.com/package/@dragcraft/themes) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fthemes)](https://www.npmjs.com/package/@dragcraft/themes) |
 | [`@dragcraft/device-frames`](https://www.npmjs.com/package/@dragcraft/device-frames) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fdevice-frames)](https://www.npmjs.com/package/@dragcraft/device-frames) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fdevice-frames)](https://www.npmjs.com/package/@dragcraft/device-frames) |
-| [`@dragcraft/i18n`](https://www.npmjs.com/package/@dragcraft/i18n) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Fi18n)](https://www.npmjs.com/package/@dragcraft/i18n) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Fi18n)](https://www.npmjs.com/package/@dragcraft/i18n) |
-| [`@dragcraft/icons`](https://www.npmjs.com/package/@dragcraft/icons) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Ficons)](https://www.npmjs.com/package/@dragcraft/icons) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Ficons)](https://www.npmjs.com/package/@dragcraft/icons) |
-| [`@dragcraft/utils`](https://www.npmjs.com/package/@dragcraft/utils) | [![npm version](https://img.shields.io/npm/v/%40dragcraft%2Futils)](https://www.npmjs.com/package/@dragcraft/utils) | [![npm downloads](https://img.shields.io/npm/dm/%40dragcraft%2Futils)](https://www.npmjs.com/package/@dragcraft/utils) |
 
 ## 核心能力
 
@@ -76,7 +68,7 @@ import '@dragcraft/themes'
 | 页面结构编排 | 使用 Schema 和布局计划表达内容区、固定区域、浮层与外部容器子区域。 |
 | 业务物料扩展 | 通过物料元数据和组件映射，将业务组件接入画布与配置面板。 |
 | 表单与字段扩展 | 通过 Form Schema 配置属性面板，可使用 Ant Design Vue adapter 或自定义字段组件。 |
-| 主题与设备预览 | 提供 Standard、Material 主题和可替换的设备外壳，也支持完整自定义工作台视觉。 |
+| 主题与设备预览 | 提供 Standard 工作台主题和可替换的设备外壳，也支持完整自定义工作台视觉。 |
 | 页面生命周期 | 提供导入、导出与编辑事件；草稿、发布、权限和生产运行时由业务应用掌控。 |
 
 ## 文档导航

@@ -27,4 +27,4 @@ description: "替换物料栏、属性栏、rail 和 Renderer 的局部视觉部
 
 **完成检查**：自定义物料卡片保持拖拽可用；替换的 shell 仍渲染每个分区 VNode，选中投影与工具栏没有消失。
 
-下一步：[主题、设备与国际化](/guide/customization/theme-device-and-i18n)；公开 props 和扩展字段见 [@dragcraft/designer](/reference/designer) 与 [@dragcraft/renderer](/reference/renderer)。
+下一步：[主题、设备与国际化](/guide/customization/theme-device-and-i18n)；公开 props 和扩展字段见 [@dragcraft/designer](/reference/designer) 与 [Designer 渲染与容器](/reference/designer-rendering)。

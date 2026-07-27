@@ -1,6 +1,4 @@
-import type { DesignerWidgetMeta } from '@dragcraft/designer'
-import type { FormContext } from '@dragcraft/form-generator'
-import type { WidgetDefinition } from '@dragcraft/widgets'
+import type { DesignerWidgetMeta, FormContext, WidgetDefinition } from '@dragcraft/designer'
 import { computed, defineComponent, h } from 'vue'
 
 export const NoticeWidget = defineComponent({

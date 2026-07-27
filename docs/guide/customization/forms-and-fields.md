@@ -20,7 +20,7 @@ description: "使用 FormSchema、字段 adapter、绑定范围和 render factor
 | --- | --- |
 | 字段可见性、禁用状态、值转换和校验触发 | 远程选项、资产权限、异步校验和最终服务端校验 |
 
-函数值会被解释为 render factory。要使用 Vue 函数式组件，先把它注册到 `fieldComponentMap`。更多字段类型见 [@dragcraft/form-generator](/reference/form-generator)。
+函数值会被解释为 render factory。要使用 Vue 函数式组件，先把它注册到 `fieldComponentMap`。更多字段类型见 [Designer 表单与字段](/reference/designer-forms)。
 
 **完成检查**：切换“使用背景图”后，`Asset` 字段出现或隐藏；其值只写入公告的 `props.image`。
 

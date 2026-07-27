@@ -1,23 +1,22 @@
 # 包职责索引
 
-本章提供所有 workspace package 的职责、主要导出、依赖方向和集成方式索引。
+本章提供所有 workspace package 的职责、主要导出、依赖方向和集成方式索引。只有标记为“公开”的 package 属于业务支持面；内部 package 可以作为传递依赖发布，但业务应用不得直接导入。
 
 ## 总览
 
-| Package | 定位 |
-| --- | --- |
-| `@dragcraft/core` | 领域模型、状态机、命令、历史、事件、注册协议 |
-| `@dragcraft/designer` | 对外 API、Vue3 设计器布局与交互编排 |
-| `@dragcraft/renderer` | 将 schema 节点映射为 Vue 组件树 |
-| `@dragcraft/form-generator` | 配置面板 schema 表单引擎 |
-| `@dragcraft/fields-ant-design-vue` | Ant Design Vue 字段 adapter 包 |
-| `@dragcraft/widgets` | 物料协议与通用工具函数 |
-| `@dragcraft/ui` | 共享 Vue UI 模块与统一滚动区域 |
-| `@dragcraft/themes` | 工作台主题聚合、令牌与视觉配方 |
-| `@dragcraft/device-frames` | 设备容器框架 |
-| `@dragcraft/icons` | SVG 图标组件库 |
-| `@dragcraft/i18n` | Vue UI 包共享的响应式国际化上下文 |
-| `@dragcraft/utils` | 跨包复用纯函数工具 |
+| Package | 支持级别 | 定位 |
+| --- | --- | --- |
+| `@dragcraft/designer` | 公开 | 唯一主入口、Vue3 工作台、聚合扩展接口与 Standard 主题 |
+| `@dragcraft/device-frames` | 公开可选 | 设备容器框架 |
+| `@dragcraft/fields-ant-design-vue` | 公开可选 | Ant Design Vue 字段 adapter |
+| `@dragcraft/core` | 内部 | 领域模型、状态机、命令、历史、事件、注册协议 |
+| `@dragcraft/renderer` | 内部 | 将 schema 节点映射为 Vue 组件树 |
+| `@dragcraft/form-generator` | 内部 | 配置面板 schema 表单引擎 |
+| `@dragcraft/widgets` | 内部 | 物料协议与通用工具函数 |
+| `@dragcraft/ui` | 内部 | 共享 Vue UI 模块与统一滚动区域 |
+| `@dragcraft/icons` | 内部 | SVG 图标模块 |
+| `@dragcraft/i18n` | 内部 | Vue UI 模块共享的响应式国际化上下文 |
+| `@dragcraft/utils` | 内部 | 跨包复用纯函数工具 |
 
 ## @dragcraft/core
 
@@ -59,12 +58,14 @@
 - `DcDesigner`。
 - `useDesigner()`。
 - Designer options、workspace controller 和 extensions 类型。
+- Schema、command、renderer、form、widget 与 i18n 的业务扩展接口。
+- `@dragcraft/designer/styles`、`styles/structure` 与主题契约 JSON。
 
 依赖与协作：
 
-- 依赖 core、renderer、form-generator。
+- 依赖 core、renderer、form-generator、widgets 等内部 implementation module。
 - 用户显式传入 widget meta、componentMap 和 fieldComponentMap。
-- 必要结构样式由 renderer 包提供，工作台视觉由 themes 或业务主题差异提供。
+- Designer 聚合必要结构样式和唯一 Standard 工作台主题；业务通过 token 或公开 hook 覆盖差异。
 
 ## @dragcraft/renderer
 
@@ -128,7 +129,7 @@
 
 依赖与协作：
 
-- 依赖 form-generator 类型和 Ant Design Vue 组件。
+- 内部依赖 form-generator 类型和 Ant Design Vue 组件。
 - 被业务应用或 playground 合并进 `fieldComponentMap`。
 - 不承载业务特化字段；`Color`、`Array`、`NavbarTitle` 等由业务侧维护。
 
@@ -150,7 +151,7 @@
 依赖与协作：
 
 - 依赖 core 类型和 Vue Component 类型。
-- designer 不强依赖本包，业务可以直接传入 meta 和 componentMap。
+- designer 依赖并聚合本包的业务扩展接口；业务不直接导入本包。
 
 ## @dragcraft/ui
 
@@ -171,28 +172,7 @@
 
 - 只 peer 依赖 Vue，不依赖 designer、renderer 或 device-frames。
 - 被 designer 的物料、结构树和属性面板消费，也被 device-frames 的内容 viewport 消费。
-- `@dragcraft/themes` 聚合其结构层、视觉 recipe 和公开 token 契约。
-
-## @dragcraft/themes
-
-职责：
-
-- 聚合 ui、designer、renderer 与 form-generator 的必要结构 CSS。
-- 提供完整 Standard 默认令牌、共享基线视觉配方与 Material 差异。
-- 发布机器可读主题契约；不负责画布内业务 widget 的内容主题。
-
-主要入口：
-
-- `@dragcraft/themes` 或 `@dragcraft/themes/standard`。
-- `@dragcraft/themes/material`。
-- `@dragcraft/themes/structure`。
-- `@dragcraft/themes/theme-contract.json` 与 `@dragcraft/themes/css-custom-data.json`。
-
-依赖与协作：
-
-- 不改变组件逻辑。
-- 构建时通过 ui、designer、renderer、form-generator 的公开 `structure.css` 子路径聚合结构层，并引入 ui 的公共视觉 recipe；发布的每个主题 CSS 都是可独立导入的完整文件。
-- 业务优先增量覆盖 token，必要时使用公开 component/part/state 编写差异配方。
+- Designer 的 Standard 主题聚合其结构层、视觉 recipe 和公开 token 契约。
 
 ## @dragcraft/device-frames
 
@@ -216,7 +196,7 @@
 - 依赖 Vue、`@dragcraft/core` layout/schema 类型、`@dragcraft/icons` 与 `@dragcraft/ui`，不依赖 designer 或 renderer。
 - 设备选择器是可选宿主组件，由业务放在应用顶栏或其他产品区域；designer 默认不提供设备选择。
 - 与 renderer 通过 `containerShell` 集成。
-- 样式自包含，不依赖 themes。
+- 样式自包含，不依赖 Designer 的工作台主题。
 
 ## @dragcraft/icons
 
@@ -253,7 +233,7 @@
 依赖与协作：
 
 - peer 依赖 Vue。
-- 被 designer、renderer、form-generator 和业务应用消费。
+- 被 designer、renderer 和 form-generator 内部消费；业务通过 designer 聚合接口使用。
 - 不包含具体产品文案；各消费包或宿主负责合并消息树。
 
 ## @dragcraft/utils
@@ -271,7 +251,7 @@
 
 依赖与协作：
 
-- 被 core 等上层包复用。
+- 被 core 等内部上层模块复用，不属于业务接口。
 - 不承载 schema 或业务语义。
 
 ## 依赖方向
@@ -281,16 +261,18 @@
 ```plaintext
 业务应用
   -> @dragcraft/designer
-      -> @dragcraft/core
-      -> @dragcraft/renderer
+  -> @dragcraft/fields-ant-design-vue (可选)
+  -> @dragcraft/device-frames (可选)
+
+@dragcraft/designer
+  -> @dragcraft/core
+  -> @dragcraft/renderer
   -> @dragcraft/form-generator
-  -> @dragcraft/i18n
-  -> @dragcraft/fields-ant-design-vue
-  -> @dragcraft/themes
-  -> @dragcraft/ui
   -> @dragcraft/widgets
-  -> @dragcraft/device-frames
+  -> @dragcraft/i18n
+  -> @dragcraft/ui
   -> @dragcraft/icons
+  -> @dragcraft/utils
 
 @dragcraft/core -> @dragcraft/utils
 @dragcraft/designer -> @dragcraft/ui
@@ -307,4 +289,5 @@
 - utils 不依赖 Vue 或 DOM。
 - renderer 不直接持久化业务状态。
 - designer 负责包组合与对外简化。
+- README、公开文档、examples 和 playground 只能直接导入三个公开 package。
 - 业务应用负责提供物料实现，并选择内置字段包或自定义字段 adapter。

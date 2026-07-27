@@ -18,7 +18,10 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./package.json": "./package.json",
-    "./structure.css": "./dist/structure.css"
+    "./styles": "./dist/styles/standard.css",
+    "./styles/structure": "./dist/styles/structure.css",
+    "./theme-contract.json": "./dist/theme-contract.json",
+    "./css-custom-data.json": "./dist/css-custom-data.json"
   },
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
@@ -27,8 +30,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsdown",
+    "build": "pnpm generate:theme-contract && pnpm check:theme && tsdown",
+    "check:theme": "node scripts/validate-theme-contract.mjs && node scripts/validate-theme-interactions.mjs",
     "dev": "tsdown --watch",
+    "generate:theme-contract": "node scripts/generate-theme-custom-data.mjs",
     "lint": "eslint",
     "prepublishOnly": "pnpm build",
     "release": "bumpp",
@@ -46,10 +51,13 @@
     "@dragcraft/icons": "workspace:*",
     "@dragcraft/renderer": "workspace:*",
     "@dragcraft/ui": "workspace:*",
-    "@dragcraft/utils": "workspace:*"
+    "@dragcraft/utils": "workspace:*",
+    "@dragcraft/widgets": "workspace:*"
   },
   "devDependencies": {
     "happy-dom": "catalog:testing",
+    "postcss": "catalog:cli",
+    "postcss-selector-parser": "catalog:cli",
     "vitest": "catalog:testing",
     "vue": "catalog:vue"
   }
