@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/ui",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Shared Vue UI modules for dragcraft",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
