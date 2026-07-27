@@ -136,6 +136,10 @@ for (const property of ['min-height', 'padding']) {
     errors.push(`form section header: expected ${property}: ${expected}, found ${actual ?? 'nothing'}`)
 }
 
+expectDeclarations('form section body alignment', formStructure, '.dc-form-section__body', {
+  padding: '0 6px 8px',
+})
+
 const materialCollapsedToggle = findRule(designerStructure, '.dc-material-group__toggle--collapsed')
 const formCollapsedToggle = findRule(formStructure, '.dc-form-section__toggle--collapsed')
 if (declaration(formCollapsedToggle, 'transform') !== declaration(materialCollapsedToggle, 'transform'))
