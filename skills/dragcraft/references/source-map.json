@@ -11,14 +11,14 @@
     "integration": {
       "playbook": "references/integration.md",
       "docs": [
-        { "repositoryPath": "docs/guide/getting-started.md", "url": "https://hackycy.github.io/dragcraft/guide/getting-started" },
-        { "repositoryPath": "docs/guide/mental-model.md", "url": "https://hackycy.github.io/dragcraft/guide/mental-model" },
-        { "repositoryPath": "docs/guide/designer-integration.md", "url": "https://hackycy.github.io/dragcraft/guide/designer-integration" },
+        { "repositoryPath": "docs/guide/learn/prerequisites.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/prerequisites" },
+        { "repositoryPath": "docs/guide/learn/first-editor.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/first-editor" },
+        { "repositoryPath": "docs/guide/learn/schema-and-write-path.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path" },
         { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
       ],
       "examples": [
-        { "repositoryPath": "playground/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/App.vue" },
-        { "repositoryPath": "playground/src/config/global-config-schema.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/config/global-config-schema.ts" }
+        { "repositoryPath": "examples/guide-project/src/editor/minimal-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/minimal-designer.ts" },
+        { "repositoryPath": "examples/guide-project/src/editor/create-page-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/create-page-designer.ts" }
       ],
       "packages": [
         { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" },
@@ -29,14 +29,14 @@
     "widgets": {
       "playbook": "references/widgets.md",
       "docs": [
-        { "repositoryPath": "docs/guide/materials-and-fields.md", "url": "https://hackycy.github.io/dragcraft/guide/materials-and-fields" },
-        { "repositoryPath": "docs/guide/schema-and-layout.md", "url": "https://hackycy.github.io/dragcraft/guide/schema-and-layout" },
+        { "repositoryPath": "docs/guide/learn/material-and-property-panel.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/material-and-property-panel" },
+        { "repositoryPath": "docs/guide/customization/materials.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/materials" },
         { "repositoryPath": "docs/reference/widgets-and-fields.md", "url": "https://hackycy.github.io/dragcraft/reference/widgets-and-fields" },
         { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
       ],
       "examples": [
-        { "repositoryPath": "playground/src/components/widgets/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/index.ts" },
-        { "repositoryPath": "playground/src/components/widgets/basic.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/basic.ts" }
+        { "repositoryPath": "examples/guide-project/src/domain/widgets/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/index.ts" },
+        { "repositoryPath": "examples/guide-project/src/domain/widgets/notice.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/notice.ts" }
       ],
       "packages": [
         { "name": "@dragcraft/widgets", "repositoryPath": "packages/widgets/package.json" },
@@ -47,14 +47,14 @@
     "containers": {
       "playbook": "references/containers.md",
       "docs": [
-        { "repositoryPath": "docs/guide/container-materials.md", "url": "https://hackycy.github.io/dragcraft/guide/container-materials" },
-        { "repositoryPath": "docs/guide/schema-and-layout.md", "url": "https://hackycy.github.io/dragcraft/guide/schema-and-layout" },
+        { "repositoryPath": "docs/guide/learn/schema-and-write-path.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path" },
+        { "repositoryPath": "docs/guide/customization/layout-and-containers.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/layout-and-containers" },
         { "repositoryPath": "docs/reference/core.md", "url": "https://hackycy.github.io/dragcraft/reference/core" },
         { "repositoryPath": "docs/reference/renderer.md", "url": "https://hackycy.github.io/dragcraft/reference/renderer" }
       ],
       "examples": [
-        { "repositoryPath": "playground/src/components/widgets/container.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/container.ts" },
-        { "repositoryPath": "playground/src/components/widgets/container.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/container.test.ts" }
+        { "repositoryPath": "examples/guide-project/src/domain/widgets/container.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/container.ts" },
+        { "repositoryPath": "examples/guide-project/src/domain/widgets/container.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/container.test.ts" }
       ],
       "packages": [
         { "name": "@dragcraft/core", "repositoryPath": "packages/core/package.json" },
@@ -65,13 +65,14 @@
     "forms": {
       "playbook": "references/forms.md",
       "docs": [
-        { "repositoryPath": "docs/guide/forms-and-fields.md", "url": "https://hackycy.github.io/dragcraft/guide/forms-and-fields" },
+        { "repositoryPath": "docs/guide/customization/forms-and-fields.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/forms-and-fields" },
+        { "repositoryPath": "docs/guide/learn/material-and-property-panel.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/material-and-property-panel" },
         { "repositoryPath": "docs/reference/form-generator.md", "url": "https://hackycy.github.io/dragcraft/reference/form-generator" },
         { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
       ],
       "examples": [
-        { "repositoryPath": "playground/src/components/fields/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/components/fields/index.ts" },
-        { "repositoryPath": "playground/src/config/global-config-schema.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/config/global-config-schema.ts" }
+        { "repositoryPath": "examples/guide-project/src/forms/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/forms/index.ts" },
+        { "repositoryPath": "examples/guide-project/src/domain/widgets/notice.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/notice.ts" }
       ],
       "packages": [
         { "name": "@dragcraft/form-generator", "repositoryPath": "packages/form-generator/package.json" },
@@ -82,13 +83,13 @@
     "shell": {
       "playbook": "references/shell.md",
       "docs": [
-        { "repositoryPath": "docs/guide/extending-the-designer.md", "url": "https://hackycy.github.io/dragcraft/guide/extending-the-designer" },
-        { "repositoryPath": "docs/guide/themes-and-device-frames.md", "url": "https://hackycy.github.io/dragcraft/guide/themes-and-device-frames" },
+        { "repositoryPath": "docs/guide/customization/panels-and-canvas.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/panels-and-canvas" },
+        { "repositoryPath": "docs/guide/customization/theme-device-and-i18n.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/theme-device-and-i18n" },
         { "repositoryPath": "docs/reference/renderer.md", "url": "https://hackycy.github.io/dragcraft/reference/renderer" },
         { "repositoryPath": "docs/reference/device-frames.md", "url": "https://hackycy.github.io/dragcraft/reference/device-frames" }
       ],
       "examples": [
-        { "repositoryPath": "playground/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/App.vue" },
+        { "repositoryPath": "examples/guide-project/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/App.vue" },
         { "repositoryPath": "packages/device-frames/src/components/DeviceFrameShell.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/packages/device-frames/src/components/DeviceFrameShell.ts" }
       ],
       "packages": [
@@ -101,14 +102,13 @@
     "lifecycle": {
       "playbook": "references/lifecycle.md",
       "docs": [
-        { "repositoryPath": "docs/guide/import-export-and-i18n.md", "url": "https://hackycy.github.io/dragcraft/guide/import-export-and-i18n" },
-        { "repositoryPath": "docs/guide/saving-and-publishing.md", "url": "https://hackycy.github.io/dragcraft/guide/saving-and-publishing" },
-        { "repositoryPath": "docs/guide/runtime-integration.md", "url": "https://hackycy.github.io/dragcraft/guide/runtime-integration" },
+        { "repositoryPath": "docs/guide/learn/persistence-and-runtime.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/persistence-and-runtime" },
+        { "repositoryPath": "docs/guide/customization/lifecycle-and-runtime.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/lifecycle-and-runtime" },
         { "repositoryPath": "docs/reference/core.md", "url": "https://hackycy.github.io/dragcraft/reference/core" }
       ],
       "examples": [
-        { "repositoryPath": "playground/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/App.vue" },
-        { "repositoryPath": "playground/src/shared/use-schema-io.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/playground/src/shared/use-schema-io.ts" }
+        { "repositoryPath": "examples/guide-project/src/host/page-repository.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/host/page-repository.ts" },
+        { "repositoryPath": "examples/guide-project/src/runtime/RuntimePage.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/RuntimePage.ts" }
       ],
       "packages": [
         { "name": "@dragcraft/core", "repositoryPath": "packages/core/package.json" },

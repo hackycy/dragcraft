@@ -1,43 +1,34 @@
 ---
-description: "@dragcraft/core 的 Schema、命令、状态、历史、事件和外部容器协议参考。"
+description: "@dragcraft/core 的 Schema、命令、历史、事件、容器和迁移公开 API。"
 ---
 
 # @dragcraft/core
 
-`@dragcraft/core` 负责 schema、命令和历史记录。
-
-需要实现可承载子节点的 flex、grid 或分栏物料时，先阅读 [外部容器物料](/guide/container-materials)；本页说明 Core 提供的容器 API。
-
-先看一个最小示例：
+当你需要直接读 Schema、执行命令、处理历史或校验容器时使用 Core。标准 Designer 接入会替你创建 Engine。
 
 ```ts
-import { createEngine, CommandType } from '@dragcraft/core'
+import { CommandType, createEngine } from '@dragcraft/core'
 
 const engine = createEngine()
-
 engine.execute({
   type: CommandType.SET_GLOBAL_CONFIG,
-  payload: {
-    config: {
-      title: '首页',
-    },
-  },
+  payload: { config: { title: '首页' } },
 })
-
-const schema = engine.state.getSchema()
-console.log(schema.globalConfig.title)
 ```
 
-这段代码展示了这个包最常见的读写节奏。我们先用 `createEngine()` 创建实例，再通过命令对象调用 `engine.execute()`，最后用 `engine.state.getSchema()` 读取公开状态。
+## 公开入口
 
-加载已有页面时不要把 schema 传给 `createEngine()`。先注册页面需要的 widget metadata，再调用 `engine.importSchema(schema)`；这样容器定义、节点所有权和 ID 唯一性会在进入运行态前统一校验。使用 `createDesigner()` 时可以继续传 `engineOptions.initialSchema`，Designer 会负责正确的注册与导入顺序。
+| 入口 | 用途 |
+| --- | --- |
+| `createEngine()` | 创建无 UI 的 Schema Engine。 |
+| `engine.execute(command)` | 执行内置或已注册命令。 |
+| `engine.state` | 读取深只读 Schema 和交互状态。 |
+| `engine.exportSchema()` / `importSchema()` | 交换完整页面快照。 |
+| `engine.registerMigration()` | 注册版本间的 Schema 迁移。 |
+| `ContainerDefinition`、`createContainerPlan()` | 描述和读取外部容器 region。 |
 
-要定义页面节点、布局位置或容器区域时，继续阅读 [Schema 与布局](/guide/schema-and-layout)。`createLayoutPlan()`、`EventName` 和 `resolveBehavior()` 适合在实现自定义布局、事件订阅或拖拽约束时再查阅。
+`engine.store` 的 Schema ref 是只读的。命令成功前，Core 会校验节点所有权、容器约束和 ID；失败命令不会产生历史或 `schema:changed`。
 
-`engine.state.getSchema()` 与 `getNodeById()` 返回当前已提交的深冻结只读快照；在下一条有效变更命令前，重复读取会得到相同引用。`engine.store` 只公开只读 refs 和 selection/hover/drag 交互方法，不包含 schema mutation API；修改页面必须通过 `engine.execute()`，需要一份可编辑的导出对象时使用 `engine.exportSchema()`。成功结果中的 `changed: false` 表示命令没有产生提交、历史或 `schema:changed` 事件。
+`registerHandler()` 适合直接使用 Core 的基础设施。标准 Designer 项目应优先使用内置 `CommandType`、字段绑定和节点动作，避免让页面协议依赖无文档的自定义命令。
 
-## Container public API
-
-`root.children` 包含页面节点，`flow/chrome/layer` 保持 root-only；容器 regions 拥有普通子节点，当前协议拒绝嵌套容器。`container` 是兼容现有文档的可选字段，因此 schema version 不变。
-
-主要入口包括 `validateContainerDefinition()`、`createContainerState()`、`createContainerPlan()`、`resolvePlacementDecision()`、`buildSchemaIndex()` 和 `validateSchema()`。`NodeDestination` 显式区分 root 与 container region，所有跨 owner 的 add/move/remove/copy 都通过结构化 command result 保证拒绝回滚与 undo 一致性。外部 meta 注册 variants、regions、constraints 和 material-owned migration；框架不定义 flex/grid geometry。
+继续阅读 [页面布局与容器](/guide/customization/layout-and-containers) 或 [生命周期与运行时](/guide/customization/lifecycle-and-runtime)。

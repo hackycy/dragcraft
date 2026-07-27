@@ -230,11 +230,11 @@ export function validateSkills(repositoryRoot) {
 
   if (!existsSync(resolve(repositoryRoot, 'skills/README.md')))
     failures.push('缺少 skills/README.md')
-  if (!existsSync(resolve(repositoryRoot, 'docs/guide/ai-assisted-development.md')))
-    failures.push('缺少 AI 辅助接入文档')
+  if (!existsSync(resolve(repositoryRoot, 'docs/guide/tools/ai-assisted-development.md')))
+    failures.push('缺少 AI 辅助开发文档')
   const docsConfig = readText(resolve(repositoryRoot, 'docs/.vitepress/config.ts'), failures)
-  if (!docsConfig.includes('{ text: \'AI 辅助接入\', link: \'/guide/ai-assisted-development\' }'))
-    failures.push('文档侧边栏缺少 AI 辅助接入入口')
+  if (!docsConfig.includes('{ text: \'AI 辅助开发\', link: \'/guide/tools/ai-assisted-development\' }'))
+    failures.push('文档侧边栏缺少 AI 辅助开发入口')
 
   return failures
 }

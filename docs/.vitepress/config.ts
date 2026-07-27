@@ -19,7 +19,7 @@ export default defineConfig({
   themeConfig: {
     siteTitle: 'dragcraft',
     nav: [
-      { text: '指南', link: '/guide/getting-started' },
+      { text: '指南', link: '/guide/learn/prerequisites' },
       { text: '参考', link: '/reference/overview' },
       {
         text: 'Playground',
@@ -31,32 +31,33 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: '开始接入',
+          text: '从零搭建页面编辑器',
           items: [
-            { text: '快速开始', link: '/guide/getting-started' },
-            { text: '核心心智模型', link: '/guide/mental-model' },
-            { text: 'Schema 与布局', link: '/guide/schema-and-layout' },
-            { text: '集成设计器', link: '/guide/designer-integration' },
-            { text: 'AI 辅助接入', link: '/guide/ai-assisted-development' },
+            { text: '准备开发', link: '/guide/learn/prerequisites' },
+            { text: '挂载最小编辑器', link: '/guide/learn/first-editor' },
+            { text: '理解 Schema 与写入链路', link: '/guide/learn/schema-and-write-path' },
+            { text: '添加物料与属性面板', link: '/guide/learn/material-and-property-panel' },
+            { text: '保存草稿并预览运行时', link: '/guide/learn/persistence-and-runtime' },
+            { text: '完成检查', link: '/guide/learn/completion' },
           ],
         },
         {
-          text: '扩展设计器',
+          text: '高级自定义',
           items: [
-            { text: '自定义物料', link: '/guide/materials-and-fields' },
-            { text: '外部容器物料', link: '/guide/container-materials' },
-            { text: '配置表单与字段', link: '/guide/forms-and-fields' },
-            { text: '动作与视图扩展', link: '/guide/extending-the-designer' },
-            { text: '主题与设备框架', link: '/guide/themes-and-device-frames' },
-            { text: '编辑器国际化', link: '/guide/i18n' },
+            { text: '选择扩展点', link: '/guide/customization/overview' },
+            { text: '业务物料', link: '/guide/customization/materials' },
+            { text: '表单与字段', link: '/guide/customization/forms-and-fields' },
+            { text: '页面布局与容器', link: '/guide/customization/layout-and-containers' },
+            { text: '动作与业务策略', link: '/guide/customization/actions-and-policies' },
+            { text: '面板与画布', link: '/guide/customization/panels-and-canvas' },
+            { text: '主题、设备与国际化', link: '/guide/customization/theme-device-and-i18n' },
+            { text: '生命周期与运行时', link: '/guide/customization/lifecycle-and-runtime' },
           ],
         },
         {
-          text: '从编辑到上线',
+          text: '工具',
           items: [
-            { text: 'Schema 生命周期', link: '/guide/import-export-and-i18n' },
-            { text: '保存草稿与发布', link: '/guide/saving-and-publishing' },
-            { text: '运行时集成边界', link: '/guide/runtime-integration' },
+            { text: 'AI 辅助开发', link: '/guide/tools/ai-assisted-development' },
           ],
         },
       ],
@@ -80,8 +81,8 @@ export default defineConfig({
         {
           text: '开始使用',
           items: [
-            { text: '快速开始', link: '/guide/getting-started' },
-            { text: '核心心智模型', link: '/guide/mental-model' },
+            { text: '准备开发', link: '/guide/learn/prerequisites' },
+            { text: '挂载最小编辑器', link: '/guide/learn/first-editor' },
           ],
         },
       ],

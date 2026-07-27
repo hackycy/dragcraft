@@ -21,9 +21,9 @@
 | 我想要 | 前往 |
 | --- | --- |
 | 先看看设计器实际效果 | [打开 Playground](https://hackycy.github.io/dragcraft/playground) |
-| 把设计器集成到 Vue 应用 | [快速开始](https://hackycy.github.io/dragcraft/guide/getting-started) |
-| 理解 Schema、命令和包的边界 | [核心心智模型](https://hackycy.github.io/dragcraft/guide/mental-model) |
-| 接入业务物料、属性表单或容器组件 | [扩展设计器](https://hackycy.github.io/dragcraft/guide/materials-and-fields) |
+| 从零搭建可保存、可预览的页面编辑器 | [准备开发](https://hackycy.github.io/dragcraft/guide/learn/prerequisites) |
+| 理解 Schema、命令和包的边界 | [Schema 与写入链路](https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path) |
+| 接入业务物料、属性表单或容器组件 | [高级自定义](https://hackycy.github.io/dragcraft/guide/customization/materials) |
 | 查阅包的公开 API | [API 参考](https://hackycy.github.io/dragcraft/reference/overview) |
 
 ## 为什么选择 dragcraft
@@ -48,7 +48,7 @@ import 'ant-design-vue/dist/reset.css'
 import '@dragcraft/themes'
 ```
 
-随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[快速开始](https://hackycy.github.io/dragcraft/guide/getting-started)。
+随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。
 
 ## Packages
 
@@ -82,11 +82,12 @@ import '@dragcraft/themes'
 ## 文档导航
 
 - [文档首页](https://hackycy.github.io/dragcraft/)
-- [快速开始](https://hackycy.github.io/dragcraft/guide/getting-started)
-- [接入设计器](https://hackycy.github.io/dragcraft/guide/designer-integration)
-- [自定义物料与字段](https://hackycy.github.io/dragcraft/guide/materials-and-fields)
-- [主题与设备框架](https://hackycy.github.io/dragcraft/guide/themes-and-device-frames)
-- [保存草稿与发布](https://hackycy.github.io/dragcraft/guide/saving-and-publishing)
+- [准备开发](https://hackycy.github.io/dragcraft/guide/learn/prerequisites)
+- [挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)
+- [理解 Schema 与写入链路](https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path)
+- [业务物料](https://hackycy.github.io/dragcraft/guide/customization/materials)
+- [主题、设备与国际化](https://hackycy.github.io/dragcraft/guide/customization/theme-device-and-i18n)
+- [生命周期与运行时](https://hackycy.github.io/dragcraft/guide/customization/lifecycle-and-runtime)
 - [API 参考](https://hackycy.github.io/dragcraft/reference/overview)
 - [架构设计](https://github.com/hackycy/dragcraft/tree/main/.github/architecture)
 

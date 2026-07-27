@@ -1,32 +1,30 @@
 ---
-description: "@dragcraft/widgets 的物料整理工具与 @dragcraft/fields-ant-design-vue 字段 adapter API 参考。"
+description: "@dragcraft/widgets 与 @dragcraft/fields-ant-design-vue 的物料整理和字段 adapter 公开 API。"
 ---
 
 # widgets 与 fields
 
-这两个入口分别解决“如何整理物料”和“如何接入字段组件”。
-
-需要实现容器物料时，先阅读 [外部容器物料](/guide/container-materials)；本页说明相关 package 的公开 API。
-
-先看一个最小示例：
+这两个包解决标准接入的三份输入：物料 metadata、页面组件映射和字段组件映射。
 
 ```ts
 import { buildComponentMap, getWidgetMetas } from '@dragcraft/widgets'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 
-const designerOptions = {
-  widgetMetas: getWidgetMetas(myWidgetDefinitions),
-  componentMap: buildComponentMap(myWidgetDefinitions),
-  fieldComponentMap: createAntDesignVueFields(),
-}
+const widgetMetas = getWidgetMetas(definitions)
+const componentMap = buildComponentMap(definitions)
+const fieldComponentMap = createAntDesignVueFields()
 ```
 
-上面的三行刚好对应标准接入时最常见的三份输入。`@dragcraft/widgets` 更偏协议和整理工具，用来整理左侧物料和画布组件映射；`@dragcraft/fields-ant-design-vue` 则直接提供一份可用的 Ant Design Vue 字段映射，给右侧表单使用。
+## 公开入口
 
-物料协议、行为约束和展示元数据见 [自定义物料](/guide/materials-and-fields)；字段 adapter 的绑定与联动见 [配置表单与字段](/guide/forms-and-fields)。
+| 入口 | 用途 |
+| --- | --- |
+| `WidgetDefinition` | 将 metadata 与 Vue 组件放在同一份定义中。 |
+| `getWidgetMetas()` | 提取注册到 Engine 的 metadata。 |
+| `buildComponentMap()` | 构建 `node.type` 到 Vue 组件的映射。 |
+| `defineContainerWidget()` | 保留容器 metadata 的类型推断。 |
+| `createAntDesignVueFields()` | 创建 Ant Design Vue 字段 adapter map。 |
 
-## 容器物料 API
+这些帮助函数不替你定义业务组件的 props、资源协议或容器几何。容器需要通过 `ContainerDefinition` 和 `ContainerRegionOutlet` 接入。
 
-`defineContainerWidget()` 保留包含 `ContainerDefinition` 的 meta 推断。外部 meta 注册 variants、regions、constraints、material-owned migration 和 renderer drop adapters；组件和业务 CSS 持有全部 flex、grid、异形 DOM 与插入 geometry，framework themes 只提供 interaction-state 样式。
-
-属性表单使用 `bindTo: { scope: 'container', path: 'variant' }` 编辑当前 variant。当前协议中容器只能存在于 `root.children`，regions 只拥有普通子节点；嵌套容器被拒绝，schema version 保持不变。
+继续阅读 [业务物料](/guide/customization/materials) 或 [表单与字段](/guide/customization/forms-and-fields)。

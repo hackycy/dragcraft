@@ -1,48 +1,33 @@
 ---
-description: "@dragcraft/ui 的共享 Vue UI 模块与 ScrollArea 使用参考。"
+description: "@dragcraft/ui 提供的共享滚动区域组件 API。"
 ---
 
 # @dragcraft/ui
 
-`@dragcraft/ui` 提供 designer、device-frames 和宿主扩展共同使用的基础 Vue UI 模块。当前公开模块是纵向 `DcScrollArea`，它保留浏览器原生滚动，只用覆盖层绘制统一滚动条，因此内容宽度不会因为滚动条出现而变化。
+`@dragcraft/ui` 当前公开 `DcScrollArea`。它用于需要统一原生滚动 viewport 和主题 token 的 Designer、Device Frame 或宿主扩展。
 
-```ts
+```vue
+<script setup lang="ts">
 import { DcScrollArea } from '@dragcraft/ui'
-import '@dragcraft/ui/styles'
+</script>
+
+<template>
+  <DcScrollArea class="my-panel">
+    <slot />
+  </DcScrollArea>
+</template>
 ```
 
-在已经导入 `@dragcraft/themes` 的工作台中，不需要再次导入 UI 样式；主题入口已经包含 ScrollArea 的结构、默认 token 和视觉 recipe。单独使用 `@dragcraft/ui` 时导入 `/styles` 即可。
+## 公开入口
 
-## DcScrollArea
-
-```ts
-import { h } from 'vue'
-import { DcScrollArea } from '@dragcraft/ui'
-
-h(DcScrollArea, {
-  type: 'hover',
-  scrollHideDelay: 600,
-  onScroll: event => console.log(event),
-}, {
-  default: () => h('div', longContent),
-})
-```
-
-`type` 支持以下策略：
-
-- `hover`：内容溢出时，在 hover、滚动或拖动期间显示，默认值。
-- `scroll`：仅在滚动或拖动期间显示。
-- `auto`：只要内容溢出就显示。
-- `always`：始终保持 scrollbar 可见；无溢出时不绘制 thumb。
-
-组件只支持纵向滚动。滚轮、触摸、键盘和代码设置 `scrollTop` 仍由原生 viewport 处理；thumb 拖动与轨道点击只同步原生 `scrollTop`，不会对内容应用位移 transform。
-
-## 样式入口
-
-| 入口 | 内容 |
+| 入口 | 用途 |
 | --- | --- |
-| `@dragcraft/ui/styles` | 结构与默认视觉 recipe |
-| `@dragcraft/ui/structure.css` | viewport、覆盖层轨道和交互几何 |
-| `@dragcraft/ui/recipe.css` | thumb 颜色、圆角和状态过渡 |
+| `DcScrollArea` | 提供纵向原生滚动 viewport 与覆盖层滚动条。 |
+| `ScrollAreaProps` | 描述滚动显示策略、隐藏延迟和事件。 |
+| `ScrollAreaType` | 限定 `hover`、`scroll`、`auto`、`always` 四种显示策略。 |
 
-公开主题 hook 为 `data-dc-component="scroll-area"`，parts 包括 `viewport`、`content`、`scrollbar`、`thumb`，states 包括 `overflowing`、`visible`、`hidden`、`scrolling`、`dragging`。业务主题优先覆盖 `--dc-scroll-area-*` token，不应依赖内部 `.dc-scroll-area__*` class。
+`ScrollAreaProps` 和 `ScrollAreaType` 描述可用 props。默认主题与 Device Frame 样式已经消费相同的 `--dc-scroll-area-*` token。
+
+它不是 Designer 状态管理入口。自定义面板仍应通过 `useDesignerContext()` 读取工作台上下文，并通过公开命令或字段绑定写入页面。
+
+继续阅读 [面板与画布](/guide/customization/panels-and-canvas)。
