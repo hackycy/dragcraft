@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/fields-ant-design-vue",
   "type": "module",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Ant Design Vue field adapters for @dragcraft/designer",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
