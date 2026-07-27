@@ -100,21 +100,40 @@ export type {
 } from '@dragcraft/core'
 // ── Re-exports: @dragcraft/form-generator ─
 export {
+  findFieldSchema,
   FormGenerator,
   resolveFieldComponentProps,
+  useFieldDependencies,
+  useFieldState,
   useFormGeneratorContext,
+  useFormValidation,
 } from '@dragcraft/form-generator'
 
 export type {
+  FieldBindingScope,
+  FieldBindingTarget,
   FieldChangePayload,
   FieldComponentDefinition,
   FieldComponentMap,
+  FieldComponentProps,
+  FieldComponentTransformContext,
+  FieldDependencies,
+  FieldDependenciesResult,
+  FieldRenderContext,
   FieldRenderFactory,
   FieldSchema,
+  FieldState,
   FormContext,
   FormGeneratorContext,
+  FormGeneratorProps,
   FormSchema,
+  FormValidation,
   SectionSchema,
+  SectionTogglePayload,
+  TypedFieldSchema,
+  TypedFormSchema,
+  TypedSectionSchema,
+  ValidationError,
   ValidationRule,
 } from '@dragcraft/form-generator'
 
@@ -139,6 +158,7 @@ export {
   useNodeDrag,
   useNodeInteractionGeometry,
   useWidgetNode,
+  useWidgetRuntime,
 } from '@dragcraft/renderer'
 export type {
   ActionConfirmRequest,
@@ -174,6 +194,7 @@ export type {
   UseNodeInteractionGeometryOptions,
   UseNodeInteractionGeometryReturn,
   WidgetFallbackProps,
+  WidgetRuntimeContext,
 } from '@dragcraft/renderer'
 
 export { DcScrollArea } from '@dragcraft/ui'

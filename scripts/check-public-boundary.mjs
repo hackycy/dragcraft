@@ -6,10 +6,36 @@ const repoRoot = path.resolve(import.meta.dirname, '..')
 const publicPackages = new Set([
   '@dragcraft/designer',
   '@dragcraft/device-frames',
-  '@dragcraft/fields-ant-design-vue',
 ])
+const publicPackagePrefixes = ['@dragcraft/fields-']
 const packagePattern = /@dragcraft\/[a-z0-9-]+/g
+const publicTextExtensions = new Set([
+  '.cjs',
+  '.css',
+  '.html',
+  '.js',
+  '.json',
+  '.jsonc',
+  '.jsx',
+  '.less',
+  '.md',
+  '.mdx',
+  '.mjs',
+  '.sass',
+  '.scss',
+  '.ts',
+  '.tsx',
+  '.txt',
+  '.vue',
+  '.yaml',
+  '.yml',
+])
 const errors = []
+
+function isPublicPackage(packageName) {
+  return publicPackages.has(packageName)
+    || publicPackagePrefixes.some(prefix => packageName.startsWith(prefix))
+}
 
 function collectFiles(relativePath, extensions) {
   const absolutePath = path.join(repoRoot, relativePath)
@@ -28,11 +54,13 @@ function collectFiles(relativePath, extensions) {
 }
 
 const files = [
+  path.join(repoRoot, 'CLAUDE.md'),
   path.join(repoRoot, 'README.md'),
-  ...collectFiles('docs', new Set(['.md', '.ts'])),
-  ...collectFiles('examples', new Set(['.css', '.json', '.ts', '.vue'])),
-  ...collectFiles('playground', new Set(['.css', '.json', '.ts', '.vue'])),
-  ...collectFiles('skills/dragcraft', new Set(['.json', '.md'])),
+  ...collectFiles('docs', publicTextExtensions)
+    .filter(file => file !== path.join(repoRoot, 'docs/package.json')),
+  ...collectFiles('examples', publicTextExtensions),
+  ...collectFiles('playground', publicTextExtensions),
+  ...collectFiles('skills/dragcraft', publicTextExtensions),
 ]
 
 for (const file of files) {
@@ -40,7 +68,7 @@ for (const file of files) {
   const lines = source.split('\n')
   for (const [index, line] of lines.entries()) {
     for (const packageName of line.match(packagePattern) ?? []) {
-      if (!publicPackages.has(packageName))
+      if (!isPublicPackage(packageName))
         errors.push(`${path.relative(repoRoot, file)}:${index + 1} references internal package ${packageName}`)
     }
   }

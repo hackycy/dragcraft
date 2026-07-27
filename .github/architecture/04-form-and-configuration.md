@@ -1,6 +1,6 @@
 # Form 与配置系统
 
-`@dragcraft/form-generator` 是配置面板表单引擎，基于 schema 渲染属性编辑 UI。它服务于 designer 右栏，也可以被业务方独立使用。
+`@dragcraft/form-generator` 是配置面板的内部表单引擎，基于 schema 渲染属性编辑 UI。它服务于 Designer 右栏，业务应用通过 Designer 聚合接口使用其 schema、字段和验证能力。
 
 ## 设计目标
 
@@ -126,7 +126,7 @@ const globalForm: FormSchema = {
 带类型提示的业务 schema 可以使用 `TypedFormSchema<PropsMap>`：
 
 ```ts
-import type { TypedFormSchema } from '@dragcraft/form-generator'
+import type { TypedFormSchema } from '@dragcraft/designer'
 import type { AntDesignVueFieldComponentPropsMap } from '@dragcraft/fields-ant-design-vue'
 
 const schema: TypedFormSchema<AntDesignVueFieldComponentPropsMap> = {
@@ -321,6 +321,6 @@ h(FormGenerator, {
         [data-dc-part="unknown"]
 ```
 
-form-generator 通过 `@dragcraft/form-generator/structure.css` 提供 section/field 外壳的必要结构样式；完整工作台主题会自动聚合该入口。字段 adapter 渲染的具体控件由对应 UI 库负责视觉，Themes 不维护不存在于 form-generator DOM 的字段 class。
+form-generator 通过 `@dragcraft/form-generator/structure.css` 提供 section/field 外壳的必要结构样式；Designer Standard 主题会自动聚合该入口。字段 adapter 渲染的具体控件由对应 UI 库负责视觉，Designer 不维护不存在于 form-generator DOM 的字段 class。
 
-`form-section` 与 Designer 的 `material-group` 共享 `header`、`title`、`toggle` 基线视觉配方和折叠反馈：相同高度、内边距、hover/focus 表面与 chevron transition。两个组件仍分别拥有结构 CSS 和状态逻辑；共享发生在 Themes 的公开 hook recipe，不建立 Form Generator 到 Designer 的代码依赖。
+`form-section` 与 Designer 的 `material-group` 共享 `header`、`title`、`toggle` 基线视觉配方和折叠反馈：相同高度、内边距、hover/focus 表面与 chevron transition。两个组件仍分别拥有结构 CSS 和状态逻辑；共享发生在 Designer Standard 主题的公开 hook recipe，不建立 Form Generator 到 Designer 的代码依赖。

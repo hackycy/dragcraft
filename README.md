@@ -35,13 +35,13 @@
 
 ## 快速开始
 
-安装设计器和默认主题：
+安装设计器和默认字段 adapter：
 
 ```bash
 pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
 ```
 
-在 Vue 应用入口加载字段样式与 dragcraft 主题：
+在 Vue 应用入口加载 Ant Design Vue 基础样式与 Designer Standard 主题：
 
 ```ts
 import 'ant-design-vue/dist/reset.css'
@@ -51,8 +51,6 @@ import '@dragcraft/designer/styles'
 随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。
 
 ## Packages
-
-版本和下载量由 npm 动态提供。各包的职责、接入方式和 API 请查看[文档参考](https://hackycy.github.io/dragcraft/reference/overview)。
 
 | Packages | Version | Downloads |
 | --- | --- | --- |

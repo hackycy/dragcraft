@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | `@dragcraft/designer` | 公开 | 唯一主入口、Vue3 工作台、聚合扩展接口与 Standard 主题 |
 | `@dragcraft/device-frames` | 公开可选 | 设备容器框架 |
-| `@dragcraft/fields-ant-design-vue` | 公开可选 | Ant Design Vue 字段 adapter |
+| `@dragcraft/fields-*` | 公开可选 | UI 库字段 adapter；当前实现为 `@dragcraft/fields-ant-design-vue` |
 | `@dragcraft/core` | 内部 | 领域模型、状态机、命令、历史、事件、注册协议 |
 | `@dragcraft/renderer` | 内部 | 将 schema 节点映射为 Vue 组件树 |
 | `@dragcraft/form-generator` | 内部 | 配置面板 schema 表单引擎 |
@@ -39,7 +39,7 @@
 
 - 被 designer 创建并持有。
 - 被 renderer 消费 store 和命令能力。
-- 被 widgets 和业务物料复用基础 widget meta 类型；renderer 在此之上扩展 `RendererWidgetMeta`。
+- 被 widgets 内部复用基础 widget meta 类型；业务物料从 Designer 使用聚合类型，renderer 在此之上扩展 `RendererWidgetMeta`。
 
 ## @dragcraft/designer
 
@@ -289,5 +289,5 @@
 - utils 不依赖 Vue 或 DOM。
 - renderer 不直接持久化业务状态。
 - designer 负责包组合与对外简化。
-- README、公开文档、examples 和 playground 只能直接导入三个公开 package。
+- README、公开文档、examples 和 playground 只能直接导入 Designer、Device Frames 和 `@dragcraft/fields-*` 字段 adapter package。
 - 业务应用负责提供物料实现，并选择内置字段包或自定义字段 adapter。

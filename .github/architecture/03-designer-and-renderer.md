@@ -308,7 +308,7 @@ resolved 容器的 handle 同样进入当前画布的全局 interaction layer，
 - `dragOverIndex`。
 - `activeDestination`、`forbiddenDestination` 与容器 drop 回调。
 
-## Container Renderer Public API
+## Container Renderer 扩展接口
 
 `ContainerRegionOutlet` 负责读取区域节点、渲染空态/插入态/禁止态，以及把 DOM 信息交给物料提供的 `ResolveContainerDropIndex`。它不定义 flex、grid 或任意插入几何。外部容器物料负责 DOM/CSS，并通过 outlet prop 或 `RendererWidgetMeta.containerAdapter.resolveDropIndex` 注册 renderer drop adapter。
 
@@ -427,10 +427,10 @@ Renderer 只负责把 schema DSL 解释成设计器预览效果，不把 DSL 绑
 
 ## Widget Runtime
 
-物料组件如果需要在自身交互中修改当前节点，可以使用 renderer 提供的注入式 runtime：
+物料组件如果需要在自身交互中修改当前节点，可以使用 Designer 聚合提供的注入式 runtime：
 
 ```ts
-import { useWidgetRuntime } from '@dragcraft/renderer'
+import { useWidgetRuntime } from '@dragcraft/designer'
 
 const runtime = useWidgetRuntime()
 runtime.updateContainerStyle({ marginTop: -12 })
@@ -504,4 +504,4 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 
 Renderer 通过 `@dragcraft/renderer/structure.css` 提供必要结构样式；完整工作台主题会自动聚合该入口。外部视觉配方只依赖公开的 component/part/state 与 token，Renderer 内部 class 不属于主题契约。
 
-基线交互视觉有三项必须保持一致：drop indicator 使用强调色虚线与浅强调色底；node toolbar 的 drag handle 与原生 `button` action 使用同一强调色表面和反色前景；`material-bounds` selection 绘制完整连续实线边框。结构层可以用私有 class 预留透明边框几何，完整主题按导入顺序在其后通过公开 hook 声明颜色或完整 border。对应视觉声明由 Themes 的 interaction recipe 校验保护。
+基线交互视觉有三项必须保持一致：drop indicator 使用强调色虚线与浅强调色底；node toolbar 的 drag handle 与原生 `button` action 使用同一强调色表面和反色前景；`material-bounds` selection 绘制完整连续实线边框。结构层可以用私有 class 预留透明边框几何，完整主题按导入顺序在其后通过公开 hook 声明颜色或完整 border。对应视觉声明由 Designer 的 interaction recipe 校验保护。

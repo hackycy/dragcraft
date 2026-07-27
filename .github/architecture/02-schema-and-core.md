@@ -138,11 +138,11 @@ Core 基于 `root.children` 和物料默认布局生成 `LayoutPlan`：
 
 Renderer 负责把 root `LayoutPlan` 分发为 `regionVNodes`、`chromeVNodes` 和 `layerVNodes` 交给 `containerShell`。容器内部由 `createContainerPlan()` 单独投影。Shell 不重新读取 schema，不创建业务 widget vnode，只执行 content scrollport、chrome layer、floating layer 和 inset 写入。
 
-## Container Schema 与 Core Public API
+## Container Schema 与 Core Module Interface
 
 框架 schema 不保存 flex/grid 几何，schema version 也保持不变。外部容器 meta 通过 `ContainerDefinition` 注册变体、区域、静态约束、动态 `canPlace` 和物料自有的 `migrateVariant`。Core 在注册、导入和每条结构命令中重新校验这些声明。
 
-主要公开入口：
+主要模块入口；业务应用从 Designer 聚合接口使用所需能力：
 
 - `validateContainerDefinition()`、`createContainerState()`、`createContainerPlan()`。
 - `resolvePlacementDecision()`、`buildSchemaIndex()`、`validateSchema()`。

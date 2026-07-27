@@ -53,6 +53,6 @@
 - 新增或修改包职责时，优先更新 [包职责索引](./07-package-reference.md)。
 - 修改 Schema、命令、行为约束时，同步更新 [Schema 与 Core Engine](./02-schema-and-core.md)。
 - 修改 `engine.state` / `engine.store` 边界、command 语义或对外入口分级时，同步更新 [项目总览](./01-overview.md)、[Schema 与 Core Engine](./02-schema-and-core.md) 与 [Designer 与 Renderer](./03-designer-and-renderer.md)。
-- 修改 designer、renderer、form-generator、themes、device-frames 的扩展点时，同步更新对应章节。
+- 修改 designer、renderer、form-generator、Designer 主题或 device-frames 的扩展点时，同步更新对应章节。
 - 重构完成后把最终架构合并进对应主题章节，不保留已实施方案索引或重构过程文档。
 - 包目录下不再新增 README 或架构 Markdown，避免文档入口分散。

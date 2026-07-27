@@ -75,6 +75,6 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Each package room needs to import packages through a pnpm workspace
 - Ensure that the projects `pnpm build`, `pnpm lint`, and `pnpm typecheck` pass (in order)
 - Centralize dependencies workspace catalog
-- Public consumers may import only `@dragcraft/designer`, `@dragcraft/device-frames`, and `@dragcraft/fields/*`
+- Public consumers may import only `@dragcraft/designer`, `@dragcraft/device-frames`, and field adapter packages matching `@dragcraft/fields-*`
 - README, public docs, examples, and playground must not reference other `@dragcraft/*` packages directly
 - `@dragcraft/designer/styles` is the complete Standard workbench theme; `@dragcraft/designer/styles/structure` is only for fully custom themes

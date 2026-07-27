@@ -10,7 +10,7 @@ dragcraft 是面向小程序装修场景的可视化页面搭建引擎。它采�
 - 单一入口：标准业务接入以 `@dragcraft/designer` 为统一入口，designer 负责组合 core、renderer 与 form-generator。
 - 强内核：`@dragcraft/core` 不包含 UI，负责状态、命令、历史、注册和事件语义。
 
-公开支持面只有 `@dragcraft/designer`、`@dragcraft/device-frames` 和 `@dragcraft/fields-ant-design-vue`。其他 workspace package 是内部 implementation module；它们可以作为传递依赖发布，但 README、公开文档、examples 和 playground 不得直接导入。
+公开支持面只有 `@dragcraft/designer`、`@dragcraft/device-frames` 和 `@dragcraft/fields-*` 字段 adapter 包；当前字段 adapter 只有 `@dragcraft/fields-ant-design-vue`。其他 workspace package 是内部 implementation module；它们可以作为传递依赖发布，但 README、公开文档、examples 和 playground 不得直接导入。
 
 ## Monorepo 结构
 
@@ -99,7 +99,7 @@ const designer = createDesigner({
 
 - Runtime 一致性：schema 写操作必须通过 core command；无效或被拒绝的命令不写入 history，也不触发 `schema:changed`。
 - 主题一致性：内部 UI 模块拥有结构样式，Designer 聚合 Standard 视觉配方；公共主题契约不暴露内部 BEM。
-- 公开入口一致性：业务应用、公开文档与示例只能直接引用三个公开 package；内部 package 依赖只存在于 workspace implementation 中。
+- 公开入口一致性：业务应用、公开文档与示例只能直接引用 Designer、Device Frames 和 `@dragcraft/fields-*` 字段 adapter package；内部 package 依赖只存在于 workspace implementation 中。
 - 可扩展性：左栏物料、画布容器、节点渲染、节点工具栏、空状态、右栏表单都通过显式扩展点替换。
 - 可测试性：core 可独立单元测试，UI 层通过集成测试覆盖交互。
 - Schema 版本化：schema 必须携带版本号，后续结构演进应显式识别语义。

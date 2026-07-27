@@ -19,7 +19,7 @@ pnpm --filter guide-project dev
 
 ## 准备你的项目
 
-你的项目需要 Vue 3、TypeScript 和 pnpm。首次接入会安装 `@dragcraft/designer`、一套主题、字段 adapter 与实际字段 UI 库；[挂载最小编辑器](/guide/learn/first-editor) 给出完整命令。
+你的项目需要 Vue 3、TypeScript 和 pnpm。首次接入会安装内含 Standard 主题的 `@dragcraft/designer`、字段 adapter 与实际字段 UI 库；[挂载最小编辑器](/guide/learn/first-editor) 给出完整命令。
 
 | 由框架提供 | 由你的应用提供 |
 | --- | --- |

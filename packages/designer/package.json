@@ -30,7 +30,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm generate:theme-contract && pnpm check:theme && tsdown",
+    "build": "pnpm generate:theme-contract && pnpm check:theme && tsdown && pnpm check:package-exports",
+    "check:package-exports": "node scripts/validate-package-exports.mjs",
     "check:theme": "node scripts/validate-theme-contract.mjs && node scripts/validate-theme-interactions.mjs",
     "dev": "tsdown --watch",
     "generate:theme-contract": "node scripts/generate-theme-custom-data.mjs",

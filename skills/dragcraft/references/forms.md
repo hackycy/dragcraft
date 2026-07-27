@@ -2,7 +2,7 @@
 
 ## 证据链
 
-读取 Form Generator 与 Designer 的类型、字段指南和现有字段 adapter。先确认字段组件的 model prop、更新事件以及 Schema 值格式。
+从 `@dragcraft/designer` 读取表单类型和运行时，并查看字段指南及现有字段 adapter。`@dragcraft/fields-*` adapter 包属于公开入口；当前仅提供 `@dragcraft/fields-ant-design-vue`。先确认字段组件的 model prop、更新事件以及 Schema 值格式。
 
 ## 实施
 

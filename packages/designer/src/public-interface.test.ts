@@ -3,9 +3,12 @@ import type {
   FieldRenderFactory,
   FormContext,
   FormGeneratorContext,
+  FormValidation,
+  TypedFormSchema,
   WidgetDefinition,
   WidgetGroup,
   WidgetGroupConfig,
+  WidgetRuntimeContext,
 } from './index'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import {
@@ -16,6 +19,8 @@ import {
   registerWidgets,
   resolveFieldComponentProps,
   useFormGeneratorContext,
+  useFormValidation,
+  useWidgetRuntime,
 } from './index'
 
 describe('designer public interface', () => {
@@ -30,6 +35,8 @@ describe('designer public interface', () => {
   it('aggregates custom field helpers', () => {
     expect(typeof resolveFieldComponentProps).toBe('function')
     expect(typeof useFormGeneratorContext).toBe('function')
+    expect(typeof useFormValidation).toBe('function')
+    expect(typeof useWidgetRuntime).toBe('function')
   })
 
   it('exposes the extension types through one package', () => {
@@ -40,5 +47,8 @@ describe('designer public interface', () => {
     expectTypeOf<FieldRenderFactory>().toBeFunction()
     expectTypeOf<FormContext>().toBeObject()
     expectTypeOf<FormGeneratorContext>().toBeObject()
+    expectTypeOf<FormValidation>().toBeObject()
+    expectTypeOf<TypedFormSchema<{ Input: { allowClear?: boolean } }>>().toBeObject()
+    expectTypeOf<WidgetRuntimeContext>().toBeObject()
   })
 })

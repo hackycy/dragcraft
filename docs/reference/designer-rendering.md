@@ -10,6 +10,7 @@ Designer 聚合设计态画布需要的扩展接口。它包含选中、拖拽�
 import {
   ContainerRegionOutlet,
   useContainerRuntime,
+  useWidgetRuntime,
 } from '@dragcraft/designer'
 ```
 
@@ -20,6 +21,7 @@ import {
 | `RendererEventHooks` | 接收选择、拖拽和 hover 生命周期。 |
 | `ContainerRegionOutlet` | 在业务容器 DOM 中渲染受控 region。 |
 | `useContainerRuntime()` | 读取当前容器 variant、region 和节点。 |
+| `useWidgetRuntime()` | 让业务物料通过受控命令更新当前节点的 props 与样式。 |
 | `DcScrollArea` | 为自定义面板提供与工作台一致的滚动区域。 |
 
 `containerShell` 只能消费已经按布局计划分好的 VNode，不能重新读取 Schema 或创建业务节点。容器 region 的子节点由 Engine 拥有，不要把它们写入普通 `children`。
