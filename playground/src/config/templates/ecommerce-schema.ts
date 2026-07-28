@@ -28,12 +28,7 @@ export const ecommerceSchema: DesignerSchema = {
         type: 'navbar',
         props: {
           title: '好物精选',
-          showBack: false,
-          backgroundColor: '#ffffff',
-          textColor: '#1a1a1a',
-          transparent: false,
         },
-        style: { content: { width: '100%' } },
         layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed', reserve: { mode: 'measure', size: 44 }, avoidContent: true } },
       },
 

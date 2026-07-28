@@ -336,57 +336,75 @@
   justify-content: center;
   width: 100%;
   height: 44px;
-  border-bottom: 1px solid rgba(31, 41, 55, 0.08);
+  color: #1a1a1a;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   box-sizing: border-box;
 }
 
-.pg-widget-navbar--transparent {
-  border-bottom-color: transparent;
-}
-
-.pg-widget-navbar__back {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-  transform: translateY(-50%);
-}
-
-.pg-widget-navbar__back:hover {
-  background: rgba(31, 41, 55, 0.06);
-}
-
 .pg-widget-navbar__title-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  max-width: min(68%, 230px);
+  min-width: 0;
+  max-width: calc(100% - 208px);
 }
 
-.pg-widget-navbar__title,
-.pg-widget-navbar__subtitle {
+.pg-widget-navbar__title {
   max-width: 100%;
   overflow: hidden;
-  line-height: 1.15;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.pg-widget-navbar__subtitle {
-  margin-top: 2px;
-  font-size: 11px;
-  opacity: 0.68;
+.pg-widget-navbar__capsule {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 86px;
+  height: 32px;
+  color: #1f1f1f;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+.pg-widget-navbar__capsule-more {
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+
+.pg-widget-navbar__capsule-more::before {
+  position: absolute;
+  top: 6px;
+  left: 1px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 5px 0 currentColor, 10px 0 currentColor;
+  content: "";
+}
+
+.pg-widget-navbar__capsule-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 11px;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.pg-widget-navbar__capsule-circle {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  box-sizing: border-box;
 }
 
 .pg-widget-tabbar {

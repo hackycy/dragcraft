@@ -1,18 +1,11 @@
 import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
-import { IconMaterial, IconNavBack, IconNavHome, IconNavRecent, IconPlus } from '../icons'
+import { IconMaterial, IconNavHome, IconNavRecent, IconPlus } from '../icons'
 
 interface TabItem {
   label: string
   icon: string
-}
-
-interface NavbarTitleConfig {
-  title?: string
-  subtitle?: string
-  titleFontSize?: number
-  titleFontWeight?: string
 }
 
 const DEFAULT_IMAGES = [
@@ -54,15 +47,14 @@ export const navbarWidgetMeta: DesignerWidgetMeta = {
   titleKey: 'widget.navbar.title',
   group: 'navigation',
   icon: 'navbar',
+  authoring: 'schema-managed',
   material: {
     icon: '导',
-    description: '配置页面顶部标题和返回入口',
+    description: '配置页面顶部标题和系统胶囊',
     descriptionKey: 'widget.navbar.material.description',
     tags: ['框架'],
     keywords: ['navigation', 'header', 'top bar', '导航'],
   },
-  draggable: false,
-  sortable: false,
   defaultLayout: {
     placement: {
       kind: 'chrome',
@@ -72,65 +64,21 @@ export const navbarWidgetMeta: DesignerWidgetMeta = {
       avoidContent: true,
     },
   },
-  creatable: (ctx) => {
-    const children = ctx.schema.root.children ?? []
-    return children.some(child => child.type === 'navbar')
-      ? {
-          allowed: false,
-          code: 'singleton.navbar',
-          messageKey: 'forbidden.navbarExists',
-          message: '页面只能配置一个导航栏',
-        }
-      : true
-  },
   defaultProps: {
     title: '页面标题',
-    subtitle: '',
-    titleFontSize: 16,
-    titleFontWeight: '600',
-    showBack: false,
-    backgroundColor: '#ffffff',
-    textColor: '#1a1a1a',
-    transparent: false,
   },
-  defaultStyle: { content: { width: '100%' } },
   formSchema: {
     sections: [
       {
         title: '标题设置',
         fields: [
           {
-            key: 'titleConfig',
-            label: '标题配置',
-            component: 'NavbarTitle',
-            parseValue: (config: Record<string, unknown>) => ({
-              title: config.title,
-              subtitle: config.subtitle,
-              titleFontSize: config.titleFontSize,
-              titleFontWeight: config.titleFontWeight,
-            }),
-            valueFormat: (value: unknown, ctx: { values: Record<string, unknown> }) => ({
-              title: ctx.values.title,
-              subtitle: ctx.values.subtitle,
-              titleFontSize: ctx.values.titleFontSize,
-              titleFontWeight: ctx.values.titleFontWeight,
-              ...(typeof value === 'object' && value !== null ? value : {}),
-            }),
+            key: 'title',
+            label: '标题',
+            component: 'Input',
+            defaultValue: '页面标题',
+            componentProps: { placeholder: '请输入标题' },
           },
-        ],
-      },
-      {
-        title: '基础设置',
-        fields: [
-          { key: 'showBack', label: '显示返回按钮', component: 'Switch', defaultValue: false },
-        ],
-      },
-      {
-        title: '样式设置',
-        fields: [
-          { key: 'backgroundColor', label: '背景颜色', component: 'Color', defaultValue: '#ffffff' },
-          { key: 'textColor', label: '文字颜色', component: 'Color', defaultValue: '#1a1a1a' },
-          { key: 'transparent', label: '透明背景', component: 'Switch', defaultValue: false },
         ],
       },
     ],
@@ -141,43 +89,18 @@ export const NavbarWidget = defineComponent({
   name: 'PlaygroundNavbarWidget',
   props: {
     title: { type: String as PropType<string>, default: '页面标题' },
-    subtitle: { type: String as PropType<string>, default: '' },
-    titleFontSize: { type: Number as PropType<number>, default: 16 },
-    titleFontWeight: { type: String as PropType<string>, default: '600' },
-    titleConfig: { type: Object as PropType<NavbarTitleConfig>, default: undefined },
-    showBack: { type: Boolean as PropType<boolean>, default: false },
-    backgroundColor: { type: String as PropType<string>, default: '#ffffff' },
-    textColor: { type: String as PropType<string>, default: '#1a1a1a' },
-    transparent: { type: Boolean as PropType<boolean>, default: false },
   },
   setup(props) {
-    return () => {
-      const title = props.titleConfig?.title ?? props.title
-      const subtitle = props.titleConfig?.subtitle ?? props.subtitle
-      const titleFontSize = props.titleConfig?.titleFontSize ?? props.titleFontSize
-      const titleFontWeight = props.titleConfig?.titleFontWeight ?? props.titleFontWeight
-
-      return h('div', {
-        class: ['pg-widget-navbar', { 'pg-widget-navbar--transparent': props.transparent }],
-        style: {
-          backgroundColor: props.transparent ? 'transparent' : props.backgroundColor,
-          color: props.textColor,
-        },
-      }, [
-        props.showBack
-          ? h('button', { class: 'pg-widget-navbar__back', type: 'button', style: { color: props.textColor } }, [
-              h(IconNavBack, { size: 18, color: 'currentColor' }),
-            ])
-          : null,
-        h('div', { class: 'pg-widget-navbar__title-wrap' }, [
-          h('div', {
-            class: 'pg-widget-navbar__title',
-            style: { fontSize: `${titleFontSize}px`, fontWeight: titleFontWeight },
-          }, title),
-          subtitle ? h('div', { class: 'pg-widget-navbar__subtitle' }, subtitle) : null,
-        ]),
-      ])
-    }
+    return () => h('div', { class: 'pg-widget-navbar' }, [
+      h('div', { class: 'pg-widget-navbar__title-wrap' }, [
+        h('div', { class: 'pg-widget-navbar__title' }, props.title),
+      ]),
+      h('div', { 'class': 'pg-widget-navbar__capsule', 'aria-hidden': 'true' }, [
+        h('span', { class: 'pg-widget-navbar__capsule-more' }),
+        h('span', { class: 'pg-widget-navbar__capsule-divider' }),
+        h('span', { class: 'pg-widget-navbar__capsule-circle' }),
+      ]),
+    ])
   },
 })
 

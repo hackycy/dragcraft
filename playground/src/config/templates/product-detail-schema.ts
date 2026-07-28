@@ -28,12 +28,7 @@ export const productDetailSchema: DesignerSchema = {
         type: 'navbar',
         props: {
           title: '商品详情',
-          showBack: true,
-          backgroundColor: '#ffffff',
-          textColor: '#1a1a1a',
-          transparent: false,
         },
-        style: { content: { width: '100%' } },
         layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed', reserve: { mode: 'measure', size: 44 }, avoidContent: true } },
       },
       // Product hero image

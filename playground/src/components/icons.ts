@@ -49,10 +49,6 @@ export function IconMaterial(props: IconProps = {}) {
   ])
 }
 
-export function IconNavBack(props: IconProps = {}) {
-  return icon(props, h('path', { d: 'M10 3L5 8l5 5' }))
-}
-
 export function IconNavHome(props: IconProps = {}) {
   return icon(props, h('circle', { cx: 8, cy: 8, r: 5 }))
 }

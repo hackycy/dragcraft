@@ -34,7 +34,6 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
     },
     forbidden: {
-      navbarExists: '页面只能配置一个导航栏',
       tabBarExists: '页面只能配置一个 Tab 栏',
     },
     widget: {
@@ -173,7 +172,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
           primarySize: { label: '主区域尺寸' },
         },
       },
-      'navbar': { title: '导航栏', material: { description: '配置页面顶部标题和返回入口' } },
+      'navbar': { title: '导航栏', material: { description: '配置页面顶部标题和系统胶囊' } },
       'tab-bar': { title: 'Tab 栏', material: { description: '配置底部多页面导航入口' } },
       'floating-button': { title: '浮动按钮', material: { description: '悬浮在页面上的快捷操作入口' } },
       'swiper': { title: '轮播', material: { description: '展示多张活动图或商品图' } },
@@ -212,7 +211,6 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
     },
     forbidden: {
-      navbarExists: 'Only one navigation bar can be configured on a page',
       tabBarExists: 'Only one tab bar can be configured on a page',
     },
     widget: {
@@ -251,7 +249,7 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
           primarySize: { label: 'Primary region size' },
         },
       },
-      'navbar': { title: 'Navigation Bar', material: { description: 'Configure the page title and back entry' } },
+      'navbar': { title: 'Navigation Bar', material: { description: 'Configure the page title and system capsule' } },
       'tab-bar': { title: 'Tab Bar', material: { description: 'Configure bottom navigation for multiple pages' } },
       'floating-button': { title: 'Floating Button', material: { description: 'Add a quick action floating above the page' } },
       'swiper': { title: 'Carousel', material: { description: 'Show multiple campaign or product images' } },

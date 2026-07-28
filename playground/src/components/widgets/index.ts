@@ -19,30 +19,32 @@ export const playgroundWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[]
       ...definition.meta.formSchema,
       sections: [
         ...definition.meta.formSchema.sections,
-        {
-          title: '容器边距',
-          titleKey: 'field.spacing.sectionTitle',
-          fields: [
-            {
-              key: 'containerMargin',
-              label: '外边距',
-              labelKey: 'field.spacing.margin',
-              component: 'Spacing',
-              bindTo: { scope: 'node', path: 'style.container' },
-              defaultValue: {},
-              componentProps: { type: 'margin', min: -120, max: 120 },
-            },
-            {
-              key: 'containerPadding',
-              label: '内边距',
-              labelKey: 'field.spacing.padding',
-              component: 'Spacing',
-              bindTo: { scope: 'node', path: 'style.container' },
-              defaultValue: {},
-              componentProps: { type: 'padding', min: 0, max: 120 },
-            },
-          ],
-        },
+        ...(definition.meta.type === 'navbar'
+          ? []
+          : [{
+              title: '容器边距',
+              titleKey: 'field.spacing.sectionTitle',
+              fields: [
+                {
+                  key: 'containerMargin',
+                  label: '外边距',
+                  labelKey: 'field.spacing.margin',
+                  component: 'Spacing',
+                  bindTo: { scope: 'node', path: 'style.container' },
+                  defaultValue: {},
+                  componentProps: { type: 'margin', min: -120, max: 120 },
+                },
+                {
+                  key: 'containerPadding',
+                  label: '内边距',
+                  labelKey: 'field.spacing.padding',
+                  component: 'Spacing',
+                  bindTo: { scope: 'node', path: 'style.container' },
+                  defaultValue: {},
+                  componentProps: { type: 'padding', min: 0, max: 120 },
+                },
+              ],
+            }]),
       ],
     },
   },

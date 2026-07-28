@@ -2,7 +2,7 @@ import type { FieldComponentMap, FieldSchema, FormContext } from '@dragcraft/des
 import type { Component, PropType } from 'vue'
 import { resolveFieldComponentProps, useFormGeneratorContext, useI18n } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
-import { Button, Input, InputNumber, Select, Slider } from 'ant-design-vue'
+import { Button, Input, InputNumber } from 'ant-design-vue'
 import { computed, defineComponent, h, ref } from 'vue'
 import { IconArrowDown, IconArrowUp, IconDelete, IconPlus } from '../icons'
 
@@ -15,13 +15,6 @@ interface ArrayFieldConfig {
   sortable?: boolean
 }
 
-interface NavbarTitleConfig {
-  title?: string
-  subtitle?: string
-  titleFontSize?: number
-  titleFontWeight?: string
-}
-
 type SpacingType = 'margin' | 'padding'
 
 type SpacingEdge = 'Top' | 'Right' | 'Bottom' | 'Left'
@@ -29,8 +22,6 @@ type SpacingEdge = 'Top' | 'Right' | 'Bottom' | 'Left'
 const AButton = Button as unknown as Component
 const AInput = Input as unknown as Component
 const AInputNumber = InputNumber as unknown as Component
-const ASelect = Select as unknown as Component
-const ASlider = Slider as unknown as Component
 
 const SPACING_EDGES: Array<{ edge: SpacingEdge, labelKey: string, label: string }> = [
   { edge: 'Top', labelKey: 'field.spacing.top', label: '上' },
@@ -355,89 +346,11 @@ export const ArrayField = defineComponent({
   },
 })
 
-export const NavbarTitleField = defineComponent({
-  name: 'PlaygroundNavbarTitleField',
-  props: {
-    modelValue: {
-      type: Object as PropType<NavbarTitleConfig>,
-      default: () => ({ title: '页面标题', subtitle: '', titleFontSize: 16, titleFontWeight: '600' }),
-    },
-    disabled: { type: Boolean, default: false },
-  },
-  emits: ['update:modelValue'],
-  setup(props, { emit }) {
-    const config = computed(() => props.modelValue ?? {})
-    const updateField = (key: keyof NavbarTitleConfig, value: unknown) => {
-      emit('update:modelValue', { ...config.value, [key]: value })
-    }
-
-    return () => {
-      const title = config.value.title || '页面标题'
-      const subtitle = config.value.subtitle || ''
-      const titleFontSize = config.value.titleFontSize ?? 16
-      const titleFontWeight = config.value.titleFontWeight ?? '600'
-
-      return h('div', { class: 'playground-navbar-title-field' }, [
-        h('div', { class: 'playground-navbar-title-field__preview' }, [
-          h('div', {
-            class: 'playground-navbar-title-field__preview-title',
-            style: { fontSize: `${titleFontSize}px`, fontWeight: titleFontWeight },
-          }, title),
-          subtitle ? h('div', { class: 'playground-navbar-title-field__preview-subtitle' }, subtitle) : null,
-        ]),
-        h('div', { class: 'playground-navbar-title-field__controls' }, [
-          h(AInput, {
-            'value': title,
-            'disabled': props.disabled,
-            'placeholder': '请输入标题',
-            'size': 'small',
-            'onUpdate:value': (value: string) => updateField('title', value),
-          }),
-          h(AInput, {
-            'value': subtitle,
-            'disabled': props.disabled,
-            'placeholder': '请输入副标题',
-            'size': 'small',
-            'allowClear': true,
-            'onUpdate:value': (value: string) => updateField('subtitle', value),
-          }),
-          h('div', { class: 'playground-navbar-title-field__row' }, [
-            h('span', null, `字号 ${titleFontSize}px`),
-            h(ASlider, {
-              'value': titleFontSize,
-              'min': 12,
-              'max': 24,
-              'disabled': props.disabled,
-              'style': { flex: 1 },
-              'onUpdate:value': (value: unknown) => {
-                if (typeof value === 'number')
-                  updateField('titleFontSize', value)
-              },
-            }),
-          ]),
-          h(ASelect, {
-            'value': titleFontWeight,
-            'disabled': props.disabled,
-            'size': 'small',
-            'options': [
-              { label: '常规', value: '400' },
-              { label: '中等', value: '500' },
-              { label: '粗体', value: '600' },
-            ],
-            'onUpdate:value': (value: string) => updateField('titleFontWeight', value),
-          }),
-        ]),
-      ])
-    }
-  },
-})
-
 export function buildPlaygroundFieldComponentMap(): FieldComponentMap {
   return {
     ...createAntDesignVueFields(),
     Color: { component: ColorField },
     Spacing: { component: SpacingField },
     Array: { component: ArrayField },
-    NavbarTitle: { component: NavbarTitleField },
   }
 }
