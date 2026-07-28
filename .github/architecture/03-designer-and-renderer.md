@@ -342,9 +342,9 @@ Designer 将 root 与 container region 都建模为 `NodeDestination`，但保�
 | `duplicate` | 350 | `button` | 复制节点或容器子树 |
 | `delete` | 400 | `button` | 删除，`risk: 'destructive'` |
 
-未授权 action 不生成；已经授权但受边界位置、容器容量或下标锁影响的 action 才保留并显示 disabled。最终 action 列表为空时，Renderer 不挂载节点工具栏。
+Authoring Policy 未授权的内置 action 保留并显示 disabled；已经授权但受边界位置、容器容量或下标锁影响的 action 同样显示 disabled。`actions.only`、`actions.exclude`、action 自身的 `visible` 和调用方 requested keys 负责显隐。最终 action 列表为空时，Renderer 不挂载节点工具栏。
 
-Schema 托管物料默认没有 action：`draggable: true` 自动准入 drag/move，`deletable: true` 自动准入 delete；`actions.only` / `exclude` 只能继续收窄。全局 custom action 必须由 `actions.only` 点名，物料自己的 `actions.extra` 视为显式授权，duplicate 始终被过滤。普通物料保持全局 action 默认准入。
+Schema 托管物料默认保留 5 个内置 action 并全部禁用，以稳定工具栏尺寸和按钮位置；`draggable: true` 启用 drag/move，`deletable: true` 启用 delete。`actions.only` / `exclude` 可以显式改变显隐但不能绕过能力。全局 custom action 必须由 `actions.only` 点名，物料自己的 `actions.extra` 视为显式授权；duplicate 始终禁用，不能用同 key extra 重新开放。普通物料保持全局 action 默认准入。
 
 复制等 action 如果会新增节点，必须声明或执行内置创建命令，由 core 统一校验完整候选子树、`WidgetMeta.creatable` 和排序约束。
 

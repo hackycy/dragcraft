@@ -7,6 +7,7 @@ import type { RendererContext } from '../types'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { createNodeActionRegistry } from '../action-registry'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
 import { RENDERER_CONTEXT_KEY } from '../types'
 import { useWidgetRuntime } from '../widget-runtime'
@@ -546,6 +547,39 @@ describe('widgetRenderer', () => {
       await nextTick()
       expect(document.querySelector('[data-dc-component="node-toolbar"]')).toBeNull()
       expect(document.querySelector('.dc-node__toolbar-anchor')).toBeNull()
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('keeps schema-managed toolbar actions visible in disabled state', async () => {
+    const ctx = makeContext(makeMeta({ authoring: 'schema-managed' }))
+    ctx.actionRegistry = createNodeActionRegistry()
+    const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    ctx.engine.store.selectNode('fab')
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, { node })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const toolbar = document.querySelector('[data-dc-component="node-toolbar"]')
+      const actions = toolbar
+        ? Array.from(toolbar.querySelectorAll<HTMLElement>('[data-dc-part="action"]'))
+        : []
+
+      expect(actions).toHaveLength(5)
+      expect(actions.every(action =>
+        action.matches('button:disabled') || action.getAttribute('aria-disabled') === 'true',
+      )).toBe(true)
     }
     finally {
       app.unmount()

@@ -335,15 +335,23 @@ export function createNodeActionRegistry(
 
       const onlyKeys = widgetActions?.only ? new Set(widgetActions.only) : undefined
       const requestedKeys = keys ? new Set(keys) : undefined
+      const authorizationByKey = new Map<string, boolean | undefined>()
+      const resolveAuthorization = (key: string): boolean | undefined => {
+        if (!authorizationByKey.has(key))
+          authorizationByKey.set(key, isBuiltInActionAuthorized(key, ctx))
+        return authorizationByKey.get(key)
+      }
 
-      // Start with globally registered actions admitted by the widget policy.
+      // Start with globally registered actions admitted by explicit visibility
+      // configuration. Built-in authoring policy is projected as disabled state
+      // later so the toolbar keeps a stable visual footprint.
       let actionDefs = this.getActions()
       if (requestedKeys)
         actionDefs = actionDefs.filter(action => requestedKeys.has(action.key))
       actionDefs = actionDefs.filter((action) => {
-        const builtInDecision = isBuiltInActionAuthorized(action.key, ctx)
+        const builtInDecision = resolveAuthorization(action.key)
         if (builtInDecision !== undefined)
-          return builtInDecision
+          return true
         return !isSchemaManagedWidget(ctx.meta) || onlyKeys?.has(action.key) === true
       })
 
@@ -359,7 +367,7 @@ export function createNodeActionRegistry(
           const admittedExtras = widgetActions.extra.filter((action) => {
             if (requestedKeys && !requestedKeys.has(action.key))
               return false
-            const builtInDecision = isBuiltInActionAuthorized(action.key, ctx)
+            const builtInDecision = resolveAuthorization(action.key)
             return builtInDecision ?? true
           })
           actionDefs = [...actionDefs, ...admittedExtras]
@@ -372,8 +380,10 @@ export function createNodeActionRegistry(
           if (!visible)
             return null
 
-          const available = def.available ? def.available(ctx) : true
-          const disabled = !available || (def.disabled ? def.disabled(ctx) : false)
+          const authorized = resolveAuthorization(def.key) ?? true
+          const disabled = !authorized
+            || (def.available ? !def.available(ctx) : false)
+            || (def.disabled ? def.disabled(ctx) : false)
 
           // Per-action guard against concurrent async invocations
           const pending = { value: false }

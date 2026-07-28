@@ -22,9 +22,9 @@ description: "使用节点动作、拦截器和事件 hooks 接入权限、确�
 
 框架不会替宿主显示拦截器返回的业务原因，也不会替你实现权限策略。不要把任意自定义 command 当作标准 Designer 扩展；优先使用内置 command 或字段绑定。
 
-固定由 Schema 提供、但仍需要选中和配置的物料使用 `authoring: 'schema-managed'`。它默认没有节点动作；`draggable: true` 会开放拖拽和上下移动，`deletable: true` 会开放删除，`actions.only` / `exclude` 可以继续收窄，`actions.extra` 可以显式加入物料自己的动作。duplicate 无法重新开放。
+固定由 Schema 提供、但仍需要选中和配置的物料使用 `authoring: 'schema-managed'`。它默认保留内置工具栏动作并全部显示为 disabled；`draggable: true` 会启用拖拽和上下移动，`deletable: true` 会启用删除，`actions.only` / `exclude` 可以控制显隐，`actions.extra` 可以显式加入物料自己的动作。duplicate 无法重新开放。
 
-未授权动作不会渲染；已授权但因当前位置或容器约束暂不可用的动作才显示 disabled。Authoring Policy 约束标准工作台和内置命令，不替代服务端权限，也不隔离 custom command。
+Authoring Policy 未授权或因当前位置、容器约束暂不可用的内置动作都会保留并显示 disabled，使工具栏保持稳定。只有 `actions.only`、`actions.exclude` 或 action 自身的 `visible` 会改变显隐。Authoring Policy 约束标准工作台和内置命令，不替代服务端权限，也不隔离 custom command。
 
 **完成检查**：公告动作只能在允许的节点出现；删除时会先经过宿主确认，并且取消不会写入 Schema。
 

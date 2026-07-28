@@ -191,25 +191,33 @@ describe('resolve', () => {
     expect(resolved.every(a => a.visible)).toBe(true)
   })
 
-  it('omits built-in actions when the corresponding capability is unauthorized', () => {
+  it('disables built-in actions when the corresponding capability is unauthorized', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, { meta: makeMeta({ draggable: false }) })
 
     const resolved = registry.resolve(ctx, emptyInterceptors)
     const drag = resolved.find(a => a.key === ActionKey.DRAG)
-    expect(drag).toBeUndefined()
-    expect(resolved.find(a => a.key === ActionKey.MOVE_UP)).toBeUndefined()
-    expect(resolved.find(a => a.key === ActionKey.MOVE_DOWN)).toBeUndefined()
+    expect(drag?.disabled).toBe(true)
+    expect(resolved.find(a => a.key === ActionKey.MOVE_UP)?.disabled).toBe(true)
+    expect(resolved.find(a => a.key === ActionKey.MOVE_DOWN)?.disabled).toBe(true)
   })
 
-  it('resolves no default actions for a schema-managed widget', () => {
+  it('keeps all built-in actions disabled for a schema-managed widget', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, { meta: makeMeta({ authoring: 'schema-managed' }) })
 
-    expect(registry.resolve(ctx, emptyInterceptors)).toEqual([])
+    const resolved = registry.resolve(ctx, emptyInterceptors)
+    expect(resolved.map(action => action.key)).toEqual([
+      ActionKey.DRAG,
+      ActionKey.MOVE_UP,
+      ActionKey.MOVE_DOWN,
+      ActionKey.DUPLICATE,
+      ActionKey.DELETE,
+    ])
+    expect(resolved.every(action => action.disabled)).toBe(true)
   })
 
-  it('omits duplicate and delete when an ordinary container has a schema-managed descendant', () => {
+  it('disables duplicate and delete when an ordinary container has a schema-managed descendant', () => {
     const ordinaryMeta = makeMeta({ type: 'layout' })
     const managedMeta = makeMeta({ type: 'managed', authoring: 'schema-managed' })
     vi.mocked(engine.registry.getWidget).mockImplementation(type =>
@@ -229,14 +237,15 @@ describe('resolve', () => {
       meta: ordinaryMeta,
     })
 
-    const actionKeys = registry.resolve(ctx, emptyInterceptors).map(action => action.key)
-    expect(actionKeys).not.toContain(ActionKey.DUPLICATE)
-    expect(actionKeys).not.toContain(ActionKey.DELETE)
+    const resolved = registry.resolve(ctx, emptyInterceptors)
+    expect(resolved.find(action => action.key === ActionKey.DUPLICATE)?.disabled).toBe(true)
+    expect(resolved.find(action => action.key === ActionKey.DELETE)?.disabled).toBe(true)
   })
 
   it('derives movement and deletion actions from explicit schema-managed overrides', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine, {
+      index: 1,
       meta: makeMeta({
         authoring: 'schema-managed',
         draggable: true,
@@ -244,21 +253,22 @@ describe('resolve', () => {
       }),
     })
 
-    expect(registry.resolve(ctx, emptyInterceptors).map(action => action.key)).toEqual([
-      ActionKey.DRAG,
-      ActionKey.MOVE_UP,
-      ActionKey.MOVE_DOWN,
-      ActionKey.DELETE,
-    ])
+    const resolved = registry.resolve(ctx, emptyInterceptors)
+    expect(resolved.find(action => action.key === ActionKey.DRAG)?.disabled).toBe(false)
+    expect(resolved.find(action => action.key === ActionKey.MOVE_UP)?.disabled).toBe(false)
+    expect(resolved.find(action => action.key === ActionKey.MOVE_DOWN)?.disabled).toBe(false)
+    expect(resolved.find(action => action.key === ActionKey.DUPLICATE)?.disabled).toBe(true)
+    expect(resolved.find(action => action.key === ActionKey.DELETE)?.disabled).toBe(false)
   })
 
   it('requires actions.only to admit global custom actions for schema-managed widgets', () => {
     const registry = createNodeActionRegistry()
     registry.register({ key: 'inspect', label: 'Inspect', type: 'button', order: 500 })
 
-    expect(registry.resolve(makeCtx(engine, {
+    const defaults = registry.resolve(makeCtx(engine, {
       meta: makeMeta({ authoring: 'schema-managed' }),
-    }), emptyInterceptors)).toEqual([])
+    }), emptyInterceptors)
+    expect(defaults.map(action => action.key)).not.toContain('inspect')
     expect(registry.resolve(makeCtx(engine, {
       meta: makeMeta({ authoring: 'schema-managed', actions: { only: ['inspect'] } }),
     }), emptyInterceptors).map(action => action.key)).toEqual(['inspect'])
@@ -278,7 +288,10 @@ describe('resolve', () => {
       }),
     })
 
-    expect(registry.resolve(ctx, emptyInterceptors).map(action => action.key)).toEqual(['inspect'])
+    const resolved = registry.resolve(ctx, emptyInterceptors)
+    expect(resolved.filter(action => action.key === ActionKey.DUPLICATE)).toHaveLength(1)
+    expect(resolved.find(action => action.key === ActionKey.DUPLICATE)?.disabled).toBe(true)
+    expect(resolved.find(action => action.key === 'inspect')?.disabled).toBe(false)
   })
 
   it('applies widgetActions.only filter', () => {

@@ -385,7 +385,7 @@ Schema 托管默认值：
 | 直接移动 | 禁止 | `draggable` |
 | 绝对 sibling 下标锁 | 不启用 | `sortable: false` 启用 |
 | 删除 | 禁止 | `deletable` |
-| 节点 action | 空 | `actions` 与相应能力显式开放 |
+| 节点内置 action | 保留并禁用 | 相应能力字段显式启用；`actions` 控制显隐与扩展 |
 
 结构命令按 transition 而不是只看命令根节点：
 
