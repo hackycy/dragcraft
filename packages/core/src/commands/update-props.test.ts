@@ -65,4 +65,39 @@ describe('updatePropsHandler', () => {
     updatePropsHandler(ctx, { nodeId: 'root', props: { title: 'My Page' } })
     expect(ctx.draft.root.props.title).toBe('My Page')
   })
+
+  it('keeps schema-managed widgets configurable by default', () => {
+    const { ctx } = setup([makeNode('a')])
+    ctx.registry.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+
+    expect(updatePropsHandler(ctx, { nodeId: 'a', props: { label: 'new' } })).toMatchObject({ ok: true })
+    expect(ctx.draft.root.children![0].props.label).toBe('new')
+  })
+
+  it('rejects props and style updates when configurable is denied', () => {
+    const { ctx } = setup([makeNode('a', { label: 'old' })])
+    ctx.registry.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+      configurable: false,
+    })
+
+    expect(updatePropsHandler(ctx, {
+      nodeId: 'a',
+      props: { label: 'new' },
+      style: { content: { color: 'red' } },
+    })).toEqual({ ok: false, code: 'NODE_NOT_CONFIGURABLE' })
+    expect(ctx.draft.root.children![0]).toEqual(makeNode('a', { label: 'old' }))
+  })
 })

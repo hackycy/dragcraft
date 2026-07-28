@@ -358,7 +358,7 @@ describe('dcStructurePanel', () => {
     }
   })
 
-  it('disables delete when the widget is not deletable', async () => {
+  it('omits delete when the widget is not deletable', async () => {
     const designer = createDesigner({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta({ deletable: false })],
@@ -367,8 +367,7 @@ describe('dcStructurePanel', () => {
 
     try {
       await nextTick()
-      const deleteButton = host.querySelector<HTMLButtonElement>('.dc-structure-panel__delete')
-      expect(deleteButton?.disabled).toBe(true)
+      expect(host.querySelector('[data-node-id="node-a"] .dc-structure-panel__delete')).toBeNull()
     }
     finally {
       app.unmount()

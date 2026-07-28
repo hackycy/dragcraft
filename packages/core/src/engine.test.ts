@@ -789,6 +789,66 @@ describe('createEngine', () => {
     engine.dispose()
   })
 
+  it('undo and redo restore committed snapshots without reevaluating authoring policy', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const engine = createEngine()
+    const baseMeta = {
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed' as const,
+    }
+    engine.registerWidget(baseMeta)
+    engine.importSchema(makeSchema([{ id: 'managed', type: 'managed', props: { label: 'old' } }]))
+    expect(engine.execute({
+      type: CommandType.UPDATE_PROPS,
+      payload: { nodeId: 'managed', props: { label: 'new' } },
+    })).toMatchObject({ ok: true })
+    engine.registerWidget({ ...baseMeta, configurable: false })
+
+    engine.history.undo()
+    expect(engine.state.getNodeById('managed')?.props.label).toBe('old')
+    engine.history.redo()
+    expect(engine.state.getNodeById('managed')?.props.label).toBe('new')
+    warn.mockRestore()
+    engine.dispose()
+  })
+
+  it('allows trusted imports, migrations, and custom commands to introduce schema-managed nodes', () => {
+    const engine = createEngine()
+    engine.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+    engine.registerMigration({
+      fromVersion: '0.9.0',
+      toVersion: '1.0.0',
+      migrate: (schema) => {
+        schema.version = '1.0.0'
+        schema.root.children = [{ id: 'from-migration', type: 'managed', props: {} }]
+        return schema
+      },
+    })
+    const imported = makeSchema()
+    imported.version = '0.9.0'
+
+    expect(engine.importSchema(imported)).toMatchObject({ ok: true })
+    expect(engine.state.getNodeById('from-migration')?.type).toBe('managed')
+
+    engine.registerHandler('HOST_ADD_MANAGED', ({ draft }) => {
+      draft.root.children!.push({ id: 'from-host', type: 'managed', props: {} })
+    })
+    expect(engine.execute({ type: 'HOST_ADD_MANAGED', payload: null })).toMatchObject({ ok: true })
+    expect(engine.state.getNodeById('from-host')?.type).toBe('managed')
+    engine.dispose()
+  })
+
   describe('schema migration', () => {
     it('registerMigration and migrateSchema applies single migration', () => {
       const engine = createEngine()

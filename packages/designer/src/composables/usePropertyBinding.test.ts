@@ -88,6 +88,56 @@ describe('usePropertyBinding', () => {
     expect(selectedFormSchema.value!.sections).toHaveLength(1)
   })
 
+  it('keeps schema-managed property fields enabled and disables variant fields by default', () => {
+    const meta = makeContainerMeta()
+    meta.authoring = 'schema-managed'
+    meta.formSchema.sections[0].fields.unshift({
+      key: 'label',
+      label: 'Label',
+      component: 'Input',
+    })
+    engine.registerWidget(meta)
+    engine.importSchema(makeSchema([{
+      id: 'layout',
+      type: 'layout',
+      props: { label: 'Managed' },
+      container: { variant: 'split', regions: { left: [] } },
+    }]))
+    engine.store.selectNode('layout')
+
+    const { selectedFormSchema } = usePropertyBinding(engine)
+    const [propertyField, variantField] = selectedFormSchema.value!.sections[0].fields
+
+    expect(propertyField.disabled).toBeUndefined()
+    expect(variantField.disabled?.({ values: {} })).toBe(true)
+  })
+
+  it('keeps configurable and variantChangeable independent in the property schema', () => {
+    const meta = makeContainerMeta()
+    meta.authoring = 'schema-managed'
+    meta.configurable = false
+    meta.variantChangeable = true
+    meta.formSchema.sections[0].fields.unshift({
+      key: 'label',
+      label: 'Label',
+      component: 'Input',
+    })
+    engine.registerWidget(meta)
+    engine.importSchema(makeSchema([{
+      id: 'layout',
+      type: 'layout',
+      props: { label: 'Managed' },
+      container: { variant: 'split', regions: { left: [] } },
+    }]))
+    engine.store.selectNode('layout')
+
+    const { selectedFormSchema } = usePropertyBinding(engine)
+    const [propertyField, variantField] = selectedFormSchema.value!.sections[0].fields
+
+    expect(propertyField.disabled?.({ values: {} })).toBe(true)
+    expect(variantField.disabled).toBeUndefined()
+  })
+
   it('reads container variant and derives registered options for the property form', () => {
     engine.registerWidget(makeContainerMeta({ clearable: true, options: [{ label: 'Stale', value: 'stale' }] }))
     engine.importSchema(makeSchema([{

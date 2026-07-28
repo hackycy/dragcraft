@@ -508,6 +508,12 @@ export interface CoreWidgetMeta {
   /** Structural container capabilities for this widget type. */
   container?: ContainerDefinition
 
+  /**
+   * Marks instances as Schema-managed. These widgets are supplied by Schema
+   * producers and cannot be created or duplicated through designer commands.
+   */
+  authoring?: 'schema-managed'
+
   // ── Renderer behavior controls ──
 
   /** Whether to render a mask overlay on the widget in the canvas (default: true). Accepts boolean or predicate. */
@@ -525,6 +531,10 @@ export interface CoreWidgetMeta {
   sortable?: BehaviorPredicate<InstanceBehaviorContext>
   /** Whether this widget can be deleted via toolbar action (default: true). Accepts boolean or predicate. */
   deletable?: BehaviorPredicate<InstanceBehaviorContext>
+  /** Whether props and style can be changed in the designer. */
+  configurable?: BehaviorPredicate<InstanceBehaviorContext>
+  /** Whether the active container variant can be changed in the designer. */
+  variantChangeable?: BehaviorPredicate<InstanceBehaviorContext>
   /** Default open layout metadata for new and existing instances of this widget type. */
   defaultLayout?: NodeLayout
 
@@ -541,6 +551,18 @@ export interface CoreWidgetMeta {
 
   /** Per-widget toolbar action configuration */
   actions?: CoreWidgetActionConfig
+}
+
+export interface ResolvedAuthoringPolicy {
+  schemaManaged: boolean
+  materialVisible: boolean
+  duplicable: boolean
+  selectable: boolean
+  configurable: boolean
+  draggable: boolean
+  sortable: boolean
+  deletable: boolean
+  variantChangeable: boolean
 }
 
 export type WidgetMeta = CoreWidgetMeta

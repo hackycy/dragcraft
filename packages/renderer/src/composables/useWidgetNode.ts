@@ -1,7 +1,7 @@
 import type { BehaviorPredicate, DesignerSchema, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext, RendererWidgetMeta } from '../types'
-import { resolveNodeLayout } from '@dragcraft/core'
+import { resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
 import { runBeforeAfterHook } from '../event-hooks'
 import { useNodeState } from './useNodeState'
@@ -62,7 +62,6 @@ export function useWidgetNode(
   const inSortScope = computed(() => layout.value.sortScope !== false)
   const isDragging = computed(() => engine.store.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
-
   function readInstanceCtx(): InstanceBehaviorContext {
     return { node: getNode(), schema: ctx.schema.value }
   }
@@ -77,14 +76,18 @@ export function useWidgetNode(
 
   const useMask = computed(() => resolveMetaBehavior(meta.value?.mask))
 
-  const selectable = computed(() => resolveMetaBehavior(meta.value?.selectable))
+  const selectable = computed(() =>
+    resolveAuthoringCapability(meta.value, readInstanceCtx(), 'selectable'),
+  )
 
-  const sortable = computed(() => resolveMetaBehavior(meta.value?.sortable))
+  const sortable = computed(() =>
+    resolveAuthoringCapability(meta.value, readInstanceCtx(), 'sortable'),
+  )
 
   const draggable = computed(() => {
     if (!inSortScope.value || !sortable.value)
       return false
-    return resolveMetaBehavior(meta.value?.draggable)
+    return resolveAuthoringCapability(meta.value, readInstanceCtx(), 'draggable')
   })
 
   const wrapperClasses = computed<Array<string | Record<string, boolean>>>(() => [

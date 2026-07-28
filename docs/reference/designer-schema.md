@@ -26,3 +26,27 @@ engine.execute({
 | `ContainerDefinition`、`createContainerPlan()` | 描述和读取外部容器 region。 |
 
 `engine.store` 的 Schema ref 是只读的。命令成功前会校验节点所有权、容器约束和 ID；失败命令不会产生历史或 `schema:changed`。标准项目优先使用内置 `CommandType`、字段绑定和节点动作。
+
+## Schema 托管物料
+
+导航栏、底部栏等由页面模板固定提供的物料，可以注册为 Schema 托管物料：
+
+```ts
+import type { DesignerWidgetMeta } from '@dragcraft/designer'
+
+const navbarMeta: DesignerWidgetMeta = {
+  type: 'navbar',
+  title: '导航栏',
+  group: 'chrome',
+  authoring: 'schema-managed',
+  defaultProps: {},
+  formSchema: { sections: [] },
+  defaultLayout: {
+    placement: { kind: 'chrome', edge: 'block-start', position: 'fixed' },
+  },
+}
+```
+
+这类物料不出现在标准物料面板中，也不能通过 `ADD_NODE` 或 duplicate 创建。已有实例默认仍可选中和编辑属性，但不可移动、删除或切换容器 variant。可以用 `selectable`、`configurable`、`draggable`、`sortable`、`deletable`、`variantChangeable` 和 `actions` 按实例开放能力；创建与复制始终禁止。
+
+限制会传播到候选子树：复制包含托管后代的普通容器会被拒绝，删除普通父容器也要求所有托管后代允许删除。`importSchema()`、注册的 migration 和 custom command 是可信宿主入口，不应被当作不可信插件沙箱。

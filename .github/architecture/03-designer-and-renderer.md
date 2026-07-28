@@ -69,7 +69,8 @@ src/
 - HTML5 drag source，drag start 时设置 `engine.store.setDragTarget`。
 - `DesignerWidgetMeta.material` 展示协议，用于声明物料卡片标题、图标、描述、缩略图、标签和搜索关键词。
 - `materialItemRenderer` 扩展点，自定义单个物料项内容；外层盒子、尺寸约束和拖拽行为由 designer 统一控制。
-- 物料项始终可拖拽，`WidgetMeta.creatable` 在画布 drag-over/drop 阶段统一裁决是否可创建。
+- `authoring: 'schema-managed'` 的物料不进入标准面板，其实例只能由初始 Schema、import 或 migration 引入。
+- 标准面板中其余物料项始终可拖拽，`WidgetMeta.creatable` 在画布 drag-over/drop 阶段统一裁决是否可创建。
 
 当 `creatable` 返回禁止决策时，画布显示红色虚线框，并在框中展示禁止原因；如果没有提供原因，则展示默认提示。禁用提示层由 container shell 渲染，使用 device frame 时覆盖整个设备预览区域，提示文本位于 frame 中央。自定义物料卡片仍会收到 `draggable: true` 与 `disabled: false`，避免左栏和画布出现两套创建规则。
 
@@ -106,6 +107,7 @@ src/
 - 选中 widget 时自动切到 Widget Tab。
 - `usePropertyBinding` 负责协调表单读写，字段绑定解析与命令翻译位于纯函数 helpers `bindings/field-binding.ts`。
 - 属性变更通过 `engine.execute()` 分发 `UPDATE_PROPS` 或 `SET_GLOBAL_CONFIG` 命令提交。
+- Schema 托管节点仍显示完整属性表单；`configurable` 拒绝时禁用 props/style 字段，`variantChangeable` 独立控制容器 variant 字段。
 - 节点切换时通过 `key` 强制重新挂载表单。
 
 ## Designer API
@@ -337,9 +339,14 @@ Designer 将 root 与 container region 都建模为 `NodeDestination`，但保�
 | `drag` | 100 | `drag-handle` | 拖拽排序 |
 | `move-up` | 200 | `button` | 上移 |
 | `move-down` | 300 | `button` | 下移 |
+| `duplicate` | 350 | `button` | 复制节点或容器子树 |
 | `delete` | 400 | `button` | 删除，`risk: 'destructive'` |
 
-复制等自定义 action 如果会新增节点，必须声明或执行 `ADD_NODE`，由 core 统一校验 `WidgetMeta.creatable` 和排序约束；action 的 `available` 可复用同一决策提前禁用按钮。
+未授权 action 不生成；已经授权但受边界位置、容器容量或下标锁影响的 action 才保留并显示 disabled。最终 action 列表为空时，Renderer 不挂载节点工具栏。
+
+Schema 托管物料默认没有 action：`draggable: true` 自动准入 drag/move，`deletable: true` 自动准入 delete；`actions.only` / `exclude` 只能继续收窄。全局 custom action 必须由 `actions.only` 点名，物料自己的 `actions.extra` 视为显式授权，duplicate 始终被过滤。普通物料保持全局 action 默认准入。
+
+复制等 action 如果会新增节点，必须声明或执行内置创建命令，由 core 统一校验完整候选子树、`WidgetMeta.creatable` 和排序约束。
 
 动作定义：
 

@@ -8,6 +8,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return prototype === Object.prototype || prototype === null
 }
 
+function authorizesDuplicate(meta: WidgetMeta): boolean {
+  const actions = meta.actions as Record<string, unknown> | undefined
+  if (Array.isArray(actions?.only) && actions.only.includes('duplicate'))
+    return true
+  return Array.isArray(actions?.extra)
+    && actions.extra.some(action => isRecord(action) && action.key === 'duplicate')
+}
+
 export function createRegistry(): RegistryInstance {
   const widgets = new Map<string, WidgetMeta>()
   let globalConfigSchema: Record<string, unknown> | undefined
@@ -31,6 +39,17 @@ export function createRegistry(): RegistryInstance {
         const codes = validation.errors.map(error => error.code).join(', ')
         console.warn(`[dragcraft/core] registerWidget: widget "${meta.type}" has an invalid container definition: ${codes}`)
         return
+      }
+    }
+    if (meta.authoring === 'schema-managed') {
+      const contradictions = [
+        meta.creatable === true ? 'creatable: true' : null,
+        authorizesDuplicate(meta) ? 'duplicate action authorization' : null,
+      ].filter(Boolean)
+      if (contradictions.length > 0) {
+        console.warn(
+          `[dragcraft/core] registerWidget: widget "${meta.type}" is schema-managed; ${contradictions.join(' and ')} will be ignored`,
+        )
       }
     }
     if (widgets.has(meta.type)) {

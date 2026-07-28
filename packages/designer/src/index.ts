@@ -65,8 +65,12 @@ export {
   createContainerPlan,
   createEngine,
   EventName,
+  isSchemaManagedWidget,
+  isWidgetVisibleInMaterialPanel,
+  resolveAuthoringPolicy,
   resolveBehavior,
   resolveCreatable,
+  resolveWidgetCreation,
 } from '@dragcraft/core'
 
 export type {
@@ -91,6 +95,7 @@ export type {
   InstanceBehaviorContext,
   MoveNodePayload,
   RemoveNodePayload,
+  ResolvedAuthoringPolicy,
   SchemaNode,
   SetGlobalConfigPayload,
   TypeBehaviorContext,

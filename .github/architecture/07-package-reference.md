@@ -25,6 +25,7 @@
 - 管理 DesignerSchema 响应式状态。
 - 提供 CommandBus、HistoryManager、Registry、EventHub。
 - 提供 LayoutPlan 投影和位置锁定约束。
+- 集中解析 Authoring Policy，并在内置命令中强制执行创建、配置和结构操作限制。
 - 定义 `CoreWidgetMeta` 等 widget 行为控制协议。
 
 主要入口：
@@ -32,6 +33,7 @@
 - `createEngine()`。
 - `CommandType`。
 - `resolveBehavior()`。
+- `resolveAuthoringPolicy()`、`resolveWidgetCreation()`。
 - `normalizeStyleValueMap()`。
 - Schema、command、event、registry、widget 相关类型。
 

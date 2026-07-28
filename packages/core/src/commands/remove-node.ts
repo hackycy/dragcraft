@@ -1,5 +1,5 @@
 import type { CommandContext, CommandResult, DesignerSchema, RemoveNodePayload } from '../types'
-import { resolveBehavior } from '../behavior'
+import { validateSubtreeDeletion } from '../authoring-policy'
 import { collectSubtreeIds } from '../helpers'
 import { createLayoutPlan, getSortScopeEntries, resolveNodeLayout, resolveNodeSource } from '../layout'
 import { buildSchemaIndex } from '../schema-index'
@@ -24,8 +24,9 @@ export function removeNodeHandler(ctx: CommandContext, payload: RemoveNodePayloa
   const node = source.location.node
   const meta = registry.getWidget(node.type)
 
-  if (!resolveBehavior(meta?.deletable, { node, schema: rawSchema }))
-    return { ok: false, code: 'NODE_NOT_DELETABLE' }
+  const deletion = validateSubtreeDeletion(node, ctx.schema, registry)
+  if (!deletion.ok)
+    return deletion
   if (node.container && !meta?.container)
     return { ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' }
 

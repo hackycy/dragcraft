@@ -1,6 +1,6 @@
-import type { AddNodePayload, CommandContext, CommandResult, DesignerSchema } from '../types'
+import type { AddNodePayload, CommandContext, CommandExecutionResult, CommandResult, DesignerSchema } from '../types'
 import { cloneDeep } from '@dragcraft/utils'
-import { resolveCreatable } from '../behavior'
+import { validateSubtreeCreation } from '../authoring-policy'
 import { createContainerState, createRegisteredNode, resolvePlacementDecision } from '../container-placement'
 import { collectSubtreeIds } from '../helpers'
 import { clampInsertIndex, createLayoutPlan, getSortableArrayIndexForInsert, getSortScopeEntries, resolveDestination, resolveNodeLayout, stripPageLayout } from '../layout'
@@ -9,34 +9,35 @@ import { cloneSchema } from '../schema-utils'
 import { validateSchema } from '../schema-validation'
 import { getLockedIndicesFromEntries, getLockedIndicesFromNodes, isInsertAllowed } from '../sortable'
 
+type CreationFailure = Extract<CommandExecutionResult, { ok: false }>
+
+function reportCreationBlocked(nodeType: string, creation: CreationFailure): CreationFailure {
+  const blockedType = typeof creation.details?.widgetType === 'string'
+    ? creation.details.widgetType
+    : nodeType
+  const fallbackCode = creation.code === 'NODE_NOT_CREATABLE'
+    || creation.code === 'SCHEMA_MANAGED_CREATION_FORBIDDEN'
+    || creation.code === 'AUTHORING_PREDICATE_FAILED'
+    || creation.code === 'AUTHORING_PREDICATE_INVALID'
+    ? undefined
+    : creation.code
+  const reason = creation.message ?? creation.messageKey ?? fallbackCode
+  console.warn(
+    `[dragcraft/core] ADD_NODE: blocked by creatable constraint for widget type "${blockedType}"${reason ? ` (${reason})` : ''}`,
+  )
+  return creation
+}
+
 export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): CommandResult {
   const { draft: rawSchema, registry } = ctx
   const safeSchema = ctx.schema as DesignerSchema
   const meta = registry.getWidget(payload.node.type)
   const destination = payload.destination ?? { kind: 'root' as const }
 
-  const createDecision = meta
-    ? resolveCreatable(meta.creatable, {
-        widgetType: payload.node.type,
-        schema: ctx.schema,
-      }, true)
-    : { allowed: true }
-
-  if (!createDecision.allowed) {
-    const reason = createDecision.message ?? createDecision.messageKey ?? createDecision.code
-    console.warn(
-      `[dragcraft/core] ADD_NODE: blocked by creatable constraint for widget type "${payload.node.type}"${reason ? ` (${reason})` : ''}`,
-    )
-    return {
-      ok: false,
-      code: createDecision.code ?? 'NODE_NOT_CREATABLE',
-      messageKey: createDecision.messageKey,
-      message: createDecision.message,
-    }
-  }
-
   const node = cloneDeep(payload.node)
-  const candidateNodeIds = collectSubtreeIds(node)
+  const suppliedCreation = validateSubtreeCreation(node, ctx.schema, registry)
+  if (!suppliedCreation.ok)
+    return reportCreationBlocked(node.type, suppliedCreation)
   if (node.container && !meta)
     return { ok: false, code: 'UNRESOLVED_CONTAINER_READ_ONLY' }
   if (node.container && !meta?.container)
@@ -44,6 +45,7 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
   if (destination.kind === 'container' && meta?.container)
     return { ok: false, code: 'CONTAINER_NESTING_FORBIDDEN' }
 
+  const initializesContainer = Boolean(meta?.container && !node.container)
   if (meta?.container && !node.container) {
     const initialized = createContainerState(
       node,
@@ -55,6 +57,13 @@ export function addNodeHandler(ctx: CommandContext, payload: AddNodePayload): Co
       return initialized
     node.container = initialized.state
   }
+
+  if (initializesContainer) {
+    const initializedCreation = validateSubtreeCreation(node, ctx.schema, registry)
+    if (!initializedCreation.ok)
+      return reportCreationBlocked(node.type, initializedCreation)
+  }
+  const candidateNodeIds = collectSubtreeIds(node)
 
   const idCandidate = cloneSchema(safeSchema)
   idCandidate.root.children ??= []

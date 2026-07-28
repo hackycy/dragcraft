@@ -158,6 +158,7 @@ src/
 ├── types.ts
 ├── constants.ts
 ├── helpers.ts
+├── authoring-policy.ts
 ├── layout.ts
 ├── sortable.ts
 ├── style.ts
@@ -332,11 +333,15 @@ interface CoreWidgetMeta {
   formSchema: FormSchemaShape
   container?: ContainerDefinition
 
+  authoring?: 'schema-managed'
+
   mask?: BehaviorPredicate<InstanceBehaviorContext>
   selectable?: BehaviorPredicate<InstanceBehaviorContext>
   draggable?: BehaviorPredicate<InstanceBehaviorContext>
   sortable?: BehaviorPredicate<InstanceBehaviorContext>
   deletable?: BehaviorPredicate<InstanceBehaviorContext>
+  configurable?: BehaviorPredicate<InstanceBehaviorContext>
+  variantChangeable?: BehaviorPredicate<InstanceBehaviorContext>
   defaultLayout?: NodeLayout
 
   creatable?: CreatableBehaviorPredicate
@@ -355,12 +360,43 @@ Vue 组件引用、`wrapper`、renderer 侧 action extra 配置和物料栏展�
 | `draggable` | `true` | 为 `false` 时隐藏拖拽 handle 和上移/下移按钮 |
 | `sortable` | `true` | 为 `false` 时锁定当前数组索引，并隐含 `draggable=false` |
 | `deletable` | `true` | 为 `false` 时隐藏删除按钮 |
+| `configurable` | `true` | 为 `false` 时拒绝 `props` / `style` 修改并禁用属性字段 |
+| `variantChangeable` | `true` | 为 `false` 时拒绝容器 variant 修改并禁用对应字段 |
 | `creatable` | `true` | 为 `false` 或返回禁止决策时，禁止创建该类型的新实例；拖入、复制等 `ADD_NODE` 入口都会被 core 拦截 |
 | `actions` | 无 | 控制节点工具栏动作 |
 
 当行为字段为函数时，renderer 在 `computed` 中求值，schema 变更会触发重新计算。
 
 `creatable` 是类型级创建能力，不是物料面板专属开关。凡是会新增 schema node 的交互都必须进入 `ADD_NODE`，由 core 基于当前 schema 统一校验该字段；UI 层可以提前读取同一决策来展示禁用态与原因，但不能把 UI 判断作为唯一约束。
+
+### Schema 托管物料与 Authoring Policy
+
+`authoring: 'schema-managed'` 声明 Schema 托管物料。策略只存在于注册 metadata，不写入节点 Schema；`authoring-policy.ts` 统一解析能力，再由 Core command、Designer 和 Renderer 消费同一个裁决。
+
+Schema 托管默认值：
+
+| 能力 | 默认值 | 可覆盖字段 |
+| --- | --- | --- |
+| 标准物料面板展示 | 禁止 | 不可覆盖 |
+| `ADD_NODE` / duplicate | 禁止 | 不可覆盖 |
+| 选择与高亮 | 允许 | `selectable` |
+| `props` / `style` 配置 | 允许 | `configurable` |
+| 容器 variant 修改 | 禁止 | `variantChangeable` |
+| 直接移动 | 禁止 | `draggable` |
+| 绝对 sibling 下标锁 | 不启用 | `sortable: false` 启用 |
+| 删除 | 禁止 | `deletable` |
+| 节点 action | 空 | `actions` 与相应能力显式开放 |
+
+结构命令按 transition 而不是只看命令根节点：
+
+- `ADD_NODE` 和 duplicate 检查完整候选子树；容器初始化器生成的后代也受创建策略约束。
+- `REMOVE_NODE` 检查完整被删子树；任一后代不可删除都会拒绝整个命令。
+- `CHANGE_CONTAINER_VARIANT` 比较 before/after 节点集合，新出现节点检查创建策略，消失节点检查删除策略。
+- `MOVE_NODE` 只检查直接 source；普通父容器带着托管后代移动、父容器重排和 sibling 被动位移不会被后代的 `draggable` 拦截。
+
+行为谓词抛错或返回非法值时 fail closed。Schema 托管 metadata 中的 `creatable: true` 或 duplicate 授权会产生 warning，但不阻止注册，且不能覆盖创建不变量。
+
+Authoring Policy 约束标准设计态交互和内置命令，不是宿主代码沙箱。`importSchema()`、Schema migration 和 custom command 是可信宿主入口；undo/redo 直接恢复已经提交的快照，不重新执行策略。
 
 创建规则可以返回布尔值，也可以返回带原因的决策：
 

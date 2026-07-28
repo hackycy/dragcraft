@@ -17,6 +17,7 @@ import {
   defineContainerWidget,
   getWidgetMetas,
   registerWidgets,
+  resolveAuthoringPolicy,
   resolveFieldComponentProps,
   useFormGeneratorContext,
   useFormValidation,
@@ -30,6 +31,7 @@ describe('designer public interface', () => {
     expect(typeof getWidgetMetas).toBe('function')
     expect(typeof registerWidgets).toBe('function')
     expect(typeof createContainerPlan).toBe('function')
+    expect(typeof resolveAuthoringPolicy).toBe('function')
   })
 
   it('aggregates custom field helpers', () => {

@@ -2,8 +2,8 @@ import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core
 import type { NodeActionContext } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererWidgetMeta } from './types'
-import { getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed } from '@dragcraft/core'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
 
 // Minimal MouseEvent stub for Node environment
@@ -16,7 +16,6 @@ vi.mock('@dragcraft/core', async () => {
   const actual = await vi.importActual<typeof import('@dragcraft/core')>('@dragcraft/core')
   return {
     ...actual,
-    resolveBehavior: vi.fn((_field: unknown, _ctx: unknown) => true),
     getLockedIndices: vi.fn(() => new Set<number>()),
     getLockedIndicesFromNodes: vi.fn(() => new Set<number>()),
     isInsertAllowed: vi.fn(() => true),
@@ -97,10 +96,6 @@ it('accepts renderer-specific widget metadata with Vue UI fields', () => {
 })
 
 describe('createDefaultActions', () => {
-  afterEach(() => {
-    vi.mocked(resolveBehavior).mockReturnValue(true)
-  })
-
   it('returns 5 built-in actions sorted by order', () => {
     const actions = createDefaultActions()
     expect(actions).toHaveLength(5)
@@ -114,10 +109,7 @@ describe('createDefaultActions', () => {
     expect(actions.map(a => a.order)).toEqual([100, 200, 300, 350, 400])
   })
 
-  it('built-in actions have available predicate instead of visible for capability checks', async () => {
-    const { resolveBehavior } = await import('@dragcraft/core')
-    vi.mocked(resolveBehavior).mockReturnValue(false)
-
+  it('keeps structural availability separate from policy authorization', () => {
     const actions = createDefaultActions()
     const dragAction = actions.find(a => a.key === ActionKey.DRAG)!
     const moveUpAction = actions.find(a => a.key === ActionKey.MOVE_UP)!
@@ -128,11 +120,17 @@ describe('createDefaultActions', () => {
     expect(moveUpAction.visible).toBeUndefined()
     expect(deleteAction.visible).toBeUndefined()
 
-    // available should check capability
-    const ctx = makeCtx(makeEngine(), { node: { id: 'n', type: 't', props: {} }, siblingCount: 1 })
+    // Capability authorization happens in the registry; definitions only
+    // describe structural availability that can change with position.
+    const ctx = makeCtx(makeEngine(), {
+      node: { id: 'n', type: 't', props: {} },
+      meta: makeMeta({ draggable: false, deletable: false }),
+      siblingCount: 1,
+      sortScope: false,
+    })
     expect(dragAction.available!(ctx as any)).toBe(false)
     expect(moveUpAction.available!(ctx as any)).toBe(false)
-    expect(deleteAction.available!(ctx as any)).toBe(false)
+    expect(deleteAction.available).toBeUndefined()
   })
 })
 
@@ -183,10 +181,6 @@ describe('resolve', () => {
     vi.mocked(isRemoveAllowed).mockReset().mockReturnValue(true)
   })
 
-  afterEach(() => {
-    vi.mocked(resolveBehavior).mockReturnValue(true)
-  })
-
   it('returns visible actions for a basic node', () => {
     const registry = createNodeActionRegistry()
     const ctx = makeCtx(engine)
@@ -197,16 +191,94 @@ describe('resolve', () => {
     expect(resolved.every(a => a.visible)).toBe(true)
   })
 
-  it('renders actions as disabled when available returns false', async () => {
-    vi.mocked(resolveBehavior).mockReturnValue(false) // all capabilities unavailable
-
+  it('omits built-in actions when the corresponding capability is unauthorized', () => {
     const registry = createNodeActionRegistry()
-    const ctx = makeCtx(engine)
+    const ctx = makeCtx(engine, { meta: makeMeta({ draggable: false }) })
 
     const resolved = registry.resolve(ctx, emptyInterceptors)
     const drag = resolved.find(a => a.key === ActionKey.DRAG)
-    expect(drag).toBeDefined()
-    expect(drag!.disabled).toBe(true)
+    expect(drag).toBeUndefined()
+    expect(resolved.find(a => a.key === ActionKey.MOVE_UP)).toBeUndefined()
+    expect(resolved.find(a => a.key === ActionKey.MOVE_DOWN)).toBeUndefined()
+  })
+
+  it('resolves no default actions for a schema-managed widget', () => {
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine, { meta: makeMeta({ authoring: 'schema-managed' }) })
+
+    expect(registry.resolve(ctx, emptyInterceptors)).toEqual([])
+  })
+
+  it('omits duplicate and delete when an ordinary container has a schema-managed descendant', () => {
+    const ordinaryMeta = makeMeta({ type: 'layout' })
+    const managedMeta = makeMeta({ type: 'managed', authoring: 'schema-managed' })
+    vi.mocked(engine.registry.getWidget).mockImplementation(type =>
+      type === 'managed' ? managedMeta : ordinaryMeta,
+    )
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine, {
+      node: makeNode({
+        type: 'layout',
+        container: {
+          variant: 'single',
+          regions: {
+            content: [makeNode({ id: 'managed-child', type: 'managed' })],
+          },
+        },
+      }),
+      meta: ordinaryMeta,
+    })
+
+    const actionKeys = registry.resolve(ctx, emptyInterceptors).map(action => action.key)
+    expect(actionKeys).not.toContain(ActionKey.DUPLICATE)
+    expect(actionKeys).not.toContain(ActionKey.DELETE)
+  })
+
+  it('derives movement and deletion actions from explicit schema-managed overrides', () => {
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine, {
+      meta: makeMeta({
+        authoring: 'schema-managed',
+        draggable: true,
+        deletable: true,
+      }),
+    })
+
+    expect(registry.resolve(ctx, emptyInterceptors).map(action => action.key)).toEqual([
+      ActionKey.DRAG,
+      ActionKey.MOVE_UP,
+      ActionKey.MOVE_DOWN,
+      ActionKey.DELETE,
+    ])
+  })
+
+  it('requires actions.only to admit global custom actions for schema-managed widgets', () => {
+    const registry = createNodeActionRegistry()
+    registry.register({ key: 'inspect', label: 'Inspect', type: 'button', order: 500 })
+
+    expect(registry.resolve(makeCtx(engine, {
+      meta: makeMeta({ authoring: 'schema-managed' }),
+    }), emptyInterceptors)).toEqual([])
+    expect(registry.resolve(makeCtx(engine, {
+      meta: makeMeta({ authoring: 'schema-managed', actions: { only: ['inspect'] } }),
+    }), emptyInterceptors).map(action => action.key)).toEqual(['inspect'])
+  })
+
+  it('admits schema-managed extra actions but never duplicate', () => {
+    const registry = createNodeActionRegistry()
+    const ctx = makeCtx(engine, {
+      meta: makeMeta({
+        authoring: 'schema-managed',
+        actions: {
+          extra: [
+            { key: 'inspect', label: 'Inspect', type: 'button', order: 10 },
+            { key: ActionKey.DUPLICATE, label: 'Duplicate', type: 'button', order: 20 },
+          ],
+        },
+      }),
+    })
+
+    expect(registry.resolve(ctx, emptyInterceptors).map(action => action.key)).toEqual(['inspect'])
   })
 
   it('applies widgetActions.only filter', () => {
@@ -243,6 +315,19 @@ describe('resolve', () => {
     const resolved = registry.resolve(ctx, emptyInterceptors)
     expect(resolved).toHaveLength(6)
     expect(resolved[0].key).toBe('custom') // order 50 comes first
+  })
+
+  it('applies requested action keys to widget extras', () => {
+    const registry = createNodeActionRegistry()
+    const meta = makeMeta({
+      actions: {
+        extra: [{ key: 'custom', label: 'Custom', type: 'button', order: 50 }],
+      },
+    })
+    const ctx = makeCtx(engine, { meta })
+
+    expect(registry.resolve(ctx, emptyInterceptors, [ActionKey.DELETE])
+      .map(action => action.key)).toEqual([ActionKey.DELETE])
   })
 
   it('move-up handler calls engine.execute with correct payload', () => {

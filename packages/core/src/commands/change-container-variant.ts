@@ -7,9 +7,11 @@ import type {
   ContainerVariantDefinition,
   ContainerVariantMigrationContext,
   ContainerVariantMigrationResult,
+  DesignerSchema,
   SchemaNode,
 } from '../types'
 import { cloneDeep } from '@dragcraft/utils'
+import { resolveAuthoringCapability, validateAuthoringTransition } from '../authoring-policy'
 import { buildSchemaIndex } from '../schema-index'
 import { cloneSchema } from '../schema-utils'
 import { validateSchema } from '../schema-validation'
@@ -117,6 +119,16 @@ export function changeContainerVariantHandler(
   if (!from || !to)
     return { ok: false, code: 'CONTAINER_VARIANT_UNKNOWN' }
 
+  const safeNode = buildSchemaIndex(ctx.schema as DesignerSchema).index.get(payload.containerId)?.node
+  if (!safeNode)
+    return { ok: false, code: 'CONTAINER_NOT_FOUND' }
+  const variantChangeable = resolveAuthoringCapability(ctx.registry.getWidget(safeNode.type), {
+    node: safeNode,
+    schema: ctx.schema,
+  }, 'variantChangeable')
+  if (!variantChangeable)
+    return { ok: false, code: 'CONTAINER_VARIANT_NOT_CHANGEABLE' }
+
   const result: ContainerVariantMigrationResult = definition.migrateVariant
     ? safelyMigrateVariant(definition, {
         schema: rawSchema,
@@ -166,6 +178,10 @@ export function changeContainerVariantHandler(
       details: { diagnostics: validation.diagnostics },
     }
   }
+
+  const transition = validateAuthoringTransition(ctx.schema, validation.schema, ctx.registry)
+  if (!transition.ok)
+    return transition
 
   const validatedState = buildSchemaIndex(validation.schema).index.get(indexed.node.id)?.node.container
   if (!validatedState)

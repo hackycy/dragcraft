@@ -37,6 +37,24 @@ describe('createRegistry', () => {
     warn.mockRestore()
   })
 
+  it('warns about schema-managed invariant conflicts but keeps the widget registered', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const reg = createRegistry()
+    const meta = makeMeta('managed', {
+      authoring: 'schema-managed',
+      creatable: true,
+      actions: { only: ['duplicate'] },
+    })
+
+    reg.registerWidget(meta)
+
+    expect(reg.getWidget('managed')).toBe(meta)
+    expect(warn).toHaveBeenCalledOnce()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('creatable: true'))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('duplicate action authorization'))
+    warn.mockRestore()
+  })
+
   it('warns and skips when type is empty', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const reg = createRegistry()

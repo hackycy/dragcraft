@@ -149,6 +149,29 @@ describe('useWidgetNode', () => {
       expect(node.draggable.value).toBe(false)
     })
 
+    it('keeps schema-managed nodes selectable but not draggable by default', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text', {
+        authoring: 'schema-managed',
+      }))
+      const node = useWidgetNode(() => makeNode('a'), ctx)
+
+      expect(node.selectable.value).toBe(true)
+      expect(node.sortable.value).toBe(true)
+      expect(node.draggable.value).toBe(false)
+    })
+
+    it('applies schema-managed selection and drag overrides', () => {
+      vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('text', {
+        authoring: 'schema-managed',
+        selectable: false,
+        draggable: true,
+      }))
+      const node = useWidgetNode(() => makeNode('a'), ctx)
+
+      expect(node.selectable.value).toBe(false)
+      expect(node.draggable.value).toBe(true)
+    })
+
     it('nodes outside sort scopes are not draggable', () => {
       vi.mocked(ctx.engine.registry.getWidget).mockReturnValue(makeMeta('tabbar', {
         defaultLayout: { placement: { kind: 'chrome', edge: 'block-end' } },

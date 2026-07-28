@@ -80,6 +80,8 @@ interface FormSchema {
 
 `FormGenerator` 本身不理解 `bindTo`，它只维护字段值并 emit `{ key, value }`。`@dragcraft/designer` 在右侧属性面板中解释 `bindTo`，把字段变更翻译成 core command。
 
+属性面板同时把 Core Authoring Policy 投影到字段 disabled 状态：props/style 绑定由 `configurable` 控制，`{ scope: 'container', path: 'variant' }` 由 `variantChangeable` 独立控制。字段保持可见并保留当前值；即使 dependency handler 尝试重新启用，策略拒绝仍优先。Core command 会再次执行相同策略，UI disabled 不是唯一约束。
+
 默认绑定：
 
 - Widget 表单字段默认写入当前节点 `props.{field.key}`。

@@ -119,6 +119,66 @@ describe('moveNodeHandler', () => {
     warn.mockRestore()
   })
 
+  it('blocks direct movement of a schema-managed node by default', () => {
+    const { ctx, registry } = setup([{ ...makeNode('managed'), type: 'managed' }, makeNode('after')])
+    registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+
+    expect(moveNodeHandler(ctx, {
+      nodeId: 'managed',
+      destination: { kind: 'root', index: 2 },
+    })).toEqual({ ok: false, code: 'NODE_NOT_MOVABLE' })
+    expect(ctx.draft.root.children!.map(node => node.id)).toEqual(['managed', 'after'])
+  })
+
+  it('allows direct movement of a schema-managed node through a draggable override', () => {
+    const { ctx, registry } = setup([{ ...makeNode('managed'), type: 'managed' }, makeNode('after')])
+    registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+      draggable: true,
+    })
+
+    expect(moveNodeHandler(ctx, {
+      nodeId: 'managed',
+      destination: { kind: 'root', index: 2 },
+    })).toMatchObject({ ok: true })
+    expect(ctx.draft.root.children!.map(node => node.id)).toEqual(['after', 'managed'])
+  })
+
+  it('allows moving an ordinary parent with a schema-managed descendant', () => {
+    const container = makeContainer({
+      required: [makeNode('required')],
+      full: [],
+      open: [{ ...makeNode('managed'), type: 'managed' }],
+    })
+    const setupResult = setupWithContainer([container, makeNode('after')])
+    setupResult.registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+
+    expect(moveNodeHandler(setupResult.ctx, {
+      nodeId: 'layout',
+      destination: { kind: 'root', index: 2 },
+    })).toMatchObject({ ok: true })
+    expect(setupResult.ctx.draft.root.children!.map(node => node.id)).toEqual(['after', 'layout'])
+  })
+
   it('moves nodes by sort-scope index while preserving chrome nodes', () => {
     const { ctx } = setup([
       makeNode('a'),

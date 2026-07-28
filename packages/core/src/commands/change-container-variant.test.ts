@@ -49,8 +49,7 @@ function makeDefinition(overrides: Partial<ContainerDefinition> = {}): Container
   }
 }
 
-function setup(definition = makeDefinition()) {
-  const container = makeContainer()
+function setup(definition = makeDefinition(), container = makeContainer()) {
   const store = createSchemaStore(makeSchema(container))
   const registry = createRegistry()
   registry.registerWidget({
@@ -88,6 +87,105 @@ describe('changeContainerVariantHandler', () => {
     expect(container.container).toEqual({
       variant: 'reversed',
       regions: { left: [makeNode('left')], right: [makeNode('right')] },
+    })
+  })
+
+  it('blocks schema-managed container variant changes by default', () => {
+    const { ctx, registry } = setup()
+    registry.registerWidget({
+      type: 'variant-layout',
+      title: 'Variant',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+      container: makeDefinition(),
+    })
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'reversed',
+    })).toEqual({ ok: false, code: 'CONTAINER_VARIANT_NOT_CHANGEABLE' })
+  })
+
+  it('allows schema-managed container variant changes through an explicit override', () => {
+    const { ctx, registry } = setup()
+    registry.registerWidget({
+      type: 'variant-layout',
+      title: 'Variant',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+      variantChangeable: true,
+      container: makeDefinition(),
+    })
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'reversed',
+    })).toMatchObject({ ok: true })
+  })
+
+  it('rejects a migration that introduces a schema-managed node', () => {
+    const definition = makeDefinition({
+      migrateVariant: ({ state }) => ({
+        allowed: true,
+        state: {
+          variant: 'stacked',
+          regions: { body: [...state.regions.left, makeNode('managed', 'managed')] },
+        },
+      }),
+    })
+    const { ctx, registry } = setup(definition)
+    registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'stacked',
+    })).toMatchObject({
+      ok: false,
+      code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN',
+      details: { nodeId: 'managed' },
+    })
+  })
+
+  it('rejects a migration that removes a non-deletable schema-managed node', () => {
+    const container = makeContainer()
+    container.container!.regions.right = [makeNode('managed', 'managed')]
+    const definition = makeDefinition({
+      migrateVariant: ({ state }) => ({
+        allowed: true,
+        state: {
+          variant: 'stacked',
+          regions: { body: [...state.regions.left] },
+        },
+      }),
+    })
+    const { ctx, registry } = setup(definition, container)
+    registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+
+    expect(changeContainerVariantHandler(ctx, {
+      containerId: 'layout',
+      variant: 'stacked',
+    })).toMatchObject({
+      ok: false,
+      code: 'NODE_NOT_DELETABLE',
+      details: { nodeId: 'managed' },
     })
   })
 

@@ -1,6 +1,6 @@
 import type { CommandContext, CommandResult, DesignerSchema, MoveNodePayload } from '../types'
 import { cloneDeep } from '@dragcraft/utils'
-import { resolveBehavior } from '../behavior'
+import { resolveAuthoringCapability } from '../authoring-policy'
 import { resolvePlacementDecision } from '../container-placement'
 import { collectSubtreeIds } from '../helpers'
 import {
@@ -43,8 +43,9 @@ export function moveNodeHandler(ctx: CommandContext, payload: MoveNodePayload): 
 
   const sourceMeta = registry.getWidget(node.type)
   const behaviorContext = { node, schema: safeSchema }
-  if (!resolveBehavior(sourceMeta?.draggable, behaviorContext)
-    || !resolveBehavior(sourceMeta?.sortable, behaviorContext)) {
+  const draggable = resolveAuthoringCapability(sourceMeta, behaviorContext, 'draggable')
+  const sortable = resolveAuthoringCapability(sourceMeta, behaviorContext, 'sortable')
+  if (!draggable || !sortable) {
     return { ok: false, code: 'NODE_NOT_MOVABLE' }
   }
 

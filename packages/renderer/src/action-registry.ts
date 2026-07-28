@@ -3,7 +3,7 @@ import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
 import type { RendererWidgetMeta } from './types'
-import { CommandType, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveBehavior } from '@dragcraft/core'
+import { CommandType, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget, resolveAuthoringCapability, validateSubtreeCreation, validateSubtreeDeletion } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
 
@@ -16,12 +16,7 @@ function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
 }
 
 function canReorder(ctx: NodeActionContext): boolean {
-  if (ctx.owner.kind === 'root' && ctx.sortScope === false)
-    return false
-
-  const instanceCtx = toInstanceCtx(ctx)
-  return resolveBehavior(ctx.meta?.draggable, instanceCtx)
-    && resolveBehavior(ctx.meta?.sortable, instanceCtx)
+  return ctx.owner.kind !== 'root' || ctx.sortScope !== false
 }
 
 function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
@@ -181,6 +176,24 @@ export const ActionKey = {
   DELETE: 'delete',
 } as const
 
+function isBuiltInActionAuthorized(key: string, ctx: NodeActionContext): boolean | undefined {
+  if (key === ActionKey.DRAG || key === ActionKey.MOVE_UP || key === ActionKey.MOVE_DOWN) {
+    const instanceCtx = toInstanceCtx(ctx)
+    return resolveAuthoringCapability(ctx.meta, instanceCtx, 'draggable')
+      && resolveAuthoringCapability(ctx.meta, instanceCtx, 'sortable')
+  }
+  if (key === ActionKey.DELETE) {
+    return resolveAuthoringCapability(ctx.meta, toInstanceCtx(ctx), 'deletable')
+      && validateSubtreeDeletion(ctx.node, ctx.schema, ctx.engine.registry).ok
+  }
+  if (key === ActionKey.DUPLICATE) {
+    if (isSchemaManagedWidget(ctx.meta))
+      return false
+    return validateSubtreeCreation(ctx.node, ctx.schema, ctx.engine.registry).ok
+  }
+  return undefined
+}
+
 // ──────────────────────────────────────────
 // Built-in default actions
 // ──────────────────────────────────────────
@@ -272,7 +285,6 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       risk: 'destructive',
       metadata: { commandType: CommandType.REMOVE_NODE },
       className: 'dc-node__toolbar-btn--delete',
-      available: ctx => resolveBehavior(ctx.meta?.deletable, toInstanceCtx(ctx)),
       disabled: (ctx) => {
         if (ctx.owner.kind === 'root' && ctx.sortScope === false)
           return false
@@ -321,29 +333,39 @@ export function createNodeActionRegistry(
       // Get per-widget action overrides from WidgetMeta
       const widgetActions = ctx.meta?.actions
 
-      // Start with global actions
+      const onlyKeys = widgetActions?.only ? new Set(widgetActions.only) : undefined
+      const requestedKeys = keys ? new Set(keys) : undefined
+
+      // Start with globally registered actions admitted by the widget policy.
       let actionDefs = this.getActions()
+      if (requestedKeys)
+        actionDefs = actionDefs.filter(action => requestedKeys.has(action.key))
+      actionDefs = actionDefs.filter((action) => {
+        const builtInDecision = isBuiltInActionAuthorized(action.key, ctx)
+        if (builtInDecision !== undefined)
+          return builtInDecision
+        return !isSchemaManagedWidget(ctx.meta) || onlyKeys?.has(action.key) === true
+      })
 
       // Apply per-widget overrides
       if (widgetActions) {
-        if (widgetActions.only) {
-          const allowedKeys = new Set(widgetActions.only)
-          actionDefs = actionDefs.filter(a => allowedKeys.has(a.key))
-        }
+        if (onlyKeys)
+          actionDefs = actionDefs.filter(a => onlyKeys.has(a.key))
         if (widgetActions.exclude) {
           const excludeKeys = new Set(widgetActions.exclude)
           actionDefs = actionDefs.filter(a => !excludeKeys.has(a.key))
         }
         if (widgetActions.extra) {
-          actionDefs = [...actionDefs, ...widgetActions.extra]
+          const admittedExtras = widgetActions.extra.filter((action) => {
+            if (requestedKeys && !requestedKeys.has(action.key))
+              return false
+            const builtInDecision = isBuiltInActionAuthorized(action.key, ctx)
+            return builtInDecision ?? true
+          })
+          actionDefs = [...actionDefs, ...admittedExtras]
             .sort((a, b) => a.order - b.order)
         }
       }
-      if (keys) {
-        const requestedKeys = new Set(keys)
-        actionDefs = actionDefs.filter(action => requestedKeys.has(action.key))
-      }
-
       return actionDefs
         .map((def): ResolvedNodeAction | null => {
           const visible = def.visible ? def.visible(ctx) : true

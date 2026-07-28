@@ -1,4 +1,5 @@
 import type { DesignerWidgetMeta } from '../types'
+import { isWidgetVisibleInMaterialPanel } from '@dragcraft/core'
 import { useI18n } from '@dragcraft/i18n'
 import { IconClose, IconSearch } from '@dragcraft/icons'
 import { DcScrollArea } from '@dragcraft/ui'
@@ -17,7 +18,8 @@ export default defineComponent({
 
     // Filter widgets by search query, grouped by widget group
     const filteredGroups = computed(() => {
-      const allWidgets = engine.registry.getAllWidgets() as DesignerWidgetMeta[]
+      const allWidgets = (engine.registry.getAllWidgets() as DesignerWidgetMeta[])
+        .filter(isWidgetVisibleInMaterialPanel)
       const query = searchQuery.value.toLowerCase().trim()
 
       // Use provided widget groups, or derive from registered widgets

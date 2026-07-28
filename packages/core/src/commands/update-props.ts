@@ -1,4 +1,5 @@
-import type { CommandContext, CommandResult, UpdatePropsPayload } from '../types'
+import type { CommandContext, CommandResult, DesignerSchema, UpdatePropsPayload } from '../types'
+import { resolveAuthoringCapability } from '../authoring-policy'
 import { findNodeById } from '../helpers'
 import { mergeRecord } from '../merge-record'
 
@@ -10,6 +11,16 @@ export function updatePropsHandler(ctx: CommandContext, payload: UpdatePropsPayl
     console.warn(`[dragcraft/core] UPDATE_PROPS: node "${payload.nodeId}" not found`)
     return false
   }
+
+  const safeNode = findNodeById((ctx.schema as DesignerSchema).root, payload.nodeId)
+  if (!safeNode)
+    return { ok: false, code: 'NODE_NOT_FOUND' }
+  const configurable = resolveAuthoringCapability(ctx.registry.getWidget(safeNode.type), {
+    node: safeNode,
+    schema: ctx.schema,
+  }, 'configurable')
+  if (!configurable)
+    return { ok: false, code: 'NODE_NOT_CONFIGURABLE' }
 
   let changed = mergeRecord(node.props, payload.props)
 

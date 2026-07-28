@@ -295,6 +295,35 @@ describe('useDragDrop', () => {
     expect(engine.store.dragTarget.value).toBeNull()
   })
 
+  it('treats schema-managed material drags as forbidden even with creatable enabled', () => {
+    const meta = makeMeta('managed', {
+      authoring: 'schema-managed',
+      creatable: true,
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    engine.registerWidget(meta)
+    const dd = useDragDrop(engine)
+    const execute = vi.spyOn(engine, 'execute')
+    const event = mockDragEvent()
+
+    dd.handleMaterialDragStart(event, meta)
+    dd.handleCanvasDragOver(event)
+    dd.dragOverIndex.value = 0
+
+    expect(dd.isForbidden.value).toBe(true)
+    expect(dd.forbiddenReason.value).toEqual({
+      code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN',
+    })
+    expect(dd.handleCanvasDrop(event)).toEqual({
+      ok: false,
+      code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN',
+      messageKey: undefined,
+      message: undefined,
+    })
+    expect(execute).not.toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
   it('handleCanvasDrop blocks drop when isForbidden is true', () => {
     engine.registerWidget(makeMeta('singleton', {
       creatable: (ctx) => {

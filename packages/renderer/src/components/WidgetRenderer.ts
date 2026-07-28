@@ -321,7 +321,7 @@ export default defineComponent({
       // Note: the toolbar must remain visible during drag — hiding it (display:none
       // or removing from DOM) breaks the HTML5 DnD lifecycle because the browser
       // cancels the drag when the source element becomes invisible.
-      if (widget.state.isSelected.value) {
+      if (widget.state.isSelected.value && actions.value.length > 0) {
         const toolbarVNode = h(NodeToolbar, {
           nodeId: node.id,
           nodeType: node.type,

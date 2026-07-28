@@ -126,6 +126,57 @@ describe('addNodeHandler', () => {
     warn.mockRestore()
   })
 
+  it('blocks schema-managed widgets even when creatable is true', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { ctx, registry } = setup()
+    registry.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+      creatable: true,
+    })
+
+    expect(addNodeHandler(ctx, { node: makeNode('managed') })).toEqual({
+      ok: false,
+      code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN',
+    })
+    expect(ctx.draft.root.children).toEqual([])
+    warn.mockRestore()
+  })
+
+  it('propagates creation restrictions to initialized container children', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const setupResult = setup()
+    setupResult.registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+    registerTextAndSplit(setupResult, {
+      ...splitDefinition,
+      createInitialState: ({ createNode }) => ({
+        variant: 'split',
+        regions: { left: [createNode('managed')], right: [] },
+      }),
+    })
+
+    expect(addNodeHandler(setupResult.ctx, {
+      node: { id: 'layout', type: 'split-layout', props: {} },
+    })).toMatchObject({
+      ok: false,
+      code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN',
+      details: { widgetType: 'managed' },
+    })
+    expect(setupResult.ctx.draft.root.children).toEqual([])
+    warn.mockRestore()
+  })
+
   it('evaluates dynamic creatable with the current schema before add', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { ctx, registry } = setup(makeSchema([makeNode('existing')]))

@@ -105,6 +105,32 @@ describe('dcLeftSidebar', () => {
     }
   })
 
+  it('does not list schema-managed widgets in the standard material panel', async () => {
+    const managed = {
+      ...makeMeta(),
+      type: 'managed',
+      title: 'Managed',
+      authoring: 'schema-managed' as const,
+    }
+    const designer = createDesigner({
+      engineOptions: { initialSchema: makeSchema() },
+      widgetMetas: [makeMeta(), managed],
+    })
+    const { app, host } = mountSidebar(designer)
+
+    try {
+      await nextTick()
+      const materials = host.querySelectorAll('.dc-material-item')
+      expect(materials).toHaveLength(1)
+      expect(host.textContent).toContain('按钮')
+      expect(host.textContent).not.toContain('Managed')
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
   it('switches to the structure panel from the icon tab', async () => {
     const designer = createDesigner({
       engineOptions: { initialSchema: makeSchema() },

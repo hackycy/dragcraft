@@ -44,6 +44,24 @@ const meta: WidgetMeta = {
 }
 ```
 
+仅由 Schema 生产方引入、不允许设计者从标准物料面板拖入的物料使用注册态 authoring 标记：
+
+```ts
+const navbarMeta: WidgetMeta = {
+  type: 'navbar',
+  title: 'Navbar',
+  group: 'chrome',
+  authoring: 'schema-managed',
+  defaultProps: {},
+  formSchema: { sections: [] },
+  defaultLayout: {
+    placement: { kind: 'chrome', edge: 'block-start', position: 'fixed' },
+  },
+}
+```
+
+`authoring` 只描述设计态操作来源，`defaultLayout` 仍独立决定物料位于 flow、固定 chrome 或 layer。Schema 托管物料默认可选中、可配置，但不可创建、复制、移动、删除或切换容器 variant；开发者可以用实例行为字段开放除创建和复制之外的能力。
+
 物料希望暴露外层盒子样式时，表单字段应通过 `bindTo: { scope: 'node', path: 'style.container.*' }` 写入 schema，而不是把这些值塞进业务 props 后再由组件自行模拟。
 
 工具函数：

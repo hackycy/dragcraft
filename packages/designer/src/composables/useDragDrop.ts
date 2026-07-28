@@ -12,10 +12,10 @@ import {
   getLockedIndices,
   getSortScopeEntries,
   getValidDropIndices,
-  resolveCreatable,
   resolveDestination,
   resolveNodeLayout,
   resolvePlacementDecision,
+  resolveWidgetCreation,
 } from '@dragcraft/core'
 import { hideNativeDragImage } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
@@ -155,10 +155,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     const meta = engine.registry.getWidget(target.widgetType)
     if (!meta)
       return { allowed: true }
-    return resolveCreatable(meta.creatable, {
+    return resolveWidgetCreation(meta, {
       widgetType: target.widgetType,
       schema: schemaSnapshot.value,
-    }, true)
+    })
   })
 
   // ── Visual drop index computation ──

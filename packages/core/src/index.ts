@@ -1,3 +1,14 @@
+export {
+  isSchemaManagedWidget,
+  isWidgetVisibleInMaterialPanel,
+  resolveAuthoringCapability,
+  resolveAuthoringPolicy,
+  resolveWidgetCreation,
+  validateAuthoringTransition,
+  validateSubtreeCreation,
+  validateSubtreeDeletion,
+} from './authoring-policy'
+
 // ── Behavior utilities ──────────────────
 export { resolveBehavior, resolveCreatable } from './behavior'
 
@@ -146,6 +157,7 @@ export type {
   PlacementDecision,
   RegistryInstance,
   RemoveNodePayload,
+  ResolvedAuthoringPolicy,
   ResolvedChromePlacement,
   ResolvedFlowPlacement,
   ResolvedLayerPlacement,

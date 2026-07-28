@@ -2,6 +2,7 @@ import type { CommandExecutionResult, DeepReadonly, DesignerEngine, SchemaNode, 
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
+import { resolveAuthoringCapability } from '@dragcraft/core'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
 import { createBindingCommand, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
@@ -47,6 +48,21 @@ function getFieldBinding(field: FieldSchema | undefined): FieldBinding {
 
 type ResolvedBinding = ReturnType<typeof resolveFieldBinding>
 
+function forceFieldDisabled(field: FieldSchema): void {
+  field.disabled = () => true
+  if (!field.dependencies)
+    return
+
+  const dependencies = field.dependencies
+  field.dependencies = {
+    ...dependencies,
+    handler: (values, fieldValue) => ({
+      ...dependencies.handler(values, fieldValue),
+      disabled: () => true,
+    }),
+  }
+}
+
 // ──────────────────────────────────────────
 // Composable
 // ──────────────────────────────────────────
@@ -77,19 +93,26 @@ export function usePropertyBinding(
 
   const selectedFormSchema = computed<FormSchema | null>(() => {
     const meta = selectedWidgetMeta.value
-    if (!meta)
+    const node = selectedNode.value
+    if (!meta || !node)
       return null
     // WidgetMeta.formSchema is Record<string, unknown> but structured as FormSchema.
     const schema = cloneDeep(meta.formSchema as FormSchema)
-    if (!meta.container)
-      return schema
+    const authoringContext = {
+      node,
+      schema: engine.store.schema.value,
+    }
+    const configurable = resolveAuthoringCapability(meta, authoringContext, 'configurable')
+    const variantChangeable = resolveAuthoringCapability(meta, authoringContext, 'variantChangeable')
 
-    const variantOptions = Object.entries(meta.container.variants).map(([value, variant]) => ({
-      value,
-      label: variant.titleKey
-        ? translate(variant.titleKey, variant.title)
-        : variant.title,
-    }))
+    const variantOptions = meta.container
+      ? Object.entries(meta.container.variants).map(([value, variant]) => ({
+          value,
+          label: variant.titleKey
+            ? translate(variant.titleKey, variant.title)
+            : variant.title,
+        }))
+      : []
 
     for (const section of schema.sections) {
       for (const field of section.fields) {
@@ -97,14 +120,22 @@ export function usePropertyBinding(
           getFieldBinding(field),
           { scope: 'node', path: `props.${field.key}` },
         )
-        if (binding.scope !== 'container' || binding.path !== 'variant')
+        const isVariant = binding.scope === 'container' && binding.path === 'variant'
+        if (isVariant) {
+          const original = field.componentProps
+          field.componentProps = ctx => ({
+            ...(typeof original === 'function' ? original(ctx) : original ?? {}),
+            options: variantOptions,
+          })
+          if (!variantChangeable)
+            forceFieldDisabled(field)
           continue
+        }
 
-        const original = field.componentProps
-        field.componentProps = ctx => ({
-          ...(typeof original === 'function' ? original(ctx) : original ?? {}),
-          options: variantOptions,
-        })
+        const isNodeConfiguration = binding.scope === 'node'
+          && (binding.path.startsWith('props.') || binding.path.startsWith('style.'))
+        if (isNodeConfiguration && !configurable)
+          forceFieldDisabled(field)
       }
     }
 

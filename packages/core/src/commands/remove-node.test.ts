@@ -243,4 +243,40 @@ describe('removeNodeHandler', () => {
     })
     expect(ctx.draft.root.children!.map(node => node.id)).toEqual(['fixed'])
   })
+
+  it('propagates deletion restrictions to schema-managed descendants', () => {
+    const container = makeContainer({ required: [makeNode('required')], open: [{ ...makeNode('managed'), type: 'managed' }] })
+    const { ctx, registry } = setupWithContainer(container)
+    registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+
+    expect(removeNodeHandler(ctx, { nodeId: 'layout' })).toEqual({
+      ok: false,
+      code: 'NODE_NOT_DELETABLE',
+      details: { nodeId: 'managed', widgetType: 'managed' },
+    })
+    expect(ctx.draft.root.children).toHaveLength(1)
+  })
+
+  it('allows deleting a schema-managed node only through an explicit override', () => {
+    const { ctx, registry } = setup([{ ...makeNode('managed'), type: 'managed' }])
+    registry.registerWidget({
+      type: 'managed',
+      title: 'Managed',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+      deletable: true,
+    })
+
+    expect(removeNodeHandler(ctx, { nodeId: 'managed' })).toMatchObject({ ok: true })
+    expect(ctx.draft.root.children).toEqual([])
+  })
 })

@@ -1,5 +1,5 @@
 import type { DesignerSchema, LayoutNodeEntry, RegistryInstance, SchemaNode } from './types'
-import { resolveBehavior } from './behavior'
+import { resolveAuthoringCapability } from './authoring-policy'
 import { createLayoutPlan, DEFAULT_SORT_SCOPE, getSortScopeEntries } from './layout'
 
 /**
@@ -44,10 +44,7 @@ export function getLockedIndicesFromNodes(
     const meta = registry.getWidget(node.type)
     if (!meta)
       continue
-    const isSortable = resolveBehavior(
-      meta.sortable,
-      { node, schema },
-    )
+    const isSortable = resolveAuthoringCapability(meta, { node, schema }, 'sortable')
     if (!isSortable) {
       locked.add(i)
     }

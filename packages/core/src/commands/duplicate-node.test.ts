@@ -94,6 +94,32 @@ describe('duplicate node command', () => {
     expect(engine.history.canUndo()).toBe(true)
   })
 
+  it('rejects duplicating an ordinary container with a schema-managed descendant', () => {
+    const engine = makeContainerEngine()
+    engine.registerWidget({
+      type: 'text',
+      title: 'Text',
+      group: 'g',
+      defaultProps: {},
+      formSchema: { sections: [] },
+      authoring: 'schema-managed',
+    })
+    const before = engine.exportSchema()
+
+    const result = engine.execute({
+      type: CommandType.DUPLICATE_NODE,
+      payload: { nodeId: 'layout' },
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN',
+      details: { widgetType: 'text' },
+    })
+    expect(engine.exportSchema()).toEqual(before)
+    expect(engine.history.canUndo()).toBe(false)
+  })
+
   it('emits one duplicate event with resolved IDs and one schema event', () => {
     const engine = makeContainerEngine()
     const duplicated = vi.fn()

@@ -83,6 +83,20 @@ function makeContext(meta: WidgetMeta): RendererContext {
   } as unknown as RendererContext
 }
 
+function provideTestAction(ctx: RendererContext): void {
+  const action: ResolvedNodeAction = {
+    key: 'inspect',
+    label: 'Inspect',
+    type: 'button',
+    order: 10,
+    risk: 'normal',
+    visible: true,
+    disabled: false,
+    handler: vi.fn(),
+  }
+  ctx.actionRegistry.resolve = vi.fn(() => [action])
+}
+
 describe('widgetRenderer', () => {
   afterEach(() => {
     document.body.innerHTML = ''
@@ -368,6 +382,7 @@ describe('widgetRenderer', () => {
   it('uses node-box geometry and a horizontal top-end toolbar for container-owned nodes', async () => {
     const meta = makeMeta({ mask: false })
     const ctx = makeContext(meta)
+    provideTestAction(ctx)
     const selectionPresentation = createNodeSelectionPresentation()
     ctx.engine.store.selectNode('fab')
     const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
@@ -458,6 +473,7 @@ describe('widgetRenderer', () => {
   it('passes the structural owner to interaction extension components', async () => {
     const meta = makeMeta({ mask: true })
     const ctx = makeContext(meta)
+    provideTestAction(ctx)
     const owner = { kind: 'container' as const, containerId: 'layout', regionId: 'left' }
     const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
     const observed = {
@@ -505,6 +521,31 @@ describe('widgetRenderer', () => {
       ctx.engine.store.selectNode('fab')
       await nextTick()
       expect(observed.toolbar).toEqual(owner)
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('does not render an empty toolbar for a selected node', async () => {
+    const ctx = makeContext(makeMeta())
+    const node: SchemaNode = { id: 'fab', type: 'floating-button', props: {} }
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    ctx.engine.store.selectNode('fab')
+    const app = createApp(defineComponent({
+      setup() {
+        provide(RENDERER_CONTEXT_KEY, ctx)
+        return () => h(WidgetRenderer, { node })
+      },
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+      expect(document.querySelector('[data-dc-component="node-toolbar"]')).toBeNull()
+      expect(document.querySelector('.dc-node__toolbar-anchor')).toBeNull()
     }
     finally {
       app.unmount()
