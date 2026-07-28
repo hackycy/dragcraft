@@ -1,10 +1,10 @@
-import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeDestination, NodeOwner, PlacementDecision, RegistryInstance, SchemaIndexResult, SchemaNode, StyleValueMap } from '@dragcraft/core'
-import type { Component, ComputedRef, InjectionKey, Ref, VNode } from 'vue'
+import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeDestination, NodeOwner, PlacementDecision, SchemaIndexResult, SchemaNode } from '@dragcraft/core'
+import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise, RendererEventHooks } from './event-hooks'
 import type { NodeToolbarOrientation } from './node-interaction'
-import type { NodeSelectionPlane, NodeSelectionPresentationHost, NodeSelectionProjection } from './selection-presentation'
+import type { NodeSelectionPlane, NodeSelectionProjection } from './selection-presentation'
 
 export type DeepReadonly<T>
   = T extends (...args: infer Args) => infer Result
@@ -193,8 +193,8 @@ export interface NodeHandleProps {
 
 /**
  * Props received by a custom nodeSelection component.
- * Renderer and the shell own geometry, plane routing, and clipping; the
- * component only owns the visual presentation.
+ * Renderer-owned Canvas Surface and Frame Boundary own geometry, plane routing,
+ * and clipping; the component only owns the visual presentation.
  */
 export interface NodeSelectionProps {
   /** The schema node ID */
@@ -235,21 +235,11 @@ export interface WidgetFallbackProps {
   nodeType: string
 }
 
-/**
- * Props received by a custom container shell component.
- */
-export interface ContainerShellProps {
-  isEmpty: boolean
-  regionVNodes: Record<string, VNode[]>
-  chromeVNodes: VNode[]
-  layerVNodes: Record<string, VNode[]>
-  forbiddenOverlayVNode?: VNode | null
-  layoutPlan: LayoutPlan
-  surfaceStyle?: StyleValueMap
-  registry: RegistryInstance
-  /** Registers shell-owned root, content, and viewport presentation planes. */
-  selectionPresentation: NodeSelectionPresentationHost
-}
+/** A stateless visual shell that renders its default slot exactly once. */
+export type ContainerShell = Component
+
+/** Static shells are concise; readonly refs let the host switch shells reactively. */
+export type ContainerShellSource = ContainerShell | Readonly<Ref<ContainerShell>>
 
 // ──────────────────────────────────────────
 // Extension points
@@ -257,11 +247,10 @@ export interface ContainerShellProps {
 
 export interface RendererExtensions {
   /**
-   * Replaces the default root canvas wrapper.
-   * E.g., a phone frame, tablet frame, or custom viewport shell.
-   * Receives ContainerShellProps and region slot functions.
+   * Wraps the complete Renderer-owned Canvas Surface.
+   * The shell receives no Renderer props and must render its default slot exactly once.
    */
-  containerShell?: Component
+  containerShell?: ContainerShellSource
 
   /**
    * Replaces the default drop indicator shown inside containers
@@ -296,7 +285,7 @@ export interface RendererExtensions {
 
   /**
    * Replaces the visual presentation of the Renderer-owned selected projection.
-   * Geometry, plane routing, and clipping remain owned by Renderer and the shell.
+   * Geometry, plane routing, and clipping remain owned by Renderer.
    */
   nodeSelection?: Component
 

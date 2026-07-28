@@ -35,13 +35,17 @@ it('paints root selection edges around the full-width root segment', () => {
   expect(inlineEnd).toMatchObject({ right: '0' })
 })
 
-it('keeps default shell grid and inset state off the shared shell marker', () => {
+it('keeps Canvas Surface layout state out of the slot-only Container Shell', () => {
   const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
+  const canvasSurface = declarations(css, ['.dc-canvas-surface'])
   const defaultShell = declarations(css, ['.dc-container-shell'])
   const sharedMarker = declarations(css, ['[data-dc-component="container-shell"]'])
 
-  expect(defaultShell.display).toBe('grid')
-  expect(defaultShell['--dc-inset-inline-start']).toContain('--dc-sized-inset-inline-start')
+  expect(canvasSurface.display).toBe('grid')
+  expect(canvasSurface['--dc-inset-inline-start']).toContain('--dc-sized-inset-inline-start')
+  expect(defaultShell.display).toBeUndefined()
+  expect(defaultShell['grid-template-columns']).toBeUndefined()
+  expect(defaultShell['--dc-inset-inline-start']).toBeUndefined()
   expect(sharedMarker.display).toBeUndefined()
   expect(sharedMarker['grid-template-columns']).toBeUndefined()
   expect(sharedMarker['--dc-inset-inline-start']).toBeUndefined()

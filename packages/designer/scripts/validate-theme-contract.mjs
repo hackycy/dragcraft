@@ -65,7 +65,7 @@ function validateRecipe(relativePath) {
   const root = readCss(relativePath)
   validatePublicProperties(root)
   const inheritableProperties = /^(?:color|font(?:-.+)?|letter-spacing|line-height|text-align)$/
-  const contentBoundaryComponents = /data-dc-component=["'](?:designer|root-renderer|canvas|node|container-shell)["']/
+  const contentBoundaryComponents = /data-dc-component=["'](?:designer|root-renderer|renderer-frame-boundary|container-shell|canvas-surface|canvas|node)["']/
 
   root.walkDecls((decl) => {
     if (decl.important)

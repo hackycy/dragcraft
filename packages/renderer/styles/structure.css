@@ -1,5 +1,18 @@
 .dc-root-renderer,
+.dc-renderer-frame-boundary,
 .dc-container-shell,
+.dc-canvas-surface,
+.dc-canvas-surface__scrollport,
+.dc-canvas-surface__content-layout,
+.dc-canvas-surface__content-row,
+.dc-canvas-surface__content-edge,
+.dc-canvas-surface__content,
+.dc-canvas-surface__region,
+.dc-canvas-surface__chrome,
+.dc-canvas-surface__chrome-item,
+.dc-canvas-surface__chrome-stack,
+.dc-canvas-surface__layer,
+.dc-canvas-surface__layer-item,
 .dc-node-selection-plane,
 .dc-empty-state,
 .dc-node,
@@ -46,13 +59,30 @@
   min-height: 100%;
 }
 
+.dc-renderer-frame-boundary {
+  position: relative;
+  isolation: isolate;
+  width: max-content;
+  min-height: inherit;
+}
+
 .dc-container-shell {
+  position: relative;
+  min-width: 375px;
+  min-height: 200px;
+}
+
+.dc-canvas-surface {
   position: relative;
   isolation: isolate;
   display: grid;
   grid-template-rows: var(--dc-inset-block-start) minmax(0, 1fr) var(--dc-inset-block-end);
   grid-template-columns: var(--dc-inset-inline-start) minmax(0, 1fr) var(--dc-inset-inline-end);
   min-height: 200px;
+  --dc-safe-area-block-start: 0px;
+  --dc-safe-area-block-end: 0px;
+  --dc-safe-area-inline-start: 0px;
+  --dc-safe-area-inline-end: 0px;
   --dc-sized-inset-block-start: 0px;
   --dc-sized-inset-block-end: 0px;
   --dc-sized-inset-inline-start: 0px;
@@ -61,10 +91,10 @@
   --dc-measured-inset-block-end: 0px;
   --dc-measured-inset-inline-start: 0px;
   --dc-measured-inset-inline-end: 0px;
-  --dc-inset-block-start: calc(var(--dc-sized-inset-block-start) + var(--dc-measured-inset-block-start));
-  --dc-inset-block-end: calc(var(--dc-sized-inset-block-end) + var(--dc-measured-inset-block-end));
-  --dc-inset-inline-start: calc(var(--dc-sized-inset-inline-start) + var(--dc-measured-inset-inline-start));
-  --dc-inset-inline-end: calc(var(--dc-sized-inset-inline-end) + var(--dc-measured-inset-inline-end));
+  --dc-inset-block-start: calc(var(--dc-safe-area-block-start) + var(--dc-sized-inset-block-start) + var(--dc-measured-inset-block-start));
+  --dc-inset-block-end: calc(var(--dc-safe-area-block-end) + var(--dc-sized-inset-block-end) + var(--dc-measured-inset-block-end));
+  --dc-inset-inline-start: calc(var(--dc-safe-area-inline-start) + var(--dc-sized-inset-inline-start) + var(--dc-measured-inset-inline-start));
+  --dc-inset-inline-end: calc(var(--dc-safe-area-inline-end) + var(--dc-sized-inset-inline-end) + var(--dc-measured-inset-inline-end));
 }
 
 .dc-node-selection-plane {
@@ -75,25 +105,26 @@
   pointer-events: none;
 }
 
-.dc-container-shell--empty {
+.dc-canvas-surface--empty {
   min-height: 200px;
 }
 
-.dc-container-shell__content {
+.dc-canvas-surface__scrollport {
   grid-area: 2 / 2;
   min-width: 0;
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
 }
 
-.dc-container-shell__content-layout {
+.dc-canvas-surface__content-layout {
   position: relative;
   display: flex;
   flex-direction: column;
   min-height: 100%;
 }
 
-.dc-container-shell__content-row {
+.dc-canvas-surface__content-row {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr) max-content;
   flex: 1 0 auto;
@@ -101,12 +132,12 @@
   min-height: 100%;
 }
 
-.dc-container-shell__content-edge--inline-start {
+.dc-canvas-surface__content-edge--inline-start {
   grid-column: 1;
   min-width: 0;
 }
 
-.dc-container-shell__content-surface {
+.dc-canvas-surface__content {
   grid-column: 2;
   position: relative;
   min-width: 0;
@@ -114,32 +145,32 @@
   box-sizing: border-box;
 }
 
-.dc-container-shell__content-edge--inline-end {
+.dc-canvas-surface__content-edge--inline-end {
   grid-column: 3;
   min-width: 0;
 }
 
-.dc-container-shell--empty > .dc-container-shell__content,
-.dc-container-shell--empty .dc-container-shell__content-layout,
-.dc-container-shell--empty .dc-container-shell__content-row,
-.dc-container-shell--empty .dc-container-shell__content-surface {
+.dc-canvas-surface--empty > .dc-canvas-surface__scrollport,
+.dc-canvas-surface--empty .dc-canvas-surface__content-layout,
+.dc-canvas-surface--empty .dc-canvas-surface__content-row,
+.dc-canvas-surface--empty .dc-canvas-surface__content {
   min-height: inherit;
 }
 
-.dc-container-shell--empty .dc-container-shell__content-surface {
+.dc-canvas-surface--empty .dc-canvas-surface__content {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.dc-container-shell__layer-item--self > [data-dc-component="node"] {
+.dc-canvas-surface__layer-item--self > [data-dc-component="node"] {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.dc-container-shell__layer-item--self > [data-dc-component="node"] > [data-dc-node-surface],
-.dc-container-shell__layer-item--self > [data-dc-component="node"] > :first-child {
+.dc-canvas-surface__layer-item--self > [data-dc-component="node"] > [data-dc-node-surface],
+.dc-canvas-surface__layer-item--self > [data-dc-component="node"] > :first-child {
   pointer-events: auto;
 }
 

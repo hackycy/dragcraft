@@ -88,7 +88,8 @@
       ],
       "examples": [
         { "repositoryPath": "examples/guide-project/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/App.vue" },
-        { "repositoryPath": "packages/device-frames/src/components/DeviceFrameShell.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/packages/device-frames/src/components/DeviceFrameShell.ts" }
+        { "repositoryPath": "packages/device-frames/src/definitions.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/packages/device-frames/src/definitions.ts" },
+        { "repositoryPath": "packages/renderer/src/components/RootRenderer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/packages/renderer/src/components/RootRenderer.ts" }
       ],
       "packages": [
         { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" },

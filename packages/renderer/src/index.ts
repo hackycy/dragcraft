@@ -91,6 +91,8 @@ export type {
   ContainerDropTarget,
   ContainerRegionOutletDropProps,
   ContainerRegionOutletProps,
+  ContainerShell,
+  ContainerShellSource,
   DeepReadonly,
   EmptyStateProps,
   ForbiddenOverlayProps,

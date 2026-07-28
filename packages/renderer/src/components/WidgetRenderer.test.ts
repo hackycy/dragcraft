@@ -1,8 +1,7 @@
 import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode, WidgetMeta } from '@dragcraft/core'
 // @vitest-environment happy-dom
-import type { Component, VNode } from 'vue'
+import type { Component } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
-import type { NodeSelectionPresentationHost } from '../selection-presentation'
 import type { RendererContext } from '../types'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -748,6 +747,19 @@ describe('widgetRenderer', () => {
           toJSON: () => ({}),
         } as DOMRect
       }
+      if (this instanceof HTMLElement && this.hasAttribute('data-dc-overlay-boundary')) {
+        return {
+          top: 40,
+          right: 480,
+          bottom: 640,
+          left: 80,
+          width: 400,
+          height: 600,
+          x: 80,
+          y: 40,
+          toJSON: () => ({}),
+        } as DOMRect
+      }
       if (this instanceof HTMLElement && this.classList.contains('dc-node__handle-anchor')) {
         return {
           top: 0,
@@ -817,36 +829,18 @@ describe('widgetRenderer', () => {
       },
     })
     const TestShell = defineComponent({
-      props: {
-        layerVNodes: { type: Object, default: () => ({}) },
-        selectionPresentation: { type: Object, required: true },
-      },
-      setup(props) {
-        const presentation = props.selectionPresentation as NodeSelectionPresentationHost
-        return () => h('div', { class: 'test-shell' }, [
-          h('div', {
-            ref: (element: unknown) => {
-              presentation.registerPlane('content', element instanceof HTMLElement ? element : null)
-            },
-            class: 'test-content-plane',
-          }),
-          h('div', {
-            ref: (element: unknown) => {
-              presentation.registerPlane('viewport', element instanceof HTMLElement ? element : null)
-            },
-            class: 'test-viewport-plane',
-          }, Object.values(props.layerVNodes as Record<string, VNode[]>).flat()),
-        ])
+      setup(_, { slots }) {
+        return () => h('div', { class: 'test-shell' }, slots.default?.())
       },
     })
     const host = document.createElement('div')
     document.body.appendChild(host)
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect
     HTMLElement.prototype.getBoundingClientRect = function getBoundingClientRect() {
-      if (this instanceof HTMLElement && this.classList.contains('test-content-plane')) {
+      if (this instanceof HTMLElement && this.dataset.dcSelectionPlane === 'content') {
         return { top: 0, right: 375, bottom: 600, left: 0, width: 375, height: 600, x: 0, y: 0, toJSON: () => ({}) } as DOMRect
       }
-      if (this instanceof HTMLElement && this.classList.contains('test-viewport-plane')) {
+      if (this instanceof HTMLElement && this.dataset.dcSelectionPlane === 'viewport') {
         return { top: 0, right: 375, bottom: 600, left: 0, width: 375, height: 600, x: 0, y: 0, toJSON: () => ({}) } as DOMRect
       }
       if (this instanceof HTMLElement && this.dataset.nodeId === 'layer-child') {
@@ -872,9 +866,9 @@ describe('widgetRenderer', () => {
       engine.store.selectNode('layer-child')
       await nextTick()
       await vi.waitFor(() => {
-        expect(host.querySelector('.test-viewport-plane .dc-node__selection-projection--container-owned')).not.toBeNull()
+        expect(host.querySelector('[data-dc-selection-plane="viewport"] .dc-node__selection-projection--container-owned')).not.toBeNull()
       })
-      expect(host.querySelector('.test-content-plane .dc-node__selection-projection')).toBeNull()
+      expect(host.querySelector('[data-dc-selection-plane="content"] .dc-node__selection-projection')).toBeNull()
     }
     finally {
       HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect

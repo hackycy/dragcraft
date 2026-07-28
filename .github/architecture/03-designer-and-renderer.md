@@ -72,7 +72,7 @@ src/
 - `authoring: 'schema-managed'` 的物料不进入标准面板，其实例只能由初始 Schema、import 或 migration 引入。
 - 标准面板中其余物料项始终可拖拽，`WidgetMeta.creatable` 在画布 drag-over/drop 阶段统一裁决是否可创建。
 
-当 `creatable` 返回禁止决策时，画布显示红色虚线框，并在框中展示禁止原因；如果没有提供原因，则展示默认提示。禁用提示层由 container shell 渲染，使用 device frame 时覆盖整个设备预览区域，提示文本位于 frame 中央。自定义物料卡片仍会收到 `draggable: true` 与 `disabled: false`，避免左栏和画布出现两套创建规则。
+当 `creatable` 返回禁止决策时，画布显示红色虚线框，并在框中展示禁止原因；如果没有提供原因，则展示默认提示。禁止层由 Renderer 的稳定 Frame Boundary 渲染，Container Shell 不接收也不能遗漏或重复渲染它。自定义物料卡片仍会收到 `draggable: true` 与 `disabled: false`，避免左栏和画布出现两套创建规则。
 
 结构树 tab 使用 `DcStructurePanel`，展示 `root.children`，并把已解析容器展开为注册顺序的虚拟 region 与 region 普通子节点：
 
@@ -209,7 +209,7 @@ interface MaterialItemRenderProps {
 
 物料栏属于高密度工具区，推荐常驻展示只包含图标、标题和短标签；描述、关键词和更多业务数据优先用于搜索、tooltip 或完整替换 `materialPanelRenderer` 后的详情交互，避免两列栏位出现横向滚动或信息噪声。
 
-画布由裁剪视口和可平移 stage 组成。stage 先以视口中心为数学原点，再根据 viewport 绝对位置、stage 尺寸和 `devicePixelRatio` 把最终左上角吸附到物理像素网格；恰好落在半物理像素时向 inline-start/block-start 取整，避免奇数尺寸 Frame 在 DPR=1 下产生模糊边线或单侧空隙。这个吸附量独立于用户 pan offset，并在 viewport/stage 尺寸、工作区布局或 DPR 变化时重新计算。stage 的最小工作宽度不等于设备 preset 宽度，较窄 Frame 必须通过 inline auto margin 在 stage 内居中。frame 大于视口时仍在相对两侧等量裁切，不通过滚动位置模拟居中。
+画布由裁剪视口和可平移 stage 组成。stage 先以视口中心为数学原点，再根据 viewport 绝对位置、stage 尺寸和 `devicePixelRatio` 把最终左上角吸附到物理像素网格；恰好落在半物理像素时向 inline-start/block-start 取整，避免奇数尺寸 Frame 在 DPR=1 下产生模糊边线或单侧空隙。这个吸附量独立于用户 pan offset，并在 viewport/stage 尺寸、工作区布局或 DPR 变化时重新计算。stage 的最小工作宽度不等于 Device Frame Definition 的 viewport 宽度，较窄 Frame 必须通过 inline auto margin 在 stage 内居中。frame 大于视口时仍在相对两侧等量裁切，不通过滚动位置模拟居中。
 
 抓手模式维护独立的二维平移量，因此不受内容尺寸和滚动边界限制。用户也可以在指针模式下按住空格临时抓取；重置位置会将平移量归零，设备 frame 被替换时同样回到中心。普通内容更新和尺寸变化不会覆盖用户已经拖动的位置。
 
@@ -249,6 +249,7 @@ src/
 │   └── useToolbarPosition.ts
 ├── components/
 │   ├── RootRenderer.ts
+│   ├── CanvasSurface.ts
 │   ├── WidgetRenderer.ts
 │   ├── DefaultContainerShell.ts
 │   ├── DefaultDropIndicator.ts
@@ -277,14 +278,19 @@ RootRenderer
   -> provide RendererContext
   -> create one deeply-readonly schema snapshot per schema revision
   -> cache LayoutPlan, schema index, and action lock indices for that revision
-  -> render containerShell and emptyState
+  -> keep renderer-frame-boundary stable
+  -> resolve static containerShell or host-owned readonly ref
+  -> render CanvasSurface into the Container Shell default slot
+      -> render flow regions, chrome, layers, scrollport, empty state
+      -> own content and viewport selection planes
+  -> own root selection plane and forbidden overlay outside Container Shell
   -> WidgetRenderer[]
       -> useWidgetNode
       -> useNodeActions
       -> useNodeDrag
       -> resolve component from componentMap
       -> render nodeMask, inline nodeHandle, or Frame-external container handle
-      -> project selected node into shell plane
+      -> project selected node into a Renderer selection plane
       -> render nodeSelection presenter
       -> render nodeToolbar
       -> apply nodeWrapper
@@ -294,7 +300,7 @@ RootRenderer
 
 `RendererContext.schema` 是每个 schema revision 共享的一份深冻结快照。`RootRenderer`、`useWidgetNode`、`useNodeActions`、行为谓词与 container drag-over 不再按节点调用 `state.getSchema()`；layout plan、ownership index 和 action lock sets 也按 revision 生成一次，避免渲染与结构树退化为 O(N²) 的全表克隆或扫描。
 
-selected 高亮和浮动工具栏使用不同的呈现通道。高亮生成 Renderer-owned `NodeSelectionProjection`，并 Teleport 到 container shell 注册的 `root`、`content` 或 `viewport` 平面；工具栏继续 Teleport 到 Designer 全局 interaction layer。投影同时保留物料真实 `materialBounds` 与最终视觉 `bounds`：root owner 使用 `root-segment` 和覆盖完整 container shell/Device Frame 的 `root` 平面，`bounds` 横向扩展到整段 Frame、纵向跟随物料，默认 presenter 的上下边位于物料外侧、左右边占用 Frame 边框带；container owner 使用 `material-bounds`，其 `bounds` 与 wrapper border box 相同，并继承所属根级物料的 `content` 或 `viewport` 平面。root flow 与 sticky/flow chrome 向容器子树传播 content plane，fixed chrome 与 layer 传播 viewport plane；placement plane 不决定 root owner 自身的投影平面。各平面的原生滚动和 overflow 负责裁剪，选中态不改变物料布局。
+selected 高亮和浮动工具栏使用不同的呈现通道。高亮生成 Renderer-owned `NodeSelectionProjection`，并 Teleport 到 Renderer 注册的 `root`、`content` 或 `viewport` 平面；工具栏继续 Teleport 到 Designer 全局 interaction layer。root 平面属于稳定 Frame Boundary，content 与 viewport 平面属于内部 Canvas Surface，Container Shell 不参与注册。投影同时保留物料真实 `materialBounds` 与最终视觉 `bounds`：root owner 使用 `root-segment`，container owner 使用 `material-bounds`；root flow 与 sticky/flow chrome 向容器子树传播 content plane，fixed chrome 与 layer 传播 viewport plane。各平面的滚动和 overflow 负责裁剪，选中态不改变物料布局。
 
 resolved 容器的 handle 同样进入当前画布的全局 interaction layer，但不进入 selected 呈现平面。它与 root-owned selected toolbar 共享 `left-start` 定位语义：横向位于 Frame 左侧，纵向与容器可见顶部对齐，并限制在画布 interaction boundary 内。handle 在未选中时常驻，以低透明度呈现，并在自身 hover 或 focus 时恢复完整视觉；selected 后立即退出并由同位置的 toolbar 接管。它不依赖或写入容器物料 hover 状态。普通 unmasked 物料继续使用 wrapper 内的 handle。
 
@@ -412,7 +418,7 @@ Renderer 只负责把 schema DSL 解释成设计器预览效果，不把 DSL 绑
 
 | DSL | 预览位置 |
 | --- | --- |
-| `schema.root.style.surface` | 默认 container shell 或 device frame 内容 surface |
+| `schema.root.style.surface` | Renderer-owned Canvas Surface 的业务内容区域 |
 | `node.style.container` | Renderer 拥有的节点外层盒子 |
 | `node.style.content` | 实际 widget 组件 vnode 的 `style` |
 
@@ -458,7 +464,7 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 
 | 扩展点 | 默认实现 | 说明 |
 | --- | --- | --- |
-| `containerShell` | `DefaultContainerShell` | 根画布容器壳 |
+| `containerShell` | `DefaultContainerShell` | slot-only Container Shell；接受静态组件或宿主持有的 readonly component ref |
 | `dropIndicator` | `DefaultDropIndicator` | 拖拽指示器 |
 | `nodeWrapper` | 无 | 包裹每个节点 |
 | `nodeToolbar` | `DefaultNodeToolbar` | 节点浮动工具栏 |
@@ -468,7 +474,7 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 | `emptyState` | `DefaultEmptyState` | 空画布状态 |
 | `widgetFallback` | `DefaultWidgetFallback` | 未知 widget fallback |
 
-自定义 `containerShell` 接收预先解析的 `regionVNodes`、`chromeVNodes`、`layerVNodes`、`layoutPlan` 与 `surfaceStyle: StyleValueMap`。Shell 不读取 schema；`surfaceStyle` 可包含字符串、数字等样式值，只能应用到内容 surface，不能覆盖 scrollport、inset、stacking context 等结构层。content selection plane 必须位于 scrollport 内的完整内容布局中，随内容自然滚动；root/viewport plane 留在 Shell 根坐标系。
+自定义 `containerShell` 不接收 Renderer props，只渲染一次 default slot。slot 是已经完成 flow region、chrome、layer、滚动、inset、空态、surface style 与 content/viewport 选择平面的完整 Canvas Surface。稳定 Frame Boundary 位于 Shell 外部并拥有 root 选择平面、禁止层和 toolbar boundary，因此切换 Shell 不会重建 Designer、Engine、Schema 或 history。Shell 可以通过继承 CSS 变量提供 safe area，但不能读取 Schema、解释 `LayoutPlan` 或重建业务 VNode。
 
 ## 交互状态
 
@@ -487,26 +493,32 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 - `autoUpdate` 跟踪祖先滚动、尺寸变化和布局偏移，只在节点被选中时运行，不启用逐帧轮询。
 - root-owned 工具栏使用纵向 `left-start`，横坐标由 `[data-dc-toolbar-boundary]` 的左边缘和工具栏真实宽度决定。
 - container-owned 工具栏使用水平 `top-end`；上方空间不足时翻转为 `bottom-end`，并在画布 viewport 内 shift。
-- container-owned 工具栏只锚定节点可见交集；节点完全不可见时保持逻辑选中并隐藏工具栏。selected 投影 DOM 仍存在，由 shell 平面自然裁剪。
+- container-owned 工具栏只锚定节点可见交集；节点完全不可见时保持逻辑选中并隐藏工具栏。selected 投影 DOM 仍存在，由 Canvas Surface 的 content 或 viewport 平面自然裁剪。
 - 工具栏动作始终来自同一个 `NodeActionRegistry`，owner 只改变排列和定位，不改变动作解析。
 - Widget 离开画布可见区域时隐藏 toolbar；Renderer 独立使用时退回浏览器 viewport。
-- 工具栏 Teleport 到画布全局 interaction layer；selected 投影 Teleport 到 shell-owned interaction presentation plane。
+- 工具栏 Teleport 到画布全局 interaction layer；selected 投影 Teleport 到 Renderer-owned selection plane。
 
 ## 主题契约层级
 
 ```plaintext
 [data-dc-component="root-renderer"]
-  [data-dc-component="container-shell"]
-    [data-dc-component="empty-state"]
-    [data-dc-component="node"][data-dc-state~="root-owned"]
-    [data-dc-component="node"][data-dc-state~="container-owned"]
-      [data-dc-node-surface]
-      [data-dc-component="node-handle"]
-    [data-dc-component="drop-indicator"]
+  [data-dc-component="renderer-frame-boundary"]
+    [data-dc-component="container-shell"]
+      [data-dc-component="canvas-surface"]
+        [data-dc-component="empty-state"]
+        [data-dc-component="node"][data-dc-state~="root-owned"]
+        [data-dc-component="node"][data-dc-state~="container-owned"]
+          [data-dc-node-surface]
+          [data-dc-component="node-handle"]
+        [data-dc-component="drop-indicator"]
+        [data-dc-component="node-selection"]
+    [data-dc-component="node-selection"]
+    [data-dc-component="forbidden-overlay"]
+  [data-dc-component="widget-fallback"]
+
+[data-dc-component="canvas"] [data-dc-part="interaction-layer"]
   [data-dc-component="node-handle-anchor"]
   [data-dc-component="node-toolbar"]
-  [data-dc-component="node-selection"]
-  [data-dc-component="widget-fallback"]
 ```
 
 Renderer 通过 `@dragcraft/renderer/structure.css` 提供必要结构样式；完整工作台主题会自动聚合该入口。外部视觉配方只依赖公开的 component/part/state 与 token，Renderer 内部 class 不属于主题契约。

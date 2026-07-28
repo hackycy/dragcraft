@@ -5,23 +5,32 @@ import {
   useDesigner,
 } from '@dragcraft/designer'
 import {
-  createDeviceFrameContext,
-  DEVICE_FRAME_CONTEXT_KEY,
+  BUILT_IN_DEVICE_FRAMES,
   DevicePicker,
+  IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
-import { computed, onBeforeUnmount, provide, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { guideComponentMap } from './domain/widgets'
 import { createPageDesigner } from './editor/create-page-designer'
 import { createMemoryPageRepository } from './host/page-repository'
 import { guideRuntimeContainerMap, RuntimePage } from './runtime'
 
 const pageId = 'summer-campaign'
-const designer = createPageDesigner()
-const { exportSchema, schema } = useDesigner(designer)
 // #region tutorial-device-frame
-const deviceContext = createDeviceFrameContext({ initialDevice: 'iphone' })
-provide(DEVICE_FRAME_CONTEXT_KEY, deviceContext)
+const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
+const activeDeviceFrame = computed(() =>
+  BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
+  ?? IPHONE_DEVICE_FRAME,
+)
+const activeContainerShell = computed(() => activeDeviceFrame.value.containerShell)
+
+function selectDeviceFrame(id: string) {
+  if (BUILT_IN_DEVICE_FRAMES.some(definition => definition.id === id))
+    activeDeviceFrameId.value = id
+}
 // #endregion tutorial-device-frame
+const designer = createPageDesigner({ containerShell: activeContainerShell })
+const { exportSchema, schema } = useDesigner(designer)
 // #region tutorial-save-and-preview
 const repository = createMemoryPageRepository()
 const revision = ref(0)
@@ -68,7 +77,12 @@ onBeforeUnmount(() => designer.dispose())
         <span>{{ status }}</span>
       </div>
       <div class="guide-project__controls">
-        <DevicePicker :context="deviceContext" :translate="designer.i18n.t" />
+        <DevicePicker
+          :definitions="BUILT_IN_DEVICE_FRAMES"
+          :model-value="activeDeviceFrameId"
+          :translate="designer.i18n.t"
+          @update:model-value="selectDeviceFrame"
+        />
         <button type="button" @click="saveDraft">保存草稿</button>
         <button type="button" @click="reloadDraft">加载草稿</button>
         <button type="button" @click="showPreview = !showPreview">

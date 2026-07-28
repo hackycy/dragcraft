@@ -4,13 +4,13 @@ workflow: shell
 status: passed
 evidence:
   - dragcraft shell playbook
-  - 主题/设备框指南、Renderer 类型和 DeviceFrameShell 实现
+  - 主题/设备框指南、Renderer 类型、Device Frame Definitions 和宿主示例
 verification:
-  - pnpm build:packages、pnpm --filter playground build
-  - Designer DcMaterialItem 与 DeviceFrameShell 窄测试
-  - curl --head http://localhost:9981/
+  - Renderer、Designer 与 device-frames package tests
+  - playground 与 guide-project production builds
+  - skills:check 与 skills:test
 ---
 
 # Shell 结果
 
-agent 在隔离 worktree 中仅替换 `materialItemRenderer` 的内部内容，保留 Designer 的拖拽、选中、命令和放置校验；设备 Shell 继续转发提示层并注册三种选择投影平面。构建和窄测试通过。当前环境没有可控浏览器，因此未取得交互截图。
+实现保留 Designer 的拖拽、选中、命令和放置校验；Active Device Frame 由宿主持有，受控 Picker 只发出 ID 请求，readonly Container Shell ref 负责响应式切换。Container Shell 只渲染一次 default slot，Canvas Surface、三种选择平面与禁止层继续由 Renderer 拥有。package tests 和两个宿主构建通过。

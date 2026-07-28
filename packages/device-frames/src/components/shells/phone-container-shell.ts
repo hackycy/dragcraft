@@ -1,17 +1,8 @@
-import type { LayoutPlan, StyleValueMap } from '@dragcraft/core'
-import type { PropType, VNode, VNodeChild } from 'vue'
-import type { DeviceFrameSelectionPresentationHost } from '../../types'
-import type { AndroidNavigationIcon } from './system-icons'
+import type { VNode, VNodeChild } from 'vue'
+import type { AndroidNavigationIcon } from '../frames/system-icons'
 import { defineComponent, h } from 'vue'
-import { renderDeviceFrame, useFrameViewport } from '../frame-viewport'
-import {
-  renderAndroidNavigationIcon,
-  renderHomeIndicator,
-  renderSystemBattery,
-  renderSystemCellular,
-  renderSystemWifi,
-  renderWaterdropCamera,
-} from './system-icons'
+import { renderAndroidNavigationIcon, renderHomeIndicator, renderSystemBattery, renderSystemCellular, renderSystemWifi, renderWaterdropCamera } from '../frames/system-icons'
+import { renderCanvasViewport, renderDeviceContainerShell } from './device-container-shell'
 
 type PhoneStatusBar
   = 'iphone-dynamic-island'
@@ -25,46 +16,11 @@ type PhoneNavigation
     | 'android-standard'
     | 'android-waterdrop'
 
-interface PhoneFrameProfile {
+interface PhoneContainerShellProfile {
   name: string
   modifierClass: string
   statusBar: PhoneStatusBar
   navigation?: PhoneNavigation
-}
-
-const phoneFrameProps = {
-  layoutPlan: {
-    type: Object as PropType<LayoutPlan>,
-    default: undefined,
-  },
-  chromeVNodes: {
-    type: Array as PropType<VNode[]>,
-    default: () => [],
-  },
-  layerVNodes: {
-    type: Object as PropType<Record<string, VNode[]>>,
-    default: () => ({}),
-  },
-  forbiddenOverlayVNode: {
-    type: Object as PropType<VNode | null>,
-    default: null,
-  },
-  surfaceStyle: {
-    type: Object as PropType<StyleValueMap>,
-    default: undefined,
-  },
-  selectionPresentation: {
-    type: Object as PropType<DeviceFrameSelectionPresentationHost>,
-    default: undefined,
-  },
-  viewportWidth: {
-    type: Number,
-    default: undefined,
-  },
-  viewportHeight: {
-    type: Number,
-    default: undefined,
-  },
 }
 
 function renderIPhoneStatusIcons(): VNode {
@@ -162,39 +118,23 @@ function renderAndroidNavigation(navigation: 'android-standard' | 'android-water
 }
 
 function renderNavigation(navigation: PhoneNavigation | undefined): VNodeChild {
-  if (navigation === 'home-indicator') {
+  if (navigation === 'home-indicator')
     return renderHomeIndicator()
-  }
   if (navigation === 'android-standard' || navigation === 'android-waterdrop')
     return renderAndroidNavigation(navigation)
-
   return null
 }
 
-export function createPhoneFrame(profile: PhoneFrameProfile) {
+export function createPhoneContainerShell(profile: PhoneContainerShellProfile) {
   return defineComponent({
     name: profile.name,
-    props: phoneFrameProps,
 
-    setup(props, { slots }) {
-      const renderViewport = useFrameViewport(() => ({
-        content: slots.default?.() ?? [],
-        chromeVNodes: props.chromeVNodes,
-        layerVNodes: props.layerVNodes,
-        plan: props.layoutPlan,
-        surfaceStyle: props.surfaceStyle,
-        selectionPresentation: props.selectionPresentation,
-        viewportHeight: props.viewportHeight,
-      }))
-
-      return () => renderDeviceFrame(profile.modifierClass, props.selectionPresentation, [
+    setup(_, { slots }) {
+      return () => renderDeviceContainerShell(profile.modifierClass, [
         renderStatusBar(profile.statusBar),
-        renderViewport(),
+        renderCanvasViewport(slots.default?.()),
         renderNavigation(profile.navigation),
-      ], {
-        frameOverlay: props.forbiddenOverlayVNode,
-        viewportWidth: props.viewportWidth,
-      })
+      ])
     },
   })
 }

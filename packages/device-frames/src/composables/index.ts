@@ -1,1 +1,0 @@
-export { useDeviceFrame } from './useDeviceFrame'

@@ -1,23 +1,20 @@
 import type { CreationBlockReason, DeepReadonly, DesignerEngine, DesignerSchema, LayoutNodeEntry, LayoutPlan, NodeDestination, PlacementDecision } from '@dragcraft/core'
-import type { Component, PropType, Ref, VNode } from 'vue'
+import type { PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
 import type { ActionInterceptor } from '../action-runtime'
 import type { RendererEventHooks } from '../event-hooks'
 import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions } from '../types'
 import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, normalizeStyleValueMap, resolveNodeLayout } from '@dragcraft/core'
-import { computed, defineComponent, h, provide } from 'vue'
+import { computed, defineComponent, h, isRef, provide } from 'vue'
 import { createRendererContext } from '../context'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
 import { RENDERER_CONTEXT_KEY } from '../types'
+import CanvasSurface from './CanvasSurface'
 import DefaultContainerShell from './DefaultContainerShell'
 import DefaultDropIndicator from './DefaultDropIndicator'
 import DefaultEmptyState from './DefaultEmptyState'
 import DefaultForbiddenOverlay from './DefaultForbiddenOverlay'
 import WidgetRenderer from './WidgetRenderer'
-
-function handlesForbiddenOverlay(component: Component): boolean {
-  return Boolean((component as Component & { __dcHandlesForbiddenOverlay?: boolean }).__dcHandlesForbiddenOverlay)
-}
 
 function regionEntryIndex(plan: LayoutPlan, entry: LayoutNodeEntry): number {
   return (plan.regions.get(entry.layout.region ?? DEFAULT_LAYOUT_REGION) ?? [])
@@ -167,9 +164,10 @@ export default defineComponent({
     provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
 
     // Resolve which container shell to use
-    const ContainerShell = computed(
-      () => props.extensions?.containerShell ?? DefaultContainerShell,
-    )
+    const ContainerShell = computed(() => {
+      const source = props.extensions?.containerShell
+      return (isRef(source) ? source.value : source) ?? DefaultContainerShell
+    })
 
     const ForbiddenOverlay = computed(
       () => props.extensions?.forbiddenOverlay ?? DefaultForbiddenOverlay,
@@ -244,14 +242,12 @@ export default defineComponent({
         )
       }
 
-      const contentVNodes = regionVNodes[DEFAULT_LAYOUT_REGION] ?? []
-
       // Empty state placeholder (only when the schema has no rendered nodes and not dragging)
       const isEmpty = plan.entries.length === 0 && !isDragOver
+      if (isEmpty)
+        regionVNodes[DEFAULT_LAYOUT_REGION] = [h(EmptyState, { isDragOver: false })]
+
       const ContainerShellComponent = ContainerShell.value
-      const fallbackForbiddenOverlayVNode = forbiddenOverlayVNode && !handlesForbiddenOverlay(ContainerShellComponent)
-        ? createForbiddenOverlayVNode()
-        : null
 
       return h(
         'div',
@@ -263,29 +259,34 @@ export default defineComponent({
         },
         [
           h(
-            ContainerShellComponent,
+            'div',
             {
-              class: { 'dc-container-shell--empty': isEmpty },
-              isEmpty,
-              regionVNodes,
-              chromeVNodes,
-              layerVNodes,
+              'class': 'dc-renderer-frame-boundary',
+              'data-dc-component': 'renderer-frame-boundary',
+              'data-dc-toolbar-boundary': '',
+            },
+            [
+              h(ContainerShellComponent, null, {
+                default: () => h(CanvasSurface, {
+                  isEmpty,
+                  regionVNodes,
+                  chromeVNodes,
+                  layerVNodes,
+                  layoutPlan: plan,
+                  surfaceStyle: normalizeStyleValueMap(schema.root.style?.surface),
+                  selectionPresentation,
+                }),
+              }),
+              h('div', {
+                'ref': (element: unknown) => {
+                  selectionPresentation.registerPlane('root', element instanceof HTMLElement ? element : null)
+                },
+                'class': 'dc-node-selection-plane dc-node-selection-plane--root',
+                'data-dc-selection-plane': 'root',
+                'aria-hidden': 'true',
+              }),
               forbiddenOverlayVNode,
-              layoutPlan: plan,
-              surfaceStyle: normalizeStyleValueMap(schema.root.style?.surface),
-              registry: props.engine.registry,
-              selectionPresentation,
-            },
-            {
-              default: () => {
-                if (isEmpty)
-                  return [h(EmptyState, { isDragOver: false })]
-                return contentVNodes
-              },
-              ...Object.fromEntries(
-                Object.entries(regionVNodes).map(([region, vnodes]) => [region, () => vnodes]),
-              ),
-            },
+            ],
           ),
           h('div', {
             'ref': (element: unknown) => {
@@ -295,7 +296,6 @@ export default defineComponent({
             'data-dc-selection-plane': 'fallback',
             'aria-hidden': 'true',
           }),
-          fallbackForbiddenOverlayVNode,
         ],
       )
     }

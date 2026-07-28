@@ -40,9 +40,7 @@
     "vue": ">=3.0.0"
   },
   "dependencies": {
-    "@dragcraft/core": "workspace:*",
-    "@dragcraft/icons": "workspace:*",
-    "@dragcraft/ui": "workspace:*"
+    "@dragcraft/icons": "workspace:*"
   },
   "devDependencies": {
     "@vue/test-utils": "catalog:testing",

@@ -159,7 +159,7 @@
 
 职责：
 
-- 提供 designer、device-frames 与宿主扩展复用的基础 Vue UI 模块。
+- 提供 designer 与宿主扩展复用的基础 Vue UI 模块。
 - 统一原生滚动 viewport、覆盖层 scrollbar、thumb 几何和 pointer 交互。
 - 发布结构 CSS、视觉 recipe 与完整默认样式入口。
 
@@ -173,7 +173,7 @@
 依赖与协作：
 
 - 只 peer 依赖 Vue，不依赖 designer、renderer 或 device-frames。
-- 被 designer 的物料、结构树和属性面板消费，也被 device-frames 的内容 viewport 消费。
+- 被 designer 的物料、结构树和属性面板消费。
 - Designer 的 Standard 主题聚合其结构层、视觉 recipe 和公开 token 契约。
 
 ## @dragcraft/device-frames
@@ -181,24 +181,23 @@
 职责：
 
 - 提供 iPhone 15 Pro、iPhone X、iPhone 8、普通与水滴屏 Android、Tablet、Desktop 画布设备容器。
-- 提供设备上下文和独立设备选择组件。
-- 作为 renderer `containerShell` 扩展点使用。
+- 提供冻结且引用稳定的 Device Frame Definitions、有序只读目录和受控设备选择组件。
+- 每个 definition 包含开放字符串 ID、展示元数据、可用 viewport 几何和 slot-only Container Shell。
 
 主要入口：
 
-- `createDeviceFrameContext()`。
-- `DeviceFrameShell`。
-- `DEVICE_FRAME_CONTEXT_KEY`。
+- `IPHONE_DEVICE_FRAME` 等单个内置 definition constants。
+- `BUILT_IN_DEVICE_FRAMES`。
 - `DevicePicker`。
-- `useDeviceFrame()`。
+- `DeviceFrameDefinition`、`DeviceFrameGroup`、`DeviceFrameViewport`。
 - `@dragcraft/device-frames/styles`。
 
 依赖与协作：
 
-- 依赖 Vue、`@dragcraft/core` layout/schema 类型、`@dragcraft/icons` 与 `@dragcraft/ui`，不依赖 designer 或 renderer。
-- 设备选择器是可选宿主组件，由业务放在应用顶栏或其他产品区域；designer 默认不提供设备选择。
-- `DevicePreset.width/height` 是 Frame adapter 的 viewport 尺寸来源；context 创建时校验并快照外部 presets。
-- 与 renderer 通过 `containerShell` 集成。
+- peer 依赖 Vue，workspace 依赖只有 `@dragcraft/icons`；不依赖 designer、renderer、core 或 ui。
+- Active Device Frame 与 ID 解析由宿主持有；包内没有 context、controller 或路由 Shell。
+- `DevicePicker` 接收 definitions/modelValue 并只发出 `update:modelValue`。
+- 宿主把 definition 的 `containerShell` 或 readonly component ref 传给 renderer `containerShell` seam。
 - 样式自包含，不依赖 Designer 的工作台主题。
 
 ## @dragcraft/icons
@@ -280,7 +279,7 @@
 @dragcraft/core -> @dragcraft/utils
 @dragcraft/designer -> @dragcraft/ui
 @dragcraft/designer -> @dragcraft/utils
-@dragcraft/device-frames -> @dragcraft/ui
+@dragcraft/device-frames -> @dragcraft/icons
 @dragcraft/renderer -> @dragcraft/utils
 ```
 

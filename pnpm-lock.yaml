@@ -257,15 +257,9 @@ importers:
 
   packages/device-frames:
     dependencies:
-      '@dragcraft/core':
-        specifier: workspace:*
-        version: link:../core
       '@dragcraft/icons':
         specifier: workspace:*
         version: link:../icons
-      '@dragcraft/ui':
-        specifier: workspace:*
-        version: link:../ui
     devDependencies:
       '@vue/test-utils':
         specifier: catalog:testing

@@ -1,10 +1,10 @@
-import type { DesignerSchema, FormSchema } from '@dragcraft/designer'
+import type { ContainerShellSource, DesignerSchema, FormSchema } from '@dragcraft/designer'
 import {
   CommandType,
   createConfirmActionInterceptor,
   createDesigner,
 } from '@dragcraft/designer'
-import { DeviceFrameShell } from '@dragcraft/device-frames'
+import { IPHONE_DEVICE_FRAME } from '@dragcraft/device-frames'
 import { defineComponent, h } from 'vue'
 import { guideComponentMap, guideWidgetGroups, guideWidgetMetas } from '../domain/widgets'
 import { createGuideFieldComponentMap } from '../forms'
@@ -76,7 +76,13 @@ const GuideEmptyState = defineComponent({
 })
 
 // #region tutorial-create-designer
-export function createPageDesigner(initialSchema = createGuideSchema()) {
+export interface CreatePageDesignerOptions {
+  initialSchema?: DesignerSchema
+  containerShell?: ContainerShellSource
+}
+
+export function createPageDesigner(options: CreatePageDesignerOptions = {}) {
+  const initialSchema = options.initialSchema ?? createGuideSchema()
   return createDesigner({
     engineOptions: {
       initialSchema,
@@ -119,7 +125,7 @@ export function createPageDesigner(initialSchema = createGuideSchema()) {
     extensions: {
       materialItemRenderer: ({ material }) => h('span', { class: 'guide-material-card' }, material.title),
       rendererExtensions: {
-        containerShell: DeviceFrameShell,
+        containerShell: options.containerShell ?? IPHONE_DEVICE_FRAME.containerShell,
         emptyState: GuideEmptyState,
       },
     },

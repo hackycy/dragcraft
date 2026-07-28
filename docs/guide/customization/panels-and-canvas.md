@@ -19,12 +19,12 @@ description: "替换物料栏、属性栏、rail 和 Renderer 的局部视觉部
 
 | 框架负责 | 宿主负责 |
 | --- | --- |
-| 拖拽外壳、选择投影、面板上下文与 Renderer VNode 分区 | 搜索、分组、产品操作、面板布局和自定义视觉 |
+| 拖拽外壳、Canvas Surface、选择投影、面板上下文与 Renderer 布局投影 | 搜索、分组、产品操作、面板布局和 Container Shell 外观 |
 
-完整面板替换后，宿主需要自行实现搜索、分组、选中节点读取和字段提交。自定义 `nodeWrapper` 必须渲染 default slot；自定义 `containerShell` 必须渲染 Renderer 提供的分区 VNode，并注册需要的选择平面。
+完整面板替换后，宿主需要自行实现搜索、分组、选中节点读取和字段提交。自定义 `nodeWrapper` 必须渲染 default slot；自定义 `containerShell` 不接收 Renderer props，只需恰好渲染一次包含完整 Canvas Surface 的 default slot。
 
-不要用私有 DOM class 覆盖交互，也不要重新读取 Schema 来重建 `containerShell` 的内容。
+不要用私有 DOM class 覆盖交互，也不要在 `containerShell` 中读取 Schema、解释 LayoutPlan、创建业务节点或重建 selection/forbidden 层。
 
-**完成检查**：自定义物料卡片保持拖拽可用；替换的 shell 仍渲染每个分区 VNode，选中投影与工具栏没有消失。
+**完成检查**：自定义物料卡片保持拖拽可用；替换的 Shell 只渲染一次 Canvas Surface，flow/chrome/layer、选中投影、禁止层与工具栏都没有消失。
 
 下一步：[主题、设备与国际化](/guide/customization/theme-device-and-i18n)；公开 props 和扩展字段见 [@dragcraft/designer](/reference/designer) 与 [Designer 渲染与容器](/reference/designer-rendering)。

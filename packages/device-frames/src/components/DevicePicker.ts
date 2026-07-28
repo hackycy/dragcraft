@@ -1,98 +1,97 @@
-import type { PropType, VNode } from 'vue'
-import type { DeviceFrameContext, DevicePreset, DeviceType } from '../types'
+import type { PropType, VNode, VNodeChild } from 'vue'
+import type { DeviceFrameDefinition, DeviceFrameGroup, DeviceFrameTranslate } from '../types'
 import { defineComponent, h } from 'vue'
 
-type Translate = (key: string, fallback?: string) => string
-type PresetGroup = 'iphone' | 'android' | 'other'
-
-const GROUPS: Array<{
-  id: PresetGroup
-  labelKey: string
-  fallback: string
-  types: readonly DeviceType[]
-}> = [
-  {
-    id: 'iphone',
-    labelKey: 'device.groups.iphone',
-    fallback: 'iPhone',
-    types: ['iphone', 'iphone-x', 'iphone-8'],
-  },
-  {
-    id: 'android',
-    labelKey: 'device.groups.android',
-    fallback: 'Android',
-    types: ['android', 'android-waterdrop'],
-  },
-  {
-    id: 'other',
-    labelKey: 'device.groups.other',
-    fallback: 'Other',
-    types: ['tablet', 'desktop'],
-  },
-]
-
-function translatePreset(preset: DevicePreset, translate: Translate | undefined): string {
-  return preset.labelKey && translate
-    ? translate(preset.labelKey, preset.label)
-    : preset.label
+function translatedLabel(definition: DeviceFrameDefinition, translate: DeviceFrameTranslate | undefined): string {
+  return definition.labelKey && translate
+    ? translate(definition.labelKey, definition.label)
+    : definition.label
 }
 
-function renderGroup(
-  group: typeof GROUPS[number],
-  presets: readonly DevicePreset[],
-  translate: Translate | undefined,
-): VNode | null {
-  const groupPresets = presets.filter(preset => group.types.includes(preset.type))
-  if (groupPresets.length === 0)
-    return null
+function renderOption(definition: DeviceFrameDefinition, translate: DeviceFrameTranslate | undefined): VNode {
+  return h('option', {
+    key: definition.id,
+    value: definition.id,
+  }, translatedLabel(definition, translate))
+}
 
-  return h('optgroup', {
-    key: group.id,
-    label: translate?.(group.labelKey, group.fallback) ?? group.fallback,
-  }, groupPresets.map(preset => h('option', {
-    key: preset.type,
-    value: preset.type,
-  }, translatePreset(preset, translate))))
+function renderOptions(definitions: readonly DeviceFrameDefinition[], translate: DeviceFrameTranslate | undefined): VNodeChild[] {
+  const groups = new Map<string, { definition: DeviceFrameGroup, frames: DeviceFrameDefinition[] }>()
+
+  for (const definition of definitions) {
+    if (!definition.group)
+      continue
+    const group = groups.get(definition.group.id)
+    if (group)
+      group.frames.push(definition)
+    else
+      groups.set(definition.group.id, { definition: definition.group, frames: [definition] })
+  }
+
+  const renderedGroups = new Set<string>()
+  return definitions.flatMap((definition) => {
+    const group = definition.group
+    if (!group)
+      return [renderOption(definition, translate)]
+    if (renderedGroups.has(group.id))
+      return []
+
+    renderedGroups.add(group.id)
+    const grouped = groups.get(group.id)!
+    return [h('optgroup', {
+      key: group.id,
+      label: grouped.definition.labelKey && translate
+        ? translate(grouped.definition.labelKey, grouped.definition.label)
+        : grouped.definition.label,
+    }, grouped.frames.map(item => renderOption(item, translate)))]
+  })
 }
 
 export default defineComponent({
   name: 'DcDevicePicker',
 
   props: {
-    context: {
-      type: Object as PropType<DeviceFrameContext>,
+    definitions: {
+      type: Array as PropType<readonly DeviceFrameDefinition[]>,
+      required: true,
+    },
+    modelValue: {
+      type: String,
       required: true,
     },
     translate: {
-      type: Function as PropType<Translate>,
+      type: Function as PropType<DeviceFrameTranslate>,
       default: undefined,
     },
   },
 
-  setup(props) {
+  emits: {
+    'update:modelValue': (id: string) => id.length > 0,
+  },
+
+  setup(props, { emit }) {
     return () => {
-      const selected = props.context.getPreset(props.context.currentDevice.value)
-        ?? props.context.presets[0]
+      const selected = props.definitions.find(definition => definition.id === props.modelValue)
       const label = props.translate?.('device.group', 'Preview device') ?? 'Preview device'
 
       return h('label', { class: 'dc-device-picker' }, [
-        selected && h('span', {
+        h('span', {
           'class': 'dc-device-picker__icon',
           'aria-hidden': 'true',
-        }, [
-          typeof selected.icon === 'string'
-            ? selected.icon
-            : h(selected.icon, { size: 15 }),
-        ]),
+        }, selected?.icon
+          ? [typeof selected.icon === 'string'
+              ? selected.icon
+              : h(selected.icon, { size: 15 })]
+          : []),
         h('select', {
           'class': 'dc-device-picker__select',
-          'value': props.context.currentDevice.value,
+          'value': props.modelValue,
           'aria-label': label,
-          'title': selected ? translatePreset(selected, props.translate) : label,
+          'title': selected ? translatedLabel(selected, props.translate) : label,
           'onChange': (event: Event) => {
-            props.context.setDevice((event.target as HTMLSelectElement).value as DeviceType)
+            emit('update:modelValue', (event.target as HTMLSelectElement).value)
           },
-        }, GROUPS.map(group => renderGroup(group, props.context.presets, props.translate))),
+        }, renderOptions(props.definitions, props.translate)),
       ])
     }
   },

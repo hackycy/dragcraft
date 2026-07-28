@@ -36,6 +36,7 @@ export default defineComponent({
     const canvasPan = useCanvasPan(viewportRef, stageRef)
     let mutationObserver: MutationObserver | null = null
     let observedTarget: HTMLElement | null = null
+    let observedContainerShell: Element | null = null
 
     const rendererExtensions = computed(() => ({
       ...(extensions.rendererExtensions ?? {}),
@@ -55,13 +56,19 @@ export default defineComponent({
       const nextTarget = content?.querySelector<HTMLElement>('[data-dc-toolbar-boundary]')
         ?? content?.querySelector<HTMLElement>('.dc-root-renderer')
         ?? null
+      const nextContainerShell = nextTarget?.firstElementChild ?? null
       hasToolbarBoundary.value = nextTarget?.hasAttribute('data-dc-toolbar-boundary') ?? false
 
-      if (nextTarget && observedTarget && nextTarget !== observedTarget)
-        canvasPan.reset()
-      if (!nextTarget || nextTarget === observedTarget)
+      if (!nextTarget)
         return
+      if (observedTarget && (
+        nextTarget !== observedTarget
+        || (observedContainerShell !== null && nextContainerShell !== observedContainerShell)
+      )) {
+        canvasPan.reset()
+      }
       observedTarget = nextTarget
+      observedContainerShell = nextContainerShell
     }
 
     onMounted(() => {

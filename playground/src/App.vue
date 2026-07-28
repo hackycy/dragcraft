@@ -2,13 +2,12 @@
 import { CommandType, createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
 import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@dragcraft/designer'
 import {
-  createDeviceFrameContext,
-  DEVICE_FRAME_CONTEXT_KEY,
-  DeviceFrameShell,
+  BUILT_IN_DEVICE_FRAMES,
   DevicePicker,
+  IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
 import { Modal } from 'ant-design-vue'
-import { defineComponent, h, provide } from 'vue'
+import { computed, defineComponent, h, ref } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
 import { buildPlaygroundFieldComponentMap } from './components/fields'
 import { IconArrowDown, IconCopy, IconPhone } from './components/icons'
@@ -24,10 +23,19 @@ import { useTemplateSwitch } from './composables/useTemplateSwitch'
 import SchemaIOModal from './shared/SchemaIOModal.vue'
 import { useSchemaIO } from './shared/use-schema-io'
 
-// ── Device Frame Context ────────────────────
+// ── Host-owned Active Device Frame ──────────
 
-const deviceCtx = createDeviceFrameContext({ initialDevice: 'iphone' })
-provide(DEVICE_FRAME_CONTEXT_KEY, deviceCtx)
+const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
+const activeDeviceFrame = computed(() =>
+  BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
+  ?? IPHONE_DEVICE_FRAME,
+)
+const activeContainerShell = computed(() => activeDeviceFrame.value.containerShell)
+
+function selectDeviceFrame(id: string) {
+  if (BUILT_IN_DEVICE_FRAMES.some(definition => definition.id === id))
+    activeDeviceFrameId.value = id
+}
 
 // ── Mini-Program Empty State ────────────────────
 
@@ -157,7 +165,7 @@ const designer = createDesigner({
   extensions: {
     materialItemRenderer,
     rendererExtensions: {
-      containerShell: DeviceFrameShell,
+      containerShell: activeContainerShell,
       emptyState: MiniProgramEmptyState,
     },
   },
@@ -196,8 +204,10 @@ function toggleLocale() {
     >
       <template #preview-controls>
         <DevicePicker
-          :context="deviceCtx"
+          :definitions="BUILT_IN_DEVICE_FRAMES"
+          :model-value="activeDeviceFrameId"
           :translate="designer.i18n.t"
+          @update:model-value="selectDeviceFrame"
         />
       </template>
     </PlaygroundHeader>

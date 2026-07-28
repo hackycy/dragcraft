@@ -1,15 +1,17 @@
 // @vitest-environment happy-dom
+import type { DeviceFrameDefinition } from '../types'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
-import { createDeviceFrameContext } from '../context'
+import { defineComponent, h } from 'vue'
+import { BUILT_IN_DEVICE_FRAMES } from '../definitions'
 import DevicePicker from './DevicePicker'
 
 describe('devicePicker', () => {
-  it('renders grouped device choices and switches context', async () => {
-    const context = createDeviceFrameContext({ initialDevice: 'iphone' })
+  it('renders definition metadata and emits a request without owning selection state', async () => {
     const wrapper = mount(DevicePicker, {
       props: {
-        context,
+        definitions: BUILT_IN_DEVICE_FRAMES,
+        modelValue: 'iphone',
         translate: (key: string, fallback?: string) => ({
           'device.group': 'Devices',
           'device.groups.iphone': 'Apple phones',
@@ -28,31 +30,38 @@ describe('devicePicker', () => {
     ])
     expect(wrapper.findAll('option')).toHaveLength(7)
     expect((select.element as HTMLSelectElement).value).toBe('iphone')
-    expect(wrapper.find('.dc-device-picker__icon').exists()).toBe(true)
 
     await select.setValue('android-waterdrop')
-    expect(context.currentDevice.value).toBe('android-waterdrop')
-    expect((select.element as HTMLSelectElement).value).toBe('android-waterdrop')
+
+    expect(wrapper.props('modelValue')).toBe('iphone')
+    expect(wrapper.emitted('update:modelValue')).toEqual([['android-waterdrop']])
   })
 
-  it('uses preset labels and group fallbacks without a translator', () => {
-    const context = createDeviceFrameContext()
-    const wrapper = mount(DevicePicker, { props: { context } })
+  it('supports arbitrary custom IDs and ungrouped definitions', async () => {
+    const CustomShell = defineComponent({
+      setup(_, { slots }) {
+        return () => h('div', slots.default?.())
+      },
+    })
+    const customDefinition: DeviceFrameDefinition = Object.freeze({
+      id: 'acme.preview-wide',
+      label: 'Acme Wide Preview',
+      viewport: Object.freeze({ width: 1440, height: 900 }),
+      containerShell: CustomShell,
+    })
+    const definitions = Object.freeze([customDefinition, ...BUILT_IN_DEVICE_FRAMES])
+    const wrapper = mount(DevicePicker, {
+      props: {
+        definitions,
+        modelValue: customDefinition.id,
+      },
+    })
 
-    expect(wrapper.get('select').attributes('aria-label')).toBe('Preview device')
-    expect(wrapper.findAll('optgroup').map(group => group.attributes('label'))).toEqual([
-      'iPhone',
-      'Android',
-      'Other',
-    ])
-    expect(wrapper.findAll('option').map(option => option.text())).toEqual([
-      'iPhone 15 Pro',
-      'iPhone X',
-      'iPhone 8',
-      'Android',
-      'Android Waterdrop',
-      'Tablet',
-      'Desktop',
-    ])
+    expect(wrapper.findAll('option').at(0)?.attributes('value')).toBe(customDefinition.id)
+    expect(wrapper.findAll('option').at(0)?.text()).toBe(customDefinition.label)
+    expect(wrapper.get('select').attributes('title')).toBe(customDefinition.label)
+
+    await wrapper.get('select').setValue('iphone-x')
+    expect(wrapper.emitted('update:modelValue')).toEqual([['iphone-x']])
   })
 })

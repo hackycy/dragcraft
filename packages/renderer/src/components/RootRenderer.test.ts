@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import type { DesignerSchema, NodePlacement } from '@dragcraft/core'
-import type { Component, PropType, VNode } from 'vue'
+import type { Component } from 'vue'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { createEngine } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, inject, nextTick, ref } from 'vue'
+import { createApp, defineComponent, h, inject, nextTick, readonly, ref, shallowRef } from 'vue'
 import { NODE_SELECTION_PLANE_KEY } from '../selection-presentation'
 import RootRenderer from './RootRenderer'
 
@@ -57,7 +57,7 @@ function mountDefaultRootRenderer(schema: DesignerSchema) {
 
 function renderedLayoutOrder(host: HTMLElement): string[] {
   return Array.from(host.querySelectorAll<HTMLElement>(
-    '.dc-container-shell [data-dc-component="node"], .dc-container-shell [data-dc-component="drop-indicator"]',
+    '.dc-canvas-surface [data-dc-component="node"], .dc-canvas-surface [data-dc-component="drop-indicator"]',
   )).map(element => element.dataset.nodeId ?? element.dataset.dcComponent ?? '')
 }
 
@@ -354,9 +354,9 @@ describe('rootRenderer forbidden overlay', () => {
     ]))
 
     try {
-      const shell = host.querySelector<HTMLElement>('[data-dc-component="container-shell"]')!
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="canvas-surface"]')!
       const fixed = host.querySelector<HTMLElement>('[data-dc-chrome-position="fixed"]')!
-      const fixedStack = fixed.closest<HTMLElement>('.dc-container-shell__chrome-stack--block-start[data-dc-avoid-content-stack="true"]')!
+      const fixedStack = fixed.closest<HTMLElement>('.dc-canvas-surface__chrome-stack--block-start[data-dc-avoid-content-stack="true"]')!
       const sticky = host.querySelector<HTMLElement>('[data-dc-chrome-position="sticky"]')!
       const layer = host.querySelector<HTMLElement>('[data-dc-layer="float"]')!
       const layerItem = host.querySelector<HTMLElement>('[data-dc-layer-mode="framework"]')!
@@ -373,7 +373,7 @@ describe('rootRenderer forbidden overlay', () => {
       expect(layerItem.style.position).toBe('absolute')
       expect(layerItem.dataset.dcLayerBlock).toBe('end')
       expect(layerItem.dataset.dcLayerInline).toBe('end')
-      expect(shell.style.getPropertyValue('--dc-sized-inset-block-start')).toBe('calc(48px + 32px)')
+      expect(surface.style.getPropertyValue('--dc-sized-inset-block-start')).toBe('calc(48px + 32px)')
     }
     finally {
       app.unmount()
@@ -395,13 +395,13 @@ describe('rootRenderer forbidden overlay', () => {
     ]))
 
     try {
-      const row = host.querySelector<HTMLElement>('.dc-container-shell__content-row')!
-      const start = row.querySelector<HTMLElement>(':scope > .dc-container-shell__content-edge--inline-start [data-node-id="sidebar"]')!
-      const end = row.querySelector<HTMLElement>(':scope > .dc-container-shell__content-edge--inline-end [data-node-id="rail"]')!
-      const surface = row.querySelector<HTMLElement>(':scope > .dc-container-shell__content-surface')!
+      const row = host.querySelector<HTMLElement>('.dc-canvas-surface__content-row')!
+      const start = row.querySelector<HTMLElement>(':scope > .dc-canvas-surface__content-edge--inline-start [data-node-id="sidebar"]')!
+      const end = row.querySelector<HTMLElement>(':scope > .dc-canvas-surface__content-edge--inline-end [data-node-id="rail"]')!
+      const surface = row.querySelector<HTMLElement>(':scope > .dc-canvas-surface__content')!
 
-      expect(start.closest('.dc-container-shell__content-row')).toBe(row)
-      expect(end.closest('.dc-container-shell__content-row')).toBe(row)
+      expect(start.closest('.dc-canvas-surface__content-row')).toBe(row)
+      expect(end.closest('.dc-canvas-surface__content-row')).toBe(row)
       expect(surface.querySelector('[data-node-id="content"]')).not.toBeNull()
       expect(start.parentElement?.style.position).toBe('sticky')
       expect(start.parentElement?.style.left).toBe('0px')
@@ -428,10 +428,10 @@ describe('rootRenderer forbidden overlay', () => {
     }]))
 
     try {
-      const shell = host.querySelector<HTMLElement>('[data-dc-component="container-shell"]')!
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="canvas-surface"]')!
       const chrome = host.querySelector<HTMLElement>('[data-dc-chrome-position="fixed"]')!
       expect(chrome.dataset.dcAvoidContent).toBe('false')
-      expect(shell.style.getPropertyValue('--dc-measured-inset-block-start')).toBe('0px')
+      expect(surface.style.getPropertyValue('--dc-measured-inset-block-start')).toBe('0px')
     }
     finally {
       app.unmount()
@@ -441,16 +441,16 @@ describe('rootRenderer forbidden overlay', () => {
 
   it('uses inset scrollport boundaries and keeps selection above business layers', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
-    const shellRule = css.match(/\.dc-container-shell\s*\{[^}]*\}/)?.[0]
-    const contentRule = css.match(/\.dc-container-shell__content\s*\{[^}]*\}/)?.[0]
-    const contentRowRule = css.match(/\.dc-container-shell__content-row\s*\{[^}]*\}/)?.[0]
+    const surfaceRule = css.match(/\.dc-canvas-surface\s*\{[^}]*\}/)?.[0]
+    const scrollportRule = css.match(/\.dc-canvas-surface__scrollport\s*\{[^}]*\}/)?.[0]
+    const contentRowRule = css.match(/\.dc-canvas-surface__content-row\s*\{[^}]*\}/)?.[0]
     const selectionRule = css.match(/\.dc-node-selection-plane\s*\{[^}]*\}/)?.[0]
 
-    expect(shellRule).toContain('display: grid')
-    expect(shellRule).toContain('grid-template-rows: var(--dc-inset-block-start)')
-    expect(contentRule).toContain('grid-area: 2 / 2')
-    expect(contentRule).toContain('overflow: auto')
-    expect(contentRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
+    expect(surfaceRule).toContain('display: grid')
+    expect(surfaceRule).toContain('grid-template-rows: var(--dc-inset-block-start)')
+    expect(scrollportRule).toContain('grid-area: 2 / 2')
+    expect(scrollportRule).toContain('overflow: auto')
+    expect(scrollportRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
     expect(contentRowRule).toContain('grid-template-columns: max-content minmax(0, 1fr) max-content')
     expect(selectionRule).toContain('z-index: 40')
   })
@@ -496,19 +496,28 @@ describe('rootRenderer forbidden overlay', () => {
     }
   })
 
-  it('renders fallback overlay when a custom container shell ignores forbiddenOverlayVNode', () => {
-    const LegacyShell = defineComponent({
-      setup(_, { slots }) {
-        return () => h('div', { class: 'legacy-shell' }, slots.default?.())
+  it('keeps Renderer-owned behavior outside a static slot-only Container Shell', () => {
+    const SlotOnlyShell = defineComponent({
+      setup(_, { attrs, slots }) {
+        return () => h('div', {
+          'class': 'slot-only-shell',
+          'data-test-attrs': Object.keys(attrs).join(','),
+        }, slots.default?.())
       },
     })
 
-    const { app, host } = mountRootRenderer(LegacyShell)
+    const { app, host } = mountRootRenderer(SlotOnlyShell)
 
     try {
+      expect(host.querySelectorAll('[data-dc-component="canvas-surface"]')).toHaveLength(1)
+      expect(host.querySelector('.slot-only-shell [data-dc-component="canvas-surface"]')).not.toBeNull()
+      expect(host.querySelector('.slot-only-shell')?.getAttribute('data-test-attrs')).toBe('')
       expect(host.querySelectorAll('.dc-forbidden-overlay')).toHaveLength(1)
-      expect(host.querySelector('.dc-root-renderer > .dc-forbidden-overlay')).not.toBeNull()
-      expect(host.querySelector('.legacy-shell .dc-forbidden-overlay')).toBeNull()
+      expect(host.querySelector('.dc-renderer-frame-boundary > .dc-forbidden-overlay')).not.toBeNull()
+      expect(host.querySelector('.slot-only-shell .dc-forbidden-overlay')).toBeNull()
+      expect(host.querySelector('.dc-renderer-frame-boundary > [data-dc-selection-plane="root"]')).not.toBeNull()
+      expect(host.querySelector('.slot-only-shell [data-dc-selection-plane="content"]')).not.toBeNull()
+      expect(host.querySelector('.slot-only-shell [data-dc-selection-plane="viewport"]')).not.toBeNull()
       expect(host.querySelector('.dc-root-renderer > [data-dc-selection-plane="fallback"]')).not.toBeNull()
     }
     finally {
@@ -516,32 +525,51 @@ describe('rootRenderer forbidden overlay', () => {
     }
   })
 
-  it('does not render fallback overlay when a custom container shell handles forbiddenOverlayVNode', () => {
-    const MarkedShell = defineComponent({
-      props: {
-        forbiddenOverlayVNode: {
-          type: Object as PropType<VNode | null>,
-          default: null,
-        },
+  it('switches a host-owned readonly shell ref without replacing Renderer state', async () => {
+    const FirstShell = defineComponent({
+      setup(_, { slots }) {
+        return () => h('div', { class: 'first-shell' }, slots.default?.())
       },
-      setup(props, { slots }) {
-        return () => h('div', { class: 'marked-shell' }, [
-          ...(slots.default?.() ?? []),
-          props.forbiddenOverlayVNode,
-        ])
+    })
+    const SecondShell = defineComponent({
+      setup(_, { slots }) {
+        return () => h('section', { class: 'second-shell' }, slots.default?.())
       },
-    }) as Component & { __dcHandlesForbiddenOverlay?: boolean }
-    MarkedShell.__dcHandlesForbiddenOverlay = true
-
-    const { app, host } = mountRootRenderer(MarkedShell)
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const engine = createEngine()
+    const imported = engine.importSchema(makeLayoutSchema([{ id: 'content' }]))
+    if (!imported.ok)
+      throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
+    const activeShell = shallowRef<Component>(FirstShell)
+    const shellSource = readonly(activeShell)
+    const app = createApp(defineComponent({
+      setup: () => () => h(RootRenderer, {
+        engine,
+        componentMap: { 'test-widget': TestWidget },
+        extensions: { containerShell: shellSource },
+      }),
+    }))
+    app.mount(host)
 
     try {
-      expect(host.querySelectorAll('.dc-forbidden-overlay')).toHaveLength(1)
-      expect(host.querySelector('.marked-shell .dc-forbidden-overlay')).not.toBeNull()
-      expect(host.querySelector('.dc-root-renderer > .dc-forbidden-overlay')).toBeNull()
+      const boundary = host.querySelector('[data-dc-component="renderer-frame-boundary"]')
+      const schemaBefore = engine.state.getSchema()
+      expect(host.querySelector('.first-shell [data-node-id="content"]')).not.toBeNull()
+
+      activeShell.value = SecondShell
+      await nextTick()
+
+      expect(host.querySelector('.first-shell')).toBeNull()
+      expect(host.querySelector('.second-shell [data-node-id="content"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="renderer-frame-boundary"]')).toBe(boundary)
+      expect(engine.state.getSchema()).toEqual(schemaBefore)
     }
     finally {
       app.unmount()
+      engine.dispose()
+      host.remove()
     }
   })
 
@@ -575,14 +603,15 @@ describe('rootRenderer forbidden overlay', () => {
     try {
       app.mount(host)
       expect(host.querySelector<HTMLElement>('.dc-container-shell')?.style.backgroundColor).toBe('')
-      expect(host.querySelector<HTMLElement>('.dc-container-shell__content-surface')?.style.backgroundColor).toBe('#f6ffed')
+      expect(host.querySelector<HTMLElement>('.dc-canvas-surface__content')?.style.backgroundColor).toBe('#f6ffed')
       expect(host.querySelector('[data-dc-component="root-renderer"]')).not.toBeNull()
-      expect(host.querySelector('[data-dc-component="container-shell"][data-dc-state="empty"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="container-shell"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="canvas-surface"][data-dc-state="empty"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="empty-state"] > [data-dc-part="icon"]')).not.toBeNull()
-      expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="root"]')).not.toBeNull()
-      expect(host.querySelector('.dc-container-shell__content-layout > [data-dc-selection-plane="content"]')).not.toBeNull()
+      expect(host.querySelector('.dc-renderer-frame-boundary > [data-dc-selection-plane="root"]')).not.toBeNull()
+      expect(host.querySelector('.dc-canvas-surface__content-layout > [data-dc-selection-plane="content"]')).not.toBeNull()
       expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="content"]')).toBeNull()
-      expect(host.querySelector('.dc-container-shell > [data-dc-selection-plane="viewport"]')).not.toBeNull()
+      expect(host.querySelector('.dc-canvas-surface > [data-dc-selection-plane="viewport"]')).not.toBeNull()
     }
     finally {
       app.unmount()

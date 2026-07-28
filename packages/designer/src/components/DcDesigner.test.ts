@@ -3,7 +3,7 @@ import type { Component } from 'vue'
 import type { DesignerSchema, DesignerWidgetMeta, WidgetMeta } from '..'
 import { ContainerRegionOutlet } from '@dragcraft/renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick } from 'vue'
+import { createApp, defineComponent, h, nextTick, readonly, shallowRef } from 'vue'
 import { createDesigner } from '..'
 import DcDesigner from './DcDesigner'
 
@@ -237,17 +237,23 @@ describe('dcDesigner', () => {
     }
   })
 
-  it('shrink-wraps the canvas stage when the container shell declares a toolbar boundary', async () => {
-    const BoundaryShell = defineComponent({
+  it('switches a host-owned Container Shell ref and recenters without replacing Designer state', async () => {
+    const FirstShell = defineComponent({
       setup(_, { slots }) {
-        return () => h('div', { 'data-dc-toolbar-boundary': '' }, slots.default?.())
+        return () => h('div', { class: 'first-shell' }, slots.default?.())
       },
     })
+    const SecondShell = defineComponent({
+      setup(_, { slots }) {
+        return () => h('section', { class: 'second-shell' }, slots.default?.())
+      },
+    })
+    const activeShell = shallowRef<Component>(FirstShell)
     const designer = createDesigner({
       engineOptions: { initialSchema: makeSchema() },
       extensions: {
         rendererExtensions: {
-          containerShell: BoundaryShell,
+          containerShell: readonly(activeShell),
         },
       },
     })
@@ -260,8 +266,45 @@ describe('dcDesigner', () => {
       await nextTick()
       await nextTick()
 
+      const boundary = host.querySelector('[data-dc-component="renderer-frame-boundary"]')
+      const viewport = host.querySelector<HTMLElement>('.dc-canvas__viewport')!
+      const stage = host.querySelector<HTMLElement>('[data-dc-canvas-stage]')!
+      const hand = host.querySelector<HTMLButtonElement>('[data-dc-workspace-control="hand"]')!
+      const schemaBefore = designer.engine.state.getSchema()
+      const historyBefore = designer.engine.history.state.value
+
       expect(host.querySelector('.dc-canvas__content')?.classList)
         .toContain('dc-canvas__content--bounded')
+      expect(host.querySelector('.first-shell [data-dc-component="canvas-surface"]')).not.toBeNull()
+
+      hand.click()
+      viewport.dispatchEvent(new PointerEvent('pointerdown', {
+        button: 0,
+        pointerId: 1,
+        clientX: 100,
+        clientY: 100,
+        bubbles: true,
+      }))
+      viewport.dispatchEvent(new PointerEvent('pointermove', {
+        pointerId: 1,
+        clientX: 160,
+        clientY: 140,
+        bubbles: true,
+      }))
+      await nextTick()
+      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('60px')
+
+      activeShell.value = SecondShell
+      await nextTick()
+      await nextTick()
+
+      expect(host.querySelector('.first-shell')).toBeNull()
+      expect(host.querySelector('.second-shell [data-dc-component="canvas-surface"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="renderer-frame-boundary"]')).toBe(boundary)
+      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('0px')
+      expect(stage.style.getPropertyValue('--_dc-canvas-pan-y')).toBe('0px')
+      expect(designer.engine.state.getSchema()).toEqual(schemaBefore)
+      expect(designer.engine.history.state.value).toBe(historyBefore)
     }
     finally {
       app.unmount()

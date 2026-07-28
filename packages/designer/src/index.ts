@@ -173,6 +173,8 @@ export type {
   ActionRisk,
   ComponentMap,
   ConfirmActionInterceptorOptions,
+  ContainerShell,
+  ContainerShellSource,
   DeepReadonly,
   EmptyStateProps,
   NodeActionContext,

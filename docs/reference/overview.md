@@ -9,7 +9,7 @@ description: "查找 DragCraft 公开包的入口、约束与对应开发者指�
 | Package | 何时查阅 | 对应指南 |
 | --- | --- | --- |
 | [@dragcraft/designer](/reference/designer) | 创建实例、Schema、命令、物料、字段、画布和主题 | [高级自定义](/guide/customization/overview) |
-| [@dragcraft/device-frames](/reference/device-frames) | 设备壳、设备选择器和选择平面 | [主题、设备与国际化](/guide/customization/theme-device-and-i18n) |
+| [@dragcraft/device-frames](/reference/device-frames) | 无状态设备定义、Container Shell 和受控选择器 | [主题、设备与国际化](/guide/customization/theme-device-and-i18n) |
 | [@dragcraft/fields-ant-design-vue](/reference/fields-ant-design-vue) | Ant Design Vue 字段 adapter | [表单与字段](/guide/customization/forms-and-fields) |
 
 字段 adapter 使用 `@dragcraft/fields-*` 命名并属于公开支持面；当前仅提供 Ant Design Vue adapter。

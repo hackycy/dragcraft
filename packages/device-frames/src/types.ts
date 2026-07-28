@@ -1,87 +1,25 @@
-import type { Component, InjectionKey, Ref } from 'vue'
+import type { Component } from 'vue'
 
-export type DeviceFrameSelectionPlane = 'root' | 'content' | 'viewport'
-
-/** Structural counterpart of Renderer selection presentation registration. */
-export interface DeviceFrameSelectionPresentationHost {
-  registerPlane: (plane: DeviceFrameSelectionPlane, element: HTMLElement | null) => void
+export interface DeviceFrameViewport {
+  readonly width: number
+  readonly height: number
 }
 
-// ──────────────────────────────────────────
-// Device type
-// ──────────────────────────────────────────
-
-/**
- * Supported device frame identifiers.
- */
-export type DeviceType
-  = 'iphone'
-    | 'iphone-x'
-    | 'iphone-8'
-    | 'android'
-    | 'android-waterdrop'
-    | 'tablet'
-    | 'desktop'
-
-// ──────────────────────────────────────────
-// Device preset
-// ──────────────────────────────────────────
-
-/**
- * Complete description of a device frame preset.
- */
-export interface DevicePreset {
-  /** Unique device identifier */
-  type: DeviceType
-  /** Human-readable label for host-owned device controls. */
-  label: string
-  /** Optional i18n key resolved by a host-provided translator. */
-  labelKey?: string
-  /** Icon character or component for compact device buttons. */
-  icon: string | Component
-  /** Content viewport width in CSS pixels */
-  width: number
-  /** Content viewport height in CSS pixels */
-  height: number
-  /** The Vue component rendering the frame chrome */
-  frameComponent: Component
+export interface DeviceFrameGroup {
+  readonly id: string
+  readonly label: string
+  readonly labelKey?: string
 }
 
-// ──────────────────────────────────────────
-// Device frame context
-// ──────────────────────────────────────────
-
-/**
- * Reactive context provided to descendants via provide/inject.
- * Controls which device frame is currently active.
- */
-export interface DeviceFrameContext {
-  /** Reactive device type ref — mutate this to switch devices */
-  currentDevice: Ref<DeviceType>
-  /** All registered presets */
-  presets: readonly DevicePreset[]
-  /** Lookup a preset by type */
-  getPreset: (type: DeviceType) => DevicePreset | undefined
-  /** Switch to a device type */
-  setDevice: (type: DeviceType) => void
+/** Stable, stateless metadata for one Container Shell. IDs are open strings. */
+export interface DeviceFrameDefinition {
+  readonly id: string
+  readonly label: string
+  readonly labelKey?: string
+  readonly icon?: string | Component
+  readonly group?: DeviceFrameGroup
+  readonly viewport: DeviceFrameViewport
+  readonly containerShell: Component
 }
 
-/**
- * Injection key for the device frame context.
- */
-export const DEVICE_FRAME_CONTEXT_KEY: InjectionKey<DeviceFrameContext>
-  = Symbol('dc-device-frame')
-
-// ──────────────────────────────────────────
-// Setup options
-// ──────────────────────────────────────────
-
-/**
- * Options for createDeviceFrameContext.
- */
-export interface DeviceFrameOptions {
-  /** Initial device to display. Defaults to 'iphone'. */
-  initialDevice?: DeviceType
-  /** Replace the default presets. Entries are validated and copied at creation. */
-  presets?: DevicePreset[]
-}
+export type DeviceFrameTranslate = (key: string, fallback?: string) => string

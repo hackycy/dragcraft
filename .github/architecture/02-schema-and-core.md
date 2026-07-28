@@ -136,7 +136,7 @@ Core 基于 `root.children` 和物料默认布局生成 `LayoutPlan`：
 
 详细的布局机制参见 [布局系统](./08-layout-system.md)。
 
-Renderer 负责把 root `LayoutPlan` 分发为 `regionVNodes`、`chromeVNodes` 和 `layerVNodes` 交给 `containerShell`。容器内部由 `createContainerPlan()` 单独投影。Shell 不重新读取 schema，不创建业务 widget vnode，只执行 content scrollport、chrome layer、floating layer 和 inset 写入。
+Renderer 负责把 root `LayoutPlan` 投影为 `regionVNodes`、`chromeVNodes` 和 `layerVNodes`，并由内部 Canvas Surface 统一执行 content scrollport、chrome layer、floating layer、inset 与选择平面布局。Container Shell 只包围完整 Canvas Surface 的 default slot，不接收 plan 或业务 VNode。容器内部由 `createContainerPlan()` 单独投影。
 
 ## Container Schema 与 Core Module Interface
 
@@ -263,7 +263,7 @@ undo/redo 直接交换快照引用，不经过 `CommandBus`，避免历史回放
 
 ### Style normalization
 
-`normalizeStyleValueMap()` 是 Core 的跨运行时样式 DSL helper。它只为已声明的长度属性把非零数字转换为 `px`，并由 renderer 与 device-frames 共同消费，避免不同 UI 包各自维护不一致的规则。
+`normalizeStyleValueMap()` 是 Core 的跨运行时样式 DSL helper。它只为已声明的长度属性把非零数字转换为 `px`，由 Renderer-owned Canvas Surface 消费。Device Frames 不解释业务 style DSL。
 
 ### Registry
 

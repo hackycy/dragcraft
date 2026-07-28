@@ -32,8 +32,11 @@ schema.root.children
         │  为每个 plan entry 创建 WidgetRenderer vnode
         │  再按 plan 分发为 regionVNodes / chromeVNodes / layerVNodes
         ▼
-  ContainerShell / DeviceFrame
+  Renderer-owned Canvas Surface
         │  content scrollport + fixed chrome + layer surfaces
+        ▼
+  slot-only Container Shell / Device Frame
+        │  只包围完整 Canvas Surface
         ▼
   rendered page
 ```
@@ -183,7 +186,7 @@ const tabbarLayout = {
 }
 ```
 
-设备框架只把 `position: fixed` 的 chrome 渲染在 `dc-device-frame__chrome` 层中。同一 edge 的 fixed 项从边缘向内堆叠；`avoidContent: true` 的 reserved stack 与累加 inset 对齐，`avoidContent: false` 的 overlay stack 独立覆盖。`sticky` 与 `flow` 留在内容 scrollport：`block-start/block-end` 分别位于业务 surface 上下，`inline-start/inline-end` 与业务 surface 组成三列布局；sticky 项在对应边界内吸附。`reserve.mode` 控制 fixed chrome 的内容避让：
+Renderer 的 Canvas Surface 把 `position: fixed` 的 chrome 渲染在 viewport chrome layer。同一 edge 的 fixed 项从边缘向内堆叠；`avoidContent: true` 的 reserved stack 与累加 inset 对齐，`avoidContent: false` 的 overlay stack 独立覆盖。`sticky` 与 `flow` 留在内容 scrollport：`block-start/block-end` 分别位于业务 surface 上下，`inline-start/inline-end` 与业务 surface 组成三列布局；sticky 项在对应边界内吸附。Device Frame 只渲染设备 system chrome，不参与这些 Schema chrome 规则。`reserve.mode` 控制 fixed chrome 的内容避让：
 
 - `measure`：使用 `ResizeObserver` 测量 chrome 实际高度或宽度；如果提供 `size`，先用它作为首帧 fallback，测量完成后用真实尺寸覆盖。
 - `size`：使用物料声明的固定尺寸。
@@ -259,17 +262,20 @@ left: var(--dc-inset-inline-start);
 - 调用 `createLayoutPlan()`。
 - 为每个 entry 创建一次 `WidgetRenderer` vnode。
 - 按 plan 生成 `regionVNodes`、`chromeVNodes`、`layerVNodes`。
-- 把这些 vnode 与 `LayoutPlan` 传给 `containerShell`。
+- 把这些 vnode 与 `LayoutPlan` 交给内部 Canvas Surface。
+- 把完整 Canvas Surface 作为 default slot 交给当前 Container Shell。
+- 在稳定 Frame Boundary 上渲染 root 选择平面与 forbidden overlay。
 
-`ContainerShell` 或 device frame 负责：
+Canvas Surface 负责：
 
 - 渲染 content scrollport。
 - 渲染 fixed/sticky chrome layer。
 - 测量 chrome 并写入 inset CSS variables。
 - 渲染 layer surfaces。
-- 把 renderer 传入的 `surfaceStyle` 只应用到内容 surface，并让 selection plane 位于业务 chrome/layer 之上。
+- 把 `surfaceStyle` 只应用到内容 surface。
+- 注册 content 与 viewport selection planes。
 
-Shell 不读取 schema、不重新 resolve 节点、不创建业务 widget vnode。默认 Shell 使用 inset grid 缩进真实 content scrollport 边界，不使用 padding 模拟避让；Device Frame 采用等价的 top/right/bottom/left scrollport 边界。
+Container Shell 只负责视觉外形并恰好渲染一次 default slot。它不读取 schema、不接收 plan 或业务 VNode、不重新 resolve 节点，也不渲染 scrollport、Schema chrome、layer、selection plane 或 forbidden overlay。设备外壳可以在 slot 祖先上设置 safe-area CSS variables；Canvas Surface 把 safe area 与 Schema chrome reserve 合并成最终 inset。
 
 ## 拖拽排序
 
