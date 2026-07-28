@@ -4,7 +4,10 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
-import { h, nextTick } from 'vue'
+import { defineComponent, h, nextTick } from 'vue'
+import { createDeviceFrameContext } from '../context'
+import { getDefaultPresets } from '../presets'
+import { DEVICE_FRAME_CONTEXT_KEY } from '../types'
 import DeviceFrameShell from './DeviceFrameShell'
 
 function makePlan(): LayoutPlan {
@@ -165,6 +168,89 @@ function makePlan(): LayoutPlan {
 }
 
 describe('deviceFrameShell', () => {
+  it('renders each preset with its configured viewport dimensions', async () => {
+    const presets = getDefaultPresets().map(preset => ({
+      ...preset,
+      width: preset.type === 'desktop' ? 1024 : preset.width,
+      height: preset.type === 'iphone'
+        ? 600
+        : preset.type === 'desktop'
+          ? 540
+          : preset.height,
+    }))
+    const context = createDeviceFrameContext({
+      initialDevice: 'iphone',
+      presets,
+    })
+    const wrapper = mount(DeviceFrameShell, {
+      global: {
+        provide: {
+          [DEVICE_FRAME_CONTEXT_KEY as symbol]: context,
+        },
+      },
+    })
+
+    expect(wrapper.get<HTMLElement>('.dc-device-frame').element.style.width).toBe('393px')
+    expect(wrapper.get<HTMLElement>('.dc-device-frame__viewport').element.style.height).toBe('600px')
+
+    context.setDevice('desktop')
+    await nextTick()
+
+    expect(wrapper.get('.dc-device-frame').classes()).toContain('dc-device-frame--desktop')
+    expect(wrapper.get<HTMLElement>('.dc-device-frame').element.style.width).toBe('1024px')
+    expect(wrapper.get<HTMLElement>('.dc-device-frame__viewport').element.style.height).toBe('540px')
+
+    context.setDevice('iphone')
+    await nextTick()
+
+    expect(wrapper.get<HTMLElement>('.dc-device-frame').element.style.width).toBe('393px')
+    expect(wrapper.get<HTMLElement>('.dc-device-frame__viewport').element.style.height).toBe('600px')
+  })
+
+  it('passes viewport dimensions to a custom frame adapter', () => {
+    const CustomFrame = defineComponent({
+      name: 'CustomFrame',
+      inheritAttrs: false,
+      props: {
+        viewportWidth: {
+          type: Number,
+          required: true,
+        },
+        viewportHeight: {
+          type: Number,
+          required: true,
+        },
+      },
+      setup(props) {
+        return () => h('div', {
+          'data-test-id': 'custom-frame',
+          'data-viewport-width': props.viewportWidth,
+          'data-viewport-height': props.viewportHeight,
+        })
+      },
+    })
+    const context = createDeviceFrameContext({
+      presets: [{
+        ...getDefaultPresets()[0],
+        width: 412,
+        height: 576,
+        frameComponent: CustomFrame,
+      }],
+    })
+    const wrapper = mount(DeviceFrameShell, {
+      global: {
+        provide: {
+          [DEVICE_FRAME_CONTEXT_KEY as symbol]: context,
+        },
+      },
+    })
+
+    expect(wrapper.get('[data-test-id="custom-frame"]').attributes()).toMatchObject({
+      'data-viewport-width': '412',
+      'data-viewport-height': '576',
+    })
+  })
+
   it('keeps the declared device viewport width available to root material', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'src/styles/device-frame.css'), 'utf8')
     const frameRule = css.match(/\.dc-device-frame\s*\{[^}]*\}/)?.[0]

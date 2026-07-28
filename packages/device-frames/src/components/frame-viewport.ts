@@ -12,6 +12,12 @@ export interface FrameViewportOptions {
   plan?: LayoutPlan
   surfaceStyle?: StyleValueMap
   selectionPresentation?: DeviceFrameSelectionPresentationHost
+  viewportHeight?: number
+}
+
+interface DeviceFrameRenderOptions {
+  frameOverlay?: VNodeChild
+  viewportWidth?: number
 }
 
 function renderFrameRootSelectionPlane(
@@ -31,14 +37,17 @@ export function renderDeviceFrame(
   modifierClass: string,
   selectionPresentation: DeviceFrameSelectionPresentationHost | undefined,
   children: VNodeChild[],
-  frameOverlay?: VNodeChild,
+  options: DeviceFrameRenderOptions = {},
 ): VNode {
   return h('div', {
     'class': ['dc-device-frame', modifierClass],
     'data-dc-toolbar-boundary': '',
+    'style': options.viewportWidth === undefined
+      ? undefined
+      : { width: `${options.viewportWidth}px` },
   }, [
     h('div', { class: 'dc-device-frame__surface' }, children),
-    frameOverlay,
+    options.frameOverlay,
     renderFrameRootSelectionPlane(selectionPresentation),
   ])
 }
@@ -274,7 +283,10 @@ function useMeasuredChromeInsets(viewportRef: { value: HTMLElement | null }): vo
   })
 }
 
-function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
+function viewportStyle(
+  plan: LayoutPlan | undefined,
+  viewportHeight: number | undefined,
+): Record<string, string> {
   const fixedChromeIds = new Set((plan?.chrome ?? []).flatMap((entry) => {
     const placement = entry.layout.placement as ResolvedChromePlacement
     return placement.position === 'fixed' ? [entry.node.id] : []
@@ -316,6 +328,8 @@ function viewportStyle(plan: LayoutPlan | undefined): Record<string, string> {
       ? values[0]
       : `calc(${values.join(' + ')})`
   }
+  if (viewportHeight !== undefined)
+    style.height = `${viewportHeight}px`
   return style
 }
 
@@ -332,7 +346,7 @@ export function useFrameViewport(options: () => FrameViewportOptions): () => VNo
       'ref': viewportRef,
       'class': 'dc-device-frame__viewport',
       'data-dc-overlay-boundary': '',
-      'style': viewportStyle(current.plan),
+      'style': viewportStyle(current.plan, current.viewportHeight),
     }, [
       h(DcScrollArea, { class: 'dc-device-frame__content' }, {
         default: () => [

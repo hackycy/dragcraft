@@ -59,8 +59,10 @@ describe('phone frames', () => {
     const wrapper = mount(component)
 
     expect(wrapper.classes()).toContain(modifier)
+    expect((wrapper.element as HTMLElement).style.width).toBe('')
     expect(wrapper.find('.dc-device-frame__status-bar').exists()).toBe(true)
     expect(wrapper.find('.dc-device-frame__viewport').exists()).toBe(true)
+    expect(wrapper.get<HTMLElement>('.dc-device-frame__viewport').element.style.height).toBe('')
     const statusIcons = wrapper.findAll('[data-dc-status-icon]')
     expect(statusIcons.map(icon => icon.attributes('data-dc-status-icon'))).toEqual([
       modifier === 'dc-device-frame--iphone-8' ? 'cellular' : modifier.includes('android') ? 'wifi' : 'cellular',

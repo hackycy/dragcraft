@@ -57,6 +57,14 @@ const phoneFrameProps = {
     type: Object as PropType<DeviceFrameSelectionPresentationHost>,
     default: undefined,
   },
+  viewportWidth: {
+    type: Number,
+    default: undefined,
+  },
+  viewportHeight: {
+    type: Number,
+    default: undefined,
+  },
 }
 
 function renderIPhoneStatusIcons(): VNode {
@@ -176,13 +184,17 @@ export function createPhoneFrame(profile: PhoneFrameProfile) {
         plan: props.layoutPlan,
         surfaceStyle: props.surfaceStyle,
         selectionPresentation: props.selectionPresentation,
+        viewportHeight: props.viewportHeight,
       }))
 
       return () => renderDeviceFrame(profile.modifierClass, props.selectionPresentation, [
         renderStatusBar(profile.statusBar),
         renderViewport(),
         renderNavigation(profile.navigation),
-      ], props.forbiddenOverlayVNode)
+      ], {
+        frameOverlay: props.forbiddenOverlayVNode,
+        viewportWidth: props.viewportWidth,
+      })
     },
   })
 }

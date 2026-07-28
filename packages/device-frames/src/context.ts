@@ -16,7 +16,18 @@ import { DEVICE_FRAME_CONTEXT_KEY } from './types'
 export function createDeviceFrameContext(
   options: DeviceFrameOptions = {},
 ): DeviceFrameContext {
-  const presets = options.presets ?? getDefaultPresets()
+  const presets = (options.presets ?? getDefaultPresets()).map((preset) => {
+    for (const dimension of ['width', 'height'] as const) {
+      const value = preset[dimension]
+      if (!Number.isFinite(value) || value <= 0) {
+        throw new RangeError(
+          `[dragcraft/device-frames] Device preset "${preset.type}" viewport ${dimension} must be a finite number greater than 0.`,
+        )
+      }
+    }
+
+    return { ...preset }
+  })
   const currentDevice = ref<DeviceType>(options.initialDevice ?? 'iphone')
 
   const presetMap = new Map<DeviceType, DevicePreset>(

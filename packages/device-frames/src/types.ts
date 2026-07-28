@@ -82,6 +82,6 @@ export const DEVICE_FRAME_CONTEXT_KEY: InjectionKey<DeviceFrameContext>
 export interface DeviceFrameOptions {
   /** Initial device to display. Defaults to 'iphone'. */
   initialDevice?: DeviceType
-  /** Override or extend the default presets. */
+  /** Replace the default presets. Entries are validated and copied at creation. */
   presets?: DevicePreset[]
 }

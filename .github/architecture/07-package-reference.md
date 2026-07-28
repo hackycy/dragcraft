@@ -197,6 +197,7 @@
 
 - 依赖 Vue、`@dragcraft/core` layout/schema 类型、`@dragcraft/icons` 与 `@dragcraft/ui`，不依赖 designer 或 renderer。
 - 设备选择器是可选宿主组件，由业务放在应用顶栏或其他产品区域；designer 默认不提供设备选择。
+- `DevicePreset.width/height` 是 Frame adapter 的 viewport 尺寸来源；context 创建时校验并快照外部 presets。
 - 与 renderer 通过 `containerShell` 集成。
 - 样式自包含，不依赖 Designer 的工作台主题。
 

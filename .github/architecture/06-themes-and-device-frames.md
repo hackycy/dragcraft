@@ -242,6 +242,10 @@ interface DevicePreset {
 
 `iphone` 与 `android` 保留为兼容 ID；`iphone` 对应的 viewport 已校正为 iPhone 15 Pro 的 393x852。手机 Frame 共享包内 `phone-frame` implementation，由私有 profile 决定状态栏和可选底部系统导航，不向 preset interface 暴露渲染参数。
 
+`DevicePreset.width` 与 `DevicePreset.height` 是通过 `DeviceFrameShell` 渲染时的 viewport 尺寸来源。宿主可以在创建 context 前复制默认 preset 并覆盖尺寸；`createDeviceFrameContext({ presets })` 会替换默认列表，对每个 preset 做浅拷贝快照，并要求宽高均为有限且大于零的数字。初始化后修改宿主原数组或 preset 对象不会改变 context。
+
+`DeviceFrameShell` 在 Frame adapter seam 上向当前 `frameComponent` 传递 `viewportWidth` 与 `viewportHeight`。内置 Frame 把宽度应用到 Frame 根元素，把高度应用到 `.dc-device-frame__viewport`；自定义 Frame adapter 应消费相同参数。直接渲染内置 Frame 且未传入尺寸时，包内 CSS 中的机型尺寸继续作为兼容默认值。
+
 ## DeviceFrameContext
 
 ```ts
@@ -260,9 +264,10 @@ setup() -> createDeviceFrameContext()
         -> provide(DEVICE_FRAME_CONTEXT_KEY, ctx)
 
 DcDesigner -> DcCanvas -> RootRenderer -> DeviceFrameShell
-DeviceFrameShell -> inject(ctx) -> currentDevice -> frameComponent
+DeviceFrameShell -> inject(ctx) -> currentDevice -> activePreset
+DeviceFrameShell -> frameComponent({ viewportWidth, viewportHeight })
 
-toolbar click -> ctx.setDevice('android') -> activeFrame recompute
+toolbar click -> ctx.setDevice('android') -> activePreset recompute -> Frame rerender
 ```
 
 ## 页面 Surface 预览
@@ -325,6 +330,7 @@ Device Frame 自己拥有结构与视觉 CSS；宿主只通过其 CSS token 调�
 约束：
 
 - `DeviceFrameShell` 是稳定组件引用，作为 renderer `containerShell` 传入。
+- `DeviceFrameShell` 把 preset 宽高作为数值 props 传给 Frame adapter；高度只定义业务 viewport，不包含设备状态栏、Home Indicator、Android 导航栏或桌面标题栏的额外高度。
 - 只有 `position: fixed` 的 chrome 进入 viewport chrome layer 并贡献 measured/sized inset；同一 edge 的 fixed chrome 使用 flex stack，从边缘向内排列，reserved stack 与 inset 累加值一致，`avoidContent: false` 的 overlay stack 独立覆盖且不占用 inset。`sticky` 与 `flow` chrome 留在 content scroller，block 边位于业务 surface 上下，inline 边与业务 surface 组成三列布局。
 - 未提供 context 时自动降级为 iPhone 容器。
 - 设备框架内部层级是局部层级；`.dc-device-frame` 使用独立 stacking context，业务 `chrome/layer` 只在设备页面内排序，不参与设计器面板、节点工具栏或应用弹窗的全局层级竞争。

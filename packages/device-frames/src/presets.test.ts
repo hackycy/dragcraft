@@ -29,4 +29,35 @@ describe('device presets', () => {
       expect(context.getPreset(type)?.frameComponent).toBeDefined()
     },
   )
+
+  it('snapshots custom presets when the context is created', () => {
+    const preset = {
+      ...getDefaultPresets()[0],
+      height: 600,
+    }
+    const context = createDeviceFrameContext({ presets: [preset] })
+
+    preset.height = 500
+
+    expect(context.getPreset('iphone')?.height).toBe(600)
+    expect(context.getPreset('iphone')).not.toBe(preset)
+  })
+
+  it.each([
+    ['width', 0],
+    ['width', Number.NaN],
+    ['height', -1],
+    ['height', Number.POSITIVE_INFINITY],
+  ] as const)('rejects an invalid viewport %s of %s', (dimension, value) => {
+    const preset = {
+      ...getDefaultPresets()[0],
+      [dimension]: value,
+    }
+
+    expect(() => createDeviceFrameContext({ presets: [preset] })).toThrowError(
+      new RangeError(
+        `[dragcraft/device-frames] Device preset "iphone" viewport ${dimension} must be a finite number greater than 0.`,
+      ),
+    )
+  })
 })

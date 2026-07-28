@@ -53,13 +53,12 @@ const DeviceFrameShell = defineComponent({
   setup(props, { slots }) {
     const ctx = inject(DEVICE_FRAME_CONTEXT_KEY, null)
 
-    const fallbackFrame = getDefaultPresets()[0].frameComponent
+    const fallbackPreset = getDefaultPresets()[0]
 
-    const activeFrame = computed(() => {
+    const activePreset = computed(() => {
       if (!ctx)
-        return fallbackFrame
-      const preset = ctx.getPreset(ctx.currentDevice.value)
-      return preset?.frameComponent ?? fallbackFrame
+        return fallbackPreset
+      return ctx.getPreset(ctx.currentDevice.value) ?? fallbackPreset
     })
 
     return () => {
@@ -70,13 +69,15 @@ const DeviceFrameShell = defineComponent({
           'class': 'dc-device-frame__content-region',
           'data-dc-layout-region': region,
         }, nodes))
-      return h(activeFrame.value, {
+      return h(activePreset.value.frameComponent, {
         layoutPlan: props.layoutPlan,
         chromeVNodes: props.chromeVNodes,
         layerVNodes: props.layerVNodes,
         forbiddenOverlayVNode: props.forbiddenOverlayVNode,
         surfaceStyle: props.surfaceStyle,
         selectionPresentation: props.selectionPresentation,
+        viewportWidth: activePreset.value.width,
+        viewportHeight: activePreset.value.height,
       }, {
         default: () => [
           ...(slots.default?.() ?? []),

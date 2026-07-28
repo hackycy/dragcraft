@@ -37,6 +37,14 @@ export default defineComponent({
       type: Object as PropType<DeviceFrameSelectionPresentationHost>,
       default: undefined,
     },
+    viewportWidth: {
+      type: Number,
+      default: undefined,
+    },
+    viewportHeight: {
+      type: Number,
+      default: undefined,
+    },
   },
 
   setup(props, { slots }) {
@@ -47,6 +55,7 @@ export default defineComponent({
       plan: props.layoutPlan,
       surfaceStyle: props.surfaceStyle,
       selectionPresentation: props.selectionPresentation,
+      viewportHeight: props.viewportHeight,
     }))
 
     return () =>
@@ -60,6 +69,9 @@ export default defineComponent({
           ]),
         ]),
         renderViewport(),
-      ], props.forbiddenOverlayVNode)
+      ], {
+        frameOverlay: props.forbiddenOverlayVNode,
+        viewportWidth: props.viewportWidth,
+      })
   },
 })
