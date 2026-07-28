@@ -4,7 +4,7 @@ description: "定义稳定的业务物料标识、默认属性、行为约束、
 
 # 业务物料
 
-当页面需要新的业务组件时，一个物料需要同时声明编辑协议和实际 Vue 组件。公告物料的完整定义在贯穿示例中：
+当页面需要新的业务组件时，一个普通物料需要同时声明编辑协议和实际 Vue 组件。公告物料的完整定义在贯穿示例中：
 
 <<< ../../../examples/guide-project/src/domain/widgets/notice.ts#tutorial-notice-widget
 
@@ -19,6 +19,8 @@ description: "定义稳定的业务物料标识、默认属性、行为约束、
 | 创建节点、复制默认值、行为约束和画布交互 | 组件实现、props 语义、资产协议和业务内容主题 |
 
 `type` 是持久化标识。改名需要服务端和 Schema 迁移策略，不能只改 Vue 组件名称。需要承载其他物料时，不要给普通物料增加 `children`；使用 [页面布局与容器](/guide/customization/layout-and-containers)。
+
+由页面模板、Schema import 或 migration 提供，而不能由设计者创建的物料，改用 `authoring: 'schema-managed'`。这不是 `creatable` 的业务创建条件：它会从标准物料面板隐藏，并且永久禁止 `ADD_NODE` 与 duplicate；已有节点仍可按策略选中和配置。完整的能力矩阵、工具栏状态和初始 Schema 范例见 [动作与业务策略](/guide/customization/actions-and-policies#schema-托管物料)。
 
 **完成检查**：新 `type` 出现在物料栏，拖入后按默认 props 渲染，且右侧只显示该物料声明的字段。
 

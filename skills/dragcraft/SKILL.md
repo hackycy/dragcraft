@@ -15,7 +15,7 @@ disable-model-invocation: true
 | 任务意图 | Playbook |
 | --- | --- |
 | 安装、创建实例、挂载设计器、接入页面 | [integration](references/integration.md) |
-| 新增或改造普通业务组件、物料栏、创建约束 | [widgets](references/widgets.md) |
+| 新增或改造业务组件、物料栏、创建约束、模板固定物料 | [widgets](references/widgets.md) |
 | 分栏、网格、region、容器变体或拖放几何 | [containers](references/containers.md) |
 | 属性面板、字段 adapter、字段联动或 `bindTo` | [forms](references/forms.md) |
 | 主题、设备框、侧栏、工具栏、画布或完整 Shell | [shell](references/shell.md) |

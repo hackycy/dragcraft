@@ -9,6 +9,7 @@ description: "根据要改变的产品行为选择 DragCraft 的公开扩展点�
 | 目标 | 公开扩展 | 宿主仍要实现 |
 | --- | --- | --- |
 | 新增页面组件 | `WidgetDefinition`、`DesignerWidgetMeta`、`componentMap` | Vue 组件、props、资源与内容样式 |
+| 固定由模板或 Schema producer 提供的物料 | `authoring: 'schema-managed'` | 初始 Schema、import/migration 与服务端白名单 |
 | 改变属性编辑 | `FormSchema`、`FieldComponentMap`、`bindTo` | 字段 UI、异步数据和业务校验 |
 | 承载子节点 | `ContainerDefinition`、`ContainerRegionOutlet`、变体迁移 | DOM、CSS、放置几何和迁移策略 |
 | 增加业务操作 | `customActions`、`actionInterceptors`、`eventHooks` | 权限、确认、审计和错误提示 |

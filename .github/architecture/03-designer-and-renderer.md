@@ -476,7 +476,7 @@ Runtime 只暴露当前节点的受控更新方法，底层仍然执行 core com
 - 悬停：普通物料中最深的 `[data-node-id]` 独占 hover，hover 不生成范围高亮；resolved 容器物料不发布 hover，其常驻外置 handle 只响应自身 hover 或 focus。
 - 拖拽悬停：外部 `dragOverNodeId` 控制，节点主题状态包含 `drag-over` 并渲染 DropIndicator。
 - 不可选中：`WidgetMeta.selectable` 为 `false` 时忽略选中。
-- 位置锁定：`WidgetMeta.sortable` 为 `false` 时节点主题状态包含 `locked`，隐藏拖拽与移动动作。
+- 位置锁定：`WidgetMeta.sortable` 为 `false` 时节点主题状态包含 `locked`，内置拖拽与移动动作显示为 disabled；只有 action 显隐配置会将其隐藏。
 
 ## Toolbar 定位
 

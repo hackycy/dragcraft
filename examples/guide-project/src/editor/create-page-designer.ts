@@ -19,17 +19,34 @@ export function createGuideSchema(): DesignerSchema {
       type: 'root',
       props: {},
       style: { surface: { backgroundColor: '#f7f8fb' } },
-      children: [{
-        id: 'notice-1',
-        type: 'notice',
-        props: {
-          text: '夏日活动已经开始',
-          tone: 'warm',
-          hasImage: false,
-          image: '',
-          featured: false,
+      children: [
+        // #region tutorial-schema-managed-header-node
+        {
+          id: 'page-header-1',
+          type: 'page-header',
+          props: { title: '夏日活动页' },
+          layout: {
+            placement: {
+              kind: 'chrome',
+              edge: 'block-start',
+              position: 'sticky',
+              reserve: { mode: 'size', size: 48 },
+            },
+          },
         },
-      }],
+        // #endregion tutorial-schema-managed-header-node
+        {
+          id: 'notice-1',
+          type: 'notice',
+          props: {
+            text: '夏日活动已经开始',
+            tone: 'warm',
+            hasImage: false,
+            image: '',
+            featured: false,
+          },
+        },
+      ],
     },
   }
 }

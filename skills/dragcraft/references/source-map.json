@@ -30,12 +30,15 @@
       "docs": [
         { "repositoryPath": "docs/guide/learn/material-and-property-panel.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/material-and-property-panel" },
         { "repositoryPath": "docs/guide/customization/materials.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/materials" },
+        { "repositoryPath": "docs/guide/customization/actions-and-policies.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/actions-and-policies" },
         { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" },
         { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
       ],
       "examples": [
         { "repositoryPath": "examples/guide-project/src/domain/widgets/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/index.ts" },
-        { "repositoryPath": "examples/guide-project/src/domain/widgets/notice.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/notice.ts" }
+        { "repositoryPath": "examples/guide-project/src/domain/widgets/notice.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/notice.ts" },
+        { "repositoryPath": "examples/guide-project/src/domain/widgets/page-header.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/page-header.ts" },
+        { "repositoryPath": "examples/guide-project/src/editor/create-page-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/create-page-designer.ts" }
       ],
       "packages": [
         { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" }

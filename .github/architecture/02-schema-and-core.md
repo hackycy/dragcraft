@@ -357,9 +357,9 @@ Vue 组件引用、`wrapper`、renderer 侧 action extra 配置和物料栏展�
 | --- | --- | --- |
 | `mask` | `true` | 为 `false` 时不渲染透明遮罩，允许直接交互 |
 | `selectable` | `true` | 为 `false` 时节点无法点击选中 |
-| `draggable` | `true` | 为 `false` 时隐藏拖拽 handle 和上移/下移按钮 |
-| `sortable` | `true` | 为 `false` 时锁定当前数组索引，并隐含 `draggable=false` |
-| `deletable` | `true` | 为 `false` 时隐藏删除按钮 |
+| `draggable` | `true` | 为 `false` 时拒绝直接移动；内置拖拽、上移和下移动作保留为 disabled，除非 action 显隐配置将其排除 |
+| `sortable` | `true` | 为 `false` 时锁定当前数组索引，并使直接移动不可用 |
+| `deletable` | `true` | 为 `false` 时拒绝删除；内置删除动作保留为 disabled，除非 action 显隐配置将其排除 |
 | `configurable` | `true` | 为 `false` 时拒绝 `props` / `style` 修改并禁用属性字段 |
 | `variantChangeable` | `true` | 为 `false` 时拒绝容器 variant 修改并禁用对应字段 |
 | `creatable` | `true` | 为 `false` 或返回禁止决策时，禁止创建该类型的新实例；拖入、复制等 `ADD_NODE` 入口都会被 core 拦截 |
@@ -419,7 +419,7 @@ creatable: ({ schema }) => {
 `sortable: false` 表示 widget 锁定在当前数组索引位置：
 
 - 该 widget 不可被拖拽。
-- 上移/下移按钮不可见。
+- 上移/下移动作 disabled；只有 action 显隐配置会将其隐藏。
 - 其他 widget 不可插入到会导致该 widget 索引变化的位置。
 - 删除其他 widget 时也不能导致锁定 widget 索引变化。
 
