@@ -338,6 +338,9 @@ importers:
       '@dragcraft/icons':
         specifier: workspace:*
         version: link:../icons
+      '@dragcraft/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils

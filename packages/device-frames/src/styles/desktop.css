@@ -2,8 +2,12 @@
 
 .dc-device-frame--desktop {
   width: 1280px;
-  --dc-device-frame-radius: 8px;
   --dc-device-frame-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.dc-device-frame--desktop,
+[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--desktop) {
+  --dc-device-frame-radius: 8px;
 }
 
 .dc-device-frame--desktop .dc-device-frame__viewport {

@@ -439,20 +439,38 @@ describe('rootRenderer forbidden overlay', () => {
     }
   })
 
-  it('uses inset scrollport boundaries and keeps selection above business layers', () => {
+  it('uses the shared scroll area inside inset boundaries and keeps selection above business layers', () => {
+    const { app, host } = mountDefaultRootRenderer(makeLayoutSchema([{ id: 'content' }]))
     const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
     const surfaceRule = css.match(/\.dc-canvas-surface\s*\{[^}]*\}/)?.[0]
     const scrollportRule = css.match(/\.dc-canvas-surface__scrollport\s*\{[^}]*\}/)?.[0]
+    const viewportRule = css.match(/\.dc-canvas-surface__scrollport > \[data-dc-part="viewport"\]\s*\{[^}]*\}/)?.[0]
+    const scrollbarRule = css.match(/\.dc-canvas-surface__scrollport > \[data-dc-part="scrollbar"\]\s*\{[^}]*\}/)?.[0]
     const contentRowRule = css.match(/\.dc-canvas-surface__content-row\s*\{[^}]*\}/)?.[0]
     const selectionRule = css.match(/\.dc-node-selection-plane\s*\{[^}]*\}/)?.[0]
 
-    expect(surfaceRule).toContain('display: grid')
-    expect(surfaceRule).toContain('grid-template-rows: var(--dc-inset-block-start)')
-    expect(scrollportRule).toContain('grid-area: 2 / 2')
-    expect(scrollportRule).toContain('overflow: auto')
-    expect(scrollportRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
-    expect(contentRowRule).toContain('grid-template-columns: max-content minmax(0, 1fr) max-content')
-    expect(selectionRule).toContain('z-index: 40')
+    try {
+      const scrollArea = host.querySelector('.dc-canvas-surface__scrollport[data-dc-component="scroll-area"]')
+      expect(scrollArea).not.toBeNull()
+      expect(host.querySelectorAll('.dc-canvas-surface [data-dc-component="scroll-area"]')).toHaveLength(1)
+      expect(scrollArea?.querySelector(
+        ':scope > [data-dc-part="viewport"] > [data-dc-part="content"] > .dc-canvas-surface__content-layout',
+      )).not.toBeNull()
+
+      expect(surfaceRule).toContain('display: grid')
+      expect(surfaceRule).toContain('grid-template-rows: var(--dc-inset-block-start)')
+      expect(scrollportRule).toContain('grid-area: 2 / 2')
+      expect(scrollportRule).not.toContain('overflow: auto')
+      expect(scrollportRule).not.toMatch(/\bpadding(?:-block|-inline)?:/)
+      expect(viewportRule).toContain('overscroll-behavior: contain')
+      expect(scrollbarRule).toContain('z-index: 25')
+      expect(contentRowRule).toContain('grid-template-columns: max-content minmax(0, 1fr) max-content')
+      expect(selectionRule).toContain('z-index: 40')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
   })
 
   it('shares one safe schema snapshot across all rendered widgets', async () => {

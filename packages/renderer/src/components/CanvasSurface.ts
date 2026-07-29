@@ -2,6 +2,7 @@ import type { LayoutEdge, LayoutPlan, ResolvedChromePlacement, ResolvedLayerPlac
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPresentationHost } from '../selection-presentation'
 import { DEFAULT_LAYOUT_REGION } from '@dragcraft/core'
+import { DcScrollArea } from '@dragcraft/ui'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
 
 const CHROME_MEASURE_SELECTOR = '[data-dc-chrome-position="fixed"][data-dc-reserve-mode="measure"][data-dc-avoid-content="true"]'
@@ -297,8 +298,8 @@ export default defineComponent({
         'data-dc-state': props.isEmpty ? 'empty' : undefined,
         'style': insetVariables(props.layoutPlan),
       }, [
-        h('div', { class: 'dc-canvas-surface__scrollport' }, [
-          h('div', { class: 'dc-canvas-surface__content-layout' }, [
+        h(DcScrollArea, { class: 'dc-canvas-surface__scrollport' }, {
+          default: () => h('div', { class: 'dc-canvas-surface__content-layout' }, [
             ...contentChrome['block-start'],
             h('div', { class: 'dc-canvas-surface__content-row' }, [
               contentChrome['inline-start'].length > 0
@@ -326,7 +327,7 @@ export default defineComponent({
               'aria-hidden': 'true',
             }),
           ]),
-        ]),
+        }),
         fixedChromeStacks.length > 0
           ? h('div', {
               class: 'dc-canvas-surface__chrome',

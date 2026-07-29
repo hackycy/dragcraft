@@ -10,19 +10,20 @@ import { BUILT_IN_DEVICE_FRAMES } from '../../definitions'
 interface ShellExpectation {
   id: string
   modifier: string
+  radius: string
   statusIcons: string[]
   cutout?: string
   navigation?: string[]
 }
 
 const EXPECTATIONS: ShellExpectation[] = [
-  { id: 'iphone', modifier: 'dc-device-frame--iphone', statusIcons: ['cellular', 'wifi', 'battery'], cutout: 'dynamic-island', navigation: ['home-indicator'] },
-  { id: 'iphone-x', modifier: 'dc-device-frame--iphone-x', statusIcons: ['cellular', 'wifi', 'battery'], cutout: 'notch', navigation: ['home-indicator'] },
-  { id: 'iphone-8', modifier: 'dc-device-frame--iphone-8', statusIcons: ['cellular', 'wifi', 'battery'] },
-  { id: 'android', modifier: 'dc-device-frame--android', statusIcons: ['wifi', 'cellular', 'battery'], navigation: ['back', 'home', 'recent'] },
-  { id: 'android-waterdrop', modifier: 'dc-device-frame--android-waterdrop', statusIcons: ['wifi', 'cellular', 'battery'], cutout: 'waterdrop', navigation: ['back', 'home', 'recent'] },
-  { id: 'tablet', modifier: 'dc-device-frame--tablet', statusIcons: ['wifi', 'battery'] },
-  { id: 'desktop', modifier: 'dc-device-frame--desktop', statusIcons: [] },
+  { id: 'iphone', modifier: 'dc-device-frame--iphone', radius: '48px', statusIcons: ['cellular', 'wifi', 'battery'], cutout: 'dynamic-island', navigation: ['home-indicator'] },
+  { id: 'iphone-x', modifier: 'dc-device-frame--iphone-x', radius: '40px', statusIcons: ['cellular', 'wifi', 'battery'], cutout: 'notch', navigation: ['home-indicator'] },
+  { id: 'iphone-8', modifier: 'dc-device-frame--iphone-8', radius: '8px', statusIcons: ['cellular', 'wifi', 'battery'] },
+  { id: 'android', modifier: 'dc-device-frame--android', radius: '20px', statusIcons: ['wifi', 'cellular', 'battery'], navigation: ['back', 'home', 'recent'] },
+  { id: 'android-waterdrop', modifier: 'dc-device-frame--android-waterdrop', radius: '24px', statusIcons: ['wifi', 'cellular', 'battery'], cutout: 'waterdrop', navigation: ['back', 'home', 'recent'] },
+  { id: 'tablet', modifier: 'dc-device-frame--tablet', radius: '24px', statusIcons: ['wifi', 'battery'] },
+  { id: 'desktop', modifier: 'dc-device-frame--desktop', radius: '8px', statusIcons: [] },
 ]
 
 describe('built-in Container Shells', () => {
@@ -66,12 +67,30 @@ describe('built-in Container Shells', () => {
     }
   })
 
+  it('provides each built-in frame radius to the stable Renderer boundary', () => {
+    const cssFiles = ['iphone.css', 'android.css', 'tablet.css', 'desktop.css']
+      .map(file => readFileSync(path.resolve(process.cwd(), 'src/styles', file), 'utf8'))
+      .join('\n')
+
+    for (const { modifier, radius } of EXPECTATIONS) {
+      const escaped = modifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const boundaryRadiusRule = cssFiles.match(new RegExp(
+        `\\.${escaped}\\s*,\\s*\\[data-dc-component="renderer-frame-boundary"\\]:has\\(> \\.${escaped}\\)\\s*\\{[^}]*\\}`,
+      ))?.[0]
+      expect(boundaryRadiusRule).toContain(`--dc-device-frame-radius: ${radius}`)
+    }
+  })
+
   it('does not contain Renderer layout or selection implementation selectors', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'src/styles/device-frame.css'), 'utf8')
+    const boundaryRule = css.match(/\[data-dc-component="renderer-frame-boundary"\]:has\(> \.dc-device-frame\)\s*\{[^}]*\}/)?.[0]
+    expect(boundaryRule).toContain('--_dc-root-selection-plane-outset: var(--dc-device-frame-border-width)')
+    expect(boundaryRule).toContain('--_dc-root-selection-plane-radius: var(--dc-device-frame-radius)')
     expect(css).not.toContain('dc-device-frame__content-layout')
     expect(css).not.toContain('dc-device-frame__chrome')
     expect(css).not.toContain('dc-device-frame__layer')
     expect(css).not.toContain('dc-device-frame__selection-plane')
+    expect(css).not.toContain('[data-dc-selection-plane')
     expect(css).not.toContain('forbidden-overlay')
   })
 

@@ -43,6 +43,7 @@
     "@dragcraft/core": "workspace:*",
     "@dragcraft/i18n": "workspace:*",
     "@dragcraft/icons": "workspace:*",
+    "@dragcraft/ui": "workspace:*",
     "@dragcraft/utils": "workspace:*",
     "@floating-ui/dom": "catalog:vue"
   },

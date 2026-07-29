@@ -2,8 +2,12 @@
 
 .dc-device-frame--android {
   width: 360px;
-  --dc-device-frame-radius: 20px;
   --dc-device-frame-nav-height: 40px;
+}
+
+.dc-device-frame--android,
+[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--android) {
+  --dc-device-frame-radius: 20px;
 }
 
 .dc-device-frame--android .dc-device-frame__viewport {
@@ -19,8 +23,12 @@
 
 .dc-device-frame--android-waterdrop {
   width: 360px;
-  --dc-device-frame-radius: 24px;
   --dc-device-frame-nav-height: 48px;
+}
+
+.dc-device-frame--android-waterdrop,
+[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--android-waterdrop) {
+  --dc-device-frame-radius: 24px;
 }
 
 .dc-device-frame--android-waterdrop .dc-device-frame__viewport {

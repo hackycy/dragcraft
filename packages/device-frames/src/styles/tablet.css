@@ -2,6 +2,10 @@
 
 .dc-device-frame--tablet {
   width: 768px;
+}
+
+.dc-device-frame--tablet,
+[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--tablet) {
   --dc-device-frame-radius: 24px;
 }
 

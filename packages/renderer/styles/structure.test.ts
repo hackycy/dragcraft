@@ -35,6 +35,16 @@ it('paints root selection edges around the full-width root segment', () => {
   expect(inlineEnd).toMatchObject({ right: '0' })
 })
 
+it('lets the Renderer-owned root plane include the active frame outline', () => {
+  const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
+  const rootPlane = declarations(css, ['.dc-node-selection-plane--root'])
+
+  expect(rootPlane).toMatchObject({
+    'inset': 'calc(-1 * var(--_dc-root-selection-plane-outset, 0px))',
+    'clip-path': 'inset(0 round var(--_dc-root-selection-plane-radius, 0px))',
+  })
+})
+
 it('keeps Canvas Surface layout state out of the slot-only Container Shell', () => {
   const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
   const canvasSurface = declarations(css, ['.dc-canvas-surface'])

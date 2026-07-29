@@ -105,6 +105,11 @@
   pointer-events: none;
 }
 
+.dc-node-selection-plane--root {
+  inset: calc(-1 * var(--_dc-root-selection-plane-outset, 0px));
+  clip-path: inset(0 round var(--_dc-root-selection-plane-radius, 0px));
+}
+
 .dc-canvas-surface--empty {
   min-height: 200px;
 }
@@ -113,8 +118,14 @@
   grid-area: 2 / 2;
   min-width: 0;
   min-height: 0;
-  overflow: auto;
+}
+
+.dc-canvas-surface__scrollport > [data-dc-part="viewport"] {
   overscroll-behavior: contain;
+}
+
+.dc-canvas-surface__scrollport > [data-dc-part="scrollbar"] {
+  z-index: 25;
 }
 
 .dc-canvas-surface__content-layout {
