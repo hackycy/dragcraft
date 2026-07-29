@@ -37,6 +37,8 @@ const PreviewShell = defineComponent({
 
 `containerShell` 不接收布局 props，必须恰好渲染一次 default slot。Renderer 在 slot 中提供完整 Canvas Surface，并继续拥有 LayoutPlan 投影、滚动、surface style、selection planes、empty state 与 forbidden overlay。Shell 只负责外围视觉和 slot 位置，可以在祖先上设置 `--dc-safe-area-*` 集成变量。
 
+未传入 `containerShell` 时，Renderer 使用无设备元素的默认外壳：宽度固定为 `375px`，独立渲染时高度为 `667px`，最低高度为 `480px`。在 Designer 中，其高度随画布可用高度变化并保留上下各 `44px`；内容超出后在 Canvas Surface 内滚动，不会继续撑高外壳。Standard 主题将默认外壳呈现为直角、无边框、白色表面和轻投影。
+
 传入 `computed(() => activeDefinition.value.containerShell)` 可以在现有 Designer 上响应式切换外壳。切换保留 Engine、Schema 和 history；Shell-local DOM/scroll 与 widget-local Vue state 不属于保留契约。
 
 容器 region 的子节点由 Engine 拥有，不要把它们写入普通 `children`。Container Shell 与业务 container widget 是不同概念：前者包围整个 Canvas Surface，后者通过 `ContainerRegionOutlet` 组织 Schema 节点。

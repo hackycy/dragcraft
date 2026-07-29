@@ -79,6 +79,10 @@ expectDeclarations('container material selection', recipes, '[data-dc-component=
   border: 'var(--dc-node-selection-stroke-width) solid var(--dc-color-accent)',
 })
 
+expectDeclarations('default container shell', recipes, '[data-dc-component="container-shell"][data-dc-state~="default"]', {
+  'box-shadow': 'var(--dc-shadow-sm)',
+})
+
 expectDeclarations('node toolbar', recipes, '[data-dc-component="node-toolbar"]', {
   color: 'var(--dc-color-on-accent)',
   background: 'var(--dc-color-accent)',

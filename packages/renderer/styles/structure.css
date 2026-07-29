@@ -66,10 +66,16 @@
   min-height: inherit;
 }
 
+.dc-renderer-frame-boundary:has(> .dc-container-shell) {
+  --_dc-root-selection-plane-outset: var(--dc-node-selection-stroke-width, 2px);
+}
+
 .dc-container-shell {
   position: relative;
+  width: 375px;
   min-width: 375px;
-  min-height: 200px;
+  height: var(--_dc-default-container-block-size, 667px);
+  min-height: 480px;
 }
 
 .dc-canvas-surface {
@@ -95,6 +101,12 @@
   --dc-inset-block-end: calc(var(--dc-safe-area-block-end) + var(--dc-sized-inset-block-end) + var(--dc-measured-inset-block-end));
   --dc-inset-inline-start: calc(var(--dc-safe-area-inline-start) + var(--dc-sized-inset-inline-start) + var(--dc-measured-inset-inline-start));
   --dc-inset-inline-end: calc(var(--dc-safe-area-inline-end) + var(--dc-sized-inset-inline-end) + var(--dc-measured-inset-inline-end));
+}
+
+.dc-container-shell > .dc-canvas-surface {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .dc-node-selection-plane {

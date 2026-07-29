@@ -67,6 +67,10 @@ RootRenderer
 
 Container Shell 不接收 props，只能渲染一次 default slot。它不接收 `LayoutPlan`、region/chrome/layer VNodes、registry、surface style、selection presentation 或 forbidden overlay。`DefaultContainerShell` 与设备外壳处于同一个 slot-only seam，没有特权布局协议。
 
+`DefaultContainerShell` 是无设备元素的基础画布外壳：固定宽度 `375px`，高度读取 Renderer 私有变量 `--_dc-default-container-block-size`，未提供时回退为 `667px`，并始终保持至少 `480px`。Designer 复用画布已有的 `ResizeObserver` 测量链路，在同一 animation frame 中读取 viewport 高度，并把 `max(480px, viewport 高度 - 88px)` 的像素结果写入 stage，因此默认外壳保留上下各 `44px`，而内容增长只改变 Canvas Surface 内部 scrollport 的滚动范围。自定义 Container Shell 和 Device Frame 不消费该私有变量。
+
+Standard 主题通过 `container-shell` 的 `default` state 为默认外壳提供轻投影；直角、无边框和白色 Canvas Surface 仍是普通容器视觉，不引入设备 chrome。默认外壳对应的 Frame Boundary 仅按 `--dc-node-selection-stroke-width` 外扩 root selection plane，使贴顶物料向外绘制的选区边线完整可见；自定义外壳与 Device Frame 继续使用各自既有的 selection outset 规则。
+
 Renderer Frame Boundary 在 Shell 切换时保持同一 DOM 身份，并拥有 toolbar boundary、root selection plane 和 forbidden overlay。Canvas Surface 可能随 Shell 一起重挂载；Schema、Engine 和 history 保持不变，Shell-local scroll 与 widget-local Vue state 不保证保留。Designer 观察当前 Shell 根节点的替换并把 pan offset 归零，使新尺寸重新居中。
 
 Container Shell 可以在 slot 祖先上设置以下集成变量，为 Canvas Surface 提供 safe area：

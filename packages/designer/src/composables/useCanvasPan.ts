@@ -12,6 +12,7 @@ export interface UseCanvasPanReturn {
   mode: Ref<CanvasInteractionMode>
   offset: Ref<CanvasPanOffset>
   pixelSnap: Ref<CanvasPanOffset>
+  defaultContainerBlockSize: Ref<number | null>
   panEnabled: ComputedRef<boolean>
   isPanning: Ref<boolean>
   setMode: (mode: CanvasInteractionMode) => void
@@ -39,6 +40,8 @@ export interface CanvasStagePixelGeometry {
 }
 
 const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable="true"], [contenteditable=""]'
+const DEFAULT_CONTAINER_MIN_BLOCK_SIZE = 480
+const DEFAULT_CONTAINER_VERTICAL_GUTTER = 88
 
 function isEditableTarget(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest(EDITABLE_SELECTOR))
@@ -75,6 +78,7 @@ export function useCanvasPan(
   const mode = ref<CanvasInteractionMode>('pointer')
   const offset = ref<CanvasPanOffset>({ x: 0, y: 0 })
   const pixelSnap = ref<CanvasPanOffset>({ x: 0, y: 0 })
+  const defaultContainerBlockSize = ref<number | null>(null)
   const spacePressed = ref(false)
   const isPanning = ref(false)
   const pointerInside = ref(false)
@@ -97,6 +101,13 @@ export function useCanvasPan(
 
     const viewportRect = viewport.getBoundingClientRect()
     const stageRect = stage.getBoundingClientRect()
+    const nextDefaultContainerBlockSize = Math.max(
+      DEFAULT_CONTAINER_MIN_BLOCK_SIZE,
+      viewportRect.height - DEFAULT_CONTAINER_VERTICAL_GUTTER,
+    )
+    if (nextDefaultContainerBlockSize !== defaultContainerBlockSize.value)
+      defaultContainerBlockSize.value = nextDefaultContainerBlockSize
+
     const next = resolveCanvasStagePixelSnap({
       viewport: {
         left: viewportRect.left,
@@ -250,6 +261,7 @@ export function useCanvasPan(
     mode,
     offset,
     pixelSnap,
+    defaultContainerBlockSize,
     panEnabled,
     isPanning,
     setMode,

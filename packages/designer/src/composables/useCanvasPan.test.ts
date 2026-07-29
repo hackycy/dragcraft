@@ -25,6 +25,20 @@ function mountPan() {
   return { app, host, viewport, stage, pan }
 }
 
+function makeRect(width: number, height: number): DOMRect {
+  return {
+    bottom: height,
+    height,
+    left: 0,
+    right: width,
+    top: 0,
+    width,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  }
+}
+
 describe('useCanvasPan', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -58,6 +72,37 @@ describe('useCanvasPan', () => {
     expect(boundedContentRule).toContain('min-width: 0')
     expect(boundedRootRule).toContain('min-width: 0')
     expect(css.indexOf(boundedRootRule!)).toBeGreaterThan(css.indexOf(rootRule!))
+  })
+
+  it('does not require container query support for the default Container Shell', () => {
+    const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
+    const viewportRule = css.match(/\.dc-canvas__viewport\s*\{[^}]*\}/)?.[0]
+    const stageRule = css.match(/\.dc-canvas__stage\s*\{[^}]*\}/)?.[0]
+
+    expect(viewportRule).not.toContain('container-type')
+    expect(stageRule).not.toContain('cqh')
+  })
+
+  it('measures a compatible pixel height for the default Container Shell', () => {
+    const callbacks: FrameRequestCallback[] = []
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callbacks.push(callback)
+      return callbacks.length
+    })
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => {})
+    const { app, viewport, stage, pan } = mountPan()
+    let viewportHeight = 720
+    vi.spyOn(viewport, 'getBoundingClientRect').mockImplementation(() => makeRect(800, viewportHeight))
+    vi.spyOn(stage, 'getBoundingClientRect').mockReturnValue(makeRect(375, 667))
+
+    callbacks.shift()!(0)
+    expect(pan.defaultContainerBlockSize.value).toBe(632)
+
+    viewportHeight = 400
+    window.dispatchEvent(new Event('resize'))
+    callbacks.shift()!(16)
+    expect(pan.defaultContainerBlockSize.value).toBe(480)
+    app.unmount()
   })
 
   it('pans the stage without scroll boundaries in hand mode', () => {

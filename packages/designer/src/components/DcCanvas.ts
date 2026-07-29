@@ -137,6 +137,9 @@ export default defineComponent({
               '--_dc-canvas-pan-y': `${canvasPan.offset.value.y}px`,
               '--_dc-canvas-snap-x': `${canvasPan.pixelSnap.value.x}px`,
               '--_dc-canvas-snap-y': `${canvasPan.pixelSnap.value.y}px`,
+              '--_dc-default-container-block-size': canvasPan.defaultContainerBlockSize.value === null
+                ? undefined
+                : `${canvasPan.defaultContainerBlockSize.value}px`,
             },
           }, [
             h('div', {

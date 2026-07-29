@@ -623,7 +623,7 @@ describe('rootRenderer forbidden overlay', () => {
       expect(host.querySelector<HTMLElement>('.dc-container-shell')?.style.backgroundColor).toBe('')
       expect(host.querySelector<HTMLElement>('.dc-canvas-surface__content')?.style.backgroundColor).toBe('#f6ffed')
       expect(host.querySelector('[data-dc-component="root-renderer"]')).not.toBeNull()
-      expect(host.querySelector('[data-dc-component="container-shell"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="container-shell"][data-dc-state~="default"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="canvas-surface"][data-dc-state="empty"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="empty-state"] > [data-dc-part="icon"]')).not.toBeNull()
       expect(host.querySelector('.dc-renderer-frame-boundary > [data-dc-selection-plane="root"]')).not.toBeNull()

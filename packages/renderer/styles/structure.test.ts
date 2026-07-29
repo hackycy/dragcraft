@@ -45,6 +45,31 @@ it('lets the Renderer-owned root plane include the active frame outline', () => 
   })
 })
 
+it('keeps the default Container Shell selection outline outside its content', () => {
+  const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
+  const defaultBoundary = declarations(css, ['.dc-renderer-frame-boundary:has(> .dc-container-shell)'])
+
+  expect(defaultBoundary['--_dc-root-selection-plane-outset'])
+    .toBe('var(--dc-node-selection-stroke-width, 2px)')
+})
+
+it('gives the default Container Shell a stable viewport geometry', () => {
+  const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
+  const defaultShell = declarations(css, ['.dc-container-shell'])
+  const defaultCanvasSurface = declarations(css, ['.dc-container-shell > .dc-canvas-surface'])
+
+  expect(defaultShell).toMatchObject({
+    'width': '375px',
+    'height': 'var(--_dc-default-container-block-size, 667px)',
+    'min-height': '480px',
+  })
+  expect(defaultCanvasSurface).toMatchObject({
+    'width': '100%',
+    'height': '100%',
+    'min-height': '0',
+  })
+})
+
 it('keeps Canvas Surface layout state out of the slot-only Container Shell', () => {
   const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
   const canvasSurface = declarations(css, ['.dc-canvas-surface'])

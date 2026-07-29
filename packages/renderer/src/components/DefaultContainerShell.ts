@@ -7,6 +7,7 @@ export default defineComponent({
     return () => h('div', {
       'class': 'dc-container-shell',
       'data-dc-component': 'container-shell',
+      'data-dc-state': 'default',
     }, slots.default?.())
   },
 })

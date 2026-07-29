@@ -375,6 +375,10 @@
   background: var(--dc-color-surface);
 }
 
+[data-dc-component="container-shell"][data-dc-state~="default"] {
+  box-shadow: var(--dc-shadow-sm);
+}
+
 [data-dc-component="empty-state"] {
   color: var(--dc-color-text-subtle);
   font-size: var(--dc-font-size-sm);
