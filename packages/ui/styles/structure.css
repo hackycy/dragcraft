@@ -52,8 +52,8 @@
   top: 0;
   right: 0;
   width: var(--dc-scroll-area-thumb-size, 4px);
-  height: var(--_dc-scroll-area-thumb-height, 0px);
+  height: var(--dc-internal-scroll-area-thumb-height, 0px);
   min-height: var(--dc-scroll-area-thumb-min-size, 24px);
-  transform: translateY(var(--_dc-scroll-area-thumb-offset, 0px));
+  transform: translateY(var(--dc-internal-scroll-area-thumb-offset, 0px));
   will-change: transform;
 }

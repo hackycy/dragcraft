@@ -67,14 +67,14 @@
 }
 
 .dc-renderer-frame-boundary:has(> .dc-container-shell) {
-  --_dc-root-selection-plane-outset: var(--dc-node-selection-stroke-width, 2px);
+  --dc-internal-renderer-root-selection-plane-outset: var(--dc-node-selection-stroke-width, 2px);
 }
 
 .dc-container-shell {
   position: relative;
   width: 375px;
   min-width: 375px;
-  height: var(--_dc-default-container-block-size, 667px);
+  height: var(--dc-internal-renderer-default-container-block-size, 667px);
   min-height: 480px;
 }
 
@@ -118,8 +118,8 @@
 }
 
 .dc-node-selection-plane--root {
-  inset: calc(-1 * var(--_dc-root-selection-plane-outset, 0px));
-  clip-path: inset(0 round var(--_dc-root-selection-plane-radius, 0px));
+  inset: calc(-1 * var(--dc-internal-renderer-root-selection-plane-outset, 0px));
+  clip-path: inset(0 round var(--dc-internal-renderer-root-selection-plane-radius, 0px));
 }
 
 .dc-canvas-surface--empty {

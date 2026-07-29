@@ -49,7 +49,7 @@
 
 .dc-form-section--grid {
   display: grid;
-  grid-template-columns: repeat(var(--_dc-columns), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--dc-internal-form-section-columns), minmax(0, 1fr));
   gap: 10px 12px;
 }
 
@@ -61,7 +61,7 @@
 }
 
 .dc-form-section--grid > .dc-form-field {
-  grid-column: span min(var(--_dc-span, 1), var(--_dc-columns));
+  grid-column: span min(var(--dc-internal-form-field-span, 1), var(--dc-internal-form-section-columns));
   min-width: 0;
   margin-bottom: 0;
 }

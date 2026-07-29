@@ -73,7 +73,7 @@ export default defineComponent({
 
       if (columns > 1) {
         bodyClass.push('dc-form-section--grid')
-        bodyStyle['--_dc-columns'] = String(columns)
+        bodyStyle['--dc-internal-form-section-columns'] = String(columns)
       }
 
       const body = h(

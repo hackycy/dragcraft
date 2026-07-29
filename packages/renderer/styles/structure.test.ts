@@ -40,8 +40,8 @@ it('lets the Renderer-owned root plane include the active frame outline', () => 
   const rootPlane = declarations(css, ['.dc-node-selection-plane--root'])
 
   expect(rootPlane).toMatchObject({
-    'inset': 'calc(-1 * var(--_dc-root-selection-plane-outset, 0px))',
-    'clip-path': 'inset(0 round var(--_dc-root-selection-plane-radius, 0px))',
+    'inset': 'calc(-1 * var(--dc-internal-renderer-root-selection-plane-outset, 0px))',
+    'clip-path': 'inset(0 round var(--dc-internal-renderer-root-selection-plane-radius, 0px))',
   })
 })
 
@@ -49,7 +49,7 @@ it('keeps the default Container Shell selection outline outside its content', ()
   const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
   const defaultBoundary = declarations(css, ['.dc-renderer-frame-boundary:has(> .dc-container-shell)'])
 
-  expect(defaultBoundary['--_dc-root-selection-plane-outset'])
+  expect(defaultBoundary['--dc-internal-renderer-root-selection-plane-outset'])
     .toBe('var(--dc-node-selection-stroke-width, 2px)')
 })
 
@@ -60,7 +60,7 @@ it('gives the default Container Shell a stable viewport geometry', () => {
 
   expect(defaultShell).toMatchObject({
     'width': '375px',
-    'height': 'var(--_dc-default-container-block-size, 667px)',
+    'height': 'var(--dc-internal-renderer-default-container-block-size, 667px)',
     'min-height': '480px',
   })
   expect(defaultCanvasSurface).toMatchObject({

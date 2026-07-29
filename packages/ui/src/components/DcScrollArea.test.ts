@@ -125,8 +125,8 @@ describe('dcScrollArea', () => {
   it('calculates proportional thumb geometry and coalesces scroll updates by frame', async () => {
     const { wrapper, viewport } = await mountOverflowing('auto')
     const thumb = wrapper.find<HTMLElement>('[data-dc-part="thumb"]').element
-    expect(thumb.style.getPropertyValue('--_dc-scroll-area-thumb-height')).toBe('25px')
-    expect(thumb.style.getPropertyValue('--_dc-scroll-area-thumb-offset')).toBe('0px')
+    expect(thumb.style.getPropertyValue('--dc-internal-scroll-area-thumb-height')).toBe('25px')
+    expect(thumb.style.getPropertyValue('--dc-internal-scroll-area-thumb-offset')).toBe('0px')
     expect(wrapper.attributes('data-dc-state')).toContain('overflowing')
     expect(wrapper.attributes('data-dc-state')).toContain('visible')
 
@@ -140,7 +140,7 @@ describe('dcScrollArea', () => {
 
     expect(requestFrame).toHaveBeenCalledOnce()
     await flushFrames()
-    expect(thumb.style.getPropertyValue('--_dc-scroll-area-thumb-offset')).toBe('37.5px')
+    expect(thumb.style.getPropertyValue('--dc-internal-scroll-area-thumb-offset')).toBe('37.5px')
     expect(wrapper.emitted('scroll')).toHaveLength(3)
   })
 
@@ -154,7 +154,7 @@ describe('dcScrollArea', () => {
     await flushFrames()
 
     expect(wrapper.find<HTMLElement>('[data-dc-part="thumb"]').element.style
-      .getPropertyValue('--_dc-scroll-area-thumb-height')).toBe('24px')
+      .getPropertyValue('--dc-internal-scroll-area-thumb-height')).toBe('24px')
   })
 
   it('implements always and auto visibility from overflow state', async () => {
@@ -292,7 +292,7 @@ describe('dcScrollArea', () => {
     expect(structure).toContain('overflow-y: scroll')
     expect(structure).toContain('right: var(--dc-scroll-area-track-offset, 0px)')
     expect(structure).toContain('right: 0')
-    expect(structure).toContain('transform: translateY(var(--_dc-scroll-area-thumb-offset, 0px))')
+    expect(structure).toContain('transform: translateY(var(--dc-internal-scroll-area-thumb-offset, 0px))')
     expect(structure).not.toContain('translate(-50%')
     expect(structure).not.toContain('background:')
     expect(recipe).toContain('var(--dc-scroll-area-thumb-color, rgba(9, 9, 11, 0.28))')

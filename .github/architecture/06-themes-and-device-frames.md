@@ -45,6 +45,17 @@ import './my-workbench-theme.css'
 - render functions 发出的 public hooks 与 manifest 双向一致。
 - `renderer-frame-boundary`、`container-shell`、`canvas-surface` 是三个不同语义 hook。
 
+### CSS 自定义属性命名契约
+
+CSS 自定义属性按稳定性分为两个命名空间：
+
+- `--dc-<domain>-<name>` 是公开主题 token 或集成属性。工作台公开属性必须登记在 `theme-contract.json` 的 `tokens` 或 `integrationProperties` 中；Device Frames 等独立公开样式面由所属 package 的架构章节约束。宿主可以依赖已登记或已明确记录的公开属性语义与兼容性。
+- `--dc-internal-<owner>-<name>` 是结构层或组件运行时使用的内部属性。`owner` 必须指出负责该属性语义的组件或模块，例如 `renderer`、`canvas`、`form-section`；内部属性不进入主题契约或 CSS custom data，宿主不得读写，也不提供跨版本兼容保证。
+
+内部属性允许通过 CSS 继承连接同一实现中的生产者与消费者。跨 package 使用时，名称仍以语义所有者为 `owner`，生产者、消费者和覆盖该协议的回归测试必须在同一变更中更新。`--_dc-*` 是已废弃的旧命名，不得再作为有效属性被声明或消费。
+
+主题校验器只把非 `--dc-internal-*` 的 `--dc-*` 属性当作公开契约检查，同时拒绝结构 CSS 中残留的 `--_dc-*`。因此内部命名不会被误发布为主题 API，公开属性拼写错误仍会导致构建失败。
+
 ## Renderer 与 Container Shell
 
 Renderer 的外层结构固定为：
@@ -67,7 +78,9 @@ RootRenderer
 
 Container Shell 不接收 props，只能渲染一次 default slot。它不接收 `LayoutPlan`、region/chrome/layer VNodes、registry、surface style、selection presentation 或 forbidden overlay。`DefaultContainerShell` 与设备外壳处于同一个 slot-only seam，没有特权布局协议。
 
-`DefaultContainerShell` 是无设备元素的基础画布外壳：固定宽度 `375px`，高度读取 Renderer 私有变量 `--_dc-default-container-block-size`，未提供时回退为 `667px`，并始终保持至少 `480px`。Designer 复用画布已有的 `ResizeObserver` 测量链路，在同一 animation frame 中读取 viewport 高度，并把 `max(480px, viewport 高度 - 88px)` 的像素结果写入 stage，因此默认外壳保留上下各 `44px`，而内容增长只改变 Canvas Surface 内部 scrollport 的滚动范围。自定义 Container Shell 和 Device Frame 不消费该私有变量。
+`DefaultContainerShell` 是无设备元素的基础画布外壳：固定宽度 `375px`，高度读取 Renderer 内部变量 `--dc-internal-renderer-default-container-block-size`，未提供时回退为 `667px`，并始终保持至少 `480px`。Designer 复用画布已有的 `ResizeObserver` 测量链路，在同一 animation frame 中读取 viewport 高度，并把 `max(480px, viewport 高度 - 88px)` 的像素结果写入 stage，因此默认外壳保留上下各 `44px`，而内容增长只改变 Canvas Surface 内部 scrollport 的滚动范围。自定义 Container Shell 和 Device Frame 不消费该内部变量。
+
+Renderer 拥有另外两个跨包内部属性：`--dc-internal-renderer-root-selection-plane-outset` 和 `--dc-internal-renderer-root-selection-plane-radius`。Renderer 为默认 Container Shell 提供 outset，并统一消费两者；Device Frames 只在稳定 Frame Boundary 上按当前设备边框宽度和圆角覆盖它们。它们不是 Container Shell 扩展协议，自定义 Shell 不应读写。
 
 Standard 主题通过 `container-shell` 的 `default` state 为默认外壳提供轻投影；直角、无边框和白色 Canvas Surface 仍是普通容器视觉，不引入设备 chrome。默认外壳对应的 Frame Boundary 仅按 `--dc-node-selection-stroke-width` 外扩 root selection plane，使贴顶物料向外绘制的选区边线完整可见；自定义外壳与 Device Frame 继续使用各自既有的 selection outset 规则。
 

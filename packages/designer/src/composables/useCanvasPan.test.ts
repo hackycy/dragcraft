@@ -65,8 +65,8 @@ describe('useCanvasPan', () => {
     const rootRule = css.match(/\.dc-canvas__content > \.dc-root-renderer\s*\{[^}]*\}/)?.[0]
 
     expect(stageRule).toContain('translate3d(-50%, -50%, 0)')
-    expect(stageRule).toContain('translate3d(var(--_dc-canvas-pan-x, 0px), var(--_dc-canvas-pan-y, 0px), 0)')
-    expect(stageRule).toContain('translate3d(var(--_dc-canvas-snap-x, 0px), var(--_dc-canvas-snap-y, 0px), 0)')
+    expect(stageRule).toContain('translate3d(var(--dc-internal-canvas-pan-x, 0px), var(--dc-internal-canvas-pan-y, 0px), 0)')
+    expect(stageRule).toContain('translate3d(var(--dc-internal-canvas-snap-x, 0px), var(--dc-internal-canvas-snap-y, 0px), 0)')
     expect(boundaryRule).toContain('margin-block: 0')
     expect(boundaryRule).toContain('margin-inline: auto')
     expect(boundedContentRule).toContain('min-width: 0')

@@ -23,8 +23,8 @@
 }
 
 [data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame) {
-  --_dc-root-selection-plane-outset: var(--dc-device-frame-border-width);
-  --_dc-root-selection-plane-radius: var(--dc-device-frame-radius);
+  --dc-internal-renderer-root-selection-plane-outset: var(--dc-device-frame-border-width);
+  --dc-internal-renderer-root-selection-plane-radius: var(--dc-device-frame-radius);
   --dc-node-selection-root-block-overlap: var(--dc-node-selection-stroke-width, 2px);
   --dc-node-selection-root-inline-overlap: var(--dc-device-frame-border-width);
 }

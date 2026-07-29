@@ -78,3 +78,4 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Public consumers may import only `@dragcraft/designer`, `@dragcraft/device-frames`, and field adapter packages matching `@dragcraft/fields-*`
 - README, public docs, examples, and playground must not reference other `@dragcraft/*` packages directly
 - `@dragcraft/designer/standard.css` is the complete Standard workbench theme; `@dragcraft/designer/structure.css` is only for fully custom themes
+- Public CSS custom properties use `--dc-<domain>-<name>`; implementation-only properties use `--dc-internal-<owner>-<name>`; the legacy `--_dc-*` prefix is prohibited

@@ -133,11 +133,11 @@ export default defineComponent({
             'data-dc-part': 'stage',
             'data-dc-canvas-stage': '',
             'style': {
-              '--_dc-canvas-pan-x': `${canvasPan.offset.value.x}px`,
-              '--_dc-canvas-pan-y': `${canvasPan.offset.value.y}px`,
-              '--_dc-canvas-snap-x': `${canvasPan.pixelSnap.value.x}px`,
-              '--_dc-canvas-snap-y': `${canvasPan.pixelSnap.value.y}px`,
-              '--_dc-default-container-block-size': canvasPan.defaultContainerBlockSize.value === null
+              '--dc-internal-canvas-pan-x': `${canvasPan.offset.value.x}px`,
+              '--dc-internal-canvas-pan-y': `${canvasPan.offset.value.y}px`,
+              '--dc-internal-canvas-snap-x': `${canvasPan.pixelSnap.value.x}px`,
+              '--dc-internal-canvas-snap-y': `${canvasPan.pixelSnap.value.y}px`,
+              '--dc-internal-renderer-default-container-block-size': canvasPan.defaultContainerBlockSize.value === null
                 ? undefined
                 : `${canvasPan.defaultContainerBlockSize.value}px`,
             },

@@ -117,7 +117,7 @@ export default defineComponent({
 
       if (span > 1) {
         wrapperClass.push(`dc-form-field--span-${span}`)
-        wrapperStyle['--_dc-span'] = String(span)
+        wrapperStyle['--dc-internal-form-field-span'] = String(span)
       }
 
       // show: false -> display: none (CSS hide, preserves DOM)

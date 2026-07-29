@@ -142,8 +142,8 @@ export default defineComponent({
       if (!nextOverflowing) {
         metrics = { maxScrollTop: 0, maxThumbOffset: 0, paddingStart: 0, thumbSize: 0 }
         thumb.style.display = 'none'
-        thumb.style.removeProperty('--_dc-scroll-area-thumb-height')
-        thumb.style.removeProperty('--_dc-scroll-area-thumb-offset')
+        thumb.style.removeProperty('--dc-internal-scroll-area-thumb-height')
+        thumb.style.removeProperty('--dc-internal-scroll-area-thumb-offset')
         syncVisibility()
         return
       }
@@ -162,8 +162,8 @@ export default defineComponent({
 
       metrics = { maxScrollTop, maxThumbOffset, paddingStart, thumbSize }
       thumb.style.display = ''
-      thumb.style.setProperty('--_dc-scroll-area-thumb-height', `${thumbSize}px`)
-      thumb.style.setProperty('--_dc-scroll-area-thumb-offset', `${thumbOffset}px`)
+      thumb.style.setProperty('--dc-internal-scroll-area-thumb-height', `${thumbSize}px`)
+      thumb.style.setProperty('--dc-internal-scroll-area-thumb-offset', `${thumbOffset}px`)
       syncVisibility()
     }
 

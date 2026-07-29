@@ -82,7 +82,10 @@ describe('dcDesigner', () => {
       expect(host.querySelector('[data-dc-workspace-control="center"]')).not.toBeNull()
       const root = host.querySelector<HTMLElement>('[data-dc-component="designer"]')
       expect(root?.dataset.dcState?.split(' ')).toContain('compact')
-      expect(root?.style.getPropertyValue('--_dc-workspace-left-width')).toBe('280px')
+      expect(root?.style.getPropertyValue('--dc-internal-designer-workspace-left-width')).toBe('280px')
+      expect(root?.style.getPropertyValue('--dc-internal-designer-workspace-right-width')).toBe('320px')
+      expect(root?.style.getPropertyValue('--dc-internal-designer-workspace-rail-width')).toBe('44px')
+      expect(root?.style.getPropertyValue('--dc-internal-designer-workspace-drawer-width')).toBe('320px')
       expect(root?.querySelector(':scope > [data-dc-part="body"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="canvas-controls"] [data-dc-part="toolbar"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="material-panel"] [data-dc-part="search-input"]')).not.toBeNull()
@@ -219,16 +222,16 @@ describe('dcDesigner', () => {
       }))
       await nextTick()
 
-      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('-220px')
-      expect(stage.style.getPropertyValue('--_dc-canvas-pan-y')).toBe('160px')
+      expect(stage.style.getPropertyValue('--dc-internal-canvas-pan-x')).toBe('-220px')
+      expect(stage.style.getPropertyValue('--dc-internal-canvas-pan-y')).toBe('160px')
       expect(viewport.scrollLeft).toBe(0)
       expect(viewport.scrollTop).toBe(0)
 
       reset.click()
       await nextTick()
 
-      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('0px')
-      expect(stage.style.getPropertyValue('--_dc-canvas-pan-y')).toBe('0px')
+      expect(stage.style.getPropertyValue('--dc-internal-canvas-pan-x')).toBe('0px')
+      expect(stage.style.getPropertyValue('--dc-internal-canvas-pan-y')).toBe('0px')
     }
     finally {
       app.unmount()
@@ -292,7 +295,7 @@ describe('dcDesigner', () => {
         bubbles: true,
       }))
       await nextTick()
-      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('60px')
+      expect(stage.style.getPropertyValue('--dc-internal-canvas-pan-x')).toBe('60px')
 
       activeShell.value = SecondShell
       await nextTick()
@@ -301,8 +304,8 @@ describe('dcDesigner', () => {
       expect(host.querySelector('.first-shell')).toBeNull()
       expect(host.querySelector('.second-shell [data-dc-component="canvas-surface"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="renderer-frame-boundary"]')).toBe(boundary)
-      expect(stage.style.getPropertyValue('--_dc-canvas-pan-x')).toBe('0px')
-      expect(stage.style.getPropertyValue('--_dc-canvas-pan-y')).toBe('0px')
+      expect(stage.style.getPropertyValue('--dc-internal-canvas-pan-x')).toBe('0px')
+      expect(stage.style.getPropertyValue('--dc-internal-canvas-pan-y')).toBe('0px')
       expect(designer.engine.state.getSchema()).toEqual(schemaBefore)
       expect(designer.engine.history.state.value).toBe(historyBefore)
     }

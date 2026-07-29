@@ -212,6 +212,7 @@ describe('formField', () => {
       await nextTick()
       let output = host.querySelector<HTMLOutputElement>('.factory-state')
       const wrapper = host.querySelector<HTMLElement>('.dc-form-field')
+      const sectionBody = host.querySelector<HTMLElement>('.dc-form-section__body')
 
       expect(output?.dataset).toMatchObject({
         field: 'Title',
@@ -221,7 +222,8 @@ describe('formField', () => {
         note: 'mode:basic',
       })
       expect(wrapper?.classList.contains('dc-form-field--span-2')).toBe(true)
-      expect(wrapper?.style.getPropertyValue('--_dc-span')).toBe('2')
+      expect(sectionBody?.style.getPropertyValue('--dc-internal-form-section-columns')).toBe('3')
+      expect(wrapper?.style.getPropertyValue('--dc-internal-form-field-span')).toBe('2')
 
       values.title = 'Second'
       values.mode = 'advanced'

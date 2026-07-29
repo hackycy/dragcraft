@@ -25,6 +25,9 @@ const knownProperties = new Set([...knownTokens, ...integrationProperties])
 const knownComponents = new Set(Object.keys(contract.components))
 const knownParts = new Set(Object.values(contract.components).flatMap(component => component.parts))
 const knownStates = new Set(Object.values(contract.components).flatMap(component => component.states))
+const internalPropertyPrefix = '--dc-internal-'
+const legacyInternalPropertyPattern = /--_dc-[a-z0-9-]+/g
+const dragcraftPropertyPattern = /--dc-[a-z0-9-]+/g
 
 function readCss(relativePath) {
   const absolutePath = path.resolve(packageRoot, relativePath)
@@ -50,12 +53,19 @@ function isInsideKeyframes(rule) {
 
 function validatePublicProperties(root) {
   root.walkDecls((decl) => {
-    if (decl.prop.startsWith('--dc-') && !knownProperties.has(decl.prop))
+    if (decl.prop.startsWith('--_dc-'))
+      report(decl, `declares legacy internal property ${decl.prop}; use ${internalPropertyPrefix}<owner>-<name>`)
+
+    if (decl.prop.startsWith('--dc-') && !decl.prop.startsWith(internalPropertyPrefix) && !knownProperties.has(decl.prop))
       report(decl, `declares unknown public property ${decl.prop}`)
 
-    const referenced = decl.value.match(/--dc-[a-z0-9-]+/g) ?? []
+    const legacyReferences = decl.value.match(legacyInternalPropertyPattern) ?? []
+    for (const property of legacyReferences)
+      report(decl, `uses legacy internal property ${property}; use ${internalPropertyPrefix}<owner>-<name>`)
+
+    const referenced = decl.value.match(dragcraftPropertyPattern) ?? []
     for (const property of referenced) {
-      if (!knownProperties.has(property))
+      if (!property.startsWith(internalPropertyPrefix) && !knownProperties.has(property))
         report(decl, `uses unknown public property ${property}`)
     }
   })
