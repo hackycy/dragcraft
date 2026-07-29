@@ -28,7 +28,6 @@ function clonePersistedValue<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
-// #region tutorial-page-repository
 export function createMemoryPageRepository(seed: SavedPage[] = []): PageRepository {
   const pages = new Map(seed.map(page => [page.id, clonePersistedValue(page)]))
 
@@ -52,4 +51,3 @@ export function createMemoryPageRepository(seed: SavedPage[] = []): PageReposito
     },
   }
 }
-// #endregion tutorial-page-repository

@@ -1,57 +1,78 @@
 ---
-description: "使用节点动作、拦截器和事件 hooks 接入权限、确认、审计和业务副作用。"
+description: "使用节点动作、拦截器、事件 hooks 和 Authoring Policy 接入业务规则。"
 ---
 
-# 动作与业务策略
+# 动作与 Authoring Policy
 
-当操作需要业务规则时，节点动作应返回命令，让 Core 继续负责校验、历史和 Schema 事件。贯穿示例为公告增加“设为精选”，并在删除前走确认拦截器：
+节点动作负责描述“用户可以发起什么操作”，Authoring Policy 负责裁决“当前节点是否允许该操作”。需要写 Schema 的动作应返回命令，确认、跳转和埋点则交给宿主 handler 或 interceptor。
 
-<<< ../../../examples/guide-project/src/editor/create-page-designer.ts#tutorial-actions
+## 增加业务动作
 
-`command` 适合写 Schema，`handler` 适合跳转、打开宿主弹窗或埋点。`actionInterceptors` 包裹内置和自定义动作，适合确认、权限和错误上报。`eventHooks` 则用于选择、拖拽和 hover 的交互通知。
+贯穿项目为公告增加“设为精选”，并为破坏性动作接入确认：
 
-| 需求 | 入口 |
-| --- | --- |
-| 新增、覆盖或限制工具栏操作 | `customActions` 与 `meta.actions` |
-| 确认、鉴权和审计 | `actionInterceptors` |
-| 监听选择、拖拽和 hover | `eventHooks` |
+<<< ../../../examples/guide-project/src/editor/actions.ts
 
-| 框架负责 | 宿主负责 |
-| --- | --- |
-| 动作管线、内置 command、历史和交互事件 | 权限、确认 UI、审计、错误提示和服务端授权 |
+`command` 适合可撤销的 Schema 写入。`handler` 适合打开弹窗、跳转和发送埋点；如果 handler 还要改页面，应显式执行命令并处理结果。
 
-框架不会替宿主显示拦截器返回的业务原因，也不会替你实现权限策略。不要把任意自定义 command 当作标准 Designer 扩展；优先使用内置 command 或字段绑定。
+动作的判断顺序是：
 
-## Schema 托管物料
+```text
+visible
+  -> available / Authoring Policy
+  -> disabled
+  -> beforeAction interceptors
+  -> command 或 handler
+  -> afterAction / onActionError
+```
 
-固定由页面模板、Schema import 或 migration 提供，但仍要在工作台中渲染、选中和配置的物料，使用 `authoring: 'schema-managed'`。它是设计态操作策略，不是对宿主代码或服务端的安全隔离。
+`actionInterceptors` 包裹内置动作和自定义动作，适合统一接入确认、权限检查、审计和错误上报。框架不会替宿主展示拒绝原因。
 
-先和普通物料一样注册 metadata 与组件：
+## 使用交互事件
 
-<<< ../../../examples/guide-project/src/domain/widgets/page-header.ts#tutorial-schema-managed-header
+选择、拖拽和 hover 不属于节点 action，使用 `eventHooks`：
 
-然后由 Schema producer 显式提供节点。`defaultLayout` 只用于创建节点；既有或初始节点仍须把自己的 `layout` 写入 Schema：
-
-<<< ../../../examples/guide-project/src/editor/create-page-designer.ts#tutorial-schema-managed-header-node
-
-| 能力 | 默认值 | 显式 override |
+| Hook | 能否取消 | 约束 |
 | --- | --- | --- |
-| 标准物料面板、`ADD_NODE`、duplicate | 隐藏或拒绝 | 不可开放 |
+| `onBeforeSelect` | 可以 | 可以异步；执行期间重复选择会被丢弃 |
+| `onAfterSelect` | 不可以 | 适合外围状态和埋点 |
+| `onBeforeDrag` | 可以 | 必须同步，浏览器 DragEvent 不能等待 Promise |
+| `onAfterDrag` | 不可以 | 异步错误不回滚已完成操作 |
+| `onHoverChange` | 不可以 | 高频通知，不应触发保存 |
+
+Schema 已提交后的数据通知使用 Engine `EventHub`，不要用 hover 或 selection hook 推断页面已经修改。
+
+## 管理 Schema 托管物料
+
+页头由初始 Schema 提供，但仍可在工作台中选中和配置：
+
+<<< ../../../examples/guide-project/src/domain/widgets/page-header.ts
+
+`authoring: 'schema-managed'` 的默认能力如下：
+
+| 能力 | 默认 | 可显式开放 |
+| --- | --- | --- |
+| 物料面板、`ADD_NODE`、duplicate | 隐藏或拒绝 | 不可开放 |
 | 选中 | 允许 | `selectable` |
-| `props` 与 `style` | 允许 | `configurable` |
-| 容器 variant | 拒绝 | `variantChangeable` |
+| 修改 props/style | 允许 | `configurable` |
+| 切换容器 variant | 拒绝 | `variantChangeable` |
 | 拖拽、上移、下移 | 拒绝 | `draggable: true` |
-| sibling 下标锁 | 不启用 | `sortable: false` |
+| 锁定 sibling 下标 | 不启用 | `sortable: false` |
 | 删除 | 拒绝 | `deletable: true` |
 
-`creatable: true` 和同 key 的 duplicate extra action 都不会解除创建与复制禁令；注册时只会给出 warning。新增、复制与容器变体迁移会检查整棵候选子树；删除普通父节点也要求其所有 Schema 托管后代都允许删除。
+默认内置动作会保留在工具栏中并显示 disabled，使按钮位置稳定。`actions.only`、`actions.exclude` 和 action 自身的 `visible` 才改变显隐；它们不能绕过能力裁决，也不能重新开放 duplicate。
 
-这些 override 可以写成布尔值，或接收只读 `node`、`schema` 的 predicate。predicate 抛错或返回非法值时会 fail closed，命令、历史和成功事件都不会提交。`configurable` 只控制 `props` 和 `style`，`variantChangeable` 独立控制 `container.variant`；被拒绝的属性字段仍显示当前值但处于 disabled。移动限制只检查 `MOVE_NODE` 的直接 source，因此普通父容器可以携带 Schema 托管后代移动，其他 sibling 的被动下标变化也不会被拦截。
+## 理解 fail closed
 
-默认保留内置工具栏动作并全部显示为 disabled。Authoring Policy 未授权或因当前位置、容器约束暂不可用的内置动作都会保留并显示 disabled，使工具栏保持稳定。`draggable: true` 会启用拖拽和上下移动，`deletable: true` 会启用删除；`actions.only`、`actions.exclude` 或 action 自身的 `visible` 才会改变显隐。全局 custom action 需要被 `actions.only` 点名，物料自己的 `actions.extra` 视为显式授权。duplicate 无法重新开放。显式显隐配置后的最终 action 列表为空时，节点不会渲染工具栏。
+行为 predicate 接收只读 `node` 和 `schema`。predicate 抛错或返回非法值时，策略按拒绝处理：
 
-`importSchema()`、注册的 migration 和 custom command 是可信宿主入口，不受该策略的隔离承诺；Undo/redo 恢复已提交的快照时也不会重新裁决策略。精确公开接口见 [Schema 与命令](/reference/designer-schema#schema-托管物料)。
+- 命令 draft 被丢弃。
+- 历史不增加。
+- 成功事件不发出。
+- UI 保留当前已提交快照。
 
-**完成检查**：公告动作只能在允许的节点出现；删除时会先经过宿主确认，并且取消不会写入 Schema。
+创建、复制和容器迁移会校验完整候选子树。删除普通父节点时，所有 Schema 托管后代也必须允许删除。
 
-下一步：[面板与画布](/guide/customization/panels-and-canvas)；精确字段见 [Designer 渲染与容器](/reference/designer-rendering)。
+> [!WARNING]
+> Authoring Policy 约束标准设计态交互和内置命令，不是服务端授权。`importSchema()`、migration 和 custom command 是可信宿主入口；undo/redo 也不会重新执行策略。
+
+精确类型和动作字段见 [Designer 渲染与容器参考](/reference/designer-rendering) 与 [Schema 与命令参考](/reference/designer-schema)。

@@ -11,7 +11,6 @@ export const GuidePageHeaderWidget = defineComponent({
   },
 })
 
-// #region tutorial-schema-managed-header
 export const pageHeaderWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
   meta: {
     type: 'page-header',
@@ -36,4 +35,3 @@ export const pageHeaderWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = 
   },
   component: GuidePageHeaderWidget,
 }
-// #endregion tutorial-schema-managed-header

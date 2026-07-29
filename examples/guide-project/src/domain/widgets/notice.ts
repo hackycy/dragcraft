@@ -28,7 +28,6 @@ export const NoticeWidget = defineComponent({
   },
 })
 
-// #region tutorial-notice-widget
 export const noticeWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
   meta: {
     type: 'notice',
@@ -45,7 +44,19 @@ export const noticeWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
       sections: [{
         title: '公告内容',
         fields: [
-          { key: 'text', label: '文案', component: 'Input' },
+          {
+            key: 'text',
+            label: '文案',
+            component: 'Input',
+            rules: [
+              { required: true, message: '公告文案不能为空' },
+              {
+                validator: (value: unknown) => typeof value === 'string' && value.length <= 60
+                  ? true
+                  : '公告文案不能超过 60 个字符',
+              },
+            ],
+          },
           {
             key: 'tone',
             label: '色调',
@@ -76,4 +87,3 @@ export const noticeWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
   },
   component: NoticeWidget,
 }
-// #endregion tutorial-notice-widget

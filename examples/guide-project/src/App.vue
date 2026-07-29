@@ -2,6 +2,7 @@
 import type { DesignerSchema } from '@dragcraft/designer'
 import {
   DcDesigner,
+  EventName,
   useDesigner,
 } from '@dragcraft/designer'
 import {
@@ -10,13 +11,11 @@ import {
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
 import { computed, onBeforeUnmount, ref } from 'vue'
-import { guideComponentMap } from './domain/widgets'
 import { createPageDesigner } from './editor/create-page-designer'
-import { createMemoryPageRepository } from './host/page-repository'
-import { guideRuntimeContainerMap, RuntimePage } from './runtime'
+import { createMemoryPageRepository, PageRevisionConflictError } from './host/page-repository'
+import { guideRuntimeRegistry, RuntimePage } from './runtime'
 
 const pageId = 'summer-campaign'
-// #region tutorial-device-frame
 const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
 const activeDeviceFrame = computed(() =>
   BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
@@ -28,10 +27,8 @@ function selectDeviceFrame(id: string) {
   if (BUILT_IN_DEVICE_FRAMES.some(definition => definition.id === id))
     activeDeviceFrameId.value = id
 }
-// #endregion tutorial-device-frame
 const designer = createPageDesigner({ containerShell: activeContainerShell })
-const { exportSchema, schema } = useDesigner(designer)
-// #region tutorial-save-and-preview
+const { canRedo, canUndo, exportSchema, redo, schema, undo } = useDesigner(designer)
 const repository = createMemoryPageRepository()
 const revision = ref(0)
 const status = ref('尚未保存')
@@ -39,13 +36,20 @@ const showPreview = ref(false)
 const runtimeSchema = computed(() => schema.value as unknown as DesignerSchema)
 
 async function saveDraft() {
-  const page = await repository.save({
-    id: pageId,
-    revision: revision.value,
-    schema: exportSchema(),
-  })
-  revision.value = page.revision
-  status.value = `已保存版本 ${page.revision}`
+  try {
+    const page = await repository.save({
+      id: pageId,
+      revision: revision.value,
+      schema: exportSchema(),
+    })
+    revision.value = page.revision
+    status.value = `草稿修订号 ${page.revision} 已保存`
+  }
+  catch (error) {
+    status.value = error instanceof PageRevisionConflictError
+      ? '草稿已被其他编辑会话更新，请重新加载'
+      : '保存草稿失败'
+  }
 }
 
 async function reloadDraft() {
@@ -57,16 +61,23 @@ async function reloadDraft() {
 
   const result = designer.engine.importSchema(page.schema)
   if (!result.ok) {
-    status.value = '草稿没有通过当前物料注册表校验'
+    status.value = `草稿校验失败：${result.diagnostics.map(item => item.code).join(', ')}`
     return
   }
 
   revision.value = page.revision
-  status.value = `已加载版本 ${page.revision}`
+  status.value = `已加载草稿修订号 ${page.revision}`
 }
 
-onBeforeUnmount(() => designer.dispose())
-// #endregion tutorial-save-and-preview
+function markDraftChanged() {
+  status.value = '有未保存的更改'
+}
+
+designer.engine.eventHub.on(EventName.SCHEMA_CHANGED, markDraftChanged)
+onBeforeUnmount(() => {
+  designer.engine.eventHub.off(EventName.SCHEMA_CHANGED, markDraftChanged)
+  designer.dispose()
+})
 </script>
 
 <template>
@@ -85,20 +96,19 @@ onBeforeUnmount(() => designer.dispose())
         />
         <button type="button" @click="saveDraft">保存草稿</button>
         <button type="button" @click="reloadDraft">加载草稿</button>
+        <button type="button" :disabled="!canUndo()" @click="undo">撤销</button>
+        <button type="button" :disabled="!canRedo()" @click="redo">重做</button>
         <button type="button" @click="showPreview = !showPreview">
           {{ showPreview ? '返回编辑' : '查看运行时' }}
         </button>
       </div>
     </header>
 
-    <!-- #region tutorial-designer-mount -->
     <DcDesigner v-if="!showPreview" :instance="designer" />
-    <!-- #endregion tutorial-designer-mount -->
     <section v-else class="guide-project__preview">
       <RuntimePage
         :schema="runtimeSchema"
-        :component-map="guideComponentMap"
-        :container-map="guideRuntimeContainerMap"
+        :registry="guideRuntimeRegistry"
       />
     </section>
   </div>

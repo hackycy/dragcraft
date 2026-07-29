@@ -34,4 +34,6 @@ const designer = createDesigner({
 
 扩展对象在 Renderer 挂载时读取。要在运行中切换一组 Renderer 扩展，应重新挂载承载 `DcDesigner` 的组件。
 
+创建已有页面时，先注册物料和 Schema migrations，再调用 `engine.importSchema()`。完整组装顺序见 [框架如何协作](/guide/fundamentals/architecture)。
+
 继续查阅 [Schema 与命令](/reference/designer-schema)、[渲染与容器](/reference/designer-rendering)、[表单与字段](/reference/designer-forms) 或 [样式与国际化](/reference/designer-styles)。

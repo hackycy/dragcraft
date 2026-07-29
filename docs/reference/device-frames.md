@@ -78,7 +78,7 @@ Picker 不保存或修改选择状态。它按 definition group metadata 分组�
 
 ## 自定义外壳
 
-Container Shell 不接收 Renderer props，只需要渲染一次 default slot：
+Container Shell 不接收 Renderer props，并且必须恰好渲染一次 default slot：
 
 ```ts
 const WidePreviewShell = defineComponent({

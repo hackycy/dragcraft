@@ -1,31 +1,51 @@
 ---
-description: "将 Schema 保存到宿主仓储，重新加载草稿，并用只读运行时解释业务节点。"
+description: "保存和重新加载页面 Schema，并通过独立 Vue 运行时预览发布数据。"
 ---
 
-# 保存草稿并预览运行时
+# 保存、加载与只读预览
 
-在业务物料和页面配置可编辑后，草稿服务属于宿主应用。贯穿示例先定义一个可替换的仓储接口和内存实现：
+设计器不会自动持久化页面。宿主通过 `exportSchema()` 取得可传输快照，通过 `importSchema()` 在当前物料注册表下迁移并校验草稿。
 
-<<< ../../../examples/guide-project/src/host/page-repository.ts#tutorial-page-repository
+## 定义仓储边界
 
-`revision` 是乐观锁版本。真实服务应在保存时验证页面归属、物料白名单、资源 URL 和业务字段；内存实现只用于让教程在浏览器中完成闭环。
+贯穿示例使用带乐观锁修订号的仓储接口：
 
-生产运行时需要自己解释 Schema，尤其是容器的 `regions`：
+<<< ../../../examples/guide-project/src/host/page-repository.ts
 
-<<< ../../../examples/guide-project/src/runtime/RuntimePage.ts#tutorial-runtime-renderer
+内存实现让示例在浏览器中完成闭环。真实服务必须校验页面归属、修订号、物料白名单、业务 props、资源 URL、容器变体和 region 约束。
 
-普通节点使用 `componentMap` 渲染。容器节点把递归渲染后的 region VNode 交给业务容器组件，因此业务应用仍拥有 flex、grid 和分栏的实际 DOM 与 CSS。
+保存成功后服务端返回新的 `revision`。旧编辑会话继续携带旧修订号保存时，仓储抛出 `PageRevisionConflictError`，而不是覆盖较新的页面。
 
-运行时容器只接收 `variant` 和 `regions`，不使用 `ContainerRegionOutlet` 或 `useContainerRuntime()`：
+## 注册后再导入
 
-<<< ../../../examples/guide-project/src/runtime/RuntimeColumnContainer.ts#tutorial-runtime-container
+完整实例先创建注册表，再注册 Schema migrations，最后导入初始数据：
 
-| 框架负责 | 宿主负责 |
-| --- | --- |
-| 导出快照、导入校验、历史与 Schema 事件 | 保存接口、版本冲突、发布流程、生产渲染与服务端安全校验 |
+<<< ../../../examples/guide-project/src/editor/create-page-designer.ts
 
-不要在生产页面复用编辑态 `RootRenderer` 或 `ContainerRegionOutlet`。它们包含选中、拖拽和编辑交互。
+这个顺序确保 migration 产出的每个 `node.type`、容器 variant 和 region 都能由当前注册表校验。`importSchema()` 失败时保留原快照，并返回带稳定 `code` 的 diagnostics。
 
-**完成检查**：保存后重新加载草稿，Schema 与公告状态恢复；切换预览时，运行时容器只使用 `variant` 和 `regions`。
+> [!WARNING]
+> 不要把导入失败改成“忽略未知节点后继续”。静默删除内容会让一次加载操作变成不可恢复的数据损失。
 
-下一步：[完成检查](/guide/learn/completion)。
+## 使用独立运行时
+
+运行时注册表按 `type` 区分普通物料与容器物料：
+
+<<< ../../../examples/guide-project/src/runtime/registry.ts
+
+普通物料接收 `props` 和 `style.content`。容器物料接收自身节点、variant 和已经递归渲染的 regions。未知物料进入可观察 fallback，不会被静默跳过。
+
+`RuntimePage` 还会解释 root surface、`flow/chrome/layer` 和物料默认布局。它不导入 `RootRenderer`、`ContainerRegionOutlet` 或 `useContainerRuntime()`；这些入口属于设计态。
+
+Vue 参考实现适合 Web 预览和同构业务页面。小程序、原生应用或其他运行时应读取同一 Schema，并按目标平台重新实现组件注册、样式 DSL 和布局投影。
+
+## 验证结果
+
+在完整示例中执行以下操作：
+
+1. 修改公告并保存草稿。
+2. 再次修改公告，然后加载草稿，确认保存时的内容恢复。
+3. 切换到“查看运行时”，确认固定页头、正文、分栏区域和浮动操作处于不同 surface。
+4. 返回编辑器，确认运行时切换没有重建 Designer 或清空历史。
+
+生产运行时的布局和降级策略见 [迁移、草稿与生产运行时](/guide/customization/lifecycle-and-runtime)。

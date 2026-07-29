@@ -1,0 +1,11 @@
+:root {
+  --dc-color-accent: #0f766e;
+  --dc-color-accent-hover: #0d665f;
+  --dc-color-accent-active: #0b574f;
+  --dc-color-accent-subtle: #ecfdf5;
+  --dc-color-accent-border: #99f6e4;
+  --dc-color-accent-ring: rgb(15 118 110 / 20%);
+  --dc-color-on-accent-subtle: #115e59;
+  --dc-color-focus-ring: #0f766e;
+  --dc-radius-md: 6px;
+}

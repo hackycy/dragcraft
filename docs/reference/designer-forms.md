@@ -32,3 +32,7 @@ import {
 | `resolveFieldComponentProps()` | 解析动态 props 和国际化选项。 |
 
 函数形式的 `FieldSchema.component` 总是 render factory。可复用 Vue 组件应先注册到 `FieldComponentMap`，再通过字符串键引用。
+
+字段未声明 `bindTo` 时，Widget 表单写入 `props.{key}`，Global 表单写入 `globalConfig.{key}`。编辑节点样式、页面 surface 或容器 variant 时使用显式绑定。
+
+`visible`、`show`、`disabled`、`dependencies`、`parseValue`、`valueFormat` 和 `rules` 的选择标准及数据流见 [表单与字段](/guide/customization/forms-and-fields)。表单验证服务编辑体验，保存与发布服务仍需重新校验。

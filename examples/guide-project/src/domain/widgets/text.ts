@@ -11,7 +11,6 @@ export const GuideTextWidget = defineComponent({
   },
 })
 
-// #region tutorial-text-widget
 export const textWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
   meta: {
     type: 'guide-text',
@@ -35,4 +34,3 @@ export const textWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
   },
   component: GuideTextWidget,
 }
-// #endregion tutorial-text-widget

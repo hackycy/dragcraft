@@ -40,3 +40,7 @@ const PreviewShell = defineComponent({
 传入 `computed(() => activeDefinition.value.containerShell)` 可以在现有 Designer 上响应式切换外壳。切换保留 Engine、Schema 和 history；Shell-local DOM/scroll 与 widget-local Vue state 不属于保留契约。
 
 容器 region 的子节点由 Engine 拥有，不要把它们写入普通 `children`。Container Shell 与业务 container widget 是不同概念：前者包围整个 Canvas Surface，后者通过 `ContainerRegionOutlet` 组织 Schema 节点。
+
+页面级 `flow/chrome/layer` 的默认值、排序域、可见性和运行时映射见 [布局投影](/guide/fundamentals/layout-system)。业务容器的 region、迁移与插入几何见 [容器与 region](/guide/customization/layout-and-containers)。
+
+`widgetFallback` 负责设计态未知物料，生产运行时必须提供自己的 fallback。不要在生产页面复用 `RootRenderer`、Designer Container Shell 或节点交互扩展。

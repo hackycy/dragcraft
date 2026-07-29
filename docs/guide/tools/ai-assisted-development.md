@@ -1,10 +1,10 @@
 ---
-description: "使用 DragCraft skill 按当前安装版本、精确指南和范例建立可复核的集成证据链。"
+description: "使用 DragCraft skill 按宿主项目的公开接口、精确指南和范例建立可复核的集成证据链。"
 ---
 
 # AI 辅助开发
 
-DragCraft 提供显式调用的 `dragcraft` skill。它先确认宿主项目中的实际版本，再按任务选择精确指南、公开类型和参考实现。
+DragCraft 提供显式调用的 `dragcraft` skill。它先检查宿主项目实际安装的公开接口，再按任务选择精确指南、公开类型和参考实现。
 
 ```text
 $dragcraft 为活动页增加一个带两个 region 的容器，并验证变体迁移

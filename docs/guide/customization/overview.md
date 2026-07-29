@@ -1,32 +1,32 @@
 ---
-description: "根据要改变的产品行为选择 DragCraft 的公开扩展点，并区分框架职责与宿主职责。"
+description: "根据要改变的产品行为选择 DragCraft 的公开扩展点，并划清宿主职责。"
 ---
 
 # 选择扩展点
 
-完成基础闭环后，按要改变的结果选择扩展点。不要因为需要业务行为就绕过 Schema 或修改组件私有 DOM。
+先描述你要改变的结果，再选择扩展点。一个需求如果同时涉及页面数据和工作台视觉，通常需要两个独立入口；不要为了修改 UI 而绕过 Schema 命令。
 
-| 目标 | 公开扩展 | 宿主仍要实现 |
+| 你要改变的结果 | 使用入口 | 宿主仍需实现 |
 | --- | --- | --- |
-| 新增页面组件 | `WidgetDefinition`、`DesignerWidgetMeta`、`componentMap` | Vue 组件、props、资源与内容样式 |
-| 固定由模板或 Schema producer 提供的物料 | `authoring: 'schema-managed'` | 初始 Schema、import/migration 与服务端白名单 |
-| 改变属性编辑 | `FormSchema`、`FieldComponentMap`、`bindTo` | 字段 UI、异步数据和业务校验 |
-| 承载子节点 | `ContainerDefinition`、`ContainerRegionOutlet`、变体迁移 | DOM、CSS、放置几何和迁移策略 |
-| 增加业务操作 | `customActions`、`actionInterceptors`、`eventHooks` | 权限、确认、审计和错误提示 |
-| 改变工作台 UI | `DesignerExtensions`、`RendererExtensions` | 面板、rail、画布部件与产品布局 |
-| 改变视觉或语言 | 主题 token、公开 data hook、Device Frame、messages | 品牌主题、内容主题和业务文案 |
-| 保存并上线页面 | 命令、事件、导入导出和 Schema 校验 | 服务端、版本、发布、生产运行时 |
+| 添加可拖入的业务组件 | `WidgetDefinition`、`componentMap` | Vue 组件、props、资源和内容主题 |
+| 固定由模板提供的组件 | `authoring: 'schema-managed'` | 初始 Schema、migration、服务端白名单 |
+| 增加属性编辑字段 | `FormSchema`、`FieldComponentMap`、`bindTo` | UI 控件、异步数据和业务校验 |
+| 让组件承载子节点 | `ContainerDefinition`、`ContainerRegionOutlet` | DOM、CSS、插入几何和迁移策略 |
+| 增加确认、权限或审计 | `customActions`、`actionInterceptors`、`eventHooks` | 授权判断、确认 UI、审计服务 |
+| 替换工作台部件 | `DesignerExtensions`、`RendererExtensions` | 产品面板、搜索和自定义视觉 |
+| 改变品牌、设备或语言 | 公开 token、Device Frame、`messages` | 品牌主题、设备状态和业务文案 |
+| 保存、发布和线上渲染 | `exportSchema()`、`importSchema()` | 服务端、发布流程和生产运行时 |
 
-所有高级路径都遵守五个边界：
+## 五条边界
 
-- 不直接修改 `engine.store.schema`。
-- 不把编辑态 `RootRenderer` 当作生产运行时。
-- 不依赖私有 `.dc-*` class；主题只使用公开 token 与 `data-dc-*` hook。
-- 不嵌套容器；当前协议只允许容器位于 `root.children`。
-- 不把任意 `createEngine().registerHandler()` 自定义 command 当作标准 Designer 扩展路径。
+- Schema 的所有写入都经过 Core command；`engine.store.schema` 只能读取。
+- Designer Renderer 只服务设计态，生产页面使用宿主运行时。
+- 主题使用公开 token 与 `data-dc-*` hook，不依赖私有 `.dc-*` class。
+- 容器直接位于 root，region 拥有普通子节点；当前协议不支持容器嵌套。
+- 公开应用只导入 Designer 聚合入口和支持的字段/设备包。
 
-`createEngine().registerHandler()` 是 Core 的低层能力。业务页面写入优先返回内置 command，或使用字段绑定。
+## 选择顺序
 
-**完成检查**：你能为当前需求选择一个公开扩展点，并写出仍由宿主负责的一项行为。
+建议先完成一个普通物料，再接入表单和保存；只有在页面真的需要子节点所有权时才实现容器。面板替换、主题和设备属于工作台集成，不应提前混入业务物料定义。
 
-从 [业务物料](/guide/customization/materials) 开始，或直接进入与你的目标对应的章节。
+从 [业务物料](/guide/customization/materials) 开始，或按目标进入 [表单与字段](/guide/customization/forms-and-fields)、[容器与 region](/guide/customization/layout-and-containers) 和 [动作与 Authoring Policy](/guide/customization/actions-and-policies)。

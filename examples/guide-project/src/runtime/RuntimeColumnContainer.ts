@@ -1,11 +1,12 @@
+import type { SchemaNode } from '@dragcraft/designer'
 import type { PropType } from 'vue'
-import type { RuntimeRegions } from './RuntimePage'
+import type { RuntimeRegions } from './registry'
 import { defineComponent, h } from 'vue'
 
-// #region tutorial-runtime-container
 export const RuntimeColumnContainer = defineComponent({
   name: 'GuideRuntimeColumnContainer',
   props: {
+    node: { type: Object as PropType<SchemaNode>, required: true },
     variant: { type: String, default: 'single' },
     regions: {
       type: Object as PropType<RuntimeRegions>,
@@ -17,14 +18,17 @@ export const RuntimeColumnContainer = defineComponent({
       class: 'guide-runtime-column-container__region',
     }, props.regions[regionId] ?? [])
 
-    return () => props.variant === 'split'
-      ? h('div', { class: 'guide-runtime-column-container guide-runtime-column-container--split' }, [
-          renderRegion('left'),
-          renderRegion('right'),
-        ])
-      : h('div', { class: 'guide-runtime-column-container' }, [
-          renderRegion('content'),
-        ])
+    return () => h('div', {
+      class: {
+        'guide-runtime-column-container': true,
+        'guide-runtime-column-container--split': props.variant === 'split',
+      },
+      style: {
+        ...props.node.style?.surface,
+        gap: `${Number(props.node.props.gap ?? 12)}px`,
+      },
+    }, props.variant === 'split'
+      ? [renderRegion('left'), renderRegion('right')]
+      : [renderRegion('content')])
   },
 })
-// #endregion tutorial-runtime-container

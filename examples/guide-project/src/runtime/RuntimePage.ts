@@ -1,62 +1,155 @@
 import type { DesignerSchema, SchemaNode } from '@dragcraft/designer'
 import type { Component, PropType, VNodeChild } from 'vue'
+import type { RuntimeLayoutEdge, RuntimeLayoutEntry } from './layout'
+import type { RuntimeRegions, RuntimeRegistry } from './registry'
 import { defineComponent, h } from 'vue'
+import { createFrameworkLayerStyle, createRuntimeLayoutPlan } from './layout'
 
-export type RuntimeComponentMap = Record<string, Component>
-export type RuntimeContainerMap = Record<string, Component>
-export type RuntimeRegions = Record<string, VNodeChild[]>
+export const DefaultRuntimeFallback = defineComponent({
+  name: 'GuideRuntimeFallback',
+  props: {
+    node: { type: Object as PropType<SchemaNode>, required: true },
+  },
+  setup(props) {
+    return () => h('p', {
+      class: 'guide-runtime-fallback',
+      role: 'status',
+    }, `无法渲染物料 ${props.node.type}（${props.node.id}）`)
+  },
+})
 
-// #region tutorial-runtime-renderer
 export function createRuntimeNodeRenderer(
-  componentMap: RuntimeComponentMap,
-  containerMap: RuntimeContainerMap,
+  registry: RuntimeRegistry,
+  fallback: Component = DefaultRuntimeFallback,
 ): (node: SchemaNode) => VNodeChild {
   const renderNode = (node: SchemaNode): VNodeChild => {
-    if (node.container) {
-      const Container = containerMap[node.type]
-      if (!Container)
-        return null
+    const definition = registry[node.type]
+    let content: VNodeChild
 
-      const regions = Object.fromEntries(
-        Object.entries(node.container.regions).map(([regionId, children]) => [
-          regionId,
-          children.map(renderNode),
-        ]),
-      ) as RuntimeRegions
+    if (!definition || (node.container && definition.kind !== 'container')) {
+      content = h(fallback, { node })
+    }
+    else if (definition.kind === 'container') {
+      if (!node.container) {
+        content = h(fallback, { node })
+      }
+      else {
+        const regions = Object.fromEntries(
+          Object.entries(node.container.regions).map(([regionId, children]) => [
+            regionId,
+            children.map(renderNode),
+          ]),
+        ) as RuntimeRegions
 
-      return h(Container, {
-        node,
-        variant: node.container.variant,
-        regions,
+        content = h(definition.component, {
+          node,
+          variant: node.container.variant,
+          regions,
+        })
+      }
+    }
+    else {
+      content = h(definition.component, {
+        ...node.props,
+        style: node.style?.content,
       })
     }
 
-    const Widget = componentMap[node.type]
-    return Widget
-      ? h('div', { class: 'guide-runtime-node', style: node.style?.container }, [
-          h(Widget, { ...node.props, style: node.style?.content }),
-        ])
-      : null
+    return h('div', {
+      'class': 'guide-runtime-node',
+      'data-runtime-node-id': node.id,
+      'data-runtime-node-type': node.type,
+      'style': node.style?.container,
+    }, [content])
   }
 
   return renderNode
 }
-// #endregion tutorial-runtime-renderer
+
+function renderEntries(
+  entries: RuntimeLayoutEntry[],
+  renderNode: (node: SchemaNode) => VNodeChild,
+): VNodeChild[] {
+  return entries.map(entry => renderNode(entry.node))
+}
+
+function chromeEntries(
+  entries: RuntimeLayoutEntry[],
+  edge: RuntimeLayoutEdge,
+  fixed: boolean,
+): RuntimeLayoutEntry[] {
+  return entries.filter(entry => entry.placement.kind === 'chrome'
+    && entry.placement.edge === edge
+    && (entry.placement.position === 'fixed') === fixed)
+}
 
 export const RuntimePage = defineComponent({
   name: 'GuideRuntimePage',
   props: {
     schema: { type: Object as PropType<DesignerSchema>, required: true },
-    componentMap: { type: Object as PropType<RuntimeComponentMap>, required: true },
-    containerMap: { type: Object as PropType<RuntimeContainerMap>, required: true },
+    registry: { type: Object as PropType<RuntimeRegistry>, required: true },
+    fallback: { type: Object as PropType<Component>, default: () => DefaultRuntimeFallback },
   },
   setup(props) {
     return () => {
-      const renderNode = createRuntimeNodeRenderer(props.componentMap, props.containerMap)
+      const plan = createRuntimeLayoutPlan(props.schema, props.registry)
+      const renderNode = createRuntimeNodeRenderer(props.registry, props.fallback)
+      const flowRegions = [...plan.flow.entries()].map(([regionId, entries]) => h('section', {
+        'class': 'guide-runtime-region',
+        'data-runtime-region': regionId,
+      }, renderEntries(entries, renderNode)))
+      const renderChrome = (edge: RuntimeLayoutEdge, fixed: boolean) => {
+        const entries = chromeEntries(plan.chrome, edge, fixed)
+        return entries.length === 0
+          ? null
+          : h('div', {
+              'class': {
+                'guide-runtime-chrome': true,
+                'guide-runtime-chrome--fixed': fixed,
+              },
+              'data-runtime-edge': edge,
+            }, renderEntries(entries, renderNode))
+      }
+      const layerVNodes = [...plan.layers.entries()].flatMap(([layer, entries]) => entries.map((entry) => {
+        if (entry.placement.kind !== 'layer')
+          return null
+        return h('div', {
+          'class': 'guide-runtime-layer-entry',
+          'data-runtime-layer': layer,
+          'data-runtime-layer-mode': entry.placement.mode,
+          'style': createFrameworkLayerStyle(entry.placement),
+        }, [renderNode(entry.node)])
+      }))
+
       return h('main', {
         class: 'guide-runtime-page',
-        style: props.schema.root.style?.surface,
-      }, props.schema.root.children?.map(renderNode))
+        style: {
+          '--guide-runtime-inset-block-start': plan.insets['block-start'],
+          '--guide-runtime-inset-block-end': plan.insets['block-end'],
+          '--guide-runtime-inset-inline-start': plan.insets['inline-start'],
+          '--guide-runtime-inset-inline-end': plan.insets['inline-end'],
+        },
+      }, [
+        h('div', { class: 'guide-runtime-scrollport' }, [
+          h('div', {
+            class: 'guide-runtime-surface',
+            style: props.schema.root.style?.surface,
+          }, [
+            renderChrome('block-start', false),
+            h('div', { class: 'guide-runtime-inline-layout' }, [
+              renderChrome('inline-start', false),
+              h('div', { class: 'guide-runtime-flow' }, flowRegions),
+              renderChrome('inline-end', false),
+            ]),
+            renderChrome('block-end', false),
+          ]),
+        ]),
+        renderChrome('block-start', true),
+        renderChrome('block-end', true),
+        renderChrome('inline-start', true),
+        renderChrome('inline-end', true),
+        h('div', { class: 'guide-runtime-layers' }, layerVNodes),
+      ])
     }
   },
 })

@@ -1,39 +1,68 @@
 ---
-description: "安装 DragCraft，并在 Vue 应用中挂载可拖入文本物料的最小编辑器。"
+description: "在 Vue 应用中定义文本物料、创建设计器实例并挂载完整工作台。"
 ---
 
-# 挂载最小编辑器
+# 创建可运行编辑器
 
-先让一个文本物料出现在编辑器中。这个阶段只需要物料 metadata、组件映射和字段 adapter。
+最小编辑器由一个物料定义、一个字段 adapter map 和一个 `DcDesigner` 组成。完成后，你可以拖入文本、修改属性并撤销修改。
 
-安装依赖：
+安装设计器、默认字段 adapter 和对应 UI 库：
 
 ```bash
 pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
 ```
 
-最小实例来自贯穿示例：
+## 定义第一个物料
 
-<<< ../../../examples/guide-project/src/editor/minimal-designer.ts#tutorial-minimal-designer
+物料定义把持久化协议和 Vue 组件放在一起。示例中的完整文本物料如下：
 
-`widgetMetas` 决定左侧能创建什么，`componentMap` 把 Schema 中的 `type` 映射到 Vue 组件，`fieldComponentMap` 告诉右侧表单如何绑定实际 UI 控件。
+<<< ../../../examples/guide-project/src/domain/widgets/text.ts
 
-在应用入口加载字段样式和工作台主题：
+`meta.type` 是 Schema 中保存的稳定标识。`component` 是设计态和当前 Vue 运行时使用的组件；组件名可以重构，`type` 改名则需要 Schema migration。
 
-<<< ../../../examples/guide-project/src/main.ts#tutorial-workbench-styles
+`defaultProps` 在拖入物料时复制到新节点。`formSchema` 中没有显式 `bindTo` 的 `content` 字段默认写入当前节点的 `props.content`。
 
-然后把 `createMinimalDesigner()` 返回的实例传给 `DcDesigner`。贯穿示例在预览切换前保留编辑器：
+## 创建设计器实例
 
-<<< ../../../examples/guide-project/src/App.vue#tutorial-designer-mount
+完整的最小实例工厂只有三类输入：
 
-现在拖入“文本”，选中它并修改 `content`。画布会更新，但浏览器不会出现任何直接修改 Schema 的 API。
+<<< ../../../examples/guide-project/src/editor/minimal-designer.ts
 
-| 框架负责 | 宿主负责 |
+| 输入 | 回答的问题 |
 | --- | --- |
-| 拖放、选中、表单 change 到命令的翻译 | 物料组件的内容、字段 UI 库和应用布局 |
+| `widgetMetas` | 设计器允许创建和编辑哪些 `type` |
+| `componentMap` | 画布如何把 `type` 渲染为 Vue 组件 |
+| `fieldComponentMap` | 属性表单如何把字段键渲染为真实控件 |
 
-不要通过 `engine.store.schema.value` 修改页面。它是只读快照，所有页面写入都应通过命令链路发生。
+这三份注册表不能互相替代。只注册 metadata 会让物料出现在左栏，但画布找不到组件；只注册组件则不会产生物料卡片和属性协议。
 
-**完成检查**：可以拖入一个文本物料、选中它并修改 `content`，且撤销操作能恢复旧值。
+## 挂载并释放实例
 
-下一步：[理解 Schema 与写入链路](/guide/learn/schema-and-write-path)。
+最小页面完整地创建、挂载并释放 Designer：
+
+<<< ../../../examples/guide-project/src/MinimalApp.vue
+
+`designer.dispose()` 会清理事件监听、历史和交互状态。实例由组件创建时，应在组件卸载时释放；如果实例由应用级容器持有，则由该容器管理生命周期。
+
+应用入口加载字段 UI 的基础样式和 Standard 工作台主题：
+
+<<< ../../../examples/guide-project/src/minimal.ts
+
+`@dragcraft/designer/styles` 包含完整工作台主题。只有准备实现整套工作台视觉时，才改用 `@dragcraft/designer/styles/structure`。
+
+## 验证结果
+
+```bash
+pnpm --filter guide-project dev
+```
+
+打开 `http://localhost:9982/minimal.html`，验证以下行为：
+
+- 左栏显示“文本”。
+- 拖入后画布显示“新文本”。
+- 选中节点后右栏显示“文本内容”。
+- 修改内容后可以撤销和重做。
+
+如果左栏存在物料但画布显示 fallback，检查 `componentMap` 是否使用了相同的 `type`。如果右栏显示未知字段，检查 `fieldComponentMap` 是否注册了 `formSchema` 中的组件键。
+
+接下来可以 [接入业务物料与属性配置](/guide/learn/material-and-property-panel)，或先建立 [Schema 与样式作用域](/guide/fundamentals/schema) 的数据模型。

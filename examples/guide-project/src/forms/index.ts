@@ -19,7 +19,6 @@ export const AssetField = defineComponent({
   },
 })
 
-// #region tutorial-field-adapter
 export function createGuideFieldComponentMap(): FieldComponentMap {
   return {
     ...createAntDesignVueFields(),
@@ -30,4 +29,3 @@ export function createGuideFieldComponentMap(): FieldComponentMap {
     },
   }
 }
-// #endregion tutorial-field-adapter

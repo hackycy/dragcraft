@@ -12,6 +12,10 @@ body {
   margin: 0;
 }
 
+.minimal-app {
+  height: 100vh;
+}
+
 button {
   border: 1px solid #c7d1df;
   border-radius: 4px;
@@ -19,6 +23,12 @@ button {
   color: #172033;
   background: #fff;
   cursor: pointer;
+}
+
+button:disabled {
+  color: #8a96a8;
+  cursor: not-allowed;
+  background: #f1f4f8;
 }
 
 .guide-project {
@@ -73,6 +83,16 @@ button {
   font-weight: 600;
   background: #fff;
   border-bottom: 1px solid #d7dee8;
+}
+
+.guide-floating-action {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: #fff;
+  font-weight: 600;
+  background: #c2410c;
+  box-shadow: 0 6px 18px rgb(124 45 18 / 24%);
 }
 
 .guide-notice--warm {
@@ -141,14 +161,95 @@ button {
 }
 
 .guide-runtime-page {
+  --guide-runtime-inset-block-start: 0px;
+  --guide-runtime-inset-block-end: 0px;
+  --guide-runtime-inset-inline-start: 0px;
+  --guide-runtime-inset-inline-end: 0px;
+
+  position: relative;
   width: min(100%, 420px);
   min-height: 680px;
-  padding: 16px;
+  overflow: hidden;
+  background: #fff;
   box-shadow: 0 8px 28px rgb(26 41 63 / 16%);
+}
+
+.guide-runtime-scrollport {
+  position: absolute;
+  inset-block: var(--guide-runtime-inset-block-start) var(--guide-runtime-inset-block-end);
+  inset-inline: var(--guide-runtime-inset-inline-start) var(--guide-runtime-inset-inline-end);
+  overflow: auto;
+}
+
+.guide-runtime-surface {
+  min-height: 100%;
+  padding: 16px;
+}
+
+.guide-runtime-inline-layout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.guide-runtime-flow,
+.guide-runtime-region {
+  min-width: 0;
 }
 
 .guide-runtime-node + .guide-runtime-node {
   margin-top: 12px;
+}
+
+.guide-runtime-chrome {
+  z-index: 2;
+}
+
+.guide-runtime-chrome--fixed {
+  position: absolute;
+}
+
+.guide-runtime-chrome--fixed[data-runtime-edge="block-start"] {
+  inset: 0 0 auto;
+}
+
+.guide-runtime-chrome--fixed[data-runtime-edge="block-end"] {
+  inset: auto 0 0;
+}
+
+.guide-runtime-chrome--fixed[data-runtime-edge="inline-start"] {
+  inset: var(--guide-runtime-inset-block-start) auto var(--guide-runtime-inset-block-end) 0;
+}
+
+.guide-runtime-chrome--fixed[data-runtime-edge="inline-end"] {
+  inset: var(--guide-runtime-inset-block-start) 0 var(--guide-runtime-inset-block-end) auto;
+}
+
+.guide-runtime-chrome > .guide-runtime-node {
+  margin: 0;
+}
+
+.guide-runtime-layers {
+  position: absolute;
+  z-index: 3;
+  inset: var(--guide-runtime-inset-block-start) var(--guide-runtime-inset-inline-end) var(--guide-runtime-inset-block-end) var(--guide-runtime-inset-inline-start);
+  pointer-events: none;
+}
+
+.guide-runtime-layer-entry {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.guide-runtime-layer-entry[data-runtime-layer-mode="self"] {
+  pointer-events: none;
+}
+
+.guide-runtime-fallback {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #b42318;
+  color: #8a1c13;
+  background: #fff1f0;
 }
 
 .guide-runtime-column-container {

@@ -31,27 +31,35 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: '从零搭建页面编辑器',
+          text: '开始使用',
           items: [
-            { text: '准备开发', link: '/guide/learn/prerequisites' },
-            { text: '挂载最小编辑器', link: '/guide/learn/first-editor' },
-            { text: '理解 Schema 与写入链路', link: '/guide/learn/schema-and-write-path' },
-            { text: '添加物料与属性面板', link: '/guide/learn/material-and-property-panel' },
-            { text: '保存草稿并预览运行时', link: '/guide/learn/persistence-and-runtime' },
-            { text: '完成检查', link: '/guide/learn/completion' },
+            { text: '了解接入边界', link: '/guide/learn/prerequisites' },
+            { text: '创建可运行编辑器', link: '/guide/learn/first-editor' },
+            { text: '接入业务物料与属性配置', link: '/guide/learn/material-and-property-panel' },
+            { text: '保存、加载与只读预览', link: '/guide/learn/persistence-and-runtime' },
+            { text: '检查集成结果', link: '/guide/learn/completion' },
           ],
         },
         {
-          text: '高级自定义',
+          text: '核心模型',
           items: [
-            { text: '选择扩展点', link: '/guide/customization/overview' },
+            { text: '框架如何协作', link: '/guide/fundamentals/architecture' },
+            { text: 'Schema 与样式作用域', link: '/guide/fundamentals/schema' },
+            { text: '状态、命令、历史与事件', link: '/guide/fundamentals/state-commands-and-history' },
             { text: '业务物料', link: '/guide/customization/materials' },
             { text: '表单与字段', link: '/guide/customization/forms-and-fields' },
-            { text: '页面布局与容器', link: '/guide/customization/layout-and-containers' },
+            { text: '布局投影', link: '/guide/fundamentals/layout-system' },
+            { text: '容器与 region', link: '/guide/customization/layout-and-containers' },
+          ],
+        },
+        {
+          text: '集成与定制',
+          items: [
+            { text: '选择扩展点', link: '/guide/customization/overview' },
             { text: '动作与业务策略', link: '/guide/customization/actions-and-policies' },
             { text: '面板与画布', link: '/guide/customization/panels-and-canvas' },
             { text: '主题、设备与国际化', link: '/guide/customization/theme-device-and-i18n' },
-            { text: '生命周期与运行时', link: '/guide/customization/lifecycle-and-runtime' },
+            { text: '迁移、草稿与生产运行时', link: '/guide/customization/lifecycle-and-runtime' },
           ],
         },
         {
@@ -80,8 +88,8 @@ export default defineConfig({
         {
           text: '开始使用',
           items: [
-            { text: '准备开发', link: '/guide/learn/prerequisites' },
-            { text: '挂载最小编辑器', link: '/guide/learn/first-editor' },
+            { text: '了解接入边界', link: '/guide/learn/prerequisites' },
+            { text: '创建可运行编辑器', link: '/guide/learn/first-editor' },
           ],
         },
       ],

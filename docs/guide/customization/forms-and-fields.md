@@ -1,27 +1,71 @@
 ---
-description: "使用 FormSchema、字段 adapter、绑定范围和 render factory 定制属性面板。"
+description: "使用 FormSchema、字段 adapter、绑定范围、联动、转换和验证定制属性面板。"
 ---
 
 # 表单与字段
 
-当物料已有稳定 props 后，字段 schema 使用稳定字符串键定位 UI adapter。公告示例把资产选择器注册为 `Asset`：
+FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提交值，Designer 再把 change 翻译成 Core command。三层各自有边界，业务字段不需要直接依赖 Core。
 
-<<< ../../../examples/guide-project/src/forms/index.ts#tutorial-field-adapter
+## 先声明字段
 
-物料表单中未声明 `bindTo` 的字段默认更新当前节点的 `props.{key}`。全局表单默认更新 `globalConfig.{key}`；需要编辑页面 surface 或容器变体时，声明明确的 `bindTo`。
+公告中的 `Asset` 字段由宿主注册，其他字段来自 Ant Design Vue adapter：
 
-| 场景 | 使用方式 |
-| --- | --- |
-| 可复用字段 | `component: 'Asset'` 加 `fieldComponentMap` |
-| 当前表单专用说明或操作区 | `FieldRenderFactory` |
-| 修改节点、Schema、全局配置或容器状态 | `bindTo` 指定 `scope` 与 `path` |
+<<< ../../../examples/guide-project/src/forms/index.ts
 
-| 框架负责 | 宿主负责 |
-| --- | --- |
-| 字段可见性、禁用状态、值转换和校验触发 | 远程选项、资产权限、异步校验和最终服务端校验 |
+字段 adapter 至少需要说明 `component`、model prop 和 update event。`componentProps` 会透传给实际 UI 组件；异步资源列表、权限和上传行为属于字段组件。
 
-函数值会被解释为 render factory。要使用 Vue 函数式组件，先把它注册到 `fieldComponentMap`。更多字段类型见 [Designer 表单与字段](/reference/designer-forms)。
+## 选择绑定范围
 
-**完成检查**：切换“使用背景图”后，`Asset` 字段出现或隐藏；其值只写入公告的 `props.image`。
+| 目标 | 默认或显式绑定 | 写入命令 |
+| --- | --- | --- |
+| 当前节点 props | widget 字段默认值 | `UPDATE_PROPS` |
+| 当前节点 style | `{ scope: 'node', path: 'style.container.*' }` | `UPDATE_PROPS` |
+| 页面 surface | `{ scope: 'schema', path: 'root.style.surface.*' }` | 语义化 `UPDATE_PROPS(root)` |
+| 页面业务配置 | 全局字段默认值 | `SET_GLOBAL_CONFIG` |
+| 容器 variant | `{ scope: 'container', path: 'variant' }` | `CHANGE_CONTAINER_VARIANT` |
 
-下一步：[页面布局与容器](/guide/customization/layout-and-containers)。
+默认绑定适合物料自身 props。页面视觉、容器状态和跨节点数据应显式写出 `bindTo`，让保存位置一眼可见。
+
+## 控制字段显示和禁用
+
+`visible` 会移除字段，`show` 只隐藏 CSS 并保留 DOM 状态，`disabled` 保留当前值但拒绝编辑。字段联动读取 `FormContext.values`：
+
+```ts
+{
+  key: 'image',
+  label: '背景图',
+  component: 'Asset',
+  visible: ctx => ctx.values.hasImage === true,
+  disabled: ctx => ctx.values.locked === true,
+}
+```
+
+Authoring Policy 对 `configurable` 和 `variantChangeable` 的拒绝优先于 dependency handler。即使联动函数返回 `disabled: false`，Core 仍会拒绝未授权的写入。
+
+## 转换和验证
+
+输入值和 Schema 值不一致时，使用 `parseValue` 和 `valueFormat`；不要把转换逻辑散落在多个组件事件里。字段规则按 required 到自定义 validator 顺序执行，首个错误短路：
+
+```ts
+{
+  key: 'title',
+  label: '标题',
+  component: 'Input',
+  rules: [
+    { required: true, message: '标题不能为空' },
+    {
+      validator: (value) => typeof value === 'string' && value.length <= 50
+        ? true
+        : '标题不能超过 50 个字符',
+    },
+  ],
+}
+```
+
+表单验证改善编辑体验，不能代替保存接口和发布服务的最终校验。
+
+## 选择字段组件还是 render factory
+
+可复用 Vue 控件先注册为 `fieldComponentMap` 中的字符串键。函数形式的 `FieldSchema.component` 总是当前表单专用的 render factory，适合说明、分割线和轻量操作区；不要用它替代可复用字段 adapter。
+
+完整字段协议见 [Designer 表单与字段参考](/reference/designer-forms)。
