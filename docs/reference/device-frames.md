@@ -6,6 +6,8 @@ description: "@dragcraft/device-frames 的无状态 Device Frame Definitions、C
 
 Device Frame Definition 是引用稳定的只读目录项。宿主持有 Active Device Frame，并把它的 `containerShell` 交给 Designer。
 
+先阅读 [主题、设备与国际化](/guide/customization/theme-device-and-i18n)，其中说明了为什么选择状态必须留在宿主。
+
 ```ts
 import { createDesigner } from '@dragcraft/designer'
 import {

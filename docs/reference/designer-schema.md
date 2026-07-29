@@ -6,6 +6,8 @@ description: "通过 @dragcraft/designer 使用 Schema、命令、历史、事�
 
 Designer 创建并持有页面 Engine，所有 Schema 写入都经过命令接口。
 
+先完成 [保存 Schema，并通过命令写入](/guide/learn/schema-and-write-path)；容器和模板节点分别见 [业务容器](/guide/learn/containers) 与 [Schema 托管动作](/guide/learn/schema-managed-actions)。
+
 ```ts
 import { CommandType, createEngine } from '@dragcraft/designer'
 

@@ -1,30 +1,39 @@
 ---
-description: "替换物料栏、属性栏、rail 和 Renderer 的局部视觉部件，同时保留框架交互语义。"
+description: "替换工作台面板或画布局部部件，同时保留 Designer 和 Renderer 的交互所有权。"
 ---
 
 # 面板与画布
 
-当标准工作台不符合产品界面时，先只改变物料卡片内容，替换 `materialItemRenderer`。示例保留 Designer 管理的拖拽外壳，只渲染自己的卡片内容：
+标准工作台已经提供物料搜索、结构树、画布和属性面板。先判断你要替换的是局部视觉还是完整工作流：局部替换可以保留框架交互，完整替换则由宿主重新实现该面板的行为。
 
-<<< ../../../examples/guide-project/src/editor/create-page-designer.ts#tutorial-renderer-extensions
+## 先替换单个物料项
 
-`DesignerExtensions` 可以替换完整物料面板、属性面板或追加 rail 内容。`RendererExtensions` 可以替换空态、工具栏、节点包裹层、选中视觉和 `containerShell`。
+活动页只改变物料卡片内部内容，仍把拖拽 shell 留给 Designer：
 
-| 目标 | 建议入口 |
-| --- | --- |
-| 改变单个物料卡片 | `materialItemRenderer` |
-| 完整替换物料或属性面板 | `materialPanelRenderer`、`propertyPanelRenderer` |
-| 在两侧增加产品入口 | `leftRailRenderer`、`rightRailRenderer` |
-| 改变画布空态、工具栏或选择视觉 | 对应 `rendererExtensions` 字段 |
+`src/editor/guide-extensions.ts`：
 
-| 框架负责 | 宿主负责 |
-| --- | --- |
-| 拖拽外壳、Canvas Surface、选择投影、面板上下文与 Renderer 布局投影 | 搜索、分组、产品操作、面板布局和 Container Shell 外观 |
+<<< ../../../examples/guide-project/src/editor/guide-extensions.ts
 
-完整面板替换后，宿主需要自行实现搜索、分组、选中节点读取和字段提交。自定义 `nodeWrapper` 必须渲染 default slot；自定义 `containerShell` 不接收 Renderer props，只需恰好渲染一次包含完整 Canvas Surface 的 default slot。
+`materialItemRenderer` 接收已解析的展示数据和拖拽状态。它只返回内部内容；Designer 继续控制固定尺寸、overflow、防误拖和拖拽事件。
 
-不要用私有 DOM class 覆盖交互，也不要在 `containerShell` 中读取 Schema、解释 LayoutPlan、创建业务节点或重建 selection/forbidden 层。
+## 再选择完整替换范围
+
+| 目标 | 建议入口 | 替换后宿主必须补齐 |
+| --- | --- | --- |
+| 改变单个物料卡片 | `materialItemRenderer` | 无，保留框架 shell |
+| 替换物料栏 | `materialPanelRenderer` | 搜索、分组、物料创建流程 |
+| 替换属性栏 | `propertyPanelRenderer` | 选中节点读取、字段值和命令提交 |
+| 在两侧追加产品入口 | `leftRailRenderer`、`rightRailRenderer` | 产品按钮的状态与权限 |
+| 改变空态、工具栏、选中视觉 | 对应 `rendererExtensions` 字段 | 组件 props 和 slot 契约 |
+
+完整面板替换后，宿主需要自行读取 `engine.store.selectedNodeId` 或 `useDesigner()` 的状态，并把字段修改转换回命令。不要把私有 DOM 选择器当作面板 API。
+
+## Container Shell 只能包住画布
+
+`containerShell` 用于手机、桌面或产品预览外壳。它不接收 Renderer props，只需要恰好渲染一次 default slot。slot 中已经包含完整 Canvas Surface、flow/chrome/layer、滚动、选中平面和禁止层。
+
+不要在 Shell 中读取 Schema、解释 `LayoutPlan`、创建业务节点或重建 selection/forbidden 层。业务分栏容器仍应使用 `ContainerRegionOutlet`；两者是不同扩展点。
 
 **完成检查**：自定义物料卡片保持拖拽可用；替换的 Shell 只渲染一次 Canvas Surface，flow/chrome/layer、选中投影、禁止层与工具栏都没有消失。
 
-下一步：[主题、设备与国际化](/guide/customization/theme-device-and-i18n)；公开 props 和扩展字段见 [@dragcraft/designer](/reference/designer) 与 [Designer 渲染与容器](/reference/designer-rendering)。
+下一步：[主题、设备与国际化](/guide/customization/theme-device-and-i18n)。公开字段见 [Designer 渲染与容器](/reference/designer-rendering)，Shell 的完整所有权边界见 [Architecture Map 的 Renderer 与 Container Shell](https://github.com/hackycy/dragcraft/blob/main/.github/architecture/06-themes-and-device-frames.md#renderer-与-container-shell)。

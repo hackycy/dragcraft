@@ -6,6 +6,8 @@ description: "@dragcraft/fields-ant-design-vue 的 Ant Design Vue 字段 adapter
 
 该包把 Ant Design Vue 控件映射为 Designer 的字段 adapter。物料定义和组件映射仍从 Designer 创建。
 
+业务字段如何与默认 adapter 合并，见 [添加物料、字段和页面设置](/guide/learn/material-and-property-panel)。
+
 ```ts
 import {
   buildComponentMap,

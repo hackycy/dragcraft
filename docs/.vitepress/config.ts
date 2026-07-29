@@ -31,18 +31,27 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: '从零搭建页面编辑器',
+          text: '开始使用',
           items: [
-            { text: '准备开发', link: '/guide/learn/prerequisites' },
-            { text: '挂载最小编辑器', link: '/guide/learn/first-editor' },
-            { text: '理解 Schema 与写入链路', link: '/guide/learn/schema-and-write-path' },
-            { text: '添加物料与属性面板', link: '/guide/learn/material-and-property-panel' },
+            { text: '准备项目', link: '/guide/learn/prerequisites' },
+            { text: '快速开始：挂载编辑器', link: '/guide/learn/first-editor' },
+            { text: '理解 Dragcraft 的边界', link: '/guide/learn/mental-model' },
+          ],
+        },
+        {
+          text: '从零构建活动页编辑器',
+          items: [
+            { text: '保存 Schema，并通过命令写入', link: '/guide/learn/schema-and-write-path' },
+            { text: '添加物料、字段和页面设置', link: '/guide/learn/material-and-property-panel' },
             { text: '保存草稿并预览运行时', link: '/guide/learn/persistence-and-runtime' },
+            { text: '安排内容、Chrome 和浮层', link: '/guide/learn/page-layout' },
+            { text: '让业务容器承载子节点', link: '/guide/learn/containers' },
+            { text: '管理模板节点和工具栏动作', link: '/guide/learn/schema-managed-actions' },
             { text: '完成检查', link: '/guide/learn/completion' },
           ],
         },
         {
-          text: '高级自定义',
+          text: '按需扩展',
           items: [
             { text: '选择扩展点', link: '/guide/customization/overview' },
             { text: '业务物料', link: '/guide/customization/materials' },
@@ -80,8 +89,9 @@ export default defineConfig({
         {
           text: '开始使用',
           items: [
-            { text: '准备开发', link: '/guide/learn/prerequisites' },
-            { text: '挂载最小编辑器', link: '/guide/learn/first-editor' },
+            { text: '准备项目', link: '/guide/learn/prerequisites' },
+            { text: '快速开始：挂载编辑器', link: '/guide/learn/first-editor' },
+            { text: '理解 Dragcraft 的边界', link: '/guide/learn/mental-model' },
           ],
         },
       ],

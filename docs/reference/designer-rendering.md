@@ -6,6 +6,8 @@ description: "通过 @dragcraft/designer 使用设计态渲染、节点交互、
 
 Designer 聚合设计态画布需要的扩展 interface。它包含选中、拖拽、工具栏和空态，不是生产只读运行时。
 
+先完成 [页面布局](/guide/learn/page-layout) 和 [业务容器](/guide/learn/containers)，再按这里的接口替换局部画布能力。
+
 ```ts
 import {
   ContainerRegionOutlet,

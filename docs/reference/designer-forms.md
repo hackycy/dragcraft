@@ -6,6 +6,8 @@ description: "通过 @dragcraft/designer 使用 FormSchema、字段 adapter、�
 
 属性面板根据 `FormSchema` 渲染字段，并把 change 翻译成页面命令。
 
+字段、默认绑定和 `bindTo` 的完整接入过程见 [添加物料、字段和页面设置](/guide/learn/material-and-property-panel)。
+
 ```ts
 import type {
   FieldComponentDefinition,

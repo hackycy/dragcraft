@@ -1,22 +1,18 @@
-import type { ContainerShellSource, DesignerSchema } from '@dragcraft/designer'
+import type { DesignerSchema } from '@dragcraft/designer'
 import { createDesigner } from '@dragcraft/designer'
 import { guideComponentMap, guideWidgetGroups, guideWidgetMetas } from '../domain/widgets'
 import { createGuideFieldComponentMap } from '../forms'
 import { createGuideSchema } from './create-guide-schema'
 import { guideGlobalConfigSchema } from './global-config-schema'
-import { createGuideExtensions } from './guide-extensions'
-import { guideActionInterceptors, guideCustomActions } from './page-actions'
 
-export interface CreatePageDesignerOptions {
+export interface CreateContainerDesignerOptions {
   initialSchema?: DesignerSchema
-  containerShell?: ContainerShellSource
 }
 
-export function createPageDesigner(options: CreatePageDesignerOptions = {}) {
-  const initialSchema = options.initialSchema ?? createGuideSchema()
+export function createContainerDesigner(options: CreateContainerDesignerOptions = {}) {
   return createDesigner({
     engineOptions: {
-      initialSchema,
+      initialSchema: options.initialSchema ?? createGuideSchema(),
       maxHistorySize: 50,
     },
     widgetMetas: guideWidgetMetas,
@@ -28,10 +24,5 @@ export function createPageDesigner(options: CreatePageDesignerOptions = {}) {
       compactBreakpoint: 1080,
       keyboardShortcuts: true,
     },
-    customActions: guideCustomActions,
-    actionInterceptors: guideActionInterceptors,
-    extensions: createGuideExtensions(options.containerShell),
   })
 }
-
-export { createGuideSchema } from './create-guide-schema'

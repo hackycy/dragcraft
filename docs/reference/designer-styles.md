@@ -6,6 +6,8 @@ description: "@dragcraft/designer 的 Standard 主题、结构层、主题契约
 
 Designer 只提供一套完整 Standard 工作台主题：
 
+工作台主题、业务页面样式和设备外壳的分工见 [主题、设备与国际化](/guide/customization/theme-device-and-i18n)。
+
 ```ts
 import '@dragcraft/designer/styles'
 import { createI18n, useI18n } from '@dragcraft/designer'

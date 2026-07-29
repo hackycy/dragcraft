@@ -6,6 +6,8 @@ description: "@dragcraft/designer 的实例创建、工作台控制、动作和�
 
 这是业务应用的唯一主入口。它聚合 Schema Engine、设计态渲染、配置表单、物料注册、国际化和 Standard 工作台主题，并要求宿主显式提供业务物料和字段 adapter。
 
+第一次接入先完成 [快速开始：挂载编辑器](/guide/learn/first-editor)，再回到这里查找装配选项。
+
 ```ts
 import { createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
 

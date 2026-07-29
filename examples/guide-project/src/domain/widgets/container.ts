@@ -53,7 +53,7 @@ export const columnContainerMeta: DesignerWidgetMeta & { container: ContainerDef
     variants: {
       single: {
         title: '单列',
-        regions: [{ id: 'content', title: '内容', constraints: { maxItems: 4 } }],
+        regions: [{ id: 'content', title: '内容' }],
       },
       split: {
         title: '双列',

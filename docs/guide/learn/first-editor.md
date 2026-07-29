@@ -1,39 +1,114 @@
 ---
-description: "安装 DragCraft，并在 Vue 应用中挂载可拖入文本物料的最小编辑器。"
+description: "在新的 Vue 应用中添加文本物料、创建 Designer 实例并挂载可编辑工作台。"
 ---
 
-# 挂载最小编辑器
+# 快速开始：挂载编辑器
 
-先让一个文本物料出现在编辑器中。这个阶段只需要物料 metadata、组件映射和字段 adapter。
+## 预期结果
 
-安装依赖：
+把下面这些文件放进上一页创建的项目。启动后，你会看到一个包含文本节点的三栏编辑器；选中文本后可以在右侧修改内容，并可以继续从左侧拖入文本。
 
-```bash
-pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
+## 前置状态
+
+你已经创建了 Vite Vue TypeScript 项目，并安装了 Designer、字段 adapter 与 Ant Design Vue。
+
+## 完整文件
+
+### 创建文本物料
+
+新建 `src/domain/widgets/text.ts`：
+
+<<< ../../../examples/guide-project/src/domain/widgets/text.ts
+
+一个 `WidgetDefinition` 把两件事放在一起：`meta` 定义 Schema 节点如何创建和配置，`component` 决定这个节点如何在画布中渲染。`type: 'guide-text'` 是会保存到 Schema 的持久化标识，不要把它当作 Vue 组件名。
+
+### 创建初始页面和 Designer
+
+新建 `src/editor/create-starter-schema.ts`：
+
+<<< ../../../examples/guide-project/src/editor/create-starter-schema.ts
+
+新建 `src/editor/minimal-designer.ts`：
+
+<<< ../../../examples/guide-project/src/editor/minimal-designer.ts
+
+`widgetMetas` 决定左侧能创建什么，`componentMap` 把 Schema 中的 `type` 映射到 Vue 组件，`fieldComponentMap` 告诉右侧表单怎样连接实际 UI 控件。`engineOptions.initialSchema` 会在物料注册后导入，因此初始节点可以被当前注册表校验。
+
+### 挂载工作台
+
+替换 `src/main.ts`：
+
+```ts
+import { createApp } from 'vue'
+import 'ant-design-vue/dist/reset.css'
+import '@dragcraft/designer/styles'
+import App from './App.vue'
+import './styles.css'
+
+createApp(App).mount('#app')
 ```
 
-最小实例来自贯穿示例：
+新建 `src/dragcraft.d.ts`：
 
-<<< ../../../examples/guide-project/src/editor/minimal-designer.ts#tutorial-minimal-designer
+```ts
+declare module '@dragcraft/designer/styles'
+```
 
-`widgetMetas` 决定左侧能创建什么，`componentMap` 把 Schema 中的 `type` 映射到 Vue 组件，`fieldComponentMap` 告诉右侧表单如何绑定实际 UI 控件。
+这是 CSS 子路径的本地 TypeScript 声明。它不影响运行时加载，但让默认 Vite 模板的 `vue-tsc -b` 能识别该样式导入。
 
-在应用入口加载字段样式和工作台主题：
+替换 `src/App.vue`：
 
-<<< ../../../examples/guide-project/src/main.ts#tutorial-workbench-styles
+```vue
+<script setup lang="ts">
+import { onBeforeUnmount } from 'vue'
+import { DcDesigner } from '@dragcraft/designer'
+import { createMinimalDesigner } from './editor/minimal-designer'
 
-然后把 `createMinimalDesigner()` 返回的实例传给 `DcDesigner`。贯穿示例在预览切换前保留编辑器：
+const designer = createMinimalDesigner()
 
-<<< ../../../examples/guide-project/src/App.vue#tutorial-designer-mount
+onBeforeUnmount(designer.dispose)
+</script>
 
-现在拖入“文本”，选中它并修改 `content`。画布会更新，但浏览器不会出现任何直接修改 Schema 的 API。
+<template>
+  <DcDesigner :instance="designer" />
+</template>
+```
 
-| 框架负责 | 宿主负责 |
-| --- | --- |
-| 拖放、选中、表单 change 到命令的翻译 | 物料组件的内容、字段 UI 库和应用布局 |
+替换 `src/styles.css`：
 
-不要通过 `engine.store.schema.value` 修改页面。它是只读快照，所有页面写入都应通过命令链路发生。
+```css
+html,
+body,
+#app {
+  min-height: 100vh;
+  margin: 0;
+}
 
-**完成检查**：可以拖入一个文本物料、选中它并修改 `content`，且撤销操作能恢复旧值。
+* {
+  box-sizing: border-box;
+}
+```
 
-下一步：[理解 Schema 与写入链路](/guide/learn/schema-and-write-path)。
+## 立即可观察行为
+
+运行项目：
+
+```bash
+pnpm dev
+```
+
+现在选中“选中我，然后在右侧修改文本。”，修改 `content`，再使用工作台的撤销按钮恢复旧值。
+
+## 设计原因
+
+`WidgetDefinition` 同时保存了可创建的 metadata 和实际 Vue 组件。`createDesigner()` 在同一个实例中注册它们、字段 adapter 和初始 Schema，因此物料栏、属性面板和画布始终解释同一份节点定义。
+
+## 限制与下一步
+
+不要通过 `engine.store.schema.value` 修改页面。它是只读快照；右侧表单已经把字段变更翻译为命令，下一页会解释这条写入链路。
+
+## 完成检查
+
+可以拖入一个文本物料、选中它并修改 `content`，且撤销操作能恢复旧值。
+
+下一步：[理解 Dragcraft 的边界](/guide/learn/mental-model)。

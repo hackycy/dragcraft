@@ -1,0 +1,26 @@
+import type { ActionInterceptor, NodeActionDefinition } from '@dragcraft/designer'
+import { CommandType, createConfirmActionInterceptor } from '@dragcraft/designer'
+
+export const guideCustomActions: NodeActionDefinition[] = [{
+  key: 'feature-notice',
+  label: '设为精选',
+  type: 'button',
+  order: 500,
+  visible: ctx => ctx.node.type === 'notice',
+  disabled: ctx => ctx.node.props.featured === true,
+  command: ctx => ({
+    type: CommandType.UPDATE_PROPS,
+    payload: { nodeId: ctx.node.id, props: { featured: true } },
+  }),
+}]
+
+export const guideActionInterceptors: ActionInterceptor[] = [
+  createConfirmActionInterceptor({
+    confirm: ({ title, message }) => typeof window === 'undefined'
+      ? true
+      // eslint-disable-next-line no-alert -- The tutorial uses the browser fallback in place of a host dialog.
+      : window.confirm(message ?? title ?? '确认执行此操作？'),
+    title: '确认删除',
+    message: '删除后可以通过撤销恢复。',
+  }),
+]

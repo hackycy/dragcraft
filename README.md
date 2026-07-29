@@ -21,9 +21,9 @@
 | 我想要 | 前往 |
 | --- | --- |
 | 先看看设计器实际效果 | [打开 Playground](https://hackycy.github.io/dragcraft/playground) |
-| 从零搭建可保存、可预览的页面编辑器 | [准备开发](https://hackycy.github.io/dragcraft/guide/learn/prerequisites) |
-| 理解 Schema、命令和包的边界 | [Schema 与写入链路](https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path) |
-| 接入业务物料、属性表单或容器组件 | [高级自定义](https://hackycy.github.io/dragcraft/guide/customization/materials) |
+| 从新的 Vue 项目搭建可保存、可预览的编辑器 | [准备项目](https://hackycy.github.io/dragcraft/guide/learn/prerequisites) |
+| 理解宿主、Designer、Core、Schema 和运行时边界 | [理解 Dragcraft 的边界](https://hackycy.github.io/dragcraft/guide/learn/mental-model) |
+| 接入业务物料、属性表单、页面布局或容器组件 | [按需扩展](https://hackycy.github.io/dragcraft/guide/customization/overview) |
 | 查阅包的公开 API | [API 参考](https://hackycy.github.io/dragcraft/reference/overview) |
 
 ## 为什么选择 dragcraft
@@ -38,7 +38,7 @@
 安装设计器和默认字段 adapter：
 
 ```bash
-pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
+pnpm add @dragcraft/designer@^0.0.4 @dragcraft/fields-ant-design-vue@^0.0.4 ant-design-vue vue
 ```
 
 在 Vue 应用入口加载 Ant Design Vue 基础样式与 Designer Standard 主题：
@@ -48,7 +48,7 @@ import 'ant-design-vue/dist/reset.css'
 import '@dragcraft/designer/styles'
 ```
 
-随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。
+随后创建设计器实例并渲染 `DcDesigner`。从创建 Vite 项目开始的完整最小物料、组件映射和字段 adapter 示例见[快速开始：挂载编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。
 
 ## Packages
 
@@ -72,9 +72,12 @@ import '@dragcraft/designer/styles'
 ## 文档导航
 
 - [文档首页](https://hackycy.github.io/dragcraft/)
-- [准备开发](https://hackycy.github.io/dragcraft/guide/learn/prerequisites)
-- [挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)
-- [理解 Schema 与写入链路](https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path)
+- [准备项目](https://hackycy.github.io/dragcraft/guide/learn/prerequisites)
+- [快速开始：挂载编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)
+- [理解 Dragcraft 的边界](https://hackycy.github.io/dragcraft/guide/learn/mental-model)
+- [保存 Schema，并通过命令写入](https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path)
+- [安排内容、Chrome 和浮层](https://hackycy.github.io/dragcraft/guide/learn/page-layout)
+- [让业务容器承载子节点](https://hackycy.github.io/dragcraft/guide/learn/containers)
 - [业务物料](https://hackycy.github.io/dragcraft/guide/customization/materials)
 - [主题、设备与国际化](https://hackycy.github.io/dragcraft/guide/customization/theme-device-and-i18n)
 - [生命周期与运行时](https://hackycy.github.io/dragcraft/guide/customization/lifecycle-and-runtime)
