@@ -18,8 +18,8 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./package.json": "./package.json",
-    "./styles": "./dist/styles/standard.css",
-    "./styles/structure": "./dist/styles/structure.css",
+    "./standard.css": "./dist/styles/standard.css",
+    "./structure.css": "./dist/styles/structure.css",
     "./theme-contract.json": "./dist/theme-contract.json",
     "./css-custom-data.json": "./dist/css-custom-data.json"
   },

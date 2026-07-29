@@ -28,7 +28,7 @@ const designer = createDesigner({
 | `DesignerExtensions` | 替换面板、物料项或追加 rail 内容。 |
 | `WidgetDefinition` 与物料 helpers | 从一份定义生成 metadata 和组件映射。 |
 | `FormSchema` 与字段扩展接口 | 声明属性面板并接入自定义字段。 |
-| `@dragcraft/designer/styles` | 加载完整 Standard 工作台主题。 |
+| `@dragcraft/designer/standard.css` | 加载完整 Standard 工作台主题。 |
 
 `DesignerOptions` 中的 `widgetMetas`、`componentMap` 和 `fieldComponentMap` 是三份不同的输入：物料协议、页面组件和字段 UI 不应相互替代。
 

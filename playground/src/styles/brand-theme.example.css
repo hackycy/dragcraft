@@ -1,4 +1,4 @@
-/* Import this file after @dragcraft/designer/styles to preview a host brand delta. */
+/* Import this file after @dragcraft/designer/standard.css to preview a host brand delta. */
 
 :root {
   --dc-color-accent: #0f766e;

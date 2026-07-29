@@ -211,7 +211,7 @@ function validatePackageStyleExports() {
   }
 
   const packageJson = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'))
-  for (const entry of ['./styles', './styles/structure', './theme-contract.json', './css-custom-data.json']) {
+  for (const entry of ['./standard.css', './structure.css', './theme-contract.json', './css-custom-data.json']) {
     if (!packageJson.exports?.[entry])
       errors.push(`packages/designer/package.json: missing ${entry} export`)
   }

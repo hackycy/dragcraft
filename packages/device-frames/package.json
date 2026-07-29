@@ -17,7 +17,7 @@
   ],
   "exports": {
     ".": "./dist/index.mjs",
-    "./styles": "./dist/styles/index.css",
+    "./styles.css": "./dist/styles/index.css",
     "./package.json": "./package.json"
   },
   "main": "./dist/index.mjs",

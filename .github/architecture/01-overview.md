@@ -66,7 +66,7 @@ root
 
 ### Standard Workbench Theme
 
-`@dragcraft/designer/styles` 提供与组件结构行为分层的 Standard 工作台主题：
+`@dragcraft/designer/standard.css` 提供与组件结构行为分层的 Standard 工作台主题：
 
 - designer、renderer 与 form-generator 分别发布自身必要的结构 CSS。
 - Designer 聚合完整默认 token、共享基线视觉配方和机器可读主题契约。
@@ -76,7 +76,7 @@ root
 ## 标准接入模式
 
 ```ts
-import '@dragcraft/designer/styles'
+import '@dragcraft/designer/standard.css'
 import { createDesigner, DcDesigner } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 

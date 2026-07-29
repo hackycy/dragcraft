@@ -20,8 +20,8 @@ token 适合颜色、字号、圆角、密度、阴影和动效。只有 token �
 
 | 目标 | 导入方式 | 你的责任 |
 | --- | --- | --- |
-| 使用完整工作台并调整品牌 | `@dragcraft/designer/styles` | 覆盖少量公开 token |
-| 实现整套工作台视觉 | `@dragcraft/designer/styles/structure` | 补齐全部视觉 recipe 和主题契约 |
+| 使用完整工作台并调整品牌 | `@dragcraft/designer/standard.css` | 覆盖少量公开 token |
+| 实现整套工作台视觉 | `@dragcraft/designer/structure.css` | 补齐全部视觉 recipe 和主题契约 |
 | 样式化画布内业务内容 | 业务 CSS | 自己维护内容主题和跨端映射 |
 
 结构入口只保证布局与交互所需几何，不会提供可用的完整视觉。

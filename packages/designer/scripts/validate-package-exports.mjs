@@ -7,8 +7,8 @@ const packageRoot = path.resolve(import.meta.dirname, '..')
 const packageJson = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf8'))
 const expectedExports = {
   './css-custom-data.json': './dist/css-custom-data.json',
-  './styles': './dist/styles/standard.css',
-  './styles/structure': './dist/styles/structure.css',
+  './standard.css': './dist/styles/standard.css',
+  './structure.css': './dist/styles/structure.css',
   './theme-contract.json': './dist/theme-contract.json',
 }
 const errors = []

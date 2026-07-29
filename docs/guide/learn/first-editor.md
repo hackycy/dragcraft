@@ -48,7 +48,7 @@ pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
 
 <<< ../../../examples/guide-project/src/minimal.ts
 
-`@dragcraft/designer/styles` 包含完整工作台主题。只有准备实现整套工作台视觉时，才改用 `@dragcraft/designer/styles/structure`。
+`@dragcraft/designer/standard.css` 包含完整工作台主题。只有准备实现整套工作台视觉时，才改用 `@dragcraft/designer/structure.css`。
 
 ## 验证结果
 

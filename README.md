@@ -45,7 +45,7 @@ pnpm add @dragcraft/designer @dragcraft/fields-ant-design-vue ant-design-vue vue
 
 ```ts
 import 'ant-design-vue/dist/reset.css'
-import '@dragcraft/designer/styles'
+import '@dragcraft/designer/standard.css'
 ```
 
 随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。

@@ -61,7 +61,7 @@
 - `useDesigner()`。
 - Designer options、workspace controller 和 extensions 类型。
 - Schema、command、renderer、form、widget 与 i18n 的业务扩展接口。
-- `@dragcraft/designer/styles`、`styles/structure` 与主题契约 JSON。
+- `@dragcraft/designer/standard.css`、`@dragcraft/designer/structure.css` 与主题契约 JSON。
 
 依赖与协作：
 
@@ -190,7 +190,7 @@
 - `BUILT_IN_DEVICE_FRAMES`。
 - `DevicePicker`。
 - `DeviceFrameDefinition`、`DeviceFrameGroup`、`DeviceFrameViewport`。
-- `@dragcraft/device-frames/styles`。
+- `@dragcraft/device-frames/styles.css`。
 
 依赖与协作：
 

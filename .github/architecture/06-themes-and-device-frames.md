@@ -8,20 +8,20 @@ dragcraft 的 UI modules 分开拥有结构与视觉：
 
 - `@dragcraft/ui/structure.css`、designer、renderer 与 form-generator 的 `styles/structure.css` 负责布局和交互几何。
 - `@dragcraft/ui/recipe.css` 与 Designer baseline recipes 负责默认视觉。
-- `@dragcraft/designer/styles` 聚合完整 Standard 结构、tokens 和 recipes。
-- `@dragcraft/designer/styles/structure` 只提供完全自定义主题所需的结构层。
+- `@dragcraft/designer/standard.css` 聚合完整 Standard 结构、tokens 和 recipes。
+- `@dragcraft/designer/structure.css` 只提供完全自定义主题所需的结构层。
 - 工作台主题不进入 `data-dc-node-surface` 内的业务内容。
 
 Standard 主题使用方式：
 
 ```ts
-import '@dragcraft/designer/styles'
+import '@dragcraft/designer/standard.css'
 ```
 
 完全自定义主题：
 
 ```ts
-import '@dragcraft/designer/styles/structure'
+import '@dragcraft/designer/structure.css'
 import './my-workbench-theme.css'
 ```
 
@@ -142,7 +142,7 @@ import {
   DevicePicker,
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
-import '@dragcraft/device-frames/styles'
+import '@dragcraft/device-frames/styles.css'
 import { computed, ref } from 'vue'
 
 const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)

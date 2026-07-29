@@ -77,4 +77,4 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 - Centralize dependencies workspace catalog
 - Public consumers may import only `@dragcraft/designer`, `@dragcraft/device-frames`, and field adapter packages matching `@dragcraft/fields-*`
 - README, public docs, examples, and playground must not reference other `@dragcraft/*` packages directly
-- `@dragcraft/designer/styles` is the complete Standard workbench theme; `@dragcraft/designer/styles/structure` is only for fully custom themes
+- `@dragcraft/designer/standard.css` is the complete Standard workbench theme; `@dragcraft/designer/structure.css` is only for fully custom themes
