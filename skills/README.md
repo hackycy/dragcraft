@@ -4,19 +4,15 @@
 
 ## 安装
 
-将本仓库的 `skills/dragcraft` 保留为唯一源。仓库内开发时，为使用的 agent 创建链接：
+使用统一的 skills CLI 安装仓库中的 `dragcraft` skill：
 
 ```bash
-mkdir -p .agents/skills
-ln -s ../../skills/dragcraft .agents/skills/dragcraft
+npx skills@latest add hackycy/dragcraft
 ```
 
-```bash
-mkdir -p .claude/skills
-ln -s ../../skills/dragcraft .claude/skills/dragcraft
-```
+CLI 会发现仓库中的唯一 skill，并让你选择安装范围与目标 agent。更新已安装内容时运行 `npx skills@latest update dragcraft`。
 
-外部项目可先克隆本仓库，再把该项目中的 `skills/dragcraft` 复制或链接到相同的目标目录。skill 在外部宿主中优先读取已安装包的类型和 source map 的官方 URL；只有检测到 DragCraft 源码 checkout 时才读取仓库路径。更新 DragCraft 时同步更新该目录。
+skill 在宿主中优先读取已安装 package 的公开声明和 source map 的官方 URL；只有检测到 DragCraft 源码 checkout 时才读取仓库路径。
 
 ## 使用
 
@@ -26,4 +22,6 @@ ln -s ../../skills/dragcraft .claude/skills/dragcraft
 $dragcraft 为当前 Vue 页面新增一个带属性面板的优惠券物料
 ```
 
-skill 会选择一个工作流，读取与当前任务相关的本地类型、框架指南与 Playground 范例，再实施和验证。运行 `pnpm skills:test` 验证维护检查的反例覆盖，运行 `pnpm skills:check` 确认 skill、source map、评测、agent 结果和文档入口保持同步。
+skill 会按需求选择接入、命令、物料、表单、布局、容器、Shell 或生命周期工作流，只读取对应的本地类型、框架指南和业务示例，再实施并验证。证据链用于约束开发过程，最终回复保持正常的工程交付形式。
+
+运行 `pnpm skills:test` 验证维护检查的反例覆盖，运行 `pnpm skills:check` 确认 skill、资源映射、评测结果和文档入口保持同步。

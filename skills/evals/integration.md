@@ -1,18 +1,21 @@
 ---
 id: integration
-workflow: integration
-task: 在现有 Vue 3 页面挂载一个可编辑文本物料，并提供页面标题全局配置。
+workflows:
+  - integration
+  - widgets
+  - forms
+task: 在现有 Vue 页面挂载最小 DragCraft 编辑器，注册文本物料和页面标题配置，并正确管理实例生命周期。
 evidence:
-  - 项目依赖版本和锁文件
-  - createDesigner() 类型
-  - 快速开始与设计器接入指南
-  - 现有应用入口
+  - 项目依赖、锁文件和公开 package 声明
+  - 根 skill 的路由与 integration resources
+  - 现有 Vue 入口和最小编辑器示例
 boundary:
-  - 物料元数据、组件映射、字段映射和全局表单由宿主提供
-  - Schema 写入通过公开命令或属性绑定进入设计器
+  - 注册发生在依赖它的 Schema 导入之前
+  - 宿主持有页面状态并释放 Designer 实例
 verification:
-  - 文本物料可以创建、选中并由右侧字段更新
-  - 执行宿主类型检查或构建
+  - 文本物料可创建、选中并由字段更新
+  - 页面标题写入 globalConfig
+  - 宿主类型检查或最小构建通过
 ---
 
 # 最小设计器接入

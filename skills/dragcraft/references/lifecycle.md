@@ -1,16 +1,15 @@
 # Schema 生命周期与生产运行时
 
-## 证据链
-
-读取导入导出、保存发布和运行时指南，检查宿主的 API、revision 和运行时组件注册表。明确草稿、发布版本和服务端校验的所有者。
+读取 [lifecycle resources](resources/lifecycle.json)，再检查宿主 API、revision、migration 注册和运行时 registry。
 
 ## 实施
 
-1. 使用 `exportSchema()` 保存快照，使用 `importSchema()` 加载页面；在导入前处理未保存变更，因为导入会替换编辑会话。
-2. 监听成功 Schema 命令产生的 `schema:changed`，由宿主管理脏状态、防抖保存、单请求队列、revision 冲突和发布操作。
+1. 在导入前完成物料与 migration 注册；按版本迁移后调用 `importSchema()`，处理 diagnostics，并让失败保持当前编辑会话不变。
+2. 使用 `exportSchema()` 保存快照；成功的 `schema:changed` 只负责标记脏状态，宿主管理防抖、单请求队列、revision 冲突和发布。
 3. 服务端校验页面归属、物料白名单、props、资源地址、容器 variant/region 与容量；发布生成不可变版本。
-4. 生产运行时根据同一业务物料契约只读解释普通节点和 `container.regions`，分别渲染 flow、chrome 与 layer；编辑态 Renderer 只服务设计器画布。
+4. 生产运行时使用独立 registry，只读解释普通节点、容器递归、`flow/chrome/layer` 与样式作用域。
+5. 未知物料产生包含 `type` 和节点 ID 的可观察 fallback；其他平台消费同一 Schema 契约并实现自己的组件与布局映射。
 
-## 完成
+## 完成标准
 
-确认导入导出涵盖容器 region 子树，保存失败保留未保存状态，版本冲突不会覆盖远端草稿。验证运行时对未知物料的可观测降级或阻断路径。
+测试覆盖注册顺序、migration、导入诊断、保存失败、revision 冲突、容器递归、未知物料和运行时布局；失败不会覆盖有效草稿或当前会话。

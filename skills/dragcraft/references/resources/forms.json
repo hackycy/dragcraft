@@ -1,0 +1,16 @@
+{
+  "workflow": "forms",
+  "docs": [
+    { "repositoryPath": "docs/guide/customization/forms-and-fields.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/forms-and-fields" },
+    { "repositoryPath": "docs/guide/learn/material-and-property-panel.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/material-and-property-panel" },
+    { "repositoryPath": "docs/reference/designer-forms.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-forms" },
+    { "repositoryPath": "docs/reference/fields-ant-design-vue.md", "url": "https://hackycy.github.io/dragcraft/reference/fields-ant-design-vue" }
+  ],
+  "examples": [
+    { "repositoryPath": "examples/guide-project/src/forms/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/forms/index.ts" },
+    { "repositoryPath": "examples/guide-project/src/editor/global-config.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/global-config.ts" },
+    { "repositoryPath": "examples/guide-project/src/domain/widgets/notice.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/notice.ts" },
+    { "repositoryPath": "examples/guide-project/src/domain/widgets/floating-action.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/floating-action.ts" }
+  ],
+  "packages": ["@dragcraft/designer", "@dragcraft/fields-ant-design-vue"]
+}

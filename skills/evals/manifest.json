@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "referenceAgentPolicy": "single",
+  "scenarios": [
+    { "id": "integration", "workflows": ["integration", "widgets", "forms"], "file": "integration.md", "result": "results/integration.md" },
+    { "id": "commands", "workflows": ["commands"], "file": "commands.md", "result": "results/commands.md" },
+    { "id": "widgets", "workflows": ["widgets"], "file": "widgets.md", "result": "results/widgets.md" },
+    { "id": "forms", "workflows": ["forms"], "file": "forms.md", "result": "results/forms.md" },
+    { "id": "layout", "workflows": ["layout"], "file": "layout.md", "result": "results/layout.md" },
+    { "id": "containers", "workflows": ["containers"], "file": "containers.md", "result": "results/containers.md" },
+    { "id": "shell", "workflows": ["shell"], "file": "shell.md", "result": "results/shell.md" },
+    { "id": "lifecycle", "workflows": ["lifecycle"], "file": "lifecycle.md", "result": "results/lifecycle.md" },
+    { "id": "version-mismatch", "workflows": ["integration"], "file": "version-mismatch.md", "result": "results/version-mismatch.md" },
+    { "id": "cross-workflow", "workflows": ["widgets", "forms", "commands"], "file": "cross-workflow.md", "result": "results/cross-workflow.md" }
+  ]
+}

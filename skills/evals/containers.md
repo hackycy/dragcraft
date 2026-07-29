@@ -1,16 +1,18 @@
 ---
 id: containers
-workflow: containers
-task: 实现单列与双列之间可切换的外部容器，限定每个 region 的容量并保持子节点顺序。
+workflows:
+  - containers
+task: 实现单列与双列可切换的外部容器，限制 region 容量，并保证失败迁移不会部分修改 Schema。
 evidence:
-  - ContainerDefinition 和 ContainerRegionOutlet 类型
-  - 容器指南、Playground 容器范例与迁移测试
+  - ContainerDefinition、ContainerRegionOutlet 和迁移类型
+  - containers resources 与现有迁移测试
 boundary:
-  - 子节点由 container.regions 持久化，容器组件只负责 DOM、CSS 和插入几何
-  - variant 迁移返回完整目标 state
+  - 子节点只由 container.regions 持久化
+  - 容器组件负责 DOM、CSS 和插入几何
 verification:
   - resolver 返回有效插入边界
-  - 容量拒绝和每条变体迁移路径具备测试
+  - 测试覆盖容量拒绝、跨 region 移动和双向迁移
+  - 迁移拒绝或抛错保持 Schema 与历史不变
 ---
 
-# 可迁移双列容器
+# 可迁移容器与失败原子性

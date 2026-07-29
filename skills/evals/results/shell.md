@@ -1,16 +1,21 @@
 ---
 id: shell
-workflow: shell
+workflows:
+  - shell
 status: passed
+inputDigest: sha256:ce2a4b1fdbdecdc853f09fe9d91da9d51c8b01f71f497a0a67f56c35b4ee7811
+executedAt: "2026-07-29T10:57:11Z"
+runner:
+  agent: Codex
+  model: GPT-5
 evidence:
-  - dragcraft shell playbook
-  - 主题/设备框指南、Renderer 类型、Device Frame Definitions 和宿主示例
+  - Designer extensions、ContainerShellSource 与 device-frames 公开声明
+  - 受控 DevicePicker、品牌 token、消息和物料卡片示例
 verification:
-  - Renderer、Designer 与 device-frames package tests
-  - playground 与 guide-project production builds
-  - skills:check 与 skills:test
+  - guide-project 类型检查与构建通过
+  - 公开 package boundary 检查通过
 ---
 
-# Shell 结果
+# 设备预览与工作台扩展
 
-实现保留 Designer 的拖拽、选中、命令和放置校验；Active Device Frame 由宿主持有，受控 Picker 只发出 ID 请求，readonly Container Shell ref 负责响应式切换。Container Shell 只渲染一次 default slot，Canvas Surface、三种选择平面与禁止层继续由 Renderer 拥有。package tests 和两个宿主构建通过。
+参考 Agent 只选择 shell。设备 ID 由宿主持有，readonly shell ref 在现有 Designer 上切换；物料卡片使用最窄扩展点，Container Shell 只渲染一次完整 Canvas Surface slot，主题和消息只依赖公开契约。

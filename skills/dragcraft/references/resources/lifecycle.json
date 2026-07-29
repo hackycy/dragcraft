@@ -1,0 +1,18 @@
+{
+  "workflow": "lifecycle",
+  "docs": [
+    { "repositoryPath": "docs/guide/learn/persistence-and-runtime.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/persistence-and-runtime" },
+    { "repositoryPath": "docs/guide/customization/lifecycle-and-runtime.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/lifecycle-and-runtime" },
+    { "repositoryPath": "docs/guide/fundamentals/schema.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/schema" },
+    { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" }
+  ],
+  "examples": [
+    { "repositoryPath": "examples/guide-project/src/editor/schema-migrations.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/schema-migrations.ts" },
+    { "repositoryPath": "examples/guide-project/src/host/page-repository.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/host/page-repository.ts" },
+    { "repositoryPath": "examples/guide-project/src/host/page-repository.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/host/page-repository.test.ts" },
+    { "repositoryPath": "examples/guide-project/src/runtime/registry.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/registry.ts" },
+    { "repositoryPath": "examples/guide-project/src/runtime/RuntimePage.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/RuntimePage.ts" },
+    { "repositoryPath": "examples/guide-project/src/runtime/RuntimePage.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/RuntimePage.test.ts" }
+  ],
+  "packages": ["@dragcraft/designer"]
+}

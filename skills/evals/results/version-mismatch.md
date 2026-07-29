@@ -1,15 +1,21 @@
 ---
 id: version-mismatch
-workflow: integration
+workflows:
+  - integration
 status: passed
+inputDigest: sha256:b67bd09aee2a4f51de569054461d06cea76260682c733e2336044c32417f4b27
+executedAt: "2026-07-29T10:57:11Z"
+runner:
+  agent: Codex
+  model: GPT-5
 evidence:
-  - dragcraft integration playbook 和 source map
-  - 本地 Playground、Designer 和文档 package 声明
-  - 线上 llms.txt 与 npm 的 Designer 类型声明
+  - 宿主锁文件、package exports 与已安装声明
+  - 线上指南、source map 和当前示例的替代接入路径
 verification:
-  - pnpm build:packages && pnpm --dir playground build
+  - 方案未导入本地声明中不存在的符号
+  - 需要升级的能力被保留为显式前置条件而未写入实现
 ---
 
-# 版本差异结果
+# 线上指南与本地声明不一致
 
-agent 对比了已安装 `@dragcraft/designer@0.0.1` 声明与线上文档，未发现当前文档入口需要而本地没有的导出。它保留现有标准外部链接，未添加文档站点依赖或猜测 API。单独构建 Playground 前先生成 workspace 包后，构建通过。
+参考 Agent 选择 integration，并以已安装公开声明作为实现契约。线上额外能力只用于识别升级选项；没有用源码内部符号扩大当前支持面，也没有在证据不足时修改宿主代码。

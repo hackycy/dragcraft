@@ -1,16 +1,18 @@
 ---
 id: lifecycle
-workflow: lifecycle
-task: 为设计页增加草稿保存和发布，并让生产页面渲染已发布的容器 Schema。
+workflows:
+  - lifecycle
+task: 接入 Schema migration、带 revision 的草稿仓储和独立 Vue 运行时，并为未知物料提供可观察降级。
 evidence:
-  - Schema 生命周期、保存发布和运行时指南
-  - 宿主 API 与 revision 约定
+  - 导入、migration、Schema 事件和公开类型
+  - lifecycle resources、仓储与运行时示例
 boundary:
-  - 保存由 schema:changed 驱动，宿主管理版本与冲突
-  - 生产运行时只读解释 container.regions，不复用编辑交互
+  - migration 与物料在导入前完成注册
+  - 宿主管理草稿冲突与发布，运行时只读消费 Schema
 verification:
-  - 保存失败保留未保存状态，冲突不覆盖远端草稿
-  - 验证运行时未知物料的可观测降级或阻断
+  - 测试覆盖 migration、导入诊断、保存失败和 revision 冲突
+  - 容器递归与样式作用域正确
+  - 未知物料显示 type 与节点 ID
 ---
 
-# 草稿发布与生产运行时
+# Schema 生命周期与生产运行时

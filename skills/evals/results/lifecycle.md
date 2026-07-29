@@ -1,16 +1,21 @@
 ---
 id: lifecycle
-workflow: lifecycle
+workflows:
+  - lifecycle
 status: passed
+inputDigest: sha256:b1cd6efe645b29694fdd648e78cfd0b38f370a0c8649ac1abb0b9a5f925f5208
+executedAt: "2026-07-29T10:57:11Z"
+runner:
+  agent: Codex
+  model: GPT-5
 evidence:
-  - dragcraft lifecycle playbook
-  - Schema 生命周期、保存发布、运行时指南和本地 Engine/Designer 契约
+  - DesignerEngine migration、导入结果与 Schema 公开声明
+  - migration、revision 仓储、运行时 registry 与 RuntimePage 示例
 verification:
-  - pnpm build:packages、pnpm -F playground build
-  - pnpm -F playground exec vitest run
-  - git diff --check
+  - 草稿隔离和 revision 冲突测试通过
+  - 运行时递归、样式作用域与未知物料 fallback 测试通过
 ---
 
-# 生命周期结果
+# Schema 生命周期与生产运行时
 
-agent 在隔离 worktree 中让宿主以 `schema:changed`、`exportSchema()` 和 `importSchema()` 管理草稿与发布，并增加只读运行时递归解释 container regions。Playground 使用 `localStorage` 演示 revision；真实生产服务仍需承担权限、资源和业务约束校验。
+参考 Agent 只选择 lifecycle。注册顺序、导入诊断、草稿乐观锁和发布边界由宿主明确持有；独立运行时使用判别 registry 递归容器，并对未知 type 输出包含节点 ID 的可观察 fallback。

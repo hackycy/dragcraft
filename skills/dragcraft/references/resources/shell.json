@@ -1,0 +1,17 @@
+{
+  "workflow": "shell",
+  "docs": [
+    { "repositoryPath": "docs/guide/customization/panels-and-canvas.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/panels-and-canvas" },
+    { "repositoryPath": "docs/guide/customization/theme-device-and-i18n.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/theme-device-and-i18n" },
+    { "repositoryPath": "docs/reference/designer-rendering.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-rendering" },
+    { "repositoryPath": "docs/reference/designer-styles.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-styles" },
+    { "repositoryPath": "docs/reference/device-frames.md", "url": "https://hackycy.github.io/dragcraft/reference/device-frames" }
+  ],
+  "examples": [
+    { "repositoryPath": "examples/guide-project/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/App.vue" },
+    { "repositoryPath": "examples/guide-project/src/editor/extensions.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/extensions.ts" },
+    { "repositoryPath": "examples/guide-project/src/editor/messages.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/messages.ts" },
+    { "repositoryPath": "examples/guide-project/src/brand-theme.css", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/brand-theme.css" }
+  ],
+  "packages": ["@dragcraft/designer", "@dragcraft/device-frames"]
+}

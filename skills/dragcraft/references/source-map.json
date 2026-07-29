@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "documentation": {
     "site": "https://hackycy.github.io/dragcraft",
     "repository": "https://github.com/hackycy/dragcraft",
@@ -7,109 +7,19 @@
     "llmsFull": "https://hackycy.github.io/dragcraft/llms-full.txt",
     "sourceCheckoutMarker": "packages/designer/package.json"
   },
+  "publicPackages": [
+    { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" },
+    { "name": "@dragcraft/device-frames", "repositoryPath": "packages/device-frames/package.json" },
+    { "name": "@dragcraft/fields-ant-design-vue", "repositoryPath": "packages/fields/ant-design-vue/package.json" }
+  ],
   "workflows": {
-    "integration": {
-      "playbook": "references/integration.md",
-      "docs": [
-        { "repositoryPath": "docs/guide/learn/prerequisites.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/prerequisites" },
-        { "repositoryPath": "docs/guide/learn/first-editor.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/first-editor" },
-        { "repositoryPath": "docs/guide/learn/schema-and-write-path.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path" },
-        { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
-      ],
-      "examples": [
-        { "repositoryPath": "examples/guide-project/src/editor/minimal-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/minimal-designer.ts" },
-        { "repositoryPath": "examples/guide-project/src/editor/create-page-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/create-page-designer.ts" }
-      ],
-      "packages": [
-        { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" },
-        { "name": "@dragcraft/fields-ant-design-vue", "repositoryPath": "packages/fields/ant-design-vue/package.json" }
-      ]
-    },
-    "widgets": {
-      "playbook": "references/widgets.md",
-      "docs": [
-        { "repositoryPath": "docs/guide/learn/material-and-property-panel.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/material-and-property-panel" },
-        { "repositoryPath": "docs/guide/customization/materials.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/materials" },
-        { "repositoryPath": "docs/guide/customization/actions-and-policies.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/actions-and-policies" },
-        { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" },
-        { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
-      ],
-      "examples": [
-        { "repositoryPath": "examples/guide-project/src/domain/widgets/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/index.ts" },
-        { "repositoryPath": "examples/guide-project/src/domain/widgets/notice.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/notice.ts" },
-        { "repositoryPath": "examples/guide-project/src/domain/widgets/page-header.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/page-header.ts" },
-        { "repositoryPath": "examples/guide-project/src/editor/create-page-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/create-page-designer.ts" }
-      ],
-      "packages": [
-        { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" }
-      ]
-    },
-    "containers": {
-      "playbook": "references/containers.md",
-      "docs": [
-        { "repositoryPath": "docs/guide/learn/schema-and-write-path.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path" },
-        { "repositoryPath": "docs/guide/customization/layout-and-containers.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/layout-and-containers" },
-        { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" },
-        { "repositoryPath": "docs/reference/designer-rendering.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-rendering" }
-      ],
-      "examples": [
-        { "repositoryPath": "examples/guide-project/src/domain/widgets/container.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/container.ts" },
-        { "repositoryPath": "examples/guide-project/src/domain/widgets/container.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/container.test.ts" }
-      ],
-      "packages": [
-        { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" }
-      ]
-    },
-    "forms": {
-      "playbook": "references/forms.md",
-      "docs": [
-        { "repositoryPath": "docs/guide/customization/forms-and-fields.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/forms-and-fields" },
-        { "repositoryPath": "docs/guide/learn/material-and-property-panel.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/material-and-property-panel" },
-        { "repositoryPath": "docs/reference/designer-forms.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-forms" },
-        { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
-      ],
-      "examples": [
-        { "repositoryPath": "examples/guide-project/src/forms/index.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/forms/index.ts" },
-        { "repositoryPath": "examples/guide-project/src/domain/widgets/notice.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/notice.ts" }
-      ],
-      "packages": [
-        { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" },
-        { "name": "@dragcraft/fields-ant-design-vue", "repositoryPath": "packages/fields/ant-design-vue/package.json" }
-      ]
-    },
-    "shell": {
-      "playbook": "references/shell.md",
-      "docs": [
-        { "repositoryPath": "docs/guide/customization/panels-and-canvas.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/panels-and-canvas" },
-        { "repositoryPath": "docs/guide/customization/theme-device-and-i18n.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/theme-device-and-i18n" },
-        { "repositoryPath": "docs/reference/designer-rendering.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-rendering" },
-        { "repositoryPath": "docs/reference/designer-styles.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-styles" },
-        { "repositoryPath": "docs/reference/device-frames.md", "url": "https://hackycy.github.io/dragcraft/reference/device-frames" }
-      ],
-      "examples": [
-        { "repositoryPath": "examples/guide-project/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/App.vue" },
-        { "repositoryPath": "packages/device-frames/src/definitions.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/packages/device-frames/src/definitions.ts" },
-        { "repositoryPath": "packages/renderer/src/components/RootRenderer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/packages/renderer/src/components/RootRenderer.ts" }
-      ],
-      "packages": [
-        { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" },
-        { "name": "@dragcraft/device-frames", "repositoryPath": "packages/device-frames/package.json" }
-      ]
-    },
-    "lifecycle": {
-      "playbook": "references/lifecycle.md",
-      "docs": [
-        { "repositoryPath": "docs/guide/learn/persistence-and-runtime.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/persistence-and-runtime" },
-        { "repositoryPath": "docs/guide/customization/lifecycle-and-runtime.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/lifecycle-and-runtime" },
-        { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" }
-      ],
-      "examples": [
-        { "repositoryPath": "examples/guide-project/src/host/page-repository.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/host/page-repository.ts" },
-        { "repositoryPath": "examples/guide-project/src/runtime/RuntimePage.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/RuntimePage.ts" }
-      ],
-      "packages": [
-        { "name": "@dragcraft/designer", "repositoryPath": "packages/designer/package.json" }
-      ]
-    }
+    "integration": { "playbook": "references/integration.md", "resources": "references/resources/integration.json" },
+    "commands": { "playbook": "references/commands.md", "resources": "references/resources/commands.json" },
+    "widgets": { "playbook": "references/widgets.md", "resources": "references/resources/widgets.json" },
+    "forms": { "playbook": "references/forms.md", "resources": "references/resources/forms.json" },
+    "layout": { "playbook": "references/layout.md", "resources": "references/resources/layout.json" },
+    "containers": { "playbook": "references/containers.md", "resources": "references/resources/containers.json" },
+    "shell": { "playbook": "references/shell.md", "resources": "references/resources/shell.json" },
+    "lifecycle": { "playbook": "references/lifecycle.md", "resources": "references/resources/lifecycle.json" }
   }
 }

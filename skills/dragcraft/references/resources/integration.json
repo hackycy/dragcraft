@@ -1,0 +1,18 @@
+{
+  "workflow": "integration",
+  "docs": [
+    { "repositoryPath": "docs/guide/learn/prerequisites.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/prerequisites" },
+    { "repositoryPath": "docs/guide/learn/first-editor.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/first-editor" },
+    { "repositoryPath": "docs/guide/learn/completion.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/completion" },
+    { "repositoryPath": "docs/guide/fundamentals/architecture.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/architecture" },
+    { "repositoryPath": "docs/reference/overview.md", "url": "https://hackycy.github.io/dragcraft/reference/overview" },
+    { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
+  ],
+  "examples": [
+    { "repositoryPath": "examples/guide-project/src/MinimalApp.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/MinimalApp.vue" },
+    { "repositoryPath": "examples/guide-project/src/editor/minimal-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/minimal-designer.ts" },
+    { "repositoryPath": "examples/guide-project/src/editor/create-page-designer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/create-page-designer.ts" },
+    { "repositoryPath": "examples/guide-project/src/minimal.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/minimal.ts" }
+  ],
+  "packages": ["@dragcraft/designer", "@dragcraft/fields-ant-design-vue"]
+}

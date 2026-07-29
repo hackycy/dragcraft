@@ -1,0 +1,15 @@
+{
+  "workflow": "commands",
+  "docs": [
+    { "repositoryPath": "docs/guide/fundamentals/state-commands-and-history.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/state-commands-and-history" },
+    { "repositoryPath": "docs/guide/customization/actions-and-policies.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/actions-and-policies" },
+    { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" },
+    { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }
+  ],
+  "examples": [
+    { "repositoryPath": "examples/guide-project/src/editor/actions.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/actions.ts" },
+    { "repositoryPath": "examples/guide-project/src/editor/create-page-designer.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/create-page-designer.test.ts" },
+    { "repositoryPath": "examples/guide-project/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/App.vue" }
+  ],
+  "packages": ["@dragcraft/designer"]
+}

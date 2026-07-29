@@ -1,0 +1,16 @@
+{
+  "workflow": "layout",
+  "docs": [
+    { "repositoryPath": "docs/guide/fundamentals/layout-system.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/layout-system" },
+    { "repositoryPath": "docs/guide/fundamentals/schema.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/schema" },
+    { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" },
+    { "repositoryPath": "docs/reference/designer-rendering.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-rendering" }
+  ],
+  "examples": [
+    { "repositoryPath": "examples/guide-project/src/editor/initial-schema.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/initial-schema.ts" },
+    { "repositoryPath": "examples/guide-project/src/domain/widgets/floating-action.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/floating-action.ts" },
+    { "repositoryPath": "examples/guide-project/src/runtime/layout.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/layout.ts" },
+    { "repositoryPath": "examples/guide-project/src/runtime/layout.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/layout.test.ts" }
+  ],
+  "packages": ["@dragcraft/designer"]
+}

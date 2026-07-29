@@ -1,17 +1,18 @@
 ---
 id: widgets
-workflow: widgets
-task: 新增一个每页只允许一个的公告物料，并允许在属性面板编辑文案。
+workflows:
+  - widgets
+task: 新增一个只能由模板导入、可选中配置但不能创建或复制的 Schema 托管页头物料。
 evidence:
-  - 物料元数据类型
-  - 现有注册表
-  - 物料指南和同类 Playground 组件
+  - 物料 metadata 与 Authoring Policy 类型
+  - widgets resources 和现有 Schema 托管物料
 boundary:
-  - 稳定 type、meta 和 Vue 组件保持同源注册
-  - 创建限制定义在物料行为协议中
+  - 稳定 type、metadata 和 Vue 组件保持同源注册
+  - Schema producer 显式提供托管节点
 verification:
-  - 拖入默认值与表单值一致
-  - 创建约束在所有创建入口生效并具有可观察测试
+  - 标准物料面板不显示该物料
+  - 导入可解析，配置可写入，创建和复制被拒绝
+  - 策略在命令与工作台中一致
 ---
 
-# 受限业务物料
+# Schema 托管业务物料

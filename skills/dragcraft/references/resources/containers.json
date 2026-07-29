@@ -1,0 +1,15 @@
+{
+  "workflow": "containers",
+  "docs": [
+    { "repositoryPath": "docs/guide/customization/layout-and-containers.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/layout-and-containers" },
+    { "repositoryPath": "docs/guide/fundamentals/schema.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/schema" },
+    { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" },
+    { "repositoryPath": "docs/reference/designer-rendering.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-rendering" }
+  ],
+  "examples": [
+    { "repositoryPath": "examples/guide-project/src/domain/widgets/container.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/container.ts" },
+    { "repositoryPath": "examples/guide-project/src/domain/widgets/container.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/domain/widgets/container.test.ts" },
+    { "repositoryPath": "examples/guide-project/src/runtime/RuntimeColumnContainer.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/RuntimeColumnContainer.ts" }
+  ],
+  "packages": ["@dragcraft/designer"]
+}

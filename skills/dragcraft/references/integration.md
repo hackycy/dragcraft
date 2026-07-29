@@ -1,16 +1,14 @@
 # 设计器接入
 
-## 证据链
-
-阅读 source map 中的接入指南、`@dragcraft/designer` 声明和宿主应用入口。确认 Vue、主题、字段 UI 库与 DragCraft 的实际版本。
+读取 [integration resources](resources/integration.json)，再检查 `@dragcraft/designer` 声明和宿主 Vue 入口。
 
 ## 实施
 
-1. 为 `createDesigner()` 准备物料元数据、组件映射、字段组件映射和需要时的页面级 `globalConfigSchema`；初始 Schema 与历史配置归入 `engineOptions`。
-2. 由业务入口挂载 `DcDesigner`，导入与字段 adapter 匹配的 UI 样式，以及 DragCraft 的完整主题或结构 CSS。
-3. 读取页面快照使用 `engine.state` 或 `useDesigner()`；业务写入使用 `execute()`，让命令、历史和事件保持一致。
-4. 将页面 ID、权限、保存按钮和路由离开保护保留在宿主页面，而不是设计器基础布局。
+1. 先注册字段 adapter、物料定义、动作、扩展点和 Schema migration，再导入依赖这些注册项的 Schema。
+2. 为 `createDesigner()` 提供物料元数据、组件映射、字段组件映射，以及任务需要的页面级配置。无需额外 migration 时可把初始 Schema 放入 `engineOptions`；需要先注册宿主 migration 时，先创建实例并注册，再手动 `importSchema()`。历史配置仍归入 `engineOptions`。
+3. 由业务入口挂载 `DcDesigner`，导入匹配字段 adapter 的 UI 样式，以及完整主题或结构 CSS。
+4. 由创建实例的所有者调用 `dispose()`；页面 ID、权限、保存和路由离开保护继续由宿主持有。
 
-## 完成
+## 完成标准
 
-确认一个物料能创建、选中并通过右侧字段更新 Schema。运行宿主的类型检查和最贴近入口的测试或构建。
+编辑器能够挂载和释放；至少一个已注册物料可以创建、选中并由字段更新 Schema；导入发生在依赖注册完成后；宿主入口的类型检查或最小构建通过。
