@@ -12,6 +12,7 @@ import {
   BUILT_IN_DEVICE_FRAMES,
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
+import '@dragcraft/device-frames/styles.css'
 import { computed, ref } from 'vue'
 
 const activeId = ref(IPHONE_DEVICE_FRAME.id)
@@ -98,3 +99,5 @@ const widePreview: DeviceFrameDefinition = Object.freeze({
 slot 已包含完整 Canvas Surface：flow regions、Schema chrome、layers、scroll、insets、empty state 与 content/viewport selection planes。外壳不能读取 Schema、解释 `LayoutPlan` 或处理 forbidden overlay。设备 system chrome 可以放在 slot 前后，并可通过 `--dc-safe-area-*` 变量向 Canvas Surface 声明安全区。
 
 设备 Frame 只用于设计态预览，不负责业务页面运行时。继续阅读 [主题、设备与国际化](/guide/customization/theme-device-and-i18n)。
+
+设备外壳的公开外观 CSS 不会随 JavaScript 入口自动加载；应用入口还必须导入 `@dragcraft/device-frames/styles.css`。如果同时使用 Designer Standard 主题，先导入 `@dragcraft/designer/standard.css`，再导入设备外壳样式。

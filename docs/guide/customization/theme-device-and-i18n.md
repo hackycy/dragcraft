@@ -31,6 +31,11 @@ token 适合颜色、字号、圆角、密度、阴影和动效。只有 token �
 完整应用使用受控 `DevicePicker`：
 
 ```ts
+import '@dragcraft/designer/standard.css'
+import '@dragcraft/device-frames/styles.css'
+```
+
+```ts
 const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
 const activeDeviceFrame = computed(() =>
   BUILT_IN_DEVICE_FRAMES.find(item => item.id === activeDeviceFrameId.value)

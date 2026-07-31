@@ -8,6 +8,7 @@
     { "repositoryPath": "docs/reference/device-frames.md", "url": "https://hackycy.github.io/dragcraft/reference/device-frames" }
   ],
   "examples": [
+    { "repositoryPath": "examples/guide-project/src/main.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/main.ts" },
     { "repositoryPath": "examples/guide-project/src/App.vue", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/App.vue" },
     { "repositoryPath": "examples/guide-project/src/editor/extensions.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/extensions.ts" },
     { "repositoryPath": "examples/guide-project/src/editor/messages.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/messages.ts" },
