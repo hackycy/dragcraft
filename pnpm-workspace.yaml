@@ -41,6 +41,7 @@ catalogs:
     lodash-es: ^4.17.23
   testing:
     '@vue/test-utils': ^2.4.11
+    fast-check: ^4.9.0
     happy-dom: ^20.10.6
     tinyexec: ^1.0.2
     vitest: ^4.0.7
