@@ -88,7 +88,7 @@ Tasks:
 
 1. Define `DocumentSchema`, page/node/structure types, JSON value types, IDs, container declarations and `SchemaDefinitionSnapshot`.
 2. Implement JSON validation and an input-isolated immutable snapshot without `structuredClone`.
-3. Implement the single `resolveSchema(input, definitions)` interface and four-state result.
+3. Implement the single `resolveSchema(input, definitions, options?)` interface and four-state result.
 4. Build `nodesById`, `locationsById`, ordered root and container/region views inside `ResolvedDocument`.
 5. Implement stable diagnostic codes, JSON Pointer paths, stable sorting, default limit 200 and hard limit 2000.
 6. Cover empty/root/container documents, duplicate/missing/orphan references, multiple ownership, illegal nested containers, unknown types, definition conflicts, region set mismatch and cardinality.

@@ -48,7 +48,7 @@ interface DocumentSchema {
 
 `PageDefinition`、`NodeDefinition`、`DocumentStructure`、`ContainerStructure`、`NodeId`、`NodeType`、`RegionId` 和 JSON 值类型均保持普通 JSON 形态。`schema` 省略时，Designer 创建版本为 `'1'` 的标准空文档；显式传入的 `null` 或其他未知值仍按外部输入解析。`materials` 是必填数组但可以为空。
 
-底层 `resolveSchema(input, definitions)` 仍是 Core 内部的深 module interface。`@dragcraft/designer` 不导出 `resolveSchema()`、`SchemaDefinitionSnapshot`、`ResolvedDocument`、Map 索引、registry 或任何布局/几何计划。Designer 内部通过同一解析管线处理初始 Schema 和 `importSchema(input)`；公共宿主只看到状态、诊断、导入、导出和设计态操作。
+底层 `resolveSchema(input, definitions, options?)` 仍是 Core 内部的深 module interface。`@dragcraft/designer` 不导出 `resolveSchema()`、`SchemaDefinitionSnapshot`、`ResolvedDocument`、Map 索引、registry 或任何布局/几何计划。Designer 内部通过同一解析管线处理初始 Schema 和 `importSchema(input)`；公共宿主只看到状态、诊断、导入、导出和设计态操作。
 
 宿主控制 interface 为：
 
@@ -75,7 +75,7 @@ interface DiagnosticReport {
 }
 ```
 
-每条诊断含稳定 `code`、`phase`、`severity`、JSON Pointer `path` 和可选节点/容器/region 标识与 JSON `details`；按 phase、path、code 稳定排序。默认最多保留 200 条，`limits.maxDiagnostics` 可调低或调高但硬上限为 2000。Core 不生成文案，Designer 自己本地化 code；不保存被截断的原始输入或额外诊断。
+每条诊断含稳定 `code`、`phase`、`severity`、JSON Pointer `path` 和可选节点/容器/region 标识与 JSON `details`；按 phase、path、code 稳定排序。Designer 将 `limits.maxDiagnostics` 投影为内部 Resolver options：默认最多保留 200 条，可调为包括 0 在内的非负整数，超过 2000 时按硬上限执行，非法运行时值静默回退到默认值。Core 不生成文案，Designer 自己本地化 code；不保存被截断的原始输入或额外诊断。
 
 Preview 通过显式只读 `context` prop 接收当前节点、page、globalConfig、owner 和 selected/hovered/dragging 状态：
 

@@ -16,8 +16,11 @@ Schema 结构解析器是一个深 module，只公开一个无状态纯函数入
 function resolveSchema(
   input: unknown,
   definitions: SchemaDefinitionSnapshot,
+  options?: ResolveSchemaOptions,
 ): SchemaResolution
 ```
+
+`ResolveSchemaOptions.maxDiagnostics` 控制本次调用保留的诊断条数；省略时默认 200，合法非负整数可设为 0，超过 2000 时按硬上限 2000 执行，负数、小数、非有限数或其他无效运行时值静默回退到默认 200。options 不进入 `SchemaDefinitionSnapshot`。
 
 `SchemaDefinitionSnapshot` 是 registry 投影出的不可变纯数据视图，通过 `revision` 标识版本。它只包含节点 type、容器 capability、region 和结构约束；不包含 Vue 组件、Designer Preview、Runtime Renderer、表单、图标、DOM/空间策略或可执行回调。
 
@@ -34,13 +37,24 @@ interface SchemaDefinitionSnapshot {
 type SchemaResolution =
   | {
       readonly status: 'rejected'
-      readonly diagnostics: readonly SchemaDiagnostic[]
+      readonly diagnostics: DiagnosticReport
     }
   | {
       readonly status: 'ready' | 'degraded' | 'conflicted'
       readonly document: ResolvedDocument
-      readonly diagnostics: readonly SchemaDiagnostic[]
+      readonly diagnostics: DiagnosticReport
     }
+```
+
+```ts
+interface ResolveSchemaOptions {
+  readonly maxDiagnostics?: number
+}
+
+interface DiagnosticReport {
+  readonly items: readonly SchemaDiagnostic[]
+  readonly truncated: boolean
+}
 ```
 
 - `rejected`：纯 JSON 或文档结构无效，不返回部分 document 或索引。
@@ -84,6 +98,6 @@ interface SchemaDiagnostic {
 }
 ```
 
-`path` 使用 JSON Pointer；`details` 必须是纯 JSON；诊断按 phase、path、code 稳定排序。Core 不生成最终文案，Designer 根据 code 映射文案和国际化；外部消费端不依赖这套内存诊断 interface。
+`path` 使用 JSON Pointer；`details` 必须是纯 JSON；诊断按 phase、path、code 稳定排序后按有效预算保留。`truncated` 只表示实际诊断被省略，Schema 四态由完整校验结果决定，不受保留条数影响。Core 不生成最终文案，Designer 根据 code 映射文案和国际化；外部消费端不依赖这套内存诊断 interface。
 
 解析器本身不持有全局缓存。Engine/Store 以不可变 Schema snapshot identity 与 `definitions.revision` 为键保存当前结果；展示策略变化不使结构缓存失效。第一版不公开 cache、invalidate、incremental parse 或内容 hash interface，内部将来可以分阶段缓存而不改变公共入口。

@@ -31,6 +31,7 @@ Type: map
 - [Vue 与浏览器展示适配器](issues/06-web-geometry-adapter.md) — 内置 ApplicationSurface 以可选 PresentationFrame、Document/Viewport mount planes、Surface Reservation 和唯一 NodeHost 支持任意设计态几何；Interaction Plane、锚点拖放、RegionOutlet、DOM 测量与 stacking 由 Designer 统一拥有，不恢复 Schema 空间分类。
 - [@dragcraft/designer 公共 Schema 与展示接口](issues/08-public-designer-contract.md) — `createDesigner({ schema?, materials })` 是唯一公共注册入口；公开 `DocumentSchema`、受控 DesignerInstance、诊断和 Vue Presentation 扩展，内部保留解析器/ResolvedDocument/Engine/几何 registry；不提供 previewState、场景模拟或跨平台 renderer。
 - [布局体系的验证与一致性契约](issues/09-validation-and-conformance.md) — 每条不变量绑定唯一执行 owner 与权威测试面；Core 使用表格和有界属性测试，公共入口使用消费者契约测试，跨平台止于 JSON 往返，Web 几何由三个重做的产品化 playground 模板人工验收，最终合并不允许新旧双轨。
+- [Schema Resolver 诊断预算契约](issues/11-resolver-diagnostic-budget-contract.md) — Resolver 通过可选 options 拥有默认 200、硬上限 2000 的调用级诊断预算，四态统一返回可准确表达稳定截断的 DiagnosticReport，非法预算静默回退到默认值。
 
 ## Not yet specified
 
