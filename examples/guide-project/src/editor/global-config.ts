@@ -14,7 +14,6 @@ export const guideGlobalConfigSchema: FormSchema = {
         key: 'backgroundColor',
         label: '背景颜色',
         component: 'Input',
-        bindTo: { scope: 'schema', path: 'root.style.surface.backgroundColor' },
       },
     ],
   }],

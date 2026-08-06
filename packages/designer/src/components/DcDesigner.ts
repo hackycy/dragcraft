@@ -30,7 +30,7 @@ export default defineComponent({
     const leftPanelRef = ref<HTMLElement | null>(null)
     const rightPanelRef = ref<HTMLElement | null>(null)
     const searchQuery = ref('')
-    const drag = useDragDrop(props.instance)
+    const drag = useDragDrop(props.instance, internals.executeWorkbenchAction)
     const resolvedDocument = computed(() => {
       const state = props.instance.document.value
       if (state.status === 'rejected')
@@ -99,11 +99,11 @@ export default defineComponent({
       const key = event.key.toLowerCase()
       if (key === 'z') {
         event.preventDefault()
-        props.instance.execute({ type: event.shiftKey ? 'redo' : 'undo' })
+        internals.executeWorkbenchAction({ type: event.shiftKey ? 'redo' : 'undo' })
       }
       else if (key === 'y' && event.ctrlKey) {
         event.preventDefault()
-        props.instance.execute({ type: 'redo' })
+        internals.executeWorkbenchAction({ type: 'redo' })
       }
     }
 

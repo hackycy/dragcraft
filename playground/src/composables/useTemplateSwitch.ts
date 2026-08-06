@@ -1,57 +1,42 @@
-import type { DesignerSchema } from '@dragcraft/designer'
+import type { DocumentSchema, SchemaLoadResult } from '@dragcraft/designer'
 import type { TemplateEntry } from '../config/templates'
-
 import { ref } from 'vue'
 import { templateRegistry } from '../config/templates'
 
 export interface UseTemplateSwitchOptions {
-  importSchema: (schema: DesignerSchema) => void
-  exportSchema: () => DesignerSchema
+  importSchema: (schema: DocumentSchema) => SchemaLoadResult
+  exportSchema: () => DocumentSchema | null
   confirmSwitch?: () => boolean | Promise<boolean>
 }
 
 export function useTemplateSwitch(options: UseTemplateSwitchOptions) {
-  const { importSchema, exportSchema, confirmSwitch } = options
-
   const activeTemplateId = ref(templateRegistry[0].id)
   const templates: TemplateEntry[] = templateRegistry
 
   function getActiveTemplate(): TemplateEntry {
-    return templates.find(t => t.id === activeTemplateId.value) ?? templates[0]
+    return templates.find(template => template.id === activeTemplateId.value) ?? templates[0]!
   }
 
   function isModified(): boolean {
-    const current = JSON.stringify(exportSchema())
-    const baseline = JSON.stringify(getActiveTemplate().schema)
-    return current !== baseline
+    return JSON.stringify(options.exportSchema()) !== JSON.stringify(getActiveTemplate().schema)
   }
 
-  function switchTemplate(id: string) {
+  async function switchTemplate(id: string): Promise<void> {
     if (id === activeTemplateId.value)
       return
-
-    const target = templates.find(t => t.id === id)
+    const target = templates.find(template => template.id === id)
     if (!target)
       return
-
-    if (isModified()) {
-      if (confirmSwitch && !confirmSwitch())
-        return
-    }
-
-    importSchema(target.schema)
-    activeTemplateId.value = id
+    if (isModified() && options.confirmSwitch && !await options.confirmSwitch())
+      return
+    const result = options.importSchema(target.schema)
+    if (result.status !== 'rejected')
+      activeTemplateId.value = id
   }
 
   function resetTemplate() {
-    const template = getActiveTemplate()
-    importSchema(template.schema)
+    options.importSchema(getActiveTemplate().schema)
   }
 
-  return {
-    activeTemplateId,
-    templates,
-    switchTemplate,
-    resetTemplate,
-  }
+  return { activeTemplateId, templates, switchTemplate, resetTemplate }
 }

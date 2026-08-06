@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import type { DocumentSchema } from '@dragcraft/core'
+import type { PropType } from 'vue'
+import type { MaterialPreviewContext } from './index'
 import { describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h, nextTick, shallowRef } from 'vue'
 import { createDesigner, DcDesigner, defineMaterial, DesignerRegionOutlet } from './index'
@@ -108,6 +110,127 @@ describe('phase 5 workbench cutover', () => {
 
       expect(designer.selection.selectedNodeId.value).toBeNull()
       expect(designer.exportSchema()?.structure.containers['container-1']?.regions.content).toEqual([])
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it('asks the host before a protected workbench action is retried', async () => {
+    let resolveConfirmation!: (confirmed: boolean) => void
+    let request: unknown
+    const confirmation = new Promise<boolean>((resolve) => {
+      resolveConfirmation = resolve
+    })
+    const protectedMaterial = defineMaterial({
+      type: 'protected-text',
+      authoring: { policy: { remove: 'confirmation-required' } },
+      panel: { title: 'Protected text', group: 'basic' },
+      presentation: { kind: 'headless' },
+    })
+    const designer = createDesigner({
+      materials: [protectedMaterial],
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [{ id: 'protected-1', type: 'protected-text', props: {} }],
+        structure: { root: ['protected-1'], containers: {} },
+      },
+      confirmAuthoringAction(value) {
+        request = value
+        return confirmation
+      },
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const structureTab = Array.from(host.querySelectorAll<HTMLButtonElement>('.dc-left-sidebar__tab'))
+        .find(button => button.title === '结构树')!
+      structureTab.click()
+      await nextTick()
+      host.querySelector<HTMLButtonElement>('[data-dc-action="remove"]')!.click()
+
+      expect(request).toEqual({
+        action: 'remove',
+        code: 'POLICY_CONFIRMATION_REQUIRED',
+        materialType: 'protected-text',
+        nodeId: 'protected-1',
+      })
+      expect(Object.isFrozen(request)).toBe(true)
+      expect(designer.exportSchema()?.structure.root).toEqual(['protected-1'])
+
+      resolveConfirmation(true)
+      await confirmation
+      await nextTick()
+
+      expect(designer.exportSchema()?.structure.root).toEqual([])
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it('routes protected material self-updates through host confirmation', async () => {
+    let request: unknown
+    const protectedMaterial = defineMaterial({
+      type: 'protected-preview',
+      authoring: { policy: { update: 'confirmation-required' } },
+      presentation: {
+        kind: 'visual',
+        preview: defineComponent({
+          props: {
+            context: { type: Object as PropType<MaterialPreviewContext>, required: true },
+          },
+          setup(props) {
+            return () => h('button', {
+              'data-test-update-self': '',
+              'onClick': () => props.context.updateSelf({ value: 'After' }),
+            }, 'Update')
+          },
+        }),
+      },
+    })
+    const designer = createDesigner({
+      materials: [protectedMaterial],
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [{ id: 'protected-1', type: 'protected-preview', props: { value: 'Before' } }],
+        structure: { root: ['protected-1'], containers: {} },
+      },
+      confirmAuthoringAction(value) {
+        request = value
+        return true
+      },
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      host.querySelector<HTMLButtonElement>('[data-test-update-self]')!.click()
+      await Promise.resolve()
+      await nextTick()
+
+      expect(request).toEqual({
+        action: 'update',
+        code: 'POLICY_CONFIRMATION_REQUIRED',
+        materialType: 'protected-preview',
+        nodeId: 'protected-1',
+      })
+      expect(designer.exportSchema()?.nodes[0]?.props.value).toBe('After')
     }
     finally {
       app.unmount()

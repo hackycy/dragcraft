@@ -28,7 +28,7 @@ export default defineComponent({
             document,
             catalog: context.catalog,
             containerShell: containerShell.value ?? undefined,
-            execute: context.designer.execute,
+            execute: context.executeWorkbenchAction,
             selectedNodeId: context.designer.selection.selectedNodeId.value ?? undefined,
             hoveredNodeId: context.designer.selection.hoveredNodeId.value ?? undefined,
             draggingNodeId: context.drag.draggingNodeId.value ?? undefined,
@@ -70,7 +70,7 @@ export default defineComponent({
           'onClick': (event: MouseEvent) => {
             const target = event.target
             if (target instanceof Element && !target.closest('[data-dc-component="node-host"]'))
-              context.designer.execute({ type: 'select-node', nodeId: null })
+              context.executeWorkbenchAction({ type: 'select-node', nodeId: null })
           },
           'onClickCapture': canvasPan.handleClickCapture,
           'onPointerdownCapture': canvasPan.handlePointerDown,

@@ -23,7 +23,7 @@ export default defineComponent({
   },
   setup(props, { emit }) {
     const { t } = useI18n()
-    const { designer } = useDesignerContext()
+    const { designer, executeWorkbenchAction } = useDesignerContext()
     const renderButton = (button: ControlButton): VNodeChild => h('button', {
       'type': 'button',
       'class': 'dc-canvas-controls__button',
@@ -42,14 +42,14 @@ export default defineComponent({
           label: t('workspace.history.undo', '撤销'),
           icon: IconUndo,
           disabled: !designer.history.canUndo.value,
-          onClick: () => designer.execute({ type: 'undo' }),
+          onClick: () => executeWorkbenchAction({ type: 'undo' }),
         }),
         renderButton({
           key: 'redo',
           label: t('workspace.history.redo', '重做'),
           icon: IconRedo,
           disabled: !designer.history.canRedo.value,
-          onClick: () => designer.execute({ type: 'redo' }),
+          onClick: () => executeWorkbenchAction({ type: 'redo' }),
         }),
         h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
         renderButton({

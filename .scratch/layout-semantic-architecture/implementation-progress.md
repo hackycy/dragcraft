@@ -1,6 +1,6 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-06 23:16 CST
+Updated: 2026-08-07 00:49 CST
 
 ## Phase Status
 
@@ -11,7 +11,7 @@ Updated: 2026-08-06 23:16 CST
 - Phase 4: complete. Designer Presentation replacement is implemented beside the legacy Renderer path and verified through the ApplicationSurface seam.
 - Phase 5: complete. The workbench consumes DesignerInstance, the package root uses the accepted allowlist, and public consumer/package/theme validation covers the replacement path.
 - Phase 6: complete. Renderer, Widgets, legacy Core protocols, their implementation-coupled tests and obsolete package dependencies are removed; Core is a Vue-free pure module with only the accepted Document, Resolver and Editor interface.
-- Phase 7: ready to resume but implementation has not restarted. Wayfinder ticket 13 resolved the host-confirmation interface gap; no Phase 7 test or production code has yet been written.
+- Phase 7: automated implementation complete. Playground and Guide use the accepted public Designer seam, the Guide Runtime is autonomous, and all automated gates pass; the human Playground acceptance checklist remains intentionally unconfirmed.
 
 ## Phase 0 Evidence
 
@@ -453,6 +453,80 @@ No red-green implementation claim is made: the accepted-interface blocker was id
 - `git diff --check`: passed.
 - `git status --short --branch`: reported only the four decision artifacts: `CONTEXT.md`, the architecture map, the implementation progress and ticket 13; no implementation file changed.
 
+## Phase 7 Implementation
+
+- Implemented resolved Wayfinder ticket 13 through the optional `createDesigner({ confirmAuthoringAction })` host seam and the minimal frozen `AuthoringConfirmationRequest`. `DesignerInstance.execute()` remains synchronous and never invokes the callback.
+- Added one private confirmation coordinator for every `DcDesigner` Schema Action source: structure tree, Interaction Plane and material `updateSelf()`, drag/drop, inspector/property edits, undo and redo controls and keyboard shortcuts.
+- Confirmation is fail-closed and single-flight. Selection and hover remain responsive while Schema/history Actions are blocked; cancellation, callback throw/rejection, stale Schema references and disposal cannot commit a retained Action.
+- Added batch `actionIndex` to identify the first unconfirmed child. Protected children are confirmed sequentially and the complete batch commits once with one history entry only after all confirmations succeed.
+- Rebuilt Playground materials as direct `MaterialDefinition` values and all templates as flat `DocumentSchema` values with stable one-level regions. E-commerce covers navbar, tab bar, FAB, long content, measured top/bottom reservations and a Headless analytics material; content detail covers single/irregular containers and root/region moves; product detail covers ordinary content, fixed purchase actions and an overlay dialog.
+- Playground now creates the Designer through the accepted public seam, uses the public Ant Design Vue field adapter, retains Device Frame switching, template switching, locale switching, material search, inspector, four-state import/export validation and host-owned Ant Design confirmation UX. Locale changes rebuild the Designer from its exported Schema and dispose the prior instance.
+- Rebuilt Guide minimal/full setup around `createDesigner({ schema, materials })`, changed persistence to `DocumentSchema`, removed migration and legacy action/extension examples, and retained host-owned confirmation through `window.confirm()` supplied only by the Guide.
+- Replaced the Guide production Runtime with an autonomous pure-data consumer. It imports only public `DocumentSchema`/`NodeDefinition` types, owns its node registry and mount policy, and interprets `structure.containers` directly without Material Definition, Presentation, Resolver, Designer internals or a shared production renderer.
+- Added a Guide host regression that keeps the loaded revision status after import. The document watcher uses synchronous flushing so the import's dirty notification occurs before the host writes the final loaded status.
+- No accepted public interface changed beyond resolved Wayfinder ticket 13, and no new architecture gap appeared. No new Wayfinder ticket was created.
+
+## Phase 7 Red-Green Evidence
+
+Each slice began with a failing behavior assertion or failing product-consumer gate, followed by only the implementation needed for that slice. The retained tests exercise the accepted Authoring Engine, public Designer, workbench, product consumer and autonomous Runtime seams.
+
+| Cycle | Directed command | Observed red | Following green |
+| --- | --- | --- | --- |
+| 1 | `pnpm --filter @dragcraft/designer test --run src/authoring/create-authoring-engine.test.ts` | protected batch result omitted the required child `actionIndex` | engine suite passed with the exact first protected child index |
+| 2 | `pnpm --filter @dragcraft/designer test --run src/workbench-cutover.test.ts` | a protected structure-tree action never delivered a host confirmation request | workbench requested confirmation and retried through the same Engine seam |
+| 3 | `pnpm --filter @dragcraft/designer test --run src/authoring/create-authoring-confirmation-coordinator.test.ts` | the atomic protected batch produced no first request | coordinator confirmed children in order and committed one history entry |
+| 4 | same coordinator command | cancellation left the coordinator pending and blocked a later attempt | cancellation failed closed and a later attempt could request confirmation |
+| 5 | `pnpm --filter @dragcraft/designer test --run src/workbench-cutover.test.ts` | material preview `updateSelf()` bypassed host confirmation | preview self-updates used the same private coordinator |
+| 6 | `pnpm exec vitest run playground/src/components/widgets/mini-program.test.ts` | the e-commerce consumer failed at import because `defineContainerWidget` no longer exists | direct materials and the e-commerce `DocumentSchema` round-tripped through Designer |
+| 7 | `pnpm exec vitest run playground/src/components/widgets/container.test.ts` | the content template resolved as `rejected` | one-level container definitions passed and root/region sorting and moves committed |
+| 8 | `pnpm exec vitest run playground/src/components/widgets/mini-program.test.ts` | the product template resolved as `rejected` | ordinary content, purchase bar and overlay dialog passed and round-tripped |
+| 9 | `pnpm --filter ./playground build` | build failed because the old field layer imported removed `useI18n` | public field adapter cutover built successfully after 3190 modules transformed |
+| 10 | `pnpm --filter guide-project test --run src/editor/create-page-designer.test.ts` | Guide setup failed at import because `defineContainerWidget` no longer exists | full/minimal public setup and history behavior passed |
+| 11 | `pnpm --filter guide-project test --run src/runtime/RuntimePage.test.ts` | the old Runtime interpreted `DocumentSchema` as a legacy runtime registry/layout plan | autonomous structure and host mount-policy tests passed |
+| 12 | `pnpm --filter guide-project typecheck` | the first green attempt found stale Designer declarations and one `DragEvent` fixture cast | Designer build refreshed declarations, the fixture was corrected, and Guide typecheck passed |
+| 13 | `pnpm exec tsc -p playground/tsconfig.json` | the first consumer check found seven local `JsonObject`/Vue component typing errors | local types were tightened and the same TypeScript check passed |
+| 14 | `pnpm --filter guide-project test --run src/App.test.ts` | 1/1 failed: expected `已加载草稿修订号 3`, received `有未保存的更改` | 1 file and 1/1 test passed after the document watcher used `flush: 'sync'` |
+
+Review retained the accepted deep modules and removed the old consumer layers instead of wrapping them: Playground custom field wrappers/messages, Guide command/interceptor/migration examples, and the shared Runtime layout/placement implementation and its implementation-coupled tests were deleted. No compatibility alias, generic interceptor or shared production renderer was introduced.
+
+Two failed verification attempts are retained explicitly:
+
+- Running `pnpm --filter @dragcraft/designer typecheck` concurrently with `pnpm --filter @dragcraft/designer build` failed because the build cleaned `dist` while the public-consumer fixture resolved the package; after the build completed, the same typecheck passed. This was a command race, not a source failure.
+- The first `pnpm --filter guide-project typecheck` after adding `App.test.ts` rejected spreading `NodeListOf<HTMLButtonElement>` because the repository does not enable `DOM.Iterable`; replacing the test-only spread with `Array.from()` made the same typecheck pass without changing tsconfig or production behavior.
+
+## Phase 7 Verification Evidence
+
+Directed product and package checks:
+
+- `pnpm exec eslint packages/designer/src playground/src examples/guide-project/src`: passed with no output after mechanical import-order fixes.
+- `pnpm --filter @dragcraft/designer test --run`: passed, 19 files and 110 tests.
+- `pnpm --filter @dragcraft/designer build`: passed; theme contract, tsdown/publint, exact package exports and the public-consumer fixture all passed.
+- `pnpm --filter @dragcraft/designer typecheck`: passed after the sequential rebuild described above.
+- `pnpm exec vitest run playground/src/components/widgets/container.test.ts playground/src/components/widgets/mini-program.test.ts`: passed, 2 files and 4 tests.
+- `pnpm exec tsc -p playground/tsconfig.json`: passed with no output.
+- `pnpm --filter ./playground build`: passed after 3190 modules transformed; only the existing chunk-size warning remains.
+- `pnpm --filter guide-project test --run`: passed, 5 files and 10 tests.
+- `pnpm --filter guide-project typecheck`: passed.
+- `pnpm --filter guide-project build`: passed after 3190 modules transformed; only the existing chunk-size warning remains.
+
+Final repository gates were executed sequentially in the required order:
+
+- `pnpm build`: passed, 12/12 tasks. Designer package exports/public consumer passed; Guide and Playground both built.
+- `pnpm lint`: passed; `public package boundary valid` and `obsolete package removal valid`.
+- `pnpm typecheck`: passed after 9/9 package builds and the root `tsc`.
+- `pnpm test`: passed after 9/9 package builds. Every recursive suite passed, including Core 65, Designer 110, device-frames 14, form-generator 86 and Guide 10 tests. Playground has no package test script, so its 2 files and 4 tests were run explicitly above.
+
+Final conformance audits:
+
+- `rg -n "DesignerSchema|WidgetDefinition|defineContainerWidget|defineWidget|createEngine|useDesigner|EventName|createConfirmActionInterceptor|actionInterceptor|ContainerRegionOutlet|RuntimeRenderer|schemaMigrations|CommandType" playground/src examples/guide-project/src --glob '!**/dist/**'`: only `updateEventName` matched the broad `EventName` substring; no legacy consumer symbol or protocol remains.
+- `rg -n --pcre2 "from\\s+['\"]@dragcraft/(?!designer(?:/|['\"])|device-frames(?:/|['\"])|fields-[^/'\"]+(?:/|['\"]))" playground/src examples/guide-project/src`: no matches; product consumers import only allowed public packages.
+- `rg -n "MaterialDefinition|Presentation|Resolver|DesignerRegionOutlet|@dragcraft/core|@dragcraft/renderer|@dragcraft/widgets" examples/guide-project/src/runtime`: no matches; the Guide Runtime remains autonomous.
+- `rg -n "structuredClone" packages/designer/src playground/src examples/guide-project/src`: no matches.
+- `git diff --check`: passed.
+- `git diff --name-only -- .github docs .scratch/layout-semantic-architecture/implementation-plan.md .scratch/layout-semantic-architecture/map.md .scratch/layout-semantic-architecture/issues`: no output. Phase 8 architecture/docs and accepted decision artifacts were not modified.
+
+Automated Phase 7 implementation is complete. The Playground human acceptance checklist below remains unchecked because browser geometry and interaction quality require human acceptance; no agent acceptance claim is made.
+
 ## Wayfinder Ticket 12 Decision
 
 - Ticket 12 is resolved: `MaterialPreviewContext.invokeAction(name, payload?)` is deleted from the accepted public interface.
@@ -485,11 +559,12 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - Phase 0 cannot be marked complete until the user confirms the playground human baseline.
 - No automated Phase 1 blocker or failure remains.
 - No automated Phase 2 blocker or failure remains.
-- No automated Phase 5 package blocker remains. Repository build/typecheck/test still encounter the unchanged product consumers assigned to Phase 7.
-- No automated Phase 6 blocker or failure remains. Repository build/typecheck/test still stop only at the unchanged product consumers assigned to Phase 7.
+- No automated Phase 5 package blocker remains.
+- No automated Phase 6 blocker or failure remains.
+- No automated Phase 7 blocker or failure remains; only the explicitly human Playground acceptance checklist is outstanding.
 - Package-manager observation, not an automated baseline failure: a non-frozen catalog resolution currently advances `vitepress@next` to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement has no stable registry match. The docs dependency was not changed; frozen installation succeeds.
 - No accepted-interface blocker remains from Wayfinder ticket 12; Phase 4 automated implementation is complete.
-- No accepted-interface blocker remains from Wayfinder ticket 13; Phase 7 may resume through the resolved host-confirmation contract.
+- No accepted-interface blocker remains from Wayfinder ticket 13; Phase 7 completed through the resolved host-confirmation contract.
 
 ## Stop Point
 
@@ -498,5 +573,5 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - Phase 4 is complete; its accepted public-interface gap was resolved by Wayfinder ticket 12 before implementation resumed.
 - Phase 5 is complete.
 - Phase 6 is complete.
-- Phase 7 remains before its first red cycle and is ready to resume under the resolved Wayfinder ticket 13 contract.
+- Phase 7 automated implementation is complete; human Playground acceptance remains unchecked.
 - Phase 8 was not started.

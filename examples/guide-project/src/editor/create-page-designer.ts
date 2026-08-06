@@ -1,47 +1,45 @@
-import type { ContainerShellSource, DesignerSchema } from '@dragcraft/designer'
+import type {
+  ConfirmAuthoringAction,
+  ContainerShellSource,
+  DocumentSchema,
+} from '@dragcraft/designer'
 import { createDesigner } from '@dragcraft/designer'
-import { guideComponentMap, guideWidgetGroups, guideWidgetMetas } from '../domain/widgets'
+import { IPHONE_DEVICE_FRAME } from '@dragcraft/device-frames'
+import { h } from 'vue'
+import { guideMaterials } from '../domain/widgets'
 import { createGuideFieldComponentMap } from '../forms'
-import { createGuideActionInterceptors, guideCustomActions } from './actions'
-import { createGuideExtensions } from './extensions'
 import { guideGlobalConfigSchema } from './global-config'
 import { createGuideSchema } from './initial-schema'
-import { guideMessages } from './messages'
-import { registerGuideSchemaMigrations } from './schema-migrations'
 
 export interface CreatePageDesignerOptions {
-  initialSchema?: DesignerSchema
+  initialSchema?: DocumentSchema
   containerShell?: ContainerShellSource
+  confirmAuthoringAction?: ConfirmAuthoringAction
 }
+
+const defaultConfirmation: ConfirmAuthoringAction = () => typeof window === 'undefined'
+  ? true
+  // eslint-disable-next-line no-alert -- The guide deliberately demonstrates a browser-owned confirmation UX.
+  : window.confirm('此操作需要确认，是否继续？')
 
 export function createPageDesigner(options: CreatePageDesignerOptions = {}) {
-  const initialSchema = options.initialSchema ?? createGuideSchema()
-  const designer = createDesigner({
-    engineOptions: {
-      maxHistorySize: 50,
-    },
-    widgetMetas: guideWidgetMetas,
-    componentMap: guideComponentMap,
+  return createDesigner({
+    schema: options.initialSchema ?? createGuideSchema(),
+    materials: guideMaterials,
+    containerShell: options.containerShell ?? IPHONE_DEVICE_FRAME.containerShell,
+    confirmAuthoringAction: options.confirmAuthoringAction ?? defaultConfirmation,
     fieldComponentMap: createGuideFieldComponentMap(),
-    widgetGroups: guideWidgetGroups,
     globalConfigSchema: guideGlobalConfigSchema,
-    workspace: {
-      compactBreakpoint: 1080,
-      keyboardShortcuts: true,
+    maxHistoryEntries: 50,
+    workspace: { compactBreakpoint: 1080, keyboardShortcuts: true },
+    extensions: {
+      materialItemRenderer: ({ material }) => h(
+        'span',
+        { class: 'guide-material-card' },
+        material.panel?.title ?? material.type,
+      ),
     },
-    customActions: guideCustomActions,
-    actionInterceptors: createGuideActionInterceptors(),
-    extensions: createGuideExtensions(options.containerShell),
-    messages: guideMessages,
   })
-
-  registerGuideSchemaMigrations(designer.engine)
-  const result = designer.engine.importSchema(initialSchema)
-  if (!result.ok) {
-    designer.dispose()
-    throw new Error(`Initial guide schema was rejected: ${result.diagnostics.map(item => item.code).join(', ')}`)
-  }
-
-  return designer
 }
+
 export { createGuideSchema } from './initial-schema'

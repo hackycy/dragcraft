@@ -1,6 +1,10 @@
 import type { DiagnosticReport as CoreDiagnosticReport } from '@dragcraft/core'
 
 export type {
+  AuthoringConfirmationRequest,
+  ConfirmAuthoringAction,
+} from './authoring/create-authoring-confirmation-coordinator'
+export type {
   AuthoringAction,
   AuthoringBatchAction,
   AuthoringResult,

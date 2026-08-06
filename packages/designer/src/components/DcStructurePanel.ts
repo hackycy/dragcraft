@@ -49,17 +49,17 @@ export default defineComponent({
         ? h('div', { 'class': 'dc-structure-panel__actions', 'data-dc-part': 'actions' }, [
             action('move-up', 'Move node up', IconArrowUp, !previous, () => {
               if (previous)
-                context.designer.execute({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'before', nodeId: previous } } })
+                context.executeWorkbenchAction({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'before', nodeId: previous } } })
             }),
             action('move-down', 'Move node down', IconArrowDown, !next, () => {
               if (next)
-                context.designer.execute({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: next } } })
+                context.executeWorkbenchAction({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: next } } })
             }),
             action('duplicate', 'Duplicate node', IconCopy, false, () => {
-              context.designer.execute({ type: 'duplicate-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: node.node.id } } })
+              context.executeWorkbenchAction({ type: 'duplicate-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: node.node.id } } })
             }),
             action('remove', 'Remove node', IconDelete, false, () => {
-              context.designer.execute({ type: 'remove-node', nodeId: node.node.id })
+              context.executeWorkbenchAction({ type: 'remove-node', nodeId: node.node.id })
             }),
           ])
         : null
@@ -74,7 +74,7 @@ export default defineComponent({
           'class': 'dc-structure-panel__select',
           'data-dc-part': 'select',
           'aria-pressed': selected,
-          'onClick': () => context.designer.execute({ type: 'select-node', nodeId: node.node.id }),
+          'onClick': () => context.executeWorkbenchAction({ type: 'select-node', nodeId: node.node.id }),
         }, [
           h('span', { 'class': 'dc-structure-panel__branch', 'data-dc-part': 'branch' }),
           h('span', { 'class': 'dc-structure-panel__main', 'data-dc-part': 'main' }, [

@@ -1,35 +1,28 @@
 <script setup lang="ts">
-import { CommandType, createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
-import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@dragcraft/designer'
+import type { DesignerExtensions, DesignerInstance, MaterialDefinition } from '@dragcraft/designer'
+import type { Component } from 'vue'
+import { createDesigner, DcDesigner } from '@dragcraft/designer'
 import {
   BUILT_IN_DEVICE_FRAMES,
   DevicePicker,
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
+import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 import { Modal } from 'ant-design-vue'
-import { computed, defineComponent, h, ref } from 'vue'
+import { computed, h, onBeforeUnmount, ref, shallowRef } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
-import { buildPlaygroundFieldComponentMap } from './components/fields'
-import { IconArrowDown, IconCopy, IconPhone } from './components/icons'
-import {
-  playgroundComponentMap,
-  playgroundWidgetGroups,
-  playgroundWidgetMessages,
-  playgroundWidgetMetas,
-} from './components/widgets'
+import { playgroundMaterials } from './components/widgets'
 import { globalConfigSchema } from './config/global-config-schema'
 import { templateRegistry } from './config/templates'
 import { useTemplateSwitch } from './composables/useTemplateSwitch'
 import SchemaIOModal from './shared/SchemaIOModal.vue'
 import { useSchemaIO } from './shared/use-schema-io'
 
-// ── Host-owned Active Device Frame ──────────
-
+const locale = ref('zh-CN')
 const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
-const activeDeviceFrame = computed(() =>
-  BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
-  ?? IPHONE_DEVICE_FRAME,
-)
+const activeDeviceFrame = computed(() => BUILT_IN_DEVICE_FRAMES.find(
+  definition => definition.id === activeDeviceFrameId.value,
+) ?? IPHONE_DEVICE_FRAME)
 const activeContainerShell = computed(() => activeDeviceFrame.value.containerShell)
 
 function selectDeviceFrame(id: string) {
@@ -37,52 +30,20 @@ function selectDeviceFrame(id: string) {
     activeDeviceFrameId.value = id
 }
 
-// ── Mini-Program Empty State ────────────────────
-
-const MiniProgramEmptyState = defineComponent({
-  name: 'MiniProgramEmptyState',
-  props: {
-    isDragOver: { type: Boolean, default: false },
-  },
-  setup(props) {
-    return () =>
-      h('div', {
-        class: {
-          'mp-empty-state': true,
-          'mp-empty-state--drag-over': props.isDragOver,
-        },
-      }, [
-        h('div', { class: 'mp-empty-state__icon' }, [
-          props.isDragOver
-            ? h(IconArrowDown, { size: 56, color: 'currentColor' })
-            : h(IconPhone, { size: 56, color: 'currentColor' }),
-        ]),
-        h('div', { class: 'mp-empty-state__text' },
-          props.isDragOver ? '松开放置组件' : '从左侧拖入组件开始装修'),
-      ])
-  },
-})
-
-function renderMaterialIcon(icon: MaterialItemIcon | undefined) {
+function renderMaterialIcon(icon: Component | string | undefined) {
   if (!icon)
     return null
-
   return h('span', { class: 'pg-material-card__icon' }, [
-    typeof icon === 'string'
-      ? icon
-      : h(icon, { size: 18, color: 'currentColor' }),
+    typeof icon === 'string' ? icon : h(icon, { size: 18, color: 'currentColor' }),
   ])
 }
 
-const materialItemRenderer: DesignerExtensions['materialItemRenderer'] = ({
-  material,
-}) =>
-  h('div', {
-    class: 'pg-material-card',
-  }, [
-    renderMaterialIcon(material.icon),
-    h('span', { class: 'pg-material-card__title' }, material.title),
-  ])
+const materialItemRenderer: DesignerExtensions['materialItemRenderer'] = ({ material }) => h('div', {
+  class: 'pg-material-card',
+}, [
+  renderMaterialIcon(material.panel?.icon),
+  h('span', { class: 'pg-material-card__title' }, material.panel?.title ?? material.type),
+])
 
 interface ConfirmModalOptions {
   title: string
@@ -100,7 +61,6 @@ function confirmWithModal(options: ConfirmModalOptions): Promise<boolean> {
       settled = true
       resolve(value)
     }
-
     Modal.confirm({
       title: options.title,
       content: options.content,
@@ -114,64 +74,30 @@ function confirmWithModal(options: ConfirmModalOptions): Promise<boolean> {
   })
 }
 
-// ── Create designer instance ─────────────────
-
-const designer = createDesigner({
-  engineOptions: {
-    initialSchema: templateRegistry[0].schema,
-    maxHistorySize: 50,
-  },
-  widgetMetas: playgroundWidgetMetas,
-  componentMap: playgroundComponentMap,
-  fieldComponentMap: buildPlaygroundFieldComponentMap(),
-  widgetGroups: playgroundWidgetGroups,
-  globalConfigSchema,
-  messages: playgroundWidgetMessages,
-  actionInterceptors: [
-    createConfirmActionInterceptor({
-      confirm: () => confirmWithModal({
-        title: '确认删除',
-        content: '删除后可通过撤销恢复，是否继续？',
-        okText: '删除',
-        okType: 'danger',
-      }),
+function createPlaygroundDesigner(schema: unknown): DesignerInstance {
+  return createDesigner({
+    schema,
+    materials: playgroundMaterials as readonly MaterialDefinition[],
+    containerShell: activeContainerShell,
+    fieldComponentMap: createAntDesignVueFields(),
+    globalConfigSchema,
+    locale: locale.value,
+    maxHistoryEntries: 50,
+    confirmAuthoringAction: request => confirmWithModal({
+      title: request.action === 'remove' ? '确认删除' : '确认操作',
+      content: request.action === 'remove'
+        ? '删除后可通过撤销恢复，是否继续？'
+        : '此操作需要确认，是否继续？',
+      okText: request.action === 'remove' ? '删除' : '继续',
+      okType: request.action === 'remove' ? 'danger' : 'primary',
     }),
-  ],
-  customActions: [
-    {
-      key: 'duplicate',
-      label: '复制',
-      icon: IconCopy,
-      type: 'button',
-      order: 350,
-      available: (ctx: NodeActionContext) => {
-        if (!ctx.meta)
-          return true
-        return resolveCreatable(ctx.meta.creatable, {
-          widgetType: ctx.node.type,
-          schema: ctx.schema,
-        }, true).allowed
-      },
-      command: (ctx: NodeActionContext) => {
-        return {
-          type: CommandType.DUPLICATE_NODE,
-          payload: {
-            nodeId: ctx.node.id,
-          },
-        }
-      },
-    },
-  ],
-  extensions: {
-    materialItemRenderer,
-    rendererExtensions: {
-      containerShell: activeContainerShell,
-      emptyState: MiniProgramEmptyState,
-    },
-  },
-})
+    extensions: { materialItemRenderer },
+  })
+}
 
-const { exportSchema, importSchema } = useDesigner(designer)
+const designer = shallowRef(createPlaygroundDesigner(templateRegistry[0].schema))
+const exportSchema = () => designer.value.exportSchema()
+const importSchema = (schema: unknown) => designer.value.importSchema(schema)
 
 const templateSwitch = useTemplateSwitch({
   importSchema,
@@ -182,13 +108,16 @@ const templateSwitch = useTemplateSwitch({
     okText: '切换',
   }),
 })
-
 const io = useSchemaIO(exportSchema, importSchema)
 
 function toggleLocale() {
-  const next = designer.i18n.locale.value === 'zh-CN' ? 'en' : 'zh-CN'
-  designer.i18n.setLocale(next)
+  const schema = designer.value.exportSchema()
+  locale.value = locale.value === 'zh-CN' ? 'en' : 'zh-CN'
+  designer.value.dispose()
+  designer.value = createPlaygroundDesigner(schema)
 }
+
+onBeforeUnmount(() => designer.value.dispose())
 </script>
 
 <template>
@@ -196,7 +125,7 @@ function toggleLocale() {
     <PlaygroundHeader
       :active-template-id="templateSwitch.activeTemplateId.value"
       :templates="templateSwitch.templates"
-      :locale="designer.i18n.locale.value"
+      :locale="locale"
       @template-switch="templateSwitch.switchTemplate"
       @import-open="io.handleImportOpen()"
       @export-open="io.handleExport()"
@@ -206,15 +135,13 @@ function toggleLocale() {
         <DevicePicker
           :definitions="BUILT_IN_DEVICE_FRAMES"
           :model-value="activeDeviceFrameId"
-          :translate="designer.i18n.t"
           @update:model-value="selectDeviceFrame"
         />
       </template>
     </PlaygroundHeader>
 
-    <DcDesigner :instance="designer" />
+    <DcDesigner :key="locale" :instance="designer" />
 
-    <!-- Import / Export Modals -->
     <SchemaIOModal
       :show-export-modal="io.showExportModal.value"
       :show-import-modal="io.showImportModal.value"

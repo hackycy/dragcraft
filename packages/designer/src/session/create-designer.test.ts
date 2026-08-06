@@ -143,4 +143,33 @@ describe('createDesigner session', () => {
       new DesignerConfigurationError('HISTORY_LIMIT_INVALID', 'maxHistoryEntries'),
     )
   })
+
+  it('keeps programmatic execute synchronous and outside host confirmation', () => {
+    let confirmations = 0
+    const designer = createDesigner({
+      materials: [{
+        type: 'protected-text',
+        authoring: { policy: { remove: 'confirmation-required' } },
+        presentation: { kind: 'headless' },
+      }],
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [{ id: 'protected-1', type: 'protected-text', props: {} }],
+        structure: { root: ['protected-1'], containers: {} },
+      },
+      confirmAuthoringAction: () => {
+        confirmations += 1
+        return true
+      },
+    })
+
+    expect(designer.execute({ type: 'remove-node', nodeId: 'protected-1' })).toEqual({
+      status: 'confirmation-required',
+      code: 'POLICY_CONFIRMATION_REQUIRED',
+    })
+    expect(confirmations).toBe(0)
+    expect(designer.exportSchema()?.structure.root).toEqual(['protected-1'])
+  })
 })

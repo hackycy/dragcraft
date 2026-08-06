@@ -316,6 +316,36 @@ describe('createAuthoringEngine', () => {
     })).toEqual({ status: 'committed' })
   })
 
+  it('identifies the first protected child in an atomic authoring batch', () => {
+    const catalog = createMaterialCatalog([{
+      type: 'protected-text',
+      authoring: { policy: { remove: 'confirmation-required' } },
+      presentation: { kind: 'headless' },
+    }])
+    const schema = emptyDocument()
+    schema.nodes.push({ id: 'protected-1', type: 'protected-text', props: {} })
+    schema.structure.root.push('protected-1')
+    const engine = createAuthoringEngine({
+      catalog,
+      createNodeId: () => 'unused',
+      schema,
+    })
+    const before = engine.document.value
+
+    expect(engine.execute({
+      type: 'batch',
+      actions: [
+        { type: 'update-page', page: { props: { title: 'Changed' } } },
+        { type: 'remove-node', nodeId: 'protected-1' },
+      ],
+    })).toEqual({
+      status: 'confirmation-required',
+      code: 'POLICY_CONFIRMATION_REQUIRED',
+      actionIndex: 1,
+    })
+    expect(engine.document.value).toBe(before)
+  })
+
   it('undoes and redoes by moving the immutable snapshot cursor', () => {
     const engine = createAuthoringEngine({
       catalog: createMaterialCatalog([]),

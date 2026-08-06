@@ -1,64 +1,12 @@
-import type { DesignerWidgetMeta, WidgetDefinition, WidgetGroupConfig } from '@dragcraft/designer'
-import { buildComponentMap, getWidgetMetas } from '@dragcraft/designer'
-import { basicWidgetDefinitions } from './basic'
-import { playgroundContainerWidgetDefinitions } from './container'
-import { formWidgetDefinitions } from './form'
-import { playgroundWidgetMessages } from './messages'
-import { miniProgramWidgetDefinitions } from './mini-program'
+import type { MaterialDefinition } from '@dragcraft/designer'
+import { basicMaterials } from './basic'
+import { containerMaterials } from './container'
+import { formMaterials } from './form'
+import { miniProgramMaterials } from './mini-program'
 
-export const playgroundWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[] = [
-  ...basicWidgetDefinitions,
-  ...formWidgetDefinitions,
-  ...miniProgramWidgetDefinitions,
-  ...playgroundContainerWidgetDefinitions,
-].map(definition => ({
-  ...definition,
-  meta: {
-    ...definition.meta,
-    formSchema: {
-      ...definition.meta.formSchema,
-      sections: [
-        ...definition.meta.formSchema.sections,
-        ...(definition.meta.type === 'navbar'
-          ? []
-          : [{
-              title: '容器边距',
-              titleKey: 'field.spacing.sectionTitle',
-              fields: [
-                {
-                  key: 'containerMargin',
-                  label: '外边距',
-                  labelKey: 'field.spacing.margin',
-                  component: 'Spacing',
-                  bindTo: { scope: 'node', path: 'style.container' },
-                  defaultValue: {},
-                  componentProps: { type: 'margin', min: -120, max: 120 },
-                },
-                {
-                  key: 'containerPadding',
-                  label: '内边距',
-                  labelKey: 'field.spacing.padding',
-                  component: 'Spacing',
-                  bindTo: { scope: 'node', path: 'style.container' },
-                  defaultValue: {},
-                  componentProps: { type: 'padding', min: 0, max: 120 },
-                },
-              ],
-            }]),
-      ],
-    },
-  },
-}))
-
-export const playgroundWidgetGroups: WidgetGroupConfig[] = [
-  { name: 'layout', title: '布局容器', titleKey: 'group.layout' },
-  { name: 'basic', title: '基础展示', titleKey: 'group.basic' },
-  { name: 'form', title: '表单交互', titleKey: 'group.form' },
-  { name: 'navigation', title: '导航容器', titleKey: 'group.navigation' },
-  { name: 'action', title: '操作组件', titleKey: 'group.action' },
+export const playgroundMaterials: readonly MaterialDefinition[] = [
+  ...basicMaterials,
+  ...formMaterials,
+  ...miniProgramMaterials,
+  ...containerMaterials,
 ]
-
-export const playgroundWidgetMetas = getWidgetMetas(playgroundWidgetDefinitions)
-export const playgroundComponentMap = buildComponentMap(playgroundWidgetDefinitions)
-
-export { playgroundWidgetMessages }

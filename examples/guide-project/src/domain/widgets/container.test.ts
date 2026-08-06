@@ -1,49 +1,24 @@
-import type { ContainerVariantMigrationContext } from '@dragcraft/designer'
+import type { RegionDropGeometryContext } from '@dragcraft/designer'
 import { expect, it } from 'vitest'
-import { columnContainerMeta, migrateColumnVariant, node } from './container'
+import { resolveVerticalDropAnchor } from './container'
 
-function context(
-  fromVariantId: 'single' | 'split',
-  toVariantId: 'single' | 'split',
-  regions: Record<string, ReturnType<typeof node>[]>,
-): ContainerVariantMigrationContext {
-  const definition = columnContainerMeta.container
+function element(top: number): HTMLElement {
   return {
-    schema: {
-      version: '1.0.0',
-      globalConfig: {},
-      root: { id: 'root', type: 'root', props: {}, children: [] },
-    },
-    container: { id: 'layout-1', type: 'column-container', props: {} },
-    fromVariantId,
-    toVariantId,
-    fromVariant: definition.variants[fromVariantId],
-    toVariant: definition.variants[toVariantId],
-    state: { variant: fromVariantId, regions },
-  }
+    getBoundingClientRect: () => ({ top, height: 20 }) as DOMRect,
+  } as HTMLElement
 }
 
-it('keeps child order when a single column becomes two columns', () => {
-  expect(migrateColumnVariant(context('single', 'split', {
-    content: [node('one'), node('two'), node('three')],
-  }))).toEqual({
-    allowed: true,
-    state: {
-      variant: 'split',
-      regions: {
-        left: [node('one'), node('two')],
-        right: [node('three')],
-      },
-    },
-  })
-})
+it('resolves vertical browser geometry to structural anchors', () => {
+  const context = {
+    event: { clientY: 35 } as DragEvent,
+    itemElements: [element(0), element(40)],
+    nodeIds: ['first', 'second'],
+    regionElement: {} as HTMLElement,
+  } satisfies RegionDropGeometryContext
 
-it('rejects a migration that exceeds the supported capacity', () => {
-  expect(migrateColumnVariant(context('single', 'split', {
-    content: [node('one'), node('two'), node('three'), node('four'), node('five')],
-  }))).toEqual({
-    allowed: false,
-    code: 'GUIDE_CONTAINER_CAPACITY_EXCEEDED',
-    details: { maxItems: 4, nodeCount: 5 },
-  })
+  expect(resolveVerticalDropAnchor(context)).toEqual({ kind: 'before', nodeId: 'second' })
+  expect(resolveVerticalDropAnchor({
+    ...context,
+    event: { clientY: 80 } as DragEvent,
+  })).toEqual({ kind: 'after', nodeId: 'second' })
 })

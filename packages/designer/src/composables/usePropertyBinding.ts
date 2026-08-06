@@ -35,7 +35,8 @@ export function usePropertyBinding(
   designer: DesignerInstance,
   options: UsePropertyBindingOptions = {},
 ): UsePropertyBindingReturn {
-  const catalog = getDesignerInternals(designer).catalog
+  const internals = getDesignerInternals(designer)
+  const catalog = internals.catalog
   const selectedNode = computed<NodeDefinition | null>(() => {
     const state = designer.document.value
     const nodeId = designer.selection.selectedNodeId.value
@@ -84,7 +85,7 @@ export function usePropertyBinding(
     const field = findField(selectedFormSchema.value, key)
     const binding = resolveFieldBinding(field?.bindTo, { scope: 'node', path: `props.${key}` })
     const action = createBindingAction(binding, value, schema, node)
-    return action ? designer.execute(action) : null
+    return action ? internals.executeWorkbenchAction(action) : null
   }
   function handleGlobalConfigChange(key: string, value: unknown): AuthoringResult | null {
     const schema = currentSchema()
@@ -93,7 +94,7 @@ export function usePropertyBinding(
     const field = findField(options.globalConfigSchema, key)
     const binding = resolveFieldBinding(field?.bindTo, { scope: 'globalConfig', path: key })
     const action = createBindingAction(binding, value, schema, null)
-    return action ? designer.execute(action) : null
+    return action ? internals.executeWorkbenchAction(action) : null
   }
   return {
     selectedNode,

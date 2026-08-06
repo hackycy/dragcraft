@@ -1,63 +1,69 @@
-import type { SchemaNode } from '@dragcraft/designer'
+import type { DocumentSchema } from '@dragcraft/designer'
 import type { VNode } from 'vue'
 import type { RuntimeRegistry } from './registry'
 import { expect, it } from 'vitest'
-import { NoticeWidget } from '../domain/widgets'
+import { defineComponent, h } from 'vue'
 import { RuntimeColumnContainer } from './RuntimeColumnContainer'
-import { createRuntimeNodeRenderer, DefaultRuntimeFallback } from './RuntimePage'
+import { createRuntimeDocumentView, createRuntimeNodeRenderer } from './RuntimePage'
 
+const Notice = defineComponent({
+  props: { text: String },
+  setup: props => () => h('p', props.text),
+})
 const registry: RuntimeRegistry = {
-  'notice': { kind: 'widget', component: NoticeWidget },
+  'notice': { kind: 'node', component: Notice },
   'column-container': { kind: 'container', component: RuntimeColumnContainer },
+}
+const schema: DocumentSchema = {
+  version: '1',
+  globalConfig: {},
+  page: { props: {} },
+  nodes: [
+    { id: 'layout-1', type: 'column-container', props: { gap: 16 } },
+    { id: 'notice-1', type: 'notice', props: { text: '运行时公告' } },
+  ],
+  structure: {
+    root: ['layout-1'],
+    containers: { 'layout-1': { regions: { content: ['notice-1'] } } },
+  },
 }
 
 function renderedContent(vnode: VNode): VNode {
-  return (vnode.children as VNode[])[0]
+  return (vnode.children as VNode[])[0]!
 }
 
-it('passes recursively rendered region children to a runtime container', () => {
-  const renderNode = createRuntimeNodeRenderer(registry)
-  const vnode = renderNode({
-    id: 'layout-1',
-    type: 'column-container',
-    props: { gap: 16 },
-    container: {
-      variant: 'single',
-      regions: {
-        content: [{ id: 'notice-1', type: 'notice', props: { text: '运行时公告' } }],
-      },
-    },
-  }) as VNode
+it('renders container regions from the autonomous pure-data document contract', () => {
+  const renderNode = createRuntimeNodeRenderer(schema, registry)
+  const vnode = renderNode('layout-1') as VNode
   const container = renderedContent(vnode)
 
   expect(container.type).toBe(RuntimeColumnContainer)
   expect((container.props?.regions as Record<string, unknown[]>).content).toHaveLength(1)
-  expect((container.props?.node as SchemaNode).props.gap).toBe(16)
+  expect(container.props?.node).toMatchObject({ id: 'layout-1', props: { gap: 16 } })
 })
 
-it('keeps container and content styles in separate runtime scopes', () => {
-  const renderNode = createRuntimeNodeRenderer(registry)
-  const vnode = renderNode({
-    id: 'notice-1',
-    type: 'notice',
-    props: { text: '样式公告' },
-    style: {
-      container: { marginTop: 12 },
-      content: { color: '#123456' },
+it('applies an autonomous consumer mount policy by stable node type', () => {
+  const document: DocumentSchema = {
+    ...schema,
+    nodes: [
+      { id: 'header-1', type: 'header', props: {} },
+      ...schema.nodes,
+      { id: 'action-1', type: 'action', props: {} },
+    ],
+    structure: {
+      ...schema.structure,
+      root: ['header-1', 'layout-1', 'action-1'],
     },
-  }) as VNode
-  const widget = renderedContent(vnode)
+  }
+  const view = createRuntimeDocumentView(document, {
+    ...registry,
+    header: { kind: 'node', component: Notice, mount: 'header' },
+    action: { kind: 'node', component: Notice, mount: 'overlay' },
+  })
 
-  expect(vnode.props?.style).toEqual({ marginTop: 12 })
-  expect(widget.props?.style).toEqual({ color: '#123456' })
-})
-
-it('renders an observable fallback for an unknown widget', () => {
-  const renderNode = createRuntimeNodeRenderer(registry)
-  const node: SchemaNode = { id: 'unknown-1', type: 'unknown', props: {} }
-  const vnode = renderNode(node) as VNode
-  const fallback = renderedContent(vnode)
-
-  expect(fallback.type).toBe(DefaultRuntimeFallback)
-  expect(fallback.props?.node).toBe(node)
+  expect(view).toEqual({
+    header: ['header-1'],
+    document: ['layout-1'],
+    overlay: ['action-1'],
+  })
 })

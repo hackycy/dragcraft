@@ -114,7 +114,11 @@ export type AuthoringAction
 
 export type AuthoringResult
   = | { readonly status: 'committed' }
-    | { readonly status: 'confirmation-required', readonly code: 'POLICY_CONFIRMATION_REQUIRED' }
+    | {
+      readonly status: 'confirmation-required'
+      readonly code: 'POLICY_CONFIRMATION_REQUIRED'
+      readonly actionIndex?: number
+    }
     | { readonly status: 'unchanged' }
     | { readonly status: 'rejected', readonly code: string }
 

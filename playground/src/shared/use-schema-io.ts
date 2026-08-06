@@ -1,9 +1,9 @@
-import type { DesignerSchema } from '@dragcraft/designer'
+import type { DocumentSchema, SchemaLoadResult } from '@dragcraft/designer'
 import { ref } from 'vue'
 
 export function useSchemaIO(
-  exportSchema: () => DesignerSchema,
-  importSchema: (schema: DesignerSchema) => void,
+  exportSchema: () => DocumentSchema | null,
+  importSchema: (schema: unknown) => SchemaLoadResult,
 ) {
   const showExportModal = ref(false)
   const showImportModal = ref(false)
@@ -12,8 +12,7 @@ export function useSchemaIO(
   const importError = ref('')
 
   function handleExport() {
-    const schema = exportSchema()
-    exportJson.value = JSON.stringify(schema, null, 2)
+    exportJson.value = JSON.stringify(exportSchema(), null, 2)
     showExportModal.value = true
   }
 
@@ -25,12 +24,11 @@ export function useSchemaIO(
 
   function handleImportConfirm() {
     try {
-      const schema: DesignerSchema = JSON.parse(importJson.value)
-      if (!schema.version || !schema.root) {
-        importError.value = '无效的 Schema 格式：缺少 version 或 root 字段'
+      const result = importSchema(JSON.parse(importJson.value))
+      if (result.status === 'rejected') {
+        importError.value = `无效的 DocumentSchema：${result.diagnostics.items[0]?.code ?? 'UNKNOWN'}`
         return
       }
-      importSchema(schema)
       showImportModal.value = false
     }
     catch {
@@ -39,7 +37,7 @@ export function useSchemaIO(
   }
 
   function handleCopyExport() {
-    navigator.clipboard.writeText(exportJson.value)
+    return navigator.clipboard.writeText(exportJson.value)
   }
 
   return {

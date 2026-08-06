@@ -195,10 +195,10 @@ export function createAuthoringEngine(options: CreateAuthoringEngineOptions): Au
     let operation: OperationBatch | SchemaOperation
     if (action.type === 'batch') {
       const operations: SchemaOperation[] = []
-      for (const childAction of action.actions) {
+      for (const [actionIndex, childAction] of action.actions.entries()) {
         const policy = evaluateAuthoringPolicy(options.catalog, currentDocument, childAction)
         if (policy.decision === 'confirmation-required' && childAction.confirmed !== true)
-          return { status: 'confirmation-required', code: policy.code }
+          return { status: 'confirmation-required', code: policy.code, actionIndex }
         if (policy.decision === 'denied')
           return { status: 'rejected', code: policy.code }
         const compiled = compileAction(childAction)

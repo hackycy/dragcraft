@@ -1,4 +1,4 @@
-import type { SchemaNode } from '@dragcraft/designer'
+import type { NodeDefinition } from '@dragcraft/designer'
 import type { PropType } from 'vue'
 import type { RuntimeRegions } from './registry'
 import { defineComponent, h } from 'vue'
@@ -6,29 +6,13 @@ import { defineComponent, h } from 'vue'
 export const RuntimeColumnContainer = defineComponent({
   name: 'GuideRuntimeColumnContainer',
   props: {
-    node: { type: Object as PropType<SchemaNode>, required: true },
-    variant: { type: String, default: 'single' },
-    regions: {
-      type: Object as PropType<RuntimeRegions>,
-      required: true,
-    },
+    node: { type: Object as PropType<NodeDefinition>, required: true },
+    regions: { type: Object as PropType<RuntimeRegions>, required: true },
   },
-  setup(props) {
-    const renderRegion = (regionId: string) => h('section', {
-      class: 'guide-runtime-column-container__region',
-    }, props.regions[regionId] ?? [])
-
-    return () => h('div', {
-      class: {
-        'guide-runtime-column-container': true,
-        'guide-runtime-column-container--split': props.variant === 'split',
-      },
-      style: {
-        ...props.node.style?.surface,
-        gap: `${Number(props.node.props.gap ?? 12)}px`,
-      },
-    }, props.variant === 'split'
-      ? [renderRegion('left'), renderRegion('right')]
-      : [renderRegion('content')])
-  },
+  setup: props => () => h('div', {
+    class: 'guide-runtime-column-container',
+    style: { gap: `${Number(props.node.props.gap ?? 12)}px` },
+  }, [
+    h('section', { class: 'guide-runtime-column-container__region' }, props.regions.content ?? []),
+  ]),
 })

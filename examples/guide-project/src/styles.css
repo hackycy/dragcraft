@@ -85,6 +85,12 @@ button:disabled {
   border-bottom: 1px solid #d7dee8;
 }
 
+.guide-page-header-frame {
+  position: absolute;
+  z-index: 20;
+  inset: 0 0 auto;
+}
+
 .guide-floating-action {
   border: 0;
   border-radius: 999px;
@@ -93,6 +99,13 @@ button:disabled {
   font-weight: 600;
   background: #c2410c;
   box-shadow: 0 6px 18px rgb(124 45 18 / 24%);
+}
+
+.guide-floating-action-frame {
+  position: absolute;
+  z-index: 24;
+  right: 16px;
+  bottom: 16px;
 }
 
 .guide-notice--warm {
@@ -123,11 +136,6 @@ button:disabled {
 .guide-column-container {
   display: flex;
   flex-direction: column;
-}
-
-.guide-column-container--split {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .guide-column-container__region {
@@ -161,11 +169,6 @@ button:disabled {
 }
 
 .guide-runtime-page {
-  --guide-runtime-inset-block-start: 0px;
-  --guide-runtime-inset-block-end: 0px;
-  --guide-runtime-inset-inline-start: 0px;
-  --guide-runtime-inset-inline-end: 0px;
-
   position: relative;
   width: min(100%, 420px);
   min-height: 680px;
@@ -176,8 +179,7 @@ button:disabled {
 
 .guide-runtime-scrollport {
   position: absolute;
-  inset-block: var(--guide-runtime-inset-block-start) var(--guide-runtime-inset-block-end);
-  inset-inline: var(--guide-runtime-inset-inline-start) var(--guide-runtime-inset-inline-end);
+  inset: 48px 0 0;
   overflow: auto;
 }
 
@@ -186,62 +188,28 @@ button:disabled {
   padding: 16px;
 }
 
-.guide-runtime-inline-layout {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-}
-
-.guide-runtime-flow,
-.guide-runtime-region {
-  min-width: 0;
-}
-
 .guide-runtime-node + .guide-runtime-node {
   margin-top: 12px;
 }
 
-.guide-runtime-chrome {
-  z-index: 2;
-}
-
-.guide-runtime-chrome--fixed {
+.guide-runtime-header {
   position: absolute;
-}
-
-.guide-runtime-chrome--fixed[data-runtime-edge="block-start"] {
+  z-index: 2;
   inset: 0 0 auto;
 }
 
-.guide-runtime-chrome--fixed[data-runtime-edge="block-end"] {
-  inset: auto 0 0;
-}
-
-.guide-runtime-chrome--fixed[data-runtime-edge="inline-start"] {
-  inset: var(--guide-runtime-inset-block-start) auto var(--guide-runtime-inset-block-end) 0;
-}
-
-.guide-runtime-chrome--fixed[data-runtime-edge="inline-end"] {
-  inset: var(--guide-runtime-inset-block-start) 0 var(--guide-runtime-inset-block-end) auto;
-}
-
-.guide-runtime-chrome > .guide-runtime-node {
-  margin: 0;
-}
-
-.guide-runtime-layers {
+.guide-runtime-overlays {
   position: absolute;
   z-index: 3;
-  inset: var(--guide-runtime-inset-block-start) var(--guide-runtime-inset-inline-end) var(--guide-runtime-inset-block-end) var(--guide-runtime-inset-inline-start);
+  inset: 48px 0 0;
   pointer-events: none;
 }
 
-.guide-runtime-layer-entry {
+.guide-runtime-overlays > .guide-runtime-node {
   position: absolute;
+  right: 16px;
+  bottom: 16px;
   pointer-events: auto;
-}
-
-.guide-runtime-layer-entry[data-runtime-layer-mode="self"] {
-  pointer-events: none;
 }
 
 .guide-runtime-fallback {
@@ -256,11 +224,6 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.guide-runtime-column-container--split {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .guide-runtime-column-container__region {

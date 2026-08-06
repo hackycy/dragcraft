@@ -1,5 +1,5 @@
 import type { StructuralDestination } from '@dragcraft/core'
-import type { AuthoringResult } from '../authoring/types'
+import type { AuthoringAction, AuthoringResult } from '../authoring/types'
 import type { DesignerDragState } from '../context'
 import type { DesignerInstance } from '../session/create-designer'
 import { ref } from 'vue'
@@ -17,7 +17,10 @@ function setDragPayload(event: DragEvent, payload: DragPayload): void {
     event.dataTransfer.effectAllowed = 'copyMove'
 }
 
-export function useDragDrop(designer: DesignerInstance): DesignerDragState {
+export function useDragDrop(
+  designer: DesignerInstance,
+  execute: (action: AuthoringAction) => AuthoringResult = designer.execute,
+): DesignerDragState {
   const activeDestination = ref<StructuralDestination | null>(null)
   const draggingMaterialType = ref<string | null>(null)
   const draggingNodeId = ref<string | null>(null)
@@ -50,9 +53,9 @@ export function useDragDrop(designer: DesignerInstance): DesignerDragState {
     const materialType = draggingMaterialType.value
     const nodeId = draggingNodeId.value
     const result = destination && materialType
-      ? designer.execute({ type: 'create-node', materialType, to: destination })
+      ? execute({ type: 'create-node', materialType, to: destination })
       : destination && nodeId
-        ? designer.execute({ type: 'move-node', nodeId, to: destination })
+        ? execute({ type: 'move-node', nodeId, to: destination })
         : { status: 'rejected' as const, code: 'NO_DRAG_PAYLOAD' }
     handleDragEnd()
     return result

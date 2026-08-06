@@ -1,4 +1,4 @@
-import type { DesignerSchema } from '@dragcraft/designer'
+import type { DocumentSchema } from '@dragcraft/designer'
 import { contentDetailSchema } from './content-detail-schema'
 import { ecommerceSchema } from './ecommerce-schema'
 import { productDetailSchema } from './product-detail-schema'
@@ -6,7 +6,7 @@ import { productDetailSchema } from './product-detail-schema'
 export interface TemplateEntry {
   id: string
   label: string
-  schema: DesignerSchema
+  schema: DocumentSchema
 }
 
 export const templateRegistry: TemplateEntry[] = [

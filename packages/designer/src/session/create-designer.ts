@@ -1,11 +1,13 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/i18n'
+import type { ConfirmAuthoringAction } from '../authoring/create-authoring-confirmation-coordinator'
 import type { AuthoringEngine } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { MaterialDefinition } from '../materials/types'
 import type { ContainerShellSource, DesignerExtensions, DesignerWorkspaceController, DesignerWorkspaceOptions } from '../types'
 import { createI18n } from '@dragcraft/i18n'
+import { createAuthoringConfirmationCoordinator } from '../authoring/create-authoring-confirmation-coordinator'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import {
   createMaterialCatalog,
@@ -18,6 +20,7 @@ export const DOCUMENT_SCHEMA_VERSION = '1'
 
 export interface CreateDesignerOptions {
   readonly containerShell?: ContainerShellSource
+  readonly confirmAuthoringAction?: ConfirmAuthoringAction
   readonly createNodeId?: () => string
   readonly extensions?: DesignerExtensions
   readonly fieldComponentMap?: FieldComponentMap
@@ -40,6 +43,7 @@ export interface DesignerInstance extends AuthoringEngine {
 export interface DesignerInternals {
   readonly catalog: MaterialCatalog
   readonly containerShell?: ContainerShellSource
+  readonly executeWorkbenchAction: AuthoringEngine['execute']
   readonly extensions: DesignerExtensions
   readonly fieldComponentMap?: FieldComponentMap
   readonly globalConfigSchema: FormSchema | null
@@ -95,14 +99,20 @@ export function createDesigner(options: CreateDesignerOptions): DesignerInstance
     maxHistoryEntries: options.maxHistoryEntries,
     schema,
   })
+  const confirmation = createAuthoringConfirmationCoordinator({
+    catalog,
+    confirm: options.confirmAuthoringAction,
+    engine,
+  })
 
   const instance = Object.freeze({
     ...engine,
-    dispose(): void {},
+    dispose: confirmation.dispose,
   })
   internalsByInstance.set(instance, Object.freeze({
     catalog,
     ...(options.containerShell ? { containerShell: options.containerShell } : {}),
+    executeWorkbenchAction: confirmation.execute,
     extensions: Object.freeze({ ...options.extensions }),
     ...(options.fieldComponentMap ? { fieldComponentMap: options.fieldComponentMap } : {}),
     globalConfigSchema: options.globalConfigSchema ?? null,

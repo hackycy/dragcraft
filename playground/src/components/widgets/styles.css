@@ -520,3 +520,87 @@
   width: 12px;
   background: #ffffff;
 }
+
+.pg-frame {
+  position: absolute;
+  inset-inline: 0;
+  z-index: 20;
+}
+
+.pg-frame--navbar {
+  inset-block-start: 0;
+}
+
+.pg-frame--tabbar,
+.pg-frame--purchase-bar {
+  inset-block-end: 0;
+}
+
+.pg-frame--floating {
+  inset-inline: auto 16px;
+  inset-block-end: 72px;
+  z-index: 24;
+}
+
+.pg-frame--floating .pg-widget-floating-button {
+  position: relative;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+.pg-frame--dialog {
+  inset: 0;
+  z-index: 30;
+}
+
+.pg-widget-purchase-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 64px;
+  padding: 10px 12px;
+  background: #ffffff;
+  box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.09);
+}
+
+.pg-widget-purchase-bar button {
+  border: 0;
+  font-weight: 600;
+}
+
+.pg-widget-purchase-bar__secondary {
+  background: #fff0d6;
+  color: #b35a00;
+}
+
+.pg-widget-purchase-bar__primary {
+  background: #d9363e;
+  color: #ffffff;
+}
+
+.pg-widget-dialog {
+  position: relative;
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+.pg-widget-dialog__mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 22, 21, 0.46);
+}
+
+.pg-widget-dialog__panel {
+  position: relative;
+  width: min(280px, calc(100% - 32px));
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.22);
+}
+
+.pg-widget-dialog__panel p {
+  margin: 10px 0 0;
+  color: #555f5c;
+  line-height: 1.6;
+}
