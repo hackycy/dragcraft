@@ -1,6 +1,6 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-06 12:33 CST
+Updated: 2026-08-06 14:49 CST
 
 ## Phase Status
 
@@ -8,7 +8,8 @@ Updated: 2026-08-06 12:33 CST
 - Phase 1: complete. Final-named DocumentSchema, definition snapshot, Schema Structure Resolver, immutable ResolvedDocument query model, and conformance tests are implemented beside the legacy path.
 - Phase 2: complete. The pure Schema Editor, closed operation vocabulary, structural destinations, aggregate bundles, atomic batch execution, and conformance tests are implemented beside the legacy path.
 - Phase 3: complete. Material Catalog, Authoring Engine, bounded snapshot history, four-state document session, and controlled DesignerInstance seams are implemented beside the legacy UI path.
-- Phase 4: not started and explicitly deferred.
+- Phase 4: blocked after partial red-green implementation. Wayfinder ticket 12 must resolve the Material Preview action compilation contract before work resumes.
+- Phase 5: not started and explicitly prohibited while Phase 4 is blocked.
 
 ## Phase 0 Evidence
 
@@ -221,6 +222,59 @@ Each vertical slice used a directed command before the minimal implementation an
   - `pnpm test`: passed across all reported workspace packages; Designer reported 15 files and 146 tests, Core reported 27 files and 411 tests.
 - No accepted public interface change or genuine architecture gap was exposed, so no Wayfinder decision ticket was recreated.
 
+## Phase 4 Partial Implementation
+
+- Added internal `ApplicationSurface` and `NodeHost` Vue modules beside the legacy Renderer path; no workbench caller was cut over.
+- Added ordered Document, Viewport and private Interaction Plane DOM ownership inside the new surface.
+- Added distinct visual, headless and unknown material presentation paths. Headless containers create their declared Outlets automatically; unknown containers preserve Schema-owned region children in read-only recovery regions.
+- Added `DesignerRegionOutlet` with resolved structural ordering, one-primary-Outlet ownership, missing/duplicate Outlet recovery, default midpoint structural anchors and an optional material geometry resolver.
+- Added `PresentationFrame` around the complete NodeHost with missing/duplicate slot recovery.
+- Added `DesignerViewportPortal` that moves root-owned NodeHosts into the surface Viewport Plane and recovers region-child attempts in place.
+- Added the initial recovery module for missing regions.
+- The implementation stopped before Material Preview Context, Geometry Registry, Surface Reservation, complete Interaction Plane behavior, presentation structural CSS, or any workbench cutover.
+
+## Phase 4 Red-Green Evidence
+
+Every Phase 4 slice used the directed command:
+
+`pnpm --filter @dragcraft/designer test --run src/presentation/application-surface.test.ts`
+
+Each listed production behavior had an observed red before its minimal green implementation:
+
+| Cycle | Observed red | Following green |
+| --- | --- | --- |
+| 1 | missing `./application-surface`; 1 failed suite, 0 tests | 1/1 tests |
+| 2 | headless proxy marker was absent | 2/2 tests |
+| 3 | missing `./designer-region-outlet`; 1 failed suite, 0 tests | 3/3 tests |
+| 4 | omitted visual-container Outlet silently lost its child | 4/4 tests |
+| 5 | duplicate Outlets rendered two child NodeHosts | 5/5 tests |
+| 6 | headless container proxy rendered no declared Outlets | 6/6 tests |
+| 7 | unknown container fallback did not expose a read-only recovery region | 7/7 tests |
+| 8 | configured PresentationFrame was absent | 8/8 tests |
+| 9 | missing frame slot silently lost the NodeHost | 9/9 tests |
+| 10 | duplicate frame slot produced no recovery | 10/10 tests |
+| 11 | missing `./designer-viewport-portal`; 1 failed suite, 0 tests | 11/11 tests |
+| 12 | region-child portal moved the NodeHost into Viewport Plane | 12/12 tests |
+| 13 | default Outlet dragover produced no structural destination | 13/13 tests |
+| 14 | custom Outlet resolver was ignored and returned default `end` | 14/14 tests |
+
+## Phase 4 Architecture Stop
+
+- Wayfinder ticket 12 was created at `.scratch/layout-semantic-architecture/issues/12-material-preview-action-contract.md`.
+- Ticket 08 requires `MaterialPreviewContext.invokeAction(name, payload?)` to pass through Authoring Policy, Schema Editor, commit and history.
+- The accepted Phase 3 `AuthoringAction` union has no material-action variant, and `MaterialAuthoringDefinition` has no action-name/payload/compiler declaration.
+- Implementing a useful `invokeAction()` therefore requires changing the accepted public material or authoring interface. A private callback would bypass the Authoring Engine; an always-rejected placeholder would not implement the accepted behavior.
+- Development stopped without choosing either design. No `material-preview-context.ts` file was created and no accepted interface was changed.
+
+## Phase 4 Stop-Point Verification Evidence
+
+- Final directed command `pnpm --filter @dragcraft/designer test --run src/presentation/application-surface.test.ts`: passed, 1 file and 14/14 tests.
+- `pnpm --filter @dragcraft/designer typecheck`: failed with four WIP errors: one custom resolver test inference error, two possibly-undefined context errors, and one Vue Teleport overload error.
+- `pnpm exec eslint packages/designer/src/presentation`: failed with 12 WIP errors: one test-title rule, one quoted-property rule, nine chaining/quoted-property formatting errors across the new modules, and one additional chaining error.
+- `git diff --check`: passed.
+- Full repository gates were not run because Phase 4 stopped at an unresolved accepted-interface decision and remains incomplete.
+- No Phase 5 module or caller was changed.
+
 ## Playground Human Baseline
 
 The following Phase 0 items remain intentionally unconfirmed and must not be marked passed by an agent:
@@ -242,9 +296,11 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - No automated Phase 1 blocker or failure remains.
 - No automated Phase 2 blocker or failure remains.
 - Package-manager observation, not an automated baseline failure: a non-frozen catalog resolution currently advances `vitepress@next` to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement has no stable registry match. The docs dependency was not changed; frozen installation succeeds.
+- Phase 4 is blocked by open Wayfinder ticket 12. Work must not resume until the Material Preview action compilation contract is accepted.
 
 ## Stop Point
 
 - Phase 2 is complete.
 - Phase 3 is complete.
-- Phase 4 was not started and remains deferred beyond this task.
+- Phase 4 is partially implemented and blocked at the accepted public-interface gap recorded in Wayfinder ticket 12.
+- Phase 5 was not started.

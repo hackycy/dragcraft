@@ -35,7 +35,7 @@ Type: map
 
 ## Not yet specified
 
-无；本地图的架构决策、公共契约、示例要求与直接替换验收矩阵已经明确。
+- [Material Preview 动作编译契约](issues/12-material-preview-action-contract.md) — Phase 4 暴露出 `invokeAction(name, payload)` 与封闭 `AuthoringAction`/`MaterialAuthoringDefinition` 之间缺少合规编译 interface；决策前不得继续实现该写入口。
 
 ## Out of scope
 
