@@ -1,9 +1,10 @@
 # Material Preview 动作编译契约
 
-Status: open
+Status: resolved
 Type: grilling
 Blocked by: 07, 08
-Blocks: Phase 4
+Previously blocked: Phase 4
+Supersedes in part: 06, 08
 
 ## Question
 
@@ -37,3 +38,29 @@ Blocks: Phase 4
 
 - 2026-08-06: Phase 4 reached this gap after the ApplicationSurface, NodeHost, material presentation paths, Region Outlet recovery, PresentationFrame recovery, Viewport Portal, and drop-anchor slices had passed their directed happy-dom tests.
 - 2026-08-06: Development stopped before `material-preview-context.ts`, Geometry Registry, Surface Reservation, Interaction Plane behavior, structural CSS completion, or any Phase 5 work.
+
+## Comments
+
+- 2026-08-06: Confirmed that `MaterialPreviewContext.invokeAction(name, payload?)` is removed instead of gaining a compiler or material action registry.
+- 2026-08-06: Confirmed that the removal is complete: no deprecated method, rejecting placeholder, compatibility alias or custom material-action variant remains.
+- 2026-08-06: Confirmed that Preview Schema writes are limited to `updateSelf()`, while workbench structure operations continue to produce the existing closed `AuthoringAction` values.
+- 2026-08-06: Confirmed that material-owned external side effects remain in the material's Vue or host state and do not enter Dragcraft authoring or history.
+
+## Answer
+
+`MaterialPreviewContext` does not provide named action dispatch. Its only controlled Schema write is self-update:
+
+```ts
+interface MaterialPreviewContext<Props extends JsonObject>
+  extends MaterialPresentationContext<Props> {
+  updateSelf(patch: MaterialSelfPatch<Props>): AuthoringResult
+}
+```
+
+`updateSelf()` continues through Authoring Policy, Schema Editor, commit and history. Preview still cannot access Authoring Engine, Material Catalog, ResolvedDocument, history, a writable Store or full-document traversal.
+
+No action-name or payload contract is added to `MaterialAuthoringDefinition`; no material-action variant is added to `AuthoringAction`; and no compiler may return a `SchemaOperation`. The existing closed `AuthoringAction` vocabulary remains the workbench interface for document and structure operations.
+
+Material-specific network calls, navigation, analytics and other external side effects belong to the material's own Vue implementation or host state. They are not Dragcraft authoring actions and do not enter Schema history.
+
+This answer supersedes only the `invokeAction()` portions of tickets 06 and 08. It does not change their remaining Material Preview Context, Presentation or public Designer interface decisions. Because the removed interface has not shipped on the replacement path, no deprecated method, rejecting placeholder, compatibility alias or migration layer is retained.

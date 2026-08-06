@@ -73,8 +73,8 @@ Designer 为每个 Schema 节点拥有的唯一设计态 DOM、几何与交互�
 _Avoid_: Preview 自管选区、Frame 重复渲染节点、全局 DOM selector
 
 **Material Preview Context**:
-Designer 向当前 material preview 提供的只读节点、页面、归属和交互状态，以及经过 Authoring Engine 的受控自更新与 action 入口；它不承载额外的场景模拟或 Runtime 状态。
-_Avoid_: Engine、可写 Store、完整文档遍历、previewState、生产 Runtime context
+Designer 向当前 material preview 提供的只读节点、页面、归属和交互状态，以及经过 Authoring Engine 的唯一受控自更新入口；它不提供命名动作分派，也不承载额外的场景模拟或 Runtime 状态。
+_Avoid_: Engine、可写 Store、完整文档遍历、命名动作入口、previewState、生产 Runtime context
 
 **Drop Geometry Resolver**:
 Designer 将浏览器指针与 NodeHost 几何解释为结构锚点的纯展示逻辑；它不计算持久化 index，也不裁决 Schema 约束或 Authoring Policy。

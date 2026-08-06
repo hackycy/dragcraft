@@ -3,6 +3,7 @@
 Status: resolved
 Type: grilling
 Blocked by: 03, 05, 06, 10
+Superseded in part by: 12 (`MaterialPreviewContext.invokeAction()` only)
 
 ## Question
 

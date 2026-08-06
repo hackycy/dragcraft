@@ -1,6 +1,6 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-06 14:49 CST
+Updated: 2026-08-06 15:22 CST
 
 ## Phase Status
 
@@ -8,8 +8,8 @@ Updated: 2026-08-06 14:49 CST
 - Phase 1: complete. Final-named DocumentSchema, definition snapshot, Schema Structure Resolver, immutable ResolvedDocument query model, and conformance tests are implemented beside the legacy path.
 - Phase 2: complete. The pure Schema Editor, closed operation vocabulary, structural destinations, aggregate bundles, atomic batch execution, and conformance tests are implemented beside the legacy path.
 - Phase 3: complete. Material Catalog, Authoring Engine, bounded snapshot history, four-state document session, and controlled DesignerInstance seams are implemented beside the legacy UI path.
-- Phase 4: blocked after partial red-green implementation. Wayfinder ticket 12 must resolve the Material Preview action compilation contract before work resumes.
-- Phase 5: not started and explicitly prohibited while Phase 4 is blocked.
+- Phase 4: partially implemented. Wayfinder ticket 12 is resolved, but the remaining Phase 4 implementation has not resumed.
+- Phase 5: not started and explicitly prohibited until Phase 4 is complete.
 
 ## Phase 0 Evidence
 
@@ -275,6 +275,29 @@ Each listed production behavior had an observed red before its minimal green imp
 - Full repository gates were not run because Phase 4 stopped at an unresolved accepted-interface decision and remains incomplete.
 - No Phase 5 module or caller was changed.
 
+## Phase 5 Entry Audit
+
+- The 2026-08-06 Phase 5 request was stopped before the first red cycle because its accepted presentation dependency is incomplete and Wayfinder ticket 12 still records an unresolved change to the accepted public material or authoring interface.
+- No Phase 5 test, production module, public export, caller or Phase 6 work was changed. No red-green result is claimed.
+- The existing Wayfinder ticket 12 remains the authoritative decision ticket; it was not recreated or replaced.
+- `sed -n '178,202p' .scratch/layout-semantic-architecture/implementation-plan.md`: passed; showed the unfinished Phase 4 structural-CSS task immediately before the Phase 5 workbench cutover and public-interface tasks.
+- `rg -n "^Status: open$|^Blocks: Phase 4$|Implementing a useful|Phase 5: not started and explicitly prohibited" .scratch/layout-semantic-architecture/issues/12-material-preview-action-contract.md .scratch/layout-semantic-architecture/implementation-progress.md`: passed; reported ticket 12 as `Status: open`, `Blocks: Phase 4`, and the existing Phase 5 prohibition.
+- `git ls-remote origin refs/heads/refactor`: passed; remote `refactor` resolved to `3ef3ac1462f6841adb46ff32585d9364e7a91e71`, identical to local HEAD, so no accepted remote resolution is missing locally.
+- Pre-audit `git status --short --branch`: passed; reported `## refactor...origin/refactor` with no worktree changes.
+- Post-audit `git diff --check`: passed; `git diff --name-only` reported only this progress file.
+
+## Wayfinder Ticket 12 Decision
+
+- Ticket 12 is resolved: `MaterialPreviewContext.invokeAction(name, payload?)` is deleted from the accepted public interface.
+- No named material action registry, payload contract, compiler, material-action `AuthoringAction` variant, deprecated method, rejecting placeholder or compatibility alias will be added.
+- Preview Schema writes are limited to `updateSelf()` through Authoring Policy, Schema Editor, commit and history. Workbench structure operations continue to produce the existing closed `AuthoringAction` values.
+- Material-owned external side effects remain in material Vue or host state and do not enter Dragcraft authoring or history.
+- Ticket 12 supersedes only the `invokeAction()` portions of tickets 06 and 08. `CONTEXT.md` and the architecture map were updated to match.
+- No implementation phase resumed during the decision session; Phase 4 remains incomplete and Phase 5 remains unstarted.
+- `test "$(sed -n '3p' .scratch/layout-semantic-architecture/issues/12-material-preview-action-contract.md)" = "Status: resolved"`: passed.
+- `git diff --check`: passed.
+- `git diff --name-only`: reported only `CONTEXT.md`, the implementation progress, the architecture map and tickets 06, 08 and 12; no implementation file changed.
+
 ## Playground Human Baseline
 
 The following Phase 0 items remain intentionally unconfirmed and must not be marked passed by an agent:
@@ -296,11 +319,11 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - No automated Phase 1 blocker or failure remains.
 - No automated Phase 2 blocker or failure remains.
 - Package-manager observation, not an automated baseline failure: a non-frozen catalog resolution currently advances `vitepress@next` to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement has no stable registry match. The docs dependency was not changed; frozen installation succeeds.
-- Phase 4 is blocked by open Wayfinder ticket 12. Work must not resume until the Material Preview action compilation contract is accepted.
+- No accepted-interface blocker remains from Wayfinder ticket 12, but Phase 4 is still incomplete.
 
 ## Stop Point
 
 - Phase 2 is complete.
 - Phase 3 is complete.
-- Phase 4 is partially implemented and blocked at the accepted public-interface gap recorded in Wayfinder ticket 12.
+- Phase 4 is partially implemented; its accepted public-interface gap is resolved by Wayfinder ticket 12, but implementation has not resumed.
 - Phase 5 was not started.
