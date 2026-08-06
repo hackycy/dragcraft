@@ -164,6 +164,8 @@ function validateRenderedHooks() {
   const roots = [
     'packages/ui/src/components',
     'packages/designer/src/components',
+    'packages/designer/src/presentation',
+    'packages/designer/src/presentation/recovery',
     'packages/renderer/src/components',
     'packages/form-generator/src/components',
   ]

@@ -1,11 +1,15 @@
 import type { ResolvedDocument, StructuralDestination } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
+import type { AuthoringAction, AuthoringResult } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
-import { computed, defineComponent, h, nextTick, onMounted, provide, ref } from 'vue'
+import { computed, defineComponent, h, inject, nextTick, onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import DesignerRegionOutlet, { REGION_OUTLET_CONTEXT_KEY } from './designer-region-outlet'
 import { VIEWPORT_PORTAL_OWNER_KEY } from './designer-viewport-portal'
+import { GEOMETRY_REGISTRY_KEY } from './geometry-registry'
+import { createMaterialPreviewContext } from './material-preview-context'
 import PresentationFrame from './presentation-frame'
 import RegionRecovery from './recovery/region-recovery'
+import { SURFACE_RESERVATION_OWNER_KEY } from './surface-reservation'
 
 type ResolvedNode = ResolvedDocument['root'][number]
 
@@ -44,8 +48,18 @@ export default defineComponent({
       type: Function as PropType<(node: ResolvedNode, owner: PresentationOwner) => VNode>,
       required: true,
     },
+    execute: {
+      type: Function as PropType<(action: AuthoringAction) => AuthoringResult>,
+      default: undefined,
+    },
+    selected: { type: Boolean, default: false },
+    hovered: { type: Boolean, default: false },
+    dragging: { type: Boolean, default: false },
   },
   setup(props) {
+    const geometry = inject(GEOMETRY_REGISTRY_KEY)
+    const hostElement = ref<HTMLElement | null>(null)
+    let unregisterGeometry: (() => void) | undefined
     const mountedOutlets = new Map<string, symbol[]>()
     const outletRevision = ref(0)
     const missingRegionIds = ref<readonly string[]>([])
@@ -65,9 +79,13 @@ export default defineComponent({
     }
 
     provide(REGION_OUTLET_CONTEXT_KEY, {
-      catalog: props.catalog,
+      get catalog() {
+        return props.catalog
+      },
       containerId: props.node.node.id,
-      document: props.document,
+      get document() {
+        return props.document
+      },
       onDropAnchor: props.onDropAnchor,
       registerOutlet(regionId: string) {
         const token = Symbol(regionId)
@@ -95,7 +113,16 @@ export default defineComponent({
       renderNode: props.renderNode,
     })
     provide(VIEWPORT_PORTAL_OWNER_KEY, props.owner)
-    onMounted(() => nextTick(refreshMissingRegions))
+    provide(SURFACE_RESERVATION_OWNER_KEY, {
+      nodeId: props.node.node.id,
+      owner: props.owner,
+    })
+    onMounted(() => {
+      if (geometry && hostElement.value)
+        unregisterGeometry = geometry.registerNode(props.node.node.id, hostElement.value)
+      void nextTick(refreshMissingRegions)
+    })
+    onBeforeUnmount(() => unregisterGeometry?.())
 
     return () => {
       const presentation = props.catalog.getPresentation(props.node.node.type)
@@ -124,7 +151,18 @@ export default defineComponent({
             }),
           ])
         : presentation.kind === 'visual'
-          ? h(presentation.preview, { ...props.node.node.props })
+          ? h(presentation.preview, {
+              ...props.node.node.props,
+              context: createMaterialPreviewContext({
+                document: props.document,
+                node: props.node,
+                owner: props.owner,
+                execute: props.execute,
+                selected: props.selected,
+                hovered: props.hovered,
+                dragging: props.dragging,
+              }),
+            })
           : h('div', {
               'data-dc-material': 'headless',
             }, [
@@ -155,10 +193,27 @@ export default defineComponent({
       })
 
       const host = h('div', {
+        'ref': hostElement,
         'aria-readonly': !presentation || props.node.readOnly ? 'true' : undefined,
+        'aria-selected': props.selected ? 'true' : undefined,
         'data-dc-component': 'node-host',
         'data-dc-node-id': props.node.node.id,
         'data-dc-node-type': props.node.node.type,
+        'data-dc-state': [
+          props.selected ? 'selected' : null,
+          props.hovered ? 'hovered' : null,
+          props.dragging ? 'dragging' : null,
+        ].filter(Boolean).join(' ') || undefined,
+        'onClick': (event: MouseEvent) => {
+          event.stopPropagation()
+          props.execute?.({ type: 'select-node', nodeId: props.node.node.id })
+        },
+        'onMouseenter': () => {
+          props.execute?.({ type: 'hover-node', nodeId: props.node.node.id })
+        },
+        'onMouseleave': () => {
+          props.execute?.({ type: 'hover-node', nodeId: null })
+        },
       }, [content, ...recovery])
 
       return presentation?.kind === 'visual' && presentation.frame

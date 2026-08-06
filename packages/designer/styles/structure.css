@@ -705,3 +705,93 @@
 .dc-canvas--forbidden {
   cursor: not-allowed;
 }
+
+[data-dc-component="application-surface"] {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+[data-dc-component="application-surface"] > [data-dc-plane="document"] {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-block-start: calc(
+    var(--dc-safe-area-block-start, 0px)
+    + var(--dc-internal-application-surface-reservation-block-start, 0px)
+  );
+  padding-block-end: calc(
+    var(--dc-safe-area-block-end, 0px)
+    + var(--dc-internal-application-surface-reservation-block-end, 0px)
+  );
+  padding-inline-start: calc(
+    var(--dc-safe-area-inline-start, 0px)
+    + var(--dc-internal-application-surface-reservation-inline-start, 0px)
+  );
+  padding-inline-end: calc(
+    var(--dc-safe-area-inline-end, 0px)
+    + var(--dc-internal-application-surface-reservation-inline-end, 0px)
+  );
+}
+
+[data-dc-component="application-surface"] > [data-dc-plane="viewport"],
+[data-dc-component="application-surface"] > [data-dc-plane="interaction"] {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
+}
+
+[data-dc-component="application-surface"] > [data-dc-plane="viewport"] {
+  z-index: 2;
+  pointer-events: none;
+}
+
+[data-dc-component="application-surface"] > [data-dc-plane="viewport"] > *,
+[data-dc-component="application-surface"] > [data-dc-plane="interaction"] > * {
+  pointer-events: auto;
+}
+
+[data-dc-component="application-surface"] > [data-dc-plane="interaction"] {
+  z-index: 3;
+  pointer-events: none;
+}
+
+[data-dc-component="node-host"] {
+  position: relative;
+  min-width: 0;
+}
+
+[data-dc-component="designer-region-outlet"] {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+[data-dc-component="node-selection"],
+[data-dc-component="drop-indicator"],
+[data-dc-component="presentation-diagnostic"] {
+  pointer-events: none;
+}
+
+[data-dc-component="node-selection"] {
+  position: absolute;
+}
+
+[data-dc-component="node-toolbar"] {
+  position: absolute;
+  pointer-events: auto;
+}
+
+[data-dc-component="presentation-recovery"] {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}

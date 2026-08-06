@@ -114,6 +114,11 @@
     "node-handle-anchor": { "parts": [], "states": ["hidden", "visible"] },
     "node-toolbar": { "parts": ["action"], "states": ["danger", "disabled", "drag", "floating", "horizontal", "vertical"] },
     "node-selection": { "parts": ["block-end-edge", "block-start-edge", "inline-end-edge", "inline-start-edge"], "states": ["material-bounds", "root-segment"] },
-    "widget-fallback": { "parts": [], "states": [] }
+    "widget-fallback": { "parts": [], "states": [] },
+    "application-surface": { "parts": [], "states": [] },
+    "designer-region-outlet": { "parts": [], "states": [] },
+    "node-host": { "parts": [], "states": ["dragging", "hovered", "selected"] },
+    "presentation-diagnostic": { "parts": [], "states": [] },
+    "presentation-recovery": { "parts": [], "states": [] }
   }
 }

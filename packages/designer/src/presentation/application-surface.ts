@@ -1,9 +1,20 @@
 import type { ResolvedDocument, StructuralDestination } from '@dragcraft/core'
 import type { PropType } from 'vue'
+import type { AuthoringAction, AuthoringResult } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
-import { defineComponent, h, provide, ref } from 'vue'
+import { defineComponent, h, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { VIEWPORT_PLANE_TARGET_KEY } from './designer-viewport-portal'
+import { createGeometryRegistry, GEOMETRY_REGISTRY_KEY } from './geometry-registry'
+import InteractionPlane from './interaction-plane'
 import NodeHost from './node-host'
+import {
+  createPresentationDiagnosticRegistry,
+  PRESENTATION_DIAGNOSTIC_REGISTRY_KEY,
+} from './presentation-diagnostics'
+import {
+  createSurfaceReservationRegistry,
+  SURFACE_RESERVATION_REGISTRY_KEY,
+} from './surface-reservation'
 
 export default defineComponent({
   name: 'DcApplicationSurface',
@@ -20,10 +31,68 @@ export default defineComponent({
       type: Function as PropType<(destination: StructuralDestination) => void>,
       default: undefined,
     },
+    execute: {
+      type: Function as PropType<(action: AuthoringAction) => AuthoringResult>,
+      default: undefined,
+    },
+    selectedNodeId: { type: String, default: undefined },
+    hoveredNodeId: { type: String, default: undefined },
+    draggingNodeId: { type: String, default: undefined },
   },
   setup(props) {
+    const surfaceElement = ref<HTMLElement | null>(null)
     const viewportPlane = ref<HTMLElement | null>(null)
+    const dropDestination = ref<StructuralDestination | null>(null)
+    const geometry = createGeometryRegistry()
+    const diagnostics = createPresentationDiagnosticRegistry()
+    const reservations = createSurfaceReservationRegistry(geometry)
+    watch(
+      () => props.document.root.map(node => node.node.id),
+      nodeIds => reservations.setRootOrder(nodeIds),
+      { immediate: true },
+    )
     provide(VIEWPORT_PLANE_TARGET_KEY, viewportPlane)
+    provide(GEOMETRY_REGISTRY_KEY, geometry)
+    provide(PRESENTATION_DIAGNOSTIC_REGISTRY_KEY, diagnostics)
+    provide(SURFACE_RESERVATION_REGISTRY_KEY, reservations)
+    onMounted(() => geometry.setBoundary(surfaceElement.value))
+    onBeforeUnmount(() => {
+      reservations.dispose()
+      geometry.dispose()
+    })
+    function reportDropAnchor(destination: StructuralDestination): void {
+      dropDestination.value = destination
+      props.onDropAnchor?.(destination)
+    }
+
+    function handleRootDragOver(event: DragEvent): void {
+      event.preventDefault()
+      const point = geometry.toSurfacePoint(event.clientX, event.clientY)
+      const orderedRects = props.document.root.flatMap((node) => {
+        const rect = geometry.rects.value.get(node.node.id)
+        return rect ? [{ nodeId: node.node.id, rect }] : []
+      })
+      const next = orderedRects.find(({ rect }) => point.y < rect.top + rect.height / 2)
+      const last = orderedRects.at(-1)
+      reportDropAnchor({
+        owner: { kind: 'page-root' },
+        position: next
+          ? { kind: 'before', nodeId: next.nodeId }
+          : last
+            ? { kind: 'after', nodeId: last.nodeId }
+            : { kind: 'end' },
+      })
+    }
+
+    function handleRootDragLeave(event: DragEvent): void {
+      const nextTarget = event.relatedTarget
+      if (nextTarget instanceof Node && event.currentTarget instanceof HTMLElement
+        && event.currentTarget.contains(nextTarget)) {
+        return
+      }
+      dropDestination.value = null
+    }
+
     const renderNode = (
       node: ResolvedDocument['root'][number],
       owner: { readonly kind: 'page-root' } | {
@@ -37,22 +106,43 @@ export default defineComponent({
       document: props.document,
       node,
       owner,
-      onDropAnchor: props.onDropAnchor,
+      execute: props.execute,
+      selected: props.selectedNodeId === node.node.id,
+      hovered: props.hoveredNodeId === node.node.id,
+      dragging: props.draggingNodeId === node.node.id,
+      onDropAnchor: reportDropAnchor,
       renderNode,
     })
 
     return () => h('div', {
+      'ref': surfaceElement,
       'data-dc-component': 'application-surface',
+      'style': {
+        '--dc-internal-application-surface-reservation-block-start': `${reservations.totals['block-start'].value}px`,
+        '--dc-internal-application-surface-reservation-block-end': `${reservations.totals['block-end'].value}px`,
+        '--dc-internal-application-surface-reservation-inline-start': `${reservations.totals['inline-start'].value}px`,
+        '--dc-internal-application-surface-reservation-inline-end': `${reservations.totals['inline-end'].value}px`,
+      },
     }, [
       h('div', {
         'data-dc-plane': 'document',
+        'onDragleave': handleRootDragLeave,
+        'onDragover': handleRootDragOver,
+        'onDrop': () => {
+          dropDestination.value = null
+        },
       }, props.document.root.map(node => renderNode(node, { kind: 'page-root' }))),
       h('div', {
         'ref': viewportPlane,
         'data-dc-plane': 'viewport',
       }),
-      h('div', {
-        'data-dc-plane': 'interaction',
+      h(InteractionPlane, {
+        document: props.document,
+        diagnostics,
+        geometry,
+        dropDestination: dropDestination.value,
+        execute: props.execute,
+        selectedNodeId: props.selectedNodeId,
       }),
     ])
   },

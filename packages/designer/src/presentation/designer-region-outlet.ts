@@ -2,7 +2,8 @@ import type { ResolvedDocument, StructuralDestination } from '@dragcraft/core'
 import type { Component, InjectionKey, PropType, Ref, VNode } from 'vue'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { PresentationOwner } from './node-host'
-import { defineComponent, h, inject, mergeProps, onBeforeUnmount } from 'vue'
+import { defineComponent, h, inject, mergeProps, onBeforeUnmount, watch } from 'vue'
+import { PRESENTATION_DIAGNOSTIC_REGISTRY_KEY } from './presentation-diagnostics'
 
 type ResolvedNode = ResolvedDocument['root'][number]
 
@@ -63,27 +64,54 @@ export default defineComponent({
     const context = inject(REGION_OUTLET_CONTEXT_KEY)
     if (!context)
       throw new Error('DesignerRegionOutlet must be rendered inside a container NodeHost')
-    const registration = context.registerOutlet(props.regionId)
-    onBeforeUnmount(registration.unregister)
+    const regionContext = context
+    const registration = regionContext.registerOutlet(props.regionId)
+    const diagnostics = inject(PRESENTATION_DIAGNOSTIC_REGISTRY_KEY)
+    let unregisterDiagnostic: (() => void) | undefined
+    const stopWatchingPrimary = watch(registration.primary, (primary) => {
+      unregisterDiagnostic?.()
+      unregisterDiagnostic = primary
+        ? undefined
+        : diagnostics?.register({
+            code: 'REGION_OUTLET_DUPLICATE',
+            containerId: regionContext.containerId,
+            regionId: props.regionId,
+          })
+    }, { immediate: true })
+    onBeforeUnmount(() => {
+      stopWatchingPrimary()
+      unregisterDiagnostic?.()
+      registration.unregister()
+    })
 
     function handleDragOver(event: DragEvent): void {
       const regionElement = event.currentTarget as HTMLElement
       event.preventDefault()
       event.stopPropagation()
-      const itemElements = Array.from(
-        regionElement.querySelectorAll<HTMLElement>(':scope > [data-dc-component="node-host"]'),
+      const region = regionContext.document.containersById
+        .get(regionContext.containerId)
+        ?.regions
+        .get(props.regionId)
+      const elementsByNodeId = new Map(
+        Array.from(regionElement.querySelectorAll<HTMLElement>('[data-dc-component="node-host"]'))
+          .flatMap(element => element.dataset.dcNodeId
+            ? [[element.dataset.dcNodeId, element] as const]
+            : []),
       )
-      const nodeIds = itemElements
-        .map(element => element.dataset.dcNodeId)
-        .filter((nodeId): nodeId is string => nodeId !== undefined)
+      const orderedItems = region?.children.flatMap(({ node }) => {
+        const element = elementsByNodeId.get(node.id)
+        return element ? [{ element, nodeId: node.id }] : []
+      }) ?? []
+      const itemElements = orderedItems.map(item => item.element)
+      const nodeIds = orderedItems.map(item => item.nodeId)
       const resolveDropAnchor = props.resolveDropAnchor ?? resolveDefaultDropAnchor
       const position = resolveDropAnchor({ event, itemElements, nodeIds, regionElement })
       if (!position)
         return
-      context.onDropAnchor?.({
+      regionContext.onDropAnchor?.({
         owner: {
           kind: 'container-region',
-          containerId: context.containerId,
+          containerId: regionContext.containerId,
           regionId: props.regionId,
         },
         position,
@@ -91,20 +119,20 @@ export default defineComponent({
     }
 
     return () => {
-      const region = context.document.containersById
-        .get(context.containerId)
+      const region = regionContext.document.containersById
+        .get(regionContext.containerId)
         ?.regions
         .get(props.regionId)
       const owner: PresentationOwner = {
         kind: 'container-region',
-        containerId: context.containerId,
+        containerId: regionContext.containerId,
         regionId: props.regionId,
       }
 
       if (!registration.primary.value) {
         return h(props.as, mergeProps(attrs, {
           'data-dc-component': 'designer-region-outlet',
-          'data-dc-container-id': context.containerId,
+          'data-dc-container-id': regionContext.containerId,
           'data-dc-presentation-diagnostic': 'REGION_OUTLET_DUPLICATE',
           'data-dc-region-outlet': props.regionId,
         }))
@@ -112,10 +140,10 @@ export default defineComponent({
 
       return h(props.as, mergeProps(attrs, {
         'data-dc-component': 'designer-region-outlet',
-        'data-dc-container-id': context.containerId,
+        'data-dc-container-id': regionContext.containerId,
         'data-dc-region-outlet': props.regionId,
         'onDragover': handleDragOver,
-      }), region?.children.map(node => context.renderNode(node, owner)) ?? [])
+      }), region?.children.map(node => regionContext.renderNode(node, owner)) ?? [])
     }
   },
 })
