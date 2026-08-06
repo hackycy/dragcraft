@@ -1,6 +1,6 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-06 22:05 CST
+Updated: 2026-08-06 23:16 CST
 
 ## Phase Status
 
@@ -11,7 +11,7 @@ Updated: 2026-08-06 22:05 CST
 - Phase 4: complete. Designer Presentation replacement is implemented beside the legacy Renderer path and verified through the ApplicationSurface seam.
 - Phase 5: complete. The workbench consumes DesignerInstance, the package root uses the accepted allowlist, and public consumer/package/theme validation covers the replacement path.
 - Phase 6: complete. Renderer, Widgets, legacy Core protocols, their implementation-coupled tests and obsolete package dependencies are removed; Core is a Vue-free pure module with only the accepted Document, Resolver and Editor interface.
-- Phase 7: not started. Playground and guide consumers still use the legacy Designer interface and remain assigned to the next phase.
+- Phase 7: ready to resume but implementation has not restarted. Wayfinder ticket 13 resolved the host-confirmation interface gap; no Phase 7 test or production code has yet been written.
 
 ## Phase 0 Evidence
 
@@ -419,6 +419,40 @@ Dependency command evidence:
 - `git diff --check`: passed.
 - No accepted public interface change or genuine architecture gap was exposed, so no Wayfinder decision ticket was recreated.
 
+## Phase 7 Discovery Stop Evidence
+
+- Read the accepted implementation plan, the complete implementation progress, `CONTEXT.md`, the architecture map and related resolved tickets before editing any product consumer.
+- Confirmed the Phase 7 automated seams from tickets 08 and 09: product setup through `createDesigner({ schema?, materials })`, pure-data delivery through `DesignerInstance.exportSchema()` / `importSchema()`, and an autonomous Guide Runtime consuming only `DocumentSchema`.
+- Consumer inventory exposed a genuine accepted-interface gap before the first red cycle: Phase 7 requires preserving Playground and Guide host confirmation UX, but the replacement public interface has no host confirmation adapter.
+- `DcStructurePanel` and `InteractionPlane` directly execute `remove-node` and discard the returned `confirmation-required` state. The only implemented retry contract is for a caller to send the same closed Action with `confirmed: true`; `DcDesigner` has no public way to ask its host to do that.
+- Created open Wayfinder ticket 13, `Authoring 确认与宿主交互契约`, to decide the missing seam. No accepted interface, test, consumer or production implementation was changed.
+
+Actual commands and results:
+
+- `rg -n "createConfirmActionInterceptor|actionInterceptor|interceptor|confirmation-required|confirmed: true|confirm\\(" packages playground examples --glob '!**/dist/**' --glob '!**/node_modules/**'`: found legacy confirmation setup only in the two Phase 7 consumers, and the replacement confirmation state only inside Authoring Engine/types/tests; no replacement host adapter exists.
+- `rg -n "execute\\(\\{ type: '(remove-node|unwrap-container|duplicate-node|move-node)'|remove-node|unwrap-container" packages/designer/src --glob '*.ts'`: found direct workbench remove execution in `packages/designer/src/components/DcStructurePanel.ts` and `packages/designer/src/presentation/interaction-plane.ts`; neither call site handles confirmation.
+- `pnpm --filter @dragcraft/designer test --run src/authoring/create-authoring-engine.test.ts -t 'requires explicit confirmation'`: passed, 1 test passed and 19 skipped. The existing test verifies that the Engine returns `confirmation-required` first and commits only after `confirmed: true`.
+- `pnpm --filter playground build`: failed after 3193 modules transformed because the unchanged Phase 7 field consumer imports removed `useI18n` from `@dragcraft/designer`.
+- `pnpm --filter guide-project test --run src/editor/create-page-designer.test.ts`: failed before collecting tests because the unchanged Phase 7 guide imports removed `defineContainerWidget`.
+- `git status --short --branch` before the discovery: clean on `refactor...origin/refactor`.
+
+No red-green implementation claim is made: the accepted-interface blocker was identified before a Phase 7 test seam could be exercised, so development stopped as required.
+
+## Wayfinder Ticket 13 Decision
+
+- Ticket 13 is resolved. `createDesigner()` gains an optional `confirmAuthoringAction(request)` host seam accepting a minimal `{ action, code, materialType, nodeId? }` request and returning `boolean | Promise<boolean>`.
+- `DesignerInstance.execute()` remains synchronous and does not invoke host confirmation. Programmatic callers continue to handle `confirmation-required` and explicitly retry with `confirmed: true`.
+- All Schema Actions originating inside `DcDesigner`, including structure controls, Interaction Plane, drag/drop, inspector edits and `MaterialPreviewContext.updateSelf()`, use one private coordinator and the same Engine write path.
+- Confirmation is fail-closed and single-flight. Missing callbacks, cancellation, callback failure, a changed immutable Schema reference or `dispose()` discard the retained Action without a commit; pending state is not public.
+- Batch results identify the first protected child with `actionIndex`; confirmed children are retried in order and the batch commits atomically only after every required confirmation succeeds.
+- No action interceptor, custom command, `window.confirm()` default, product modal dependency, second write path or confirmation state in Schema/history is introduced.
+- Ticket 13 supersedes only the confirmation portions of tickets 07 and 08. `CONTEXT.md` and the architecture map now reflect the decision.
+- Phase 7 implementation did not resume during the decision session.
+- `test "$(sed -n '3p' .scratch/layout-semantic-architecture/issues/13-authoring-confirmation-host-contract.md)" = "Status: resolved"`: passed.
+- `rg -n "Authoring Confirmation|Authoring 确认与宿主交互契约|confirmAuthoringAction|actionIndex" CONTEXT.md .scratch/layout-semantic-architecture/map.md .scratch/layout-semantic-architecture/issues/13-authoring-confirmation-host-contract.md .scratch/layout-semantic-architecture/implementation-progress.md`: found the expected glossary, map, ticket and progress entries.
+- `git diff --check`: passed.
+- `git status --short --branch`: reported only the four decision artifacts: `CONTEXT.md`, the architecture map, the implementation progress and ticket 13; no implementation file changed.
+
 ## Wayfinder Ticket 12 Decision
 
 - Ticket 12 is resolved: `MaterialPreviewContext.invokeAction(name, payload?)` is deleted from the accepted public interface.
@@ -455,6 +489,7 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - No automated Phase 6 blocker or failure remains. Repository build/typecheck/test still stop only at the unchanged product consumers assigned to Phase 7.
 - Package-manager observation, not an automated baseline failure: a non-frozen catalog resolution currently advances `vitepress@next` to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement has no stable registry match. The docs dependency was not changed; frozen installation succeeds.
 - No accepted-interface blocker remains from Wayfinder ticket 12; Phase 4 automated implementation is complete.
+- No accepted-interface blocker remains from Wayfinder ticket 13; Phase 7 may resume through the resolved host-confirmation contract.
 
 ## Stop Point
 
@@ -463,4 +498,5 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - Phase 4 is complete; its accepted public-interface gap was resolved by Wayfinder ticket 12 before implementation resumed.
 - Phase 5 is complete.
 - Phase 6 is complete.
-- Phase 7 was not started.
+- Phase 7 remains before its first red cycle and is ready to resume under the resolved Wayfinder ticket 13 contract.
+- Phase 8 was not started.

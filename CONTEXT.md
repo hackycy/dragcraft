@@ -108,6 +108,10 @@ _Avoid_: Schema Operation、Core Command
 设计器根据物料能力与设计态 context 对 Authoring Action 作出的交互许可决定；它不定义 Schema 合法性，也不参与生产运行时解析。
 _Avoid_: Schema 结构约束、运行时权限、安全边界
 
+**Authoring Confirmation**:
+Designer 对被 Authoring Policy 判定为需要显式同意的 Authoring Action 发起的宿主裁决；确认结果不属于 Schema、Policy 或 history，也不能形成绕过 Authoring Engine 的写入通道。
+_Avoid_: Action interceptor、自动放行、Schema approval、产品 modal 状态
+
 **Schema Editor**:
 Core 中把 Schema Operation 原子应用到已解析文档并返回新不可变文档的纯变换模块，只裁决文档不变量，不管理设计器状态。
 _Avoid_: Command Bus、可变 draft、Designer Store
