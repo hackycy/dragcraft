@@ -93,14 +93,4 @@ describe('built-in Container Shells', () => {
     expect(css).not.toContain('[data-dc-selection-plane')
     expect(css).not.toContain('forbidden-overlay')
   })
-
-  it('lets a narrow device define the Renderer Frame Boundary width', () => {
-    const css = readFileSync(path.resolve(process.cwd(), '../renderer/styles/structure.css'), 'utf8')
-    const boundaryRule = css.match(/\.dc-renderer-frame-boundary\s*\{[^}]*\}/)?.[0]
-    const defaultShellRule = css.match(/\.dc-container-shell\s*\{[^}]*\}/)?.[0]
-
-    expect(boundaryRule).toContain('width: max-content')
-    expect(boundaryRule).not.toContain('min-width')
-    expect(defaultShellRule).toContain('min-width: 375px')
-  })
 })

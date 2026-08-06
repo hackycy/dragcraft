@@ -33,14 +33,7 @@
     "test": "vitest",
     "typecheck": "tsc"
   },
-  "peerDependencies": {
-    "vue": ">=3.0.0"
-  },
-  "dependencies": {
-    "@dragcraft/utils": "workspace:*"
-  },
   "devDependencies": {
-    "vitest": "catalog:testing",
-    "vue": "catalog:vue"
+    "vitest": "catalog:testing"
   }
 }

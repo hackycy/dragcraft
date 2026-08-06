@@ -1,6 +1,6 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-06 18:39 CST
+Updated: 2026-08-06 22:05 CST
 
 ## Phase Status
 
@@ -10,7 +10,8 @@ Updated: 2026-08-06 18:39 CST
 - Phase 3: complete. Material Catalog, Authoring Engine, bounded snapshot history, four-state document session, and controlled DesignerInstance seams are implemented beside the legacy UI path.
 - Phase 4: complete. Designer Presentation replacement is implemented beside the legacy Renderer path and verified through the ApplicationSurface seam.
 - Phase 5: complete. The workbench consumes DesignerInstance, the package root uses the accepted allowlist, and public consumer/package/theme validation covers the replacement path.
-- Phase 6: not started. Renderer, Widgets, legacy Core protocols and their package dependencies remain for the assigned deletion phase.
+- Phase 6: complete. Renderer, Widgets, legacy Core protocols, their implementation-coupled tests and obsolete package dependencies are removed; Core is a Vue-free pure module with only the accepted Document, Resolver and Editor interface.
+- Phase 7: not started. Playground and guide consumers still use the legacy Designer interface and remain assigned to the next phase.
 
 ## Phase 0 Evidence
 
@@ -364,6 +365,60 @@ The first full Designer audit after cutover ran `pnpm --filter @dragcraft/design
 - These repository-gate failures are the expected direct-cutover interval assigned to Phase 7. No compatibility alias or premature product-consumer rewrite was added to make them pass.
 - No implementation finding required a change to the accepted public interface. The `defineMaterial` fixture error was resolved by using its accepted inference contract, so no Wayfinder decision ticket was recreated.
 
+## Phase 6 Implementation
+
+- Deleted the complete `packages/renderer` and `packages/widgets` modules. Ignored local `dist`, `.turbo` and package-local `node_modules` artifacts were moved to the macOS Trash after their tracked sources were deleted, so neither package directory remains in the workspace.
+- Removed both obsolete packages from Designer dependencies and regenerated `pnpm-lock.yaml` through pnpm. The removed Renderer-only Floating UI dependency and its unused workspace catalog entry were also removed.
+- Deleted the legacy Core Engine, command bus and handlers, event hub, registry, history manager, layout/sortable protocols, container definition/plan/placement/variant path, tree Schema/index/store/validation/helpers, old style helpers, legacy types and their implementation-coupled tests.
+- Replaced the Core root with only the accepted DocumentSchema, SchemaDefinitionSnapshot, Schema Structure Resolver, ResolvedDocument, Schema Editor, NodeBundle, Schema Operation and Structural Destination exports.
+- Removed Core's Vue peer/dev dependency and its now-unused utils dependency. Core source is now limited to `document`, `definitions`, `resolver`, `editor` and the root export.
+- Deleted the two remaining cross-package tests that read the removed Renderer stylesheet from device-frames and playground. Their retained behavior remains covered through Designer's Presentation and structure stylesheet interface tests.
+- Removed the two obsolete standalone packages from `.github/architecture/07-package-reference.md` and updated only the directly affected Core, Designer and dependency-index descriptions. The Phase 8 architecture rewrite was not started.
+- Added `scripts/check-obsolete-protocols.mjs` and wired it into the root lint gate. It enforces absent package directories/imports/dependencies/lockfile importers, the final Core source topology, Core's Vue isolation and absence from the architecture package reference.
+- No playground material/template or guide consumer was rewritten. The only playground edit deleted the Phase 6 implementation-coupled Renderer CSS assertion.
+
+## Phase 6 Red-Green-Refactor Evidence
+
+Each Phase 6 slice first extended the repository conformance seam, observed the expected failure, applied the minimum deletion, then kept the checker green during review/refactor:
+
+| Cycle | Command | Observed red | Following green |
+| --- | --- | --- | --- |
+| 1 | `pnpm check:obsolete-protocols` | 6 violations: two package directories, two Designer dependencies and two lockfile importers remained | `node scripts/check-obsolete-protocols.mjs`: passed with `obsolete package removal valid` after package deletion and pnpm lockfile regeneration |
+| 2 | `node scripts/check-obsolete-protocols.mjs` | 54 legacy Core files, 2 Core Vue manifest declarations and 6 Core Vue imports remained | same command passed after the legacy Core cluster and Vue dependency were removed |
+| 3 | `node scripts/check-obsolete-protocols.mjs` | after excluding the checker's own denylist literal, exactly 2 source tests still read the deleted Renderer CSS implementation | same command passed after deleting those two implementation-coupled assertions |
+| 4 | `node scripts/check-obsolete-protocols.mjs` | architecture package reference still listed both deleted package names | same command passed after the scoped package-reference update |
+| 5 | `pnpm lint` | existing workspace lint reported the now-unused `@floating-ui/dom` catalog item | repeating `pnpm lint` passed after removing that catalog entry |
+
+Refactor/review kept the accepted seams fixed: the Core root was reduced to replacement modules, the conformance traversal was changed to ignore generated `dist`, `.turbo` and `node_modules` directories, and the checker was added to the permanent root lint command. No compatibility export or replacement seam was introduced.
+
+Dependency command evidence:
+
+- First `pnpm install --lockfile-only --offline`: failed because `vitepress@next` resolved to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement had no stable matching version.
+- `pnpm install --lockfile-only --offline --filter @dragcraft/designer`: failed for the same workspace-wide catalog resolution reason.
+- `pnpm install --lockfile-only --offline --config.minimum-release-age=10080`: passed and retained the existing `vitepress@2.0.0-alpha.18` resolution while removing only obsolete importers/dependencies.
+- `pnpm install --frozen-lockfile --offline --trust-lockfile`: passed after the package deletion, passed again after Core dependency cleanup, and the final run reported all 13 workspace projects already up to date in 25ms.
+
+## Phase 6 Review And Verification Evidence
+
+- `node scripts/check-obsolete-protocols.mjs`: passed with `obsolete package removal valid`.
+- `rg -n "@dragcraft/(renderer|widgets)" packages playground examples docs skills README.md CLAUDE.md --glob '!**/dist/**' --glob '!**/node_modules/**'`: no matches (exit 1, expected).
+- `rg -n "from ['\"]vue['\"]|from ['\"]@vue/|\"vue\"" packages/core/src packages/core/package.json`: no matches (exit 1, expected).
+- `pnpm --filter @dragcraft/core test --run`: passed, 2 files and 65 tests. Only the replacement Resolver and Schema Editor interface suites remain.
+- `pnpm --filter @dragcraft/core build`: passed; tsdown built the reduced runtime/declarations and publint reported no issues.
+- `pnpm --filter @dragcraft/core typecheck`: invoked the root `tsc` because Core has no package-local tsconfig and failed only on unchanged Phase 7 guide/playground consumers; the Core package build above generated declarations successfully.
+- `pnpm --filter @dragcraft/designer test --run`: passed, 18 files and 101 tests.
+- `pnpm --filter @dragcraft/designer typecheck`: passed, including the built public-consumer fixture.
+- `pnpm --filter @dragcraft/designer build`: passed; theme checks, tsdown/publint, exact package exports and the public consumer fixture all passed.
+- `pnpm --filter @dragcraft/device-frames test --run`: passed, 3 files and 14 tests after removal of the cross-package stylesheet assertion.
+- `pnpm build:packages`: passed, 9/9 retained packages. Renderer and Widgets no longer appear in Turbo's package graph.
+- Final repository gates were run in required order:
+  - `pnpm build`: all retained packages and docs passed; Turbo reported 10/12 successful tasks, then the unchanged Phase 7 guide failed on removed `ContainerRegionOutlet` and playground failed on removed `useI18n`.
+  - `pnpm lint`: passed; public package boundary and obsolete protocol conformance both reported valid.
+  - `pnpm typecheck`: all 9 retained package builds passed, then root `tsc` failed only in unchanged Phase 7 guide/playground sources that still consume legacy Designer names and shapes.
+  - `pnpm test`: all 9 retained package suites passed, including Core 65, Designer 101 and device-frames 14 tests; the recursive run then failed in 5 unchanged guide-project suites at import time because `defineContainerWidget` is no longer a function. Playground tests were not reached.
+- `git diff --check`: passed.
+- No accepted public interface change or genuine architecture gap was exposed, so no Wayfinder decision ticket was recreated.
+
 ## Wayfinder Ticket 12 Decision
 
 - Ticket 12 is resolved: `MaterialPreviewContext.invokeAction(name, payload?)` is deleted from the accepted public interface.
@@ -397,6 +452,7 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - No automated Phase 1 blocker or failure remains.
 - No automated Phase 2 blocker or failure remains.
 - No automated Phase 5 package blocker remains. Repository build/typecheck/test still encounter the unchanged product consumers assigned to Phase 7.
+- No automated Phase 6 blocker or failure remains. Repository build/typecheck/test still stop only at the unchanged product consumers assigned to Phase 7.
 - Package-manager observation, not an automated baseline failure: a non-frozen catalog resolution currently advances `vitepress@next` to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement has no stable registry match. The docs dependency was not changed; frozen installation succeeds.
 - No accepted-interface blocker remains from Wayfinder ticket 12; Phase 4 automated implementation is complete.
 
@@ -406,4 +462,5 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - Phase 3 is complete.
 - Phase 4 is complete; its accepted public-interface gap was resolved by Wayfinder ticket 12 before implementation resumed.
 - Phase 5 is complete.
-- Phase 6 was not started; Renderer, Widgets and legacy Core deletion remain untouched.
+- Phase 6 is complete.
+- Phase 7 was not started.

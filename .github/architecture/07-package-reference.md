@@ -9,10 +9,8 @@
 | `@dragcraft/designer` | 公开 | 唯一主入口、Vue3 工作台、聚合扩展接口与 Standard 主题 |
 | `@dragcraft/device-frames` | 公开可选 | 设备容器框架 |
 | `@dragcraft/fields-*` | 公开可选 | UI 库字段 adapter；当前实现为 `@dragcraft/fields-ant-design-vue` |
-| `@dragcraft/core` | 内部 | 领域模型、状态机、命令、历史、事件、注册协议 |
-| `@dragcraft/renderer` | 内部 | 将 schema 节点映射为 Vue 组件树 |
+| `@dragcraft/core` | 内部 | 纯数据文档、结构解析与原子 Schema 编辑 |
 | `@dragcraft/form-generator` | 内部 | 配置面板 schema 表单引擎 |
-| `@dragcraft/widgets` | 内部 | 物料协议与通用工具函数 |
 | `@dragcraft/ui` | 内部 | 共享 Vue UI 模块与统一滚动区域 |
 | `@dragcraft/icons` | 内部 | SVG 图标模块 |
 | `@dragcraft/i18n` | 内部 | Vue UI 模块共享的响应式国际化上下文 |
@@ -22,36 +20,31 @@
 
 职责：
 
-- 管理 DesignerSchema 响应式状态。
-- 提供 CommandBus、HistoryManager、Registry、EventHub。
-- 提供 LayoutPlan 投影和位置锁定约束。
-- 集中解析 Authoring Policy，并在内置命令中强制执行创建、配置和结构操作限制。
-- 定义 `CoreWidgetMeta` 等 widget 行为控制协议。
+- 定义纯 JSON `DocumentSchema` 与不可变文档值类型。
+- 通过 Schema Structure Resolver 校验结构并生成 `ResolvedDocument` 查询模型。
+- 通过 Schema Editor 原子应用封闭的 `SchemaOperation` 与 `OperationBatch`。
+- 保持平台无关，不持有 Vue 会话状态、history、material 展示或浏览器几何。
 
 主要入口：
 
-- `createEngine()`。
-- `CommandType`。
-- `resolveBehavior()`。
-- `resolveAuthoringPolicy()`、`resolveWidgetCreation()`。
-- `normalizeStyleValueMap()`。
-- Schema、command、event、registry、widget 相关类型。
+- `resolveSchema()`。
+- `applySchemaOperation()`。
+- `DocumentSchema`、`ResolvedDocument`、`SchemaDefinitionSnapshot`、`SchemaOperation` 与结构目的地类型。
 
 依赖与协作：
 
-- 被 designer 创建并持有。
-- 被 renderer 消费 store 和命令能力。
-- 被 widgets 内部复用基础 widget meta 类型；业务物料从 Designer 使用聚合类型，renderer 在此之上扩展 `RendererWidgetMeta`。
+- 只被 Designer 内部的 Material Catalog、Authoring Engine 与 Presentation 实现消费。
+- 不依赖 Vue、Designer、form-generator、device-frames 或其他展示模块。
 
 ## @dragcraft/designer
 
 职责：
 
 - 标准业务接入入口。
-- 组合 core、renderer、form-generator。
+- 组合 Core、Authoring Engine、ApplicationSurface 与 form-generator。
 - 提供可折叠 Dock、可平移画布和 Inspector 的响应式 Vue 可视化搭建工作台。
 - 管理基于容器宽度的 wide/compact 模式与互斥抽屉。
-- 管理拖拽、属性绑定、扩展点和事件 hooks 透传。
+- 管理拖拽、属性绑定、受控 Authoring Action 与 Presentation 扩展。
 - 通过 `bindings/field-binding.ts` 纯函数 helpers 翻译属性面板字段绑定。
 
 主要入口：
@@ -59,38 +52,15 @@
 - `createDesigner()`。
 - `DcDesigner`。
 - `useDesigner()`。
-- Designer options、workspace controller 和 extensions 类型。
-- Schema、command、renderer、form、widget 与 i18n 的业务扩展接口。
+- `DesignerInstance`、`DocumentSchema`、`MaterialDefinition` 与 Presentation 扩展类型。
+- Designer Region Outlet、Viewport Portal、Surface Reservation 与 form 接入 interface。
 - `@dragcraft/designer/standard.css`、`@dragcraft/designer/structure.css` 与主题契约 JSON。
 
 依赖与协作：
 
-- 依赖 core、renderer、form-generator、widgets 等内部 implementation module。
-- 用户显式传入 widget meta、componentMap 和 fieldComponentMap。
+- 依赖 Core、form-generator、i18n、UI、icons 与 utils 等内部 implementation module。
+- 用户只传入一个 `MaterialDefinition[]` 与可选 `fieldComponentMap`。
 - Designer 聚合必要结构样式和唯一 Standard 工作台主题；业务通过 token 或公开 hook 覆盖差异。
-
-## @dragcraft/renderer
-
-职责：
-
-- 把 `root.children` 渲染为 widget 节点列表。
-- 管理节点 mask、handle、toolbar、fallback、empty state。
-- 提供 renderer extensions、event hooks、node actions 与 composables。
-- 处理节点交互状态，并持有 `RendererWidgetMeta` 的 UI 扩展字段；schema 写入回到 core command。
-
-主要入口：
-
-- `RootRenderer`。
-- `createNodeActionRegistry()`。
-- `createDefaultActions()`。
-- `hideNativeDragImage()`。
-- `useWidgetNode()`、`useNodeActions()`、`useNodeDrag()`、`useToolbarPosition()`。
-
-依赖与协作：
-
-- 消费 core engine。
-- 接收 designer 或业务传入的 componentMap。
-- 通过 extensions 接入 device-frames 等容器。
 
 ## @dragcraft/form-generator
 
@@ -112,7 +82,7 @@
 
 - 被 designer 右栏使用。
 - 字段 adapter 由业务应用或内置字段包显式提供。
-- 值变更由 designer 转为 core command。
+- 值变更由 Designer 转为封闭的 Authoring Action。
 
 ## @dragcraft/fields-ant-design-vue
 
@@ -135,26 +105,6 @@
 - 被业务应用或 playground 合并进 `fieldComponentMap`。
 - 不承载业务特化字段；`Color`、`Array`、`NavbarTitle` 等由业务侧维护。
 
-## @dragcraft/widgets
-
-职责：
-
-- 定义 `WidgetDefinition`、`WidgetGroup`、`WidgetGroupConfig`。
-- 提供物料注册、组件映射和分组过滤工具。
-- 不包含具体物料组件。
-
-主要入口：
-
-- `registerWidgets()`。
-- `buildComponentMap()`。
-- `getWidgetMetas()`。
-- `filterByGroup()`。
-
-依赖与协作：
-
-- 依赖 core 类型和 Vue Component 类型。
-- designer 依赖并聚合本包的业务扩展接口；业务不直接导入本包。
-
 ## @dragcraft/ui
 
 职责：
@@ -172,7 +122,7 @@
 
 依赖与协作：
 
-- 只 peer 依赖 Vue，不依赖 designer、renderer 或 device-frames。
+- 只 peer 依赖 Vue，不依赖 Designer 或 device-frames。
 - 被 designer 的物料、结构树和属性面板消费。
 - Designer 的 Standard 主题聚合其结构层、视觉 recipe 和公开 token 契约。
 
@@ -194,10 +144,10 @@
 
 依赖与协作：
 
-- peer 依赖 Vue，workspace 依赖只有 `@dragcraft/icons`；不依赖 designer、renderer、core 或 ui。
+- peer 依赖 Vue，workspace 依赖只有 `@dragcraft/icons`；不依赖 Designer、Core 或 UI。
 - Active Device Frame 与 ID 解析由宿主持有；包内没有 context、controller 或路由 Shell。
 - `DevicePicker` 接收 definitions/modelValue 并只发出 `update:modelValue`。
-- 宿主把 definition 的 `containerShell` 或 readonly component ref 传给 renderer `containerShell` seam。
+- 宿主把 definition 的 `containerShell` 或 readonly component ref 传给 Designer `containerShell` seam。
 - 样式自包含，不依赖 Designer 的工作台主题。
 
 ## @dragcraft/icons
@@ -223,7 +173,7 @@
 
 - 提供 UI 包共享的响应式 locale 与翻译查询。
 - 维护 Vue injection key 和运行时消息合并。
-- 集中 designer、renderer、form-generator 使用的国际化协议与类型。
+- 集中 Designer 与 form-generator 使用的国际化协议与类型。
 
 主要入口：
 
@@ -235,7 +185,7 @@
 依赖与协作：
 
 - peer 依赖 Vue。
-- 被 designer、renderer 和 form-generator 内部消费；业务通过 designer 聚合接口使用。
+- 被 Designer 和 form-generator 内部消费；业务通过 Designer 聚合 interface 使用。
 - 不包含具体产品文案；各消费包或宿主负责合并消息树。
 
 ## @dragcraft/utils
@@ -253,7 +203,7 @@
 
 依赖与协作：
 
-- 被 core 等内部上层模块复用，不属于业务接口。
+- 被 Designer 等内部上层模块复用，不属于业务 interface。
 - 不承载 schema 或业务语义。
 
 ## 依赖方向
@@ -268,28 +218,23 @@
 
 @dragcraft/designer
   -> @dragcraft/core
-  -> @dragcraft/renderer
   -> @dragcraft/form-generator
-  -> @dragcraft/widgets
   -> @dragcraft/i18n
   -> @dragcraft/ui
   -> @dragcraft/icons
   -> @dragcraft/utils
 
-@dragcraft/core -> @dragcraft/utils
 @dragcraft/designer -> @dragcraft/ui
 @dragcraft/designer -> @dragcraft/utils
 @dragcraft/device-frames -> @dragcraft/icons
-@dragcraft/renderer -> @dragcraft/utils
 ```
 
 依赖规则：
 
-- core 不依赖 UI 组件包。
+- Core 不依赖 Vue 或 UI 模块。
 - form-generator 不依赖 core。
 - i18n 只依赖 Vue，不依赖任何 dragcraft UI 组件包。
 - utils 不依赖 Vue 或 DOM。
-- renderer 不直接持久化业务状态。
-- designer 负责包组合与对外简化。
+- Designer 负责包组合与对外简化。
 - README、公开文档、examples 和 playground 只能直接导入 Designer、Device Frames 和 `@dragcraft/fields-*` 字段 adapter package。
 - 业务应用负责提供物料实现，并选择内置字段包或自定义字段 adapter。

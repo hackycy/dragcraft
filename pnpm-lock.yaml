@@ -93,9 +93,6 @@ catalogs:
       specifier: ^24.10.0
       version: 24.13.2
   vue:
-    '@floating-ui/dom':
-      specifier: ^1.7.4
-      version: 1.7.6
     '@vitejs/plugin-vue':
       specifier: ^6.0.4
       version: 6.0.7
@@ -206,17 +203,10 @@ importers:
         version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.9.0))
 
   packages/core:
-    dependencies:
-      '@dragcraft/utils':
-        specifier: workspace:*
-        version: link:../utils
     devDependencies:
       vitest:
         specifier: catalog:testing
         version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.9.0))
-      vue:
-        specifier: catalog:vue
-        version: 3.5.39(typescript@5.9.3)
 
   packages/designer:
     dependencies:
@@ -232,18 +222,12 @@ importers:
       '@dragcraft/icons':
         specifier: workspace:*
         version: link:../icons
-      '@dragcraft/renderer':
-        specifier: workspace:*
-        version: link:../renderer
       '@dragcraft/ui':
         specifier: workspace:*
         version: link:../ui
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
-      '@dragcraft/widgets':
-        specifier: workspace:*
-        version: link:../widgets
     devDependencies:
       happy-dom:
         specifier: catalog:testing
@@ -333,40 +317,6 @@ importers:
         specifier: catalog:vue
         version: 3.5.39(typescript@5.9.3)
 
-  packages/renderer:
-    dependencies:
-      '@dragcraft/core':
-        specifier: workspace:*
-        version: link:../core
-      '@dragcraft/i18n':
-        specifier: workspace:*
-        version: link:../i18n
-      '@dragcraft/icons':
-        specifier: workspace:*
-        version: link:../icons
-      '@dragcraft/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@dragcraft/utils':
-        specifier: workspace:*
-        version: link:../utils
-      '@floating-ui/dom':
-        specifier: catalog:vue
-        version: 1.7.6
-    devDependencies:
-      happy-dom:
-        specifier: catalog:testing
-        version: 20.10.6
-      postcss:
-        specifier: catalog:cli
-        version: 8.5.15
-      vitest:
-        specifier: catalog:testing
-        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.9.0))
-      vue:
-        specifier: catalog:vue
-        version: 3.5.39(typescript@5.9.3)
-
   packages/ui:
     devDependencies:
       '@vue/test-utils':
@@ -394,19 +344,6 @@ importers:
       vitest:
         specifier: catalog:testing
         version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.9.0))
-
-  packages/widgets:
-    dependencies:
-      '@dragcraft/core':
-        specifier: workspace:*
-        version: link:../core
-    devDependencies:
-      vitest:
-        specifier: catalog:testing
-        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.4)(yaml@2.9.0))
-      vue:
-        specifier: catalog:vue
-        version: 3.5.39(typescript@5.9.3)
 
   playground:
     dependencies:
@@ -958,15 +895,6 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@floating-ui/core@1.7.5':
-    resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
-
-  '@floating-ui/dom@1.7.6':
-    resolution: {integrity: sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==}
-
-  '@floating-ui/utils@0.2.11':
-    resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -4376,17 +4304,6 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
-
-  '@floating-ui/core@1.7.5':
-    dependencies:
-      '@floating-ui/utils': 0.2.11
-
-  '@floating-ui/dom@1.7.6':
-    dependencies:
-      '@floating-ui/core': 1.7.5
-      '@floating-ui/utils': 0.2.11
-
-  '@floating-ui/utils@0.2.11': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

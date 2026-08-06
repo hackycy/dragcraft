@@ -1,5 +1,4 @@
 import type { ContainerDefinition, SchemaNode } from '@dragcraft/designer'
-import { readFileSync } from 'node:fs'
 import { CommandType, createEngine } from '@dragcraft/designer'
 import { expect, it } from 'vitest'
 import { resolveLinearDropIndex, splitContainerMeta } from './container'
@@ -46,15 +45,6 @@ it('registers playground container definitions and split variants in declaration
     'left-one-right-two',
     'top-one-bottom-two',
   ])
-})
-
-it('keeps empty-region geometry in renderer structural CSS', () => {
-  const structureCss = readFileSync(
-    new URL('../../../../packages/renderer/styles/structure.css', import.meta.url),
-    'utf8',
-  )
-  expect(structureCss).toMatch(/\.dc-container-region--empty\s*\{/)
-  expect(structureCss).not.toContain('.dc-container-region__empty')
 })
 
 it('redistributes split children in stable order when the variant changes', () => {
