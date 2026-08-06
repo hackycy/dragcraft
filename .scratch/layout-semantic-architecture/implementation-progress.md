@@ -1,13 +1,14 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-06 10:24 CST
+Updated: 2026-08-06 12:33 CST
 
 ## Phase Status
 
 - Phase 0: automated baseline and guardrails complete; playground baseline awaiting user confirmation.
 - Phase 1: complete. Final-named DocumentSchema, definition snapshot, Schema Structure Resolver, immutable ResolvedDocument query model, and conformance tests are implemented beside the legacy path.
 - Phase 2: complete. The pure Schema Editor, closed operation vocabulary, structural destinations, aggregate bundles, atomic batch execution, and conformance tests are implemented beside the legacy path.
-- Phase 3: not started.
+- Phase 3: complete. Material Catalog, Authoring Engine, bounded snapshot history, four-state document session, and controlled DesignerInstance seams are implemented beside the legacy UI path.
+- Phase 4: not started and explicitly deferred.
 
 ## Phase 0 Evidence
 
@@ -176,6 +177,50 @@ The final review found and fixed one cross-owner self-anchor edge case with the 
   - `pnpm test`: passed across every reported workspace package; Core reported 27 files and 411 tests.
 - No accepted public interface change or genuine architecture gap was exposed, so no Wayfinder decision ticket was recreated.
 
+## Phase 3 Implementation
+
+- Added `packages/designer/src/materials/types.ts` with the flat `MaterialDefinition`, explicit visual/headless presentation, schema/container declarations, optional panel/inspector declarations, NodeBundle factory context, and Authoring Policy rules.
+- Added `defineMaterial()` as a no-op inference helper in `packages/designer/src/materials/define-material.ts`.
+- Added `createMaterialCatalog()` as the single immutable catalog seam. Initialization validates duplicate/empty types, explicit presentation consistency, JSON defaults, one-level container regions/cardinality/accepts, and authoring configuration; invalid configuration throws `DesignerConfigurationError`.
+- The catalog owns immutable Core `SchemaDefinitionSnapshot`, Authoring, Presentation, panel/inspector projections and standard ordinary/container/headless NodeBundle creation. Optional material factories receive an injected ID factory and return complete aggregates.
+- Added `packages/designer/src/authoring/types.ts`, `policy.ts`, `history.ts`, and `create-authoring-engine.ts`. `execute()` is the only Authoring action write seam: create, duplicate, move, remove, unwrap, update node/page/global config, non-nested batch, selection/hover, undo and redo are translated to the closed Core operation vocabulary.
+- Authoring Policy is separate from Core Schema validity and supports allowed, denied, and confirmation-required decisions. Unknown/conflicted material nodes are read-only; policy rejection and confirmation never write document or history.
+- History stores immutable Schema snapshot references with default 50 entries, `0` disabled, bounded retention, redo-branch truncation, one entry per batch, and undo/redo cursor movement. Selection and hover are reactive and repaired when a committed document removes their node; they are not part of history.
+- Added `packages/designer/src/session/create-designer.ts` with the Phase 3 `createDesigner({ schema?, materials, ... })` session seam. Omitted schema creates canonical empty version `1`; explicit inputs use the Resolver four states; rejected imports preserve the installed document; successful imports reset the history baseline; export is detached JSON data or `null`.
+- Added the Phase 3 conformance suites:
+  - `packages/designer/src/materials/create-material-catalog.test.ts`: 12 tests.
+  - `packages/designer/src/authoring/create-authoring-engine.test.ts`: 20 tests.
+  - `packages/designer/src/session/create-designer.test.ts`: 8 tests.
+- Added the required new Core root exports for Designer's internal workspace dependency (`resolveSchema`, `applySchemaOperation`, their pure-data types and JSON helpers). No new Core/ResolvedDocument/SchemaOperation type is re-exported from the Designer public root.
+
+## Phase 3 Red-Green Evidence
+
+Each vertical slice used a directed command before the minimal implementation and then repeated the same command after implementation:
+
+- Material Catalog: `pnpm --filter @dragcraft/designer test --run src/materials/create-material-catalog.test.ts`. Initial missing-module, missing-helper, invalid presentation/container, projection, standard/custom bundle and configuration validation reds were followed by a final green result of `1 file and 12/12 tests passed`.
+- Authoring Engine: `pnpm --filter @dragcraft/designer test --run src/authoring/create-authoring-engine.test.ts`. Initial missing-module and each missing action/policy/history/selection behavior was observed red before implementation; the final directed result was `1 file and 20/20 tests passed`.
+- Designer session: `pnpm --filter @dragcraft/designer test --run src/session/create-designer.test.ts`. Initial missing-module, rejected initial state, import, diagnostic limit, export, configuration and empty-history cursor reds were followed by `1 file and 8/8 tests passed`.
+- One green attempt after adding the new Core JSON export failed with `cloneJsonValue is not a function` because the workspace `@dragcraft/core/dist` artifact was stale. The real recovery command `pnpm --filter @dragcraft/core build` passed, and repeating the directed Material command passed `7/7` at that point. This was a build-artifact issue, not a production behavior change.
+- Review found an empty-history cursor bug: undo from an initial rejected document made `canRedo` true. A new session seam test first failed, the cursor guard was corrected, and the repeated command passed `8/8`.
+
+## Phase 3 Review And Verification Evidence
+
+- `pnpm --filter @dragcraft/designer test --run`: passed, 15 files and 146 tests.
+- `pnpm --filter @dragcraft/core test --run`: passed, 27 files and 411 tests.
+- `pnpm --filter @dragcraft/designer typecheck`: passed.
+- `pnpm exec eslint packages/designer/src/materials packages/designer/src/authoring packages/designer/src/session packages/core/src/index.ts`: passed with no output after mechanical import/type fixes.
+- `pnpm --filter @dragcraft/core build`: passed; tsdown built both artifacts and publint reported no issues.
+- `pnpm --filter @dragcraft/designer build`: passed; theme contract, package export validation and publint all passed.
+- `find packages/designer/src -maxdepth 2 -type d -name presentation -print`: no output; no Phase 4 presentation module was created.
+- `rg -n "structuredClone" packages/designer/src/materials packages/designer/src/authoring packages/designer/src/session packages/core/src/index.ts`: no matches.
+- `git diff --check`: passed.
+- Final repository gates, executed in the required order after Phase 3 implementation:
+  - `pnpm build`: passed, 14/14 tasks. Existing guide/playground chunk-size warnings remain.
+  - `pnpm lint`: passed; `public package boundary valid`.
+  - `pnpm typecheck`: passed, including 11/11 package builds and root `tsc`.
+  - `pnpm test`: passed across all reported workspace packages; Designer reported 15 files and 146 tests, Core reported 27 files and 411 tests.
+- No accepted public interface change or genuine architecture gap was exposed, so no Wayfinder decision ticket was recreated.
+
 ## Playground Human Baseline
 
 The following Phase 0 items remain intentionally unconfirmed and must not be marked passed by an agent:
@@ -201,4 +246,5 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 ## Stop Point
 
 - Phase 2 is complete.
-- Phase 3 was not started and must remain deferred beyond this task.
+- Phase 3 is complete.
+- Phase 4 was not started and remains deferred beyond this task.
