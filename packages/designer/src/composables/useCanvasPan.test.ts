@@ -59,10 +59,10 @@ describe('useCanvasPan', () => {
   it('applies pan and pixel snap as independent stage translations', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
     const stageRule = css.match(/\.dc-canvas__stage\s*\{[^}]*\}/)?.[0]
-    const boundaryRule = css.match(/\.dc-canvas__content > \.dc-root-renderer > \[data-dc-toolbar-boundary\]\s*\{[^}]*\}/)?.[0]
+    const boundaryRule = css.match(/\.dc-canvas__content > \[data-dc-component="renderer-frame-boundary"\]\[data-dc-toolbar-boundary\]\s*\{[^}]*\}/)?.[0]
     const boundedContentRule = css.match(/\.dc-canvas__content--bounded\s*\{[^}]*\}/)?.[0]
-    const boundedRootRule = css.match(/\.dc-canvas__content--bounded > \.dc-root-renderer\s*\{[^}]*\}/)?.[0]
-    const rootRule = css.match(/\.dc-canvas__content > \.dc-root-renderer\s*\{[^}]*\}/)?.[0]
+    const boundedRootRule = css.match(/\.dc-canvas__content--bounded > \[data-dc-component="renderer-frame-boundary"\]\s*\{[^}]*\}/)?.[0]
+    const rootRule = css.match(/\.dc-canvas__content > \[data-dc-component="renderer-frame-boundary"\]\s*\{[^}]*\}/)?.[0]
 
     expect(stageRule).toContain('translate3d(-50%, -50%, 0)')
     expect(stageRule).toContain('translate3d(var(--dc-internal-canvas-pan-x, 0px), var(--dc-internal-canvas-pan-y, 0px), 0)')

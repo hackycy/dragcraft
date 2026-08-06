@@ -1,125 +1,35 @@
 // @vitest-environment happy-dom
-import type { DesignerContext, DesignerInstance, DesignerWidgetMeta } from '..'
-import { I18N_KEY } from '@dragcraft/i18n'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
-import { createDesigner, DESIGNER_CONTEXT_KEY } from '..'
-import DcMaterialItem from './DcMaterialItem'
-
-function makeMeta(): DesignerWidgetMeta {
-  return {
-    type: 'button',
-    title: 'Button',
-    group: 'basic',
-    icon: 'button',
-    material: {
-      title: 'Action Button',
-      description: 'Trigger a primary action',
-      tags: ['action'],
-      keywords: ['cta'],
-    },
-    defaultProps: {},
-    formSchema: { sections: [] },
-  }
-}
-
-function makeContext(instance: DesignerInstance): DesignerContext {
-  return {
-    engine: instance.engine,
-    componentMap: instance.componentMap,
-    widgetGroups: instance.widgetGroups,
-    extensions: instance.extensions,
-    fieldComponentMap: instance.fieldComponentMap,
-    globalConfigSchema: instance.globalConfigSchema,
-    eventHooks: instance.eventHooks,
-    actionInterceptors: instance.actionInterceptors,
-    actionRegistry: instance.actionRegistry,
-    workspace: instance.workspace,
-    activeDestination: ref(null),
-    containerDropDecision: ref(null),
-    dragOverNodeId: ref(null),
-    dragOverIndex: ref(null),
-    handleMaterialDragStart: vi.fn(),
-    handleDragEnd: vi.fn(),
-    handleCanvasDragOver: vi.fn(),
-    handleCanvasDragLeave: vi.fn(),
-    handleCanvasDrop: vi.fn(),
-    handleContainerDragOver: vi.fn(),
-    handleContainerDragLeave: vi.fn(),
-    handleContainerDrop: vi.fn(),
-    isForbidden: ref(false),
-    forbiddenReason: ref(null),
-    searchQuery: ref(''),
-    activeTab: instance.workspace.activeRightPanel,
-    leftPanelActiveTab: instance.workspace.activeLeftPanel,
-  }
-}
-
-function mountItem(instance: DesignerInstance, meta: DesignerWidgetMeta) {
-  const host = document.createElement('div')
-  document.body.appendChild(host)
-  const ctx = makeContext(instance)
-  const app = createApp(defineComponent({
-    setup() {
-      provide(DESIGNER_CONTEXT_KEY, ctx)
-      provide(I18N_KEY, instance.i18n)
-      return () => h(DcMaterialItem, { meta })
-    },
-  }))
-  app.mount(host)
-  return { app, host, ctx }
-}
+import { afterEach, describe, expect, it } from 'vitest'
+import { createApp, defineComponent, h, nextTick } from 'vue'
+import { createDesigner } from '../session/create-designer'
+import DcDesigner from './DcDesigner'
 
 describe('dcMaterialItem', () => {
   afterEach(() => {
     document.body.innerHTML = ''
   })
 
-  it('renders compact material display metadata in the default card', async () => {
-    const meta = makeMeta()
-    const designer = createDesigner({ widgetMetas: [meta] })
-    const { app, host } = mountItem(designer, meta)
-
-    try {
-      await nextTick()
-
-      expect(host.querySelector('.dc-material-item__title')?.textContent).toBe('Action Button')
-      expect(host.querySelector('.dc-material-item')?.getAttribute('title')).toBe('Action Button: Trigger a primary action')
-      expect(host.querySelector('.dc-material-item__description')).toBeNull()
-      expect(host.querySelector('[data-dc-component="material-item"] > [data-dc-part="icon"]')).not.toBeNull()
-      expect(host.querySelector('[data-dc-component="material-item"] [data-dc-part="title"]')?.textContent).toBe('Action Button')
-    }
-    finally {
-      app.unmount()
-      designer.dispose()
-    }
-  })
-
-  it('renders custom content inside the designer-owned draggable shell', async () => {
-    const meta = makeMeta()
+  it('renders MaterialDefinition panel metadata and custom content in the draggable shell', async () => {
     const designer = createDesigner({
-      widgetMetas: [meta],
+      materials: [{
+        type: 'banner',
+        panel: { title: 'Banner', description: 'Promotional content' },
+        presentation: { kind: 'visual', preview: defineComponent({}) },
+      }],
       extensions: {
-        materialItemRenderer: props =>
-          h('div', {
-            class: ['custom-material-item', { dragging: props.dragging }],
-          }, `${props.material.title}:${props.meta.type}`),
+        materialItemRenderer: ({ material }) => h('strong', { class: 'custom-material' }, material.type),
       },
     })
-    const { app, host, ctx } = mountItem(designer, meta)
-
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
     try {
+      app.mount(host)
       await nextTick()
-      const item = host.querySelector('.dc-material-item')!
-      const customContent = host.querySelector('.custom-material-item')!
-
-      expect(customContent.textContent).toBe('Action Button:button')
-      expect(item.classList.contains('dc-material-item--custom')).toBe(true)
-      item.dispatchEvent(new Event('dragstart', { bubbles: true, cancelable: true }))
-      await nextTick()
-
-      expect(ctx.handleMaterialDragStart).toHaveBeenCalledWith(expect.any(Event), meta)
-      expect(item.getAttribute('data-dc-state')).toBe('dragging')
+      const item = host.querySelector<HTMLElement>('[data-dc-component="material-item"]')!
+      expect(item.getAttribute('draggable')).toBe('true')
+      expect(item.title).toBe('Banner: Promotional content')
+      expect(item.querySelector('.custom-material')?.textContent).toBe('banner')
     }
     finally {
       app.unmount()

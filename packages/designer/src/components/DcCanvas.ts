@@ -1,104 +1,56 @@
-import { RootRenderer } from '@dragcraft/renderer'
-import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Component } from 'vue'
+import { computed, defineComponent, h, isRef, ref, watch } from 'vue'
 import { useCanvasPan } from '../composables/useCanvasPan'
 import { useDesignerContext } from '../context'
+import ApplicationSurface from '../presentation/application-surface'
 import DcCanvasControls from './DcCanvasControls'
 
 export default defineComponent({
   name: 'DcCanvas',
-
   setup() {
-    const ctx = useDesignerContext()
-    const {
-      engine,
-      componentMap,
-      extensions,
-      activeDestination,
-      containerDropDecision,
-      dragOverNodeId,
-      dragOverIndex,
-      isForbidden,
-      forbiddenReason,
-      handleCanvasDragOver,
-      handleCanvasDragLeave,
-      handleCanvasDrop,
-      handleContainerDragOver,
-      handleContainerDragLeave,
-      handleContainerDrop,
-      eventHooks,
-      actionInterceptors,
-      actionRegistry,
-    } = ctx
+    const context = useDesignerContext()
     const viewportRef = ref<HTMLElement | null>(null)
     const stageRef = ref<HTMLElement | null>(null)
-    const contentRef = ref<HTMLElement | null>(null)
-    const hasToolbarBoundary = ref(false)
     const canvasPan = useCanvasPan(viewportRef, stageRef)
-    let mutationObserver: MutationObserver | null = null
-    let observedTarget: HTMLElement | null = null
-    let observedContainerShell: Element | null = null
-
-    const rendererExtensions = computed(() => ({
-      ...(extensions.rendererExtensions ?? {}),
-    }))
-
-    const handleClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      const nodeEl = target.closest('[data-node-id]') as HTMLElement | null
-      if (!nodeEl || nodeEl.dataset.nodeId === 'root')
-        engine.store.selectNode(null)
-    }
-
-    const isDragging = computed(() => engine.store.dragTarget.value !== null)
-
-    function observeCanvasTarget(): void {
-      const content = contentRef.value
-      const nextTarget = content?.querySelector<HTMLElement>('[data-dc-toolbar-boundary]')
-        ?? content?.querySelector<HTMLElement>('.dc-root-renderer')
-        ?? null
-      const nextContainerShell = nextTarget?.firstElementChild ?? null
-      hasToolbarBoundary.value = nextTarget?.hasAttribute('data-dc-toolbar-boundary') ?? false
-
-      if (!nextTarget)
-        return
-      if (observedTarget && (
-        nextTarget !== observedTarget
-        || (observedContainerShell !== null && nextContainerShell !== observedContainerShell)
-      )) {
-        canvasPan.reset()
-      }
-      observedTarget = nextTarget
-      observedContainerShell = nextContainerShell
-    }
-
-    onMounted(() => {
-      const content = contentRef.value
-      if (!content)
-        return
-
-      if (typeof MutationObserver !== 'undefined') {
-        mutationObserver = new MutationObserver(observeCanvasTarget)
-        mutationObserver.observe(content, { childList: true, subtree: true })
-      }
-      nextTick(observeCanvasTarget)
+    const containerShell = computed<Component | null>(() => {
+      const source = context.containerShell
+      return (isRef(source) ? source.value : source) ?? null
     })
-
-    onBeforeUnmount(() => {
-      mutationObserver?.disconnect()
+    watch(containerShell, () => canvasPan.reset())
+    const dragging = computed(() => {
+      return context.drag.draggingMaterialType.value !== null || context.drag.draggingNodeId.value !== null
     })
 
     return () => {
+      const document = context.resolvedDocument.value
+      const surface = document
+        ? h(ApplicationSurface, {
+            document,
+            catalog: context.catalog,
+            containerShell: containerShell.value ?? undefined,
+            execute: context.designer.execute,
+            selectedNodeId: context.designer.selection.selectedNodeId.value ?? undefined,
+            hoveredNodeId: context.designer.selection.hoveredNodeId.value ?? undefined,
+            draggingNodeId: context.drag.draggingNodeId.value ?? undefined,
+            onDropAnchor: context.drag.setDestination,
+            onDrop: context.drag.handleDrop,
+            onNodeDragStart: context.drag.handleNodeDragStart,
+            onNodeDragEnd: context.drag.handleDragEnd,
+          })
+        : h('div', {
+            'role': 'status',
+            'data-dc-component': 'document-recovery',
+            'aria-label': 'Document unavailable',
+          })
       const themeStates = [
-        isDragging.value ? 'dragging' : null,
-        isForbidden.value && isDragging.value ? 'forbidden' : null,
+        dragging.value ? 'dragging' : null,
         canvasPan.panEnabled.value ? 'hand' : null,
         canvasPan.isPanning.value ? 'panning' : null,
       ].filter(Boolean).join(' ') || undefined
 
       return h('div', {
         'class': ['dc-canvas', {
-          'dc-canvas--dragging': isDragging.value,
-          'dc-canvas--forbidden': isForbidden.value && isDragging.value,
+          'dc-canvas--dragging': dragging.value,
           'dc-canvas--hand': canvasPan.panEnabled.value,
           'dc-canvas--panning': canvasPan.isPanning.value,
         }],
@@ -111,14 +63,15 @@ export default defineComponent({
           onResetView: canvasPan.reset,
         }),
         h('div', {
-          'ref': viewportRef,
+          'ref': (element: unknown) => { viewportRef.value = element instanceof HTMLElement ? element : null },
           'class': 'dc-canvas__viewport',
           'data-dc-part': 'viewport',
           'data-dc-interaction-boundary': '',
-          'onDragover': handleCanvasDragOver,
-          'onDragleave': handleCanvasDragLeave,
-          'onDrop': handleCanvasDrop,
-          'onClick': handleClick,
+          'onClick': (event: MouseEvent) => {
+            const target = event.target
+            if (target instanceof Element && !target.closest('[data-dc-component="node-host"]'))
+              context.designer.execute({ type: 'select-node', nodeId: null })
+          },
           'onClickCapture': canvasPan.handleClickCapture,
           'onPointerdownCapture': canvasPan.handlePointerDown,
           'onPointerenter': canvasPan.handlePointerEnter,
@@ -128,7 +81,7 @@ export default defineComponent({
           'onPointercancelCapture': canvasPan.handlePointerUp,
         }, [
           h('div', {
-            'ref': stageRef,
+            'ref': (element: unknown) => { stageRef.value = element instanceof HTMLElement ? element : null },
             'class': 'dc-canvas__stage',
             'data-dc-part': 'stage',
             'data-dc-canvas-stage': '',
@@ -137,42 +90,20 @@ export default defineComponent({
               '--dc-internal-canvas-pan-y': `${canvasPan.offset.value.y}px`,
               '--dc-internal-canvas-snap-x': `${canvasPan.pixelSnap.value.x}px`,
               '--dc-internal-canvas-snap-y': `${canvasPan.pixelSnap.value.y}px`,
-              '--dc-internal-renderer-default-container-block-size': canvasPan.defaultContainerBlockSize.value === null
-                ? undefined
-                : `${canvasPan.defaultContainerBlockSize.value}px`,
             },
           }, [
             h('div', {
-              'ref': contentRef,
-              'class': ['dc-canvas__content', { 'dc-canvas__content--bounded': hasToolbarBoundary.value }],
+              'class': 'dc-canvas__content dc-canvas__content--bounded',
               'data-dc-part': 'content',
             }, [
-              h(RootRenderer, {
-                engine,
-                componentMap,
-                extensions: rendererExtensions.value,
-                eventHooks,
-                actionInterceptors,
-                actionRegistry,
-                activeDestination,
-                containerDropDecision,
-                onContainerDragOver: handleContainerDragOver,
-                onContainerDragLeave: handleContainerDragLeave,
-                onContainerDrop: handleContainerDrop,
-                dragOverNodeId,
-                dragOverIndex,
-                isForbidden,
-                forbiddenReason,
-                interactionBoundary: viewportRef,
-              }),
+              h('div', {
+                'class': 'dc-renderer-frame-boundary',
+                'data-dc-component': 'renderer-frame-boundary',
+                'data-dc-toolbar-boundary': '',
+              }, [surface]),
             ]),
           ]),
         ]),
-        h('div', {
-          'class': 'dc-canvas__interaction-layer',
-          'data-dc-part': 'interaction-layer',
-          'data-dc-canvas-interaction-layer': '',
-        }),
       ])
     }
   },

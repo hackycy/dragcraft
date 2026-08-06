@@ -13,5 +13,6 @@
     "verbatimModuleSyntax": true,
     "skipDefaultLibCheck": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": ["packages/designer/fixtures/public-consumer"]
 }

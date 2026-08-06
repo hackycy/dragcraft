@@ -1,56 +1,46 @@
 import type {
-  FieldComponentDefinition,
-  FieldRenderFactory,
-  FormContext,
-  FormGeneratorContext,
-  FormValidation,
-  TypedFormSchema,
-  WidgetDefinition,
-  WidgetGroup,
-  WidgetGroupConfig,
-  WidgetRuntimeContext,
+  DocumentSchema,
+  FieldComponentMap,
+  FormSchema,
+  MaterialDefinition,
+  StructuralDestination,
 } from './index'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import {
-  buildComponentMap,
-  createContainerPlan,
-  defineContainerWidget,
-  getWidgetMetas,
-  registerWidgets,
-  resolveAuthoringPolicy,
-  resolveFieldComponentProps,
-  useFormGeneratorContext,
-  useFormValidation,
-  useWidgetRuntime,
-} from './index'
+import * as publicDesigner from './index'
 
 describe('designer public interface', () => {
-  it('aggregates widget registration helpers', () => {
-    expect(typeof buildComponentMap).toBe('function')
-    expect(typeof defineContainerWidget).toBe('function')
-    expect(typeof getWidgetMetas).toBe('function')
-    expect(typeof registerWidgets).toBe('function')
-    expect(typeof createContainerPlan).toBe('function')
-    expect(typeof resolveAuthoringPolicy).toBe('function')
+  it('exposes the agreed deep Designer seams', () => {
+    expect(typeof publicDesigner.createDesigner).toBe('function')
+    expect(typeof publicDesigner.defineMaterial).toBe('function')
+    expect(typeof publicDesigner.DcDesigner).toBe('object')
+    expect(typeof publicDesigner.DesignerRegionOutlet).toBe('object')
+    expect(typeof publicDesigner.DesignerViewportPortal).toBe('object')
+    expect(typeof publicDesigner.useDesigner).toBe('function')
+    expect(typeof publicDesigner.useSurfaceReservation).toBe('function')
   })
 
-  it('aggregates custom field helpers', () => {
-    expect(typeof resolveFieldComponentProps).toBe('function')
-    expect(typeof useFormGeneratorContext).toBe('function')
-    expect(typeof useFormValidation).toBe('function')
-    expect(typeof useWidgetRuntime).toBe('function')
+  it('does not expose removed Core, Renderer, or Widgets protocols', () => {
+    for (const removed of [
+      'CommandType',
+      'createEngine',
+      'RootRenderer',
+      'WidgetRenderer',
+      'WidgetDefinition',
+      'ComponentMap',
+      'DesignerSchema',
+      'ResolvedDocument',
+      'SchemaOperation',
+      'NodeHost',
+    ]) {
+      expect(removed in publicDesigner).toBe(false)
+    }
   })
 
-  it('exposes the extension types through one package', () => {
-    expectTypeOf<WidgetDefinition>().toBeObject()
-    expectTypeOf<WidgetGroup>().toBeString()
-    expectTypeOf<WidgetGroupConfig>().toBeObject()
-    expectTypeOf<FieldComponentDefinition>().toBeObject()
-    expectTypeOf<FieldRenderFactory>().toBeFunction()
-    expectTypeOf<FormContext>().toBeObject()
-    expectTypeOf<FormGeneratorContext>().toBeObject()
-    expectTypeOf<FormValidation>().toBeObject()
-    expectTypeOf<TypedFormSchema<{ Input: { allowClear?: boolean } }>>().toBeObject()
-    expectTypeOf<WidgetRuntimeContext>().toBeObject()
+  it('aggregates pure-data, material, authoring, and form types', () => {
+    expectTypeOf<DocumentSchema>().toMatchTypeOf<{ version: string, nodes: unknown[] }>()
+    expectTypeOf<MaterialDefinition>().toMatchTypeOf<{ type: string, presentation: unknown }>()
+    expectTypeOf<StructuralDestination>().toMatchTypeOf<{ owner: unknown, position: unknown }>()
+    expectTypeOf<FormSchema>().toMatchTypeOf<{ sections: unknown[] }>()
+    expectTypeOf<FieldComponentMap>().toBeObject()
   })
 })

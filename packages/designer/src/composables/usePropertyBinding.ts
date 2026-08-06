@@ -1,36 +1,25 @@
-import type { CommandExecutionResult, DeepReadonly, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DocumentDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
-import type { FieldBinding } from '../bindings/field-binding'
-import { resolveAuthoringCapability } from '@dragcraft/core'
-import { cloneDeep } from '@dragcraft/utils'
+import type { AuthoringResult } from '../authoring/types'
+import type { MaterialDefinition } from '../materials/types'
+import type { DesignerInstance } from '../session/create-designer'
 import { computed } from 'vue'
-import { createBindingCommand, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
+import { createBindingAction, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
+import { getDesignerInternals } from '../session/create-designer'
 
 export interface UsePropertyBindingOptions {
-  globalConfigSchema?: FormSchema | null
-  t?: (key: string, fallback?: string) => string
+  readonly globalConfigSchema?: FormSchema | null
 }
 
-// ──────────────────────────────────────────
-// Return type
-// ──────────────────────────────────────────
-
 export interface UsePropertyBindingReturn {
-  /** The selected node, reactively derived */
-  selectedNode: ComputedRef<DeepReadonly<SchemaNode> | null>
-  /** The form schema for the selected node's widget type */
-  selectedFormSchema: ComputedRef<FormSchema | null>
-  /** The selected widget meta */
-  selectedWidgetMeta: ComputedRef<WidgetMeta | undefined>
-  /** The current property values for the selected node */
-  selectedNodeProps: ComputedRef<Record<string, unknown>>
-  /** The current values for the global config form */
-  globalConfigValues: ComputedRef<Record<string, unknown>>
-  /** Handle property change from the form generator */
-  handlePropertyChange: (key: string, value: unknown) => CommandExecutionResult | null
-  /** Handle global config change */
-  handleGlobalConfigChange: (key: string, value: unknown) => CommandExecutionResult | null
+  readonly selectedNode: ComputedRef<NodeDefinition | null>
+  readonly selectedFormSchema: ComputedRef<FormSchema | null>
+  readonly selectedMaterial: ComputedRef<Readonly<MaterialDefinition> | undefined>
+  readonly selectedNodeProps: ComputedRef<Record<string, unknown>>
+  readonly globalConfigValues: ComputedRef<Record<string, unknown>>
+  readonly handlePropertyChange: (key: string, value: unknown) => AuthoringResult | null
+  readonly handleGlobalConfigChange: (key: string, value: unknown) => AuthoringResult | null
 }
 
 function findField(schema: FormSchema | null | undefined, key: string): FieldSchema | undefined {
@@ -42,185 +31,87 @@ function findField(schema: FormSchema | null | undefined, key: string): FieldSch
   return undefined
 }
 
-function getFieldBinding(field: FieldSchema | undefined): FieldBinding {
-  return field?.bindTo
-}
-
-type ResolvedBinding = ReturnType<typeof resolveFieldBinding>
-
-function forceFieldDisabled(field: FieldSchema): void {
-  field.disabled = () => true
-  if (!field.dependencies)
-    return
-
-  const dependencies = field.dependencies
-  field.dependencies = {
-    ...dependencies,
-    handler: (values, fieldValue) => ({
-      ...dependencies.handler(values, fieldValue),
-      disabled: () => true,
-    }),
-  }
-}
-
-// ──────────────────────────────────────────
-// Composable
-// ──────────────────────────────────────────
-
-/**
- * Bridges the currently selected node's props and formSchema
- * to the form-generator, and dispatches property updates as commands.
- */
 export function usePropertyBinding(
-  engine: DesignerEngine,
+  designer: DesignerInstance,
   options: UsePropertyBindingOptions = {},
 ): UsePropertyBindingReturn {
-  const translate = options.t ?? ((key: string, fallback?: string) => fallback ?? key)
-
-  const selectedNode = computed<DeepReadonly<SchemaNode> | null>(() => {
-    const nodeId = engine.store.selectedNodeId.value
-    if (!nodeId)
+  const catalog = getDesignerInternals(designer).catalog
+  const selectedNode = computed<NodeDefinition | null>(() => {
+    const state = designer.document.value
+    const nodeId = designer.selection.selectedNodeId.value
+    if (state.status === 'rejected' || !nodeId)
       return null
-    return engine.state.getNodeById(nodeId)
+    return state.schema.nodes.find(node => node.id === nodeId) as NodeDefinition | undefined ?? null
   })
-
-  const selectedWidgetMeta = computed<WidgetMeta | undefined>(() => {
+  const selectedMaterial = computed(() => {
     const node = selectedNode.value
-    if (!node)
-      return undefined
-    return engine.registry.getWidget(node.type)
+    return node ? catalog.getMaterial(node.type) : undefined
   })
-
-  const selectedFormSchema = computed<FormSchema | null>(() => {
-    const meta = selectedWidgetMeta.value
-    const node = selectedNode.value
-    if (!meta || !node)
-      return null
-    // WidgetMeta.formSchema is Record<string, unknown> but structured as FormSchema.
-    const schema = cloneDeep(meta.formSchema as FormSchema)
-    const authoringContext = {
-      node,
-      schema: engine.store.schema.value,
-    }
-    const configurable = resolveAuthoringCapability(meta, authoringContext, 'configurable')
-    const variantChangeable = resolveAuthoringCapability(meta, authoringContext, 'variantChangeable')
-
-    const variantOptions = meta.container
-      ? Object.entries(meta.container.variants).map(([value, variant]) => ({
-          value,
-          label: variant.titleKey
-            ? translate(variant.titleKey, variant.title)
-            : variant.title,
-        }))
-      : []
-
-    for (const section of schema.sections) {
-      for (const field of section.fields) {
-        const binding = resolveFieldBinding(
-          getFieldBinding(field),
-          { scope: 'node', path: `props.${field.key}` },
-        )
-        const isVariant = binding.scope === 'container' && binding.path === 'variant'
-        if (isVariant) {
-          const original = field.componentProps
-          field.componentProps = ctx => ({
-            ...(typeof original === 'function' ? original(ctx) : original ?? {}),
-            options: variantOptions,
-          })
-          if (!variantChangeable)
-            forceFieldDisabled(field)
-          continue
-        }
-
-        const isNodeConfiguration = binding.scope === 'node'
-          && (binding.path.startsWith('props.') || binding.path.startsWith('style.'))
-        if (isNodeConfiguration && !configurable)
-          forceFieldDisabled(field)
-      }
-    }
-
-    return schema
-  })
-
-  const selectedNodeProps = computed<Record<string, unknown>>(() => {
+  const selectedFormSchema = computed<FormSchema | null>(() => selectedMaterial.value?.inspector?.formSchema ?? null)
+  const selectedNodeProps = computed(() => {
     const node = selectedNode.value
     if (!node)
       return {}
-    const schema = engine.state.getSchema()
-    const values = { ...node.props }
-    for (const section of selectedFormSchema.value?.sections ?? []) {
+    const values: Record<string, unknown> = { ...node.props }
+    const schema = selectedFormSchema.value
+    for (const section of schema?.sections ?? []) {
       for (const field of section.fields) {
-        const binding = resolveFieldBinding(
-          getFieldBinding(field),
-          { scope: 'node', path: `props.${field.key}` },
-        )
-        const value = readBindingValue(binding, schema, node)
+        const binding = resolveFieldBinding(field.bindTo, { scope: 'node', path: `props.${field.key}` })
+        const value = readBindingValue(binding, designer.document.value.status === 'rejected'
+          ? emptyDocument()
+          : designer.document.value.schema, node)
         if (value !== undefined)
           values[field.key] = value
       }
     }
     return values
   })
-
-  const globalConfigValues = computed<Record<string, unknown>>(() => {
-    const schema = engine.state.getSchema()
-    const values = { ...schema.globalConfig }
-    for (const section of options.globalConfigSchema?.sections ?? []) {
-      for (const field of section.fields) {
-        const binding = resolveFieldBinding(
-          getFieldBinding(field),
-          { scope: 'globalConfig', path: field.key },
-        )
-        const value = readBindingValue(binding, schema, null)
-        if (value !== undefined)
-          values[field.key] = value
-      }
-    }
-    return values
+  const globalConfigValues = computed(() => {
+    const state = designer.document.value
+    const schema = state.status === 'rejected' ? emptyDocument() : state.schema
+    return { ...schema.globalConfig }
   })
 
-  function dispatchBinding(
-    binding: ResolvedBinding,
-    value: unknown,
-    nodeId?: string,
-  ): CommandExecutionResult | null {
-    const command = createBindingCommand(binding, value, nodeId)
-    if (!command) {
-      console.warn(`[dragcraft/designer] Unsupported binding path "${binding.path}"`)
-      return null
-    }
-    return engine.execute(command)
+  function currentSchema(): DocumentDeepReadonly<DocumentSchema> | null {
+    const state = designer.document.value
+    return state.status === 'rejected' ? null : state.schema
   }
-
-  function handlePropertyChange(key: string, value: unknown): CommandExecutionResult | null {
-    const nodeId = engine.store.selectedNodeId.value
-    if (!nodeId)
+  function handlePropertyChange(key: string, value: unknown): AuthoringResult | null {
+    const schema = currentSchema()
+    const node = selectedNode.value
+    if (!schema || !node)
       return null
-
     const field = findField(selectedFormSchema.value, key)
-    const binding = resolveFieldBinding(
-      getFieldBinding(field),
-      { scope: 'node', path: `props.${key}` },
-    )
-    return dispatchBinding(binding, value, nodeId)
+    const binding = resolveFieldBinding(field?.bindTo, { scope: 'node', path: `props.${key}` })
+    const action = createBindingAction(binding, value, schema, node)
+    return action ? designer.execute(action) : null
   }
-
-  function handleGlobalConfigChange(key: string, value: unknown): CommandExecutionResult | null {
+  function handleGlobalConfigChange(key: string, value: unknown): AuthoringResult | null {
+    const schema = currentSchema()
+    if (!schema)
+      return null
     const field = findField(options.globalConfigSchema, key)
-    const binding = resolveFieldBinding(
-      getFieldBinding(field),
-      { scope: 'globalConfig', path: key },
-    )
-    return dispatchBinding(binding, value)
+    const binding = resolveFieldBinding(field?.bindTo, { scope: 'globalConfig', path: key })
+    const action = createBindingAction(binding, value, schema, null)
+    return action ? designer.execute(action) : null
   }
-
   return {
     selectedNode,
     selectedFormSchema,
-    selectedWidgetMeta,
+    selectedMaterial,
     selectedNodeProps,
     globalConfigValues,
     handlePropertyChange,
     handleGlobalConfigChange,
+  }
+}
+
+function emptyDocument(): DocumentSchema {
+  return {
+    version: '1',
+    globalConfig: {},
+    page: { props: {} },
+    nodes: [],
+    structure: { root: [], containers: {} },
   }
 }

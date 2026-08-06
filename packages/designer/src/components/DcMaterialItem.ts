@@ -1,96 +1,55 @@
 import type { PropType } from 'vue'
-import type { DesignerWidgetMeta, MaterialItemIcon } from '../types'
+import type { MaterialDefinition } from '../materials/types'
 import { useI18n } from '@dragcraft/i18n'
 import { defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
 import { resolveMaterialItem } from '../material'
 
-function renderIcon(icon: MaterialItemIcon | undefined) {
-  if (!icon)
-    return null
-
-  return h('span', { 'class': 'dc-material-item__icon', 'data-dc-part': 'icon' }, [
-    typeof icon === 'string'
-      ? icon
-      : h(icon, { size: 20 }),
-  ])
-}
-
 export default defineComponent({
   name: 'DcMaterialItem',
-
-  props: {
-    meta: {
-      type: Object as PropType<DesignerWidgetMeta>,
-      required: true,
-    },
-  },
-
+  props: { material: { type: Object as PropType<MaterialDefinition>, required: true } },
   setup(props) {
-    const ctx = useDesignerContext()
+    const context = useDesignerContext()
     const { t } = useI18n()
-    const { extensions, handleMaterialDragStart, handleDragEnd: handleDesignerDragEnd } = ctx
-
-    const isDragging = ref(false)
-
-    const handleDragStart = (e: DragEvent) => {
-      handleMaterialDragStart(e, props.meta)
-      isDragging.value = true
-    }
-
-    const handleDragEnd = (e: DragEvent) => {
-      isDragging.value = false
-      handleDesignerDragEnd(e)
-    }
-
+    const dragging = ref(false)
     return () => {
-      const meta = props.meta
-      const material = resolveMaterialItem(meta, t)
-      const draggable = true
-      const disabled = false
-      const customContent = extensions.materialItemRenderer?.({
-        meta,
-        material,
-        draggable,
-        disabled,
-        dragging: isDragging.value,
+      const display = resolveMaterialItem(props.material, t)
+      const custom = context.extensions.materialItemRenderer?.({
+        material: props.material,
+        draggable: true,
+        dragging: dragging.value,
       })
-
-      const defaultContent = [
-        material.thumbnail
+      return h('div', {
+        'class': ['dc-material-item', { 'dc-material-item--dragging': dragging.value, 'dc-material-item--custom': !!custom }],
+        'data-dc-component': 'material-item',
+        'data-dc-state': dragging.value ? 'dragging' : undefined,
+        'draggable': true,
+        'title': display.description ? `${display.title}: ${display.description}` : display.title,
+        'onDragstart': (event: DragEvent) => {
+          dragging.value = true
+          context.drag.handleMaterialDragStart(event, props.material.type)
+        },
+        'onDragend': () => {
+          dragging.value = false
+          context.drag.handleDragEnd()
+        },
+      }, custom ?? [
+        display.thumbnail
           ? h('img', {
               'class': 'dc-material-item__thumbnail',
               'data-dc-part': 'thumbnail',
-              'src': material.thumbnail,
-              'alt': material.title,
+              'src': display.thumbnail,
+              'alt': display.title,
             })
-          : renderIcon(material.icon),
+          : display.icon
+            ? h('span', { 'class': 'dc-material-item__icon', 'data-dc-part': 'icon' }, [
+                typeof display.icon === 'string' ? display.icon : h(display.icon, { size: 20 }),
+              ])
+            : null,
         h('span', { 'class': 'dc-material-item__content', 'data-dc-part': 'content' }, [
-          h('span', { 'class': 'dc-material-item__title', 'data-dc-part': 'title' }, material.title),
+          h('span', { 'class': 'dc-material-item__title', 'data-dc-part': 'title' }, display.title),
         ]),
-      ]
-
-      return h(
-        'div',
-        {
-          'class': [
-            'dc-material-item',
-            {
-              'dc-material-item--custom': !!customContent,
-              'dc-material-item--dragging': isDragging.value,
-              'dc-material-item--with-description': !!material.description,
-            },
-          ],
-          'data-dc-component': 'material-item',
-          'data-dc-state': isDragging.value ? 'dragging' : undefined,
-          'draggable': draggable,
-          'aria-disabled': disabled,
-          'title': material.description ? `${material.title}: ${material.description}` : material.title,
-          'onDragstart': handleDragStart,
-          'onDragend': handleDragEnd,
-        },
-        customContent ?? defaultContent,
-      )
+      ])
     }
   },
 })

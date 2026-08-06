@@ -35,7 +35,8 @@ export default defineComponent({
   setup() {
     const ctx = useDesignerContext()
     const { t } = useI18n()
-    const { engine, extensions, leftPanelActiveTab, workspace } = ctx
+    const { designer, extensions, workspace } = ctx
+    const leftPanelActiveTab = workspace.activeLeftPanel
 
     const renderTabButton = (tab: LeftPanelTab) => {
       const label = t(tab.labelKey, tab.fallback)
@@ -72,7 +73,7 @@ export default defineComponent({
       const toggleLabel = open
         ? t('workspace.left.close', '收起左侧栏')
         : t('workspace.left.open', '展开左侧栏')
-      const railExtension = extensions.leftRailRenderer?.({ engine, workspace, t })
+      const railExtension = extensions.leftRailRenderer?.({ designer, workspace, t })
 
       return h('div', {
         'class': 'dc-left-sidebar',

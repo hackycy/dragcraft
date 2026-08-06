@@ -1,0 +1,14 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../../../..",
+    "paths": {
+      "@dragcraft/designer": ["packages/designer/dist/index.d.mts"],
+      "@dragcraft/device-frames": ["packages/device-frames/dist/index.d.mts"],
+      "@dragcraft/fields-ant-design-vue": ["packages/fields/ant-design-vue/dist/index.d.mts"]
+    },
+    "noEmit": true
+  },
+  "include": ["./consumer.ts"],
+  "exclude": []
+}

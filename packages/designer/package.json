@@ -30,8 +30,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm generate:theme-contract && pnpm check:theme && tsdown && pnpm check:package-exports",
+    "build": "pnpm generate:theme-contract && pnpm check:theme && tsdown && pnpm check:package-exports && pnpm check:public-consumer",
     "check:package-exports": "node scripts/validate-package-exports.mjs",
+    "check:public-consumer": "tsc -p fixtures/public-consumer/tsconfig.json",
     "check:theme": "node scripts/validate-theme-contract.mjs && node scripts/validate-theme-interactions.mjs",
     "dev": "tsdown --watch",
     "generate:theme-contract": "node scripts/generate-theme-custom-data.mjs",
@@ -40,7 +41,7 @@
     "release": "bumpp",
     "start": "tsx src/index.ts",
     "test": "vitest",
-    "typecheck": "tsc"
+    "typecheck": "tsc && pnpm check:public-consumer"
   },
   "peerDependencies": {
     "vue": ">=3.0.0"

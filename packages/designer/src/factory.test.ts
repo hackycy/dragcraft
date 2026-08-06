@@ -1,89 +1,33 @@
-// @vitest-environment happy-dom
-import type { DesignerSchema, RendererWidgetActionExtra, RendererWidgetMeta } from './index'
 import { describe, expect, it } from 'vitest'
 import { defineComponent } from 'vue'
-import { createDesigner } from './index'
+import { createDesigner } from './factory'
 
-describe('createDesigner', () => {
-  it('registers container metas before importing the initial schema', () => {
-    const initialSchema: DesignerSchema = {
-      version: '1.0.0',
+describe('createDesigner public factory', () => {
+  it('creates the canonical empty document when schema is omitted', () => {
+    const designer = createDesigner({ materials: [] })
+    expect(designer.exportSchema()).toEqual({
+      version: '1',
       globalConfig: {},
-      root: {
-        id: 'root',
-        type: 'root',
-        props: {},
-        children: [{
-          id: 'layout',
-          type: 'single-layout',
-          props: {},
-          container: { variant: 'single', regions: {} },
-        }],
-      },
-    }
-    const designer = createDesigner({
-      engineOptions: { initialSchema },
-      widgetMetas: [{
-        type: 'single-layout',
-        title: 'Single layout',
-        group: 'layout',
-        defaultProps: {},
-        formSchema: { sections: [] },
-        container: {
-          defaultVariant: 'single',
-          variants: {
-            single: {
-              title: 'Single',
-              regions: [{ id: 'content', title: 'Content' }],
-            },
-          },
-        },
-      }],
+      page: { props: {} },
+      nodes: [],
+      structure: { root: [], containers: {} },
     })
-
-    expect(designer.engine.state.getNodeById('layout')?.container).toEqual({
-      variant: 'single',
-      regions: { content: [] },
-    })
-    expect(designer.engine.exportSchema().version).toBe('1.0.0')
-    designer.dispose()
   })
 
-  it('accepts renderer widget metadata through the public API', () => {
-    const Wrapper = defineComponent({ name: 'TestWrapper', setup: () => () => null })
-    const inspectExtra: RendererWidgetActionExtra = {
-      key: 'inspect',
-      label: 'Inspect',
-      type: 'button',
-      order: 10,
-    }
-    const meta: RendererWidgetMeta = {
-      type: 'button',
-      title: 'Button',
-      group: 'basic',
-      defaultProps: {},
-      formSchema: { sections: [] },
-      wrapper: Wrapper,
-      actions: {
-        extra: [inspectExtra],
-      },
-    }
-
+  it('registers one MaterialDefinition collection before resolving Schema', () => {
     const designer = createDesigner({
-      widgetMetas: [meta],
+      materials: [{
+        type: 'text',
+        presentation: { kind: 'visual', preview: defineComponent({}) },
+      }],
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [{ id: 'a', type: 'text', props: {} }],
+        structure: { root: ['a'], containers: {} },
+      },
     })
-
-    try {
-      expect(designer.engine.registry.getWidget('button')).toMatchObject({
-        type: 'button',
-        wrapper: Wrapper,
-        actions: {
-          extra: [inspectExtra],
-        },
-      })
-    }
-    finally {
-      designer.dispose()
-    }
+    expect(designer.document.value.status).toBe('ready')
   })
 })

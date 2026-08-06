@@ -39,6 +39,7 @@ export class DesignerConfigurationError extends Error {
 }
 
 export interface MaterialCatalog {
+  readonly materials: readonly Readonly<MaterialDefinition>[]
   readonly schemaDefinitions: SchemaDefinitionSnapshot
   createBundle: (type: NodeType, createNodeId: () => string) => NodeBundle | undefined
   getAuthoring: (type: NodeType) => Readonly<MaterialAuthoringDefinition> | undefined
@@ -267,6 +268,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
   })
 
   return Object.freeze({
+    materials: Object.freeze(Array.from(materialByType.values())),
     schemaDefinitions,
     createBundle(type: NodeType, createNodeId: () => string): NodeBundle | undefined {
       const defaults = bundleDefaultsByType.get(type)

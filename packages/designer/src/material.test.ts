@@ -1,58 +1,33 @@
-import type { DesignerWidgetMeta } from './types'
 import { describe, expect, it } from 'vitest'
+import { defineComponent } from 'vue'
 import { materialItemMatchesQuery, resolveMaterialItem } from './material'
 
-const t = (key: string, fallback = '') => `${fallback} (${key})`
-
-function makeMeta(overrides: Partial<DesignerWidgetMeta> = {}): DesignerWidgetMeta {
-  return {
-    type: 'banner',
-    title: 'Banner',
-    titleKey: 'widget.banner.title',
-    group: 'basic',
-    icon: 'banner',
-    defaultProps: {},
-    formSchema: { sections: [] },
-    ...overrides,
-  }
+const material = {
+  type: 'survey',
+  panel: {
+    title: 'Survey',
+    titleKey: 'material.survey',
+    description: 'Collect feedback',
+    keywords: ['questionnaire'],
+    tags: ['feedback'],
+  },
+  presentation: { kind: 'visual' as const, preview: defineComponent({}) },
 }
 
-describe('material protocol helpers', () => {
-  it('resolves material display data with widget fallbacks', () => {
-    const meta = makeMeta({
-      material: {
-        title: 'Hero Banner',
-        titleKey: 'widget.banner.material.title',
-        icon: 'hero',
-        description: 'Promotional hero section',
-        descriptionKey: 'widget.banner.material.description',
-        tags: ['marketing'],
-        keywords: ['campaign'],
-      },
-    })
-
-    expect(resolveMaterialItem(meta, t)).toEqual({
-      title: 'Hero Banner (widget.banner.material.title)',
-      icon: 'hero',
-      description: 'Promotional hero section (widget.banner.material.description)',
-      thumbnail: undefined,
-      tags: ['marketing'],
-      keywords: ['campaign'],
+describe('material panel projection', () => {
+  it('resolves translated display data from MaterialDefinition', () => {
+    expect(resolveMaterialItem(material, (key, fallback) => `${fallback} (${key})`)).toMatchObject({
+      title: 'Survey (material.survey)',
+      description: 'Collect feedback',
+      keywords: ['questionnaire'],
+      tags: ['feedback'],
     })
   })
 
-  it('matches query against resolved material text and keywords', () => {
-    const meta = makeMeta({
-      material: {
-        description: 'Collect customer feedback',
-        tags: ['form'],
-        keywords: ['survey'],
-      },
-    })
-    const material = resolveMaterialItem(meta, t)
-
-    expect(materialItemMatchesQuery(meta, material, 'survey')).toBe(true)
-    expect(materialItemMatchesQuery(meta, material, 'feedback')).toBe(true)
-    expect(materialItemMatchesQuery(meta, material, 'missing')).toBe(false)
+  it('matches type and panel search terms', () => {
+    const display = resolveMaterialItem(material, (_key, fallback) => fallback ?? '')
+    expect(materialItemMatchesQuery(material, display, 'survey')).toBe(true)
+    expect(materialItemMatchesQuery(material, display, 'questionnaire')).toBe(true)
+    expect(materialItemMatchesQuery(material, display, 'missing')).toBe(false)
   })
 })

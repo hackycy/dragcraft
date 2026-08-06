@@ -14,12 +14,10 @@
 [data-dc-component="form-generator"],
 [data-dc-component="form-section"],
 [data-dc-component="form-field"],
-[data-dc-component="empty-state"],
-[data-dc-component="forbidden-overlay"],
+[data-dc-component="document-recovery"],
 [data-dc-component="drop-indicator"],
-[data-dc-component="node-handle"],
 [data-dc-component="node-toolbar"],
-[data-dc-component="widget-fallback"] {
+[data-dc-component="presentation-recovery"] {
   color: var(--dc-color-text);
   font-family: var(--dc-font-sans);
 }
@@ -370,102 +368,26 @@
   outline-offset: 1px;
 }
 
-/* Renderer feedback and node interactions */
-[data-dc-component="root-renderer"] {
+/* Presentation feedback and node interactions */
+[data-dc-component="application-surface"] {
   background: var(--dc-color-surface);
 }
 
-[data-dc-component="container-shell"][data-dc-state~="default"] {
-  box-shadow: var(--dc-shadow-sm);
-}
-
-[data-dc-component="empty-state"] {
+[data-dc-component="document-recovery"],
+[data-dc-component="presentation-recovery"] {
   color: var(--dc-color-text-subtle);
   font-size: var(--dc-font-size-sm);
+  border: 1px dashed var(--dc-color-border);
+  border-radius: var(--dc-radius-md);
 }
 
-[data-dc-component="empty-state"] > [data-dc-part="icon"] {
-  font-size: var(--dc-empty-state-icon-size);
-  opacity: var(--dc-empty-state-icon-opacity);
-}
-
-[data-dc-component="node"][data-dc-state~="hidden"] {
-  opacity: 0.4;
-  outline: 1px dashed var(--dc-color-border);
-  outline-offset: -1px;
-}
-
-[data-dc-component="node"][data-dc-state~="dragging"] {
+[data-dc-component="node-host"][data-dc-state~="dragging"] {
   opacity: 0.38;
 }
 
-[data-dc-component="node"][data-dc-state~="drag-over"] {
-  background-color: var(--dc-color-accent-subtle);
-  outline: 1px dashed var(--dc-color-accent);
+[data-dc-component="node-host"][aria-readonly="true"] {
+  outline: 1px dashed var(--dc-color-warning);
   outline-offset: -1px;
-}
-
-[data-dc-component="node-handle"] {
-  color: var(--dc-color-accent);
-  font: inherit;
-  background: transparent;
-}
-
-[data-dc-component="node-handle"] > [data-dc-part="surface"] {
-  color: var(--dc-color-on-accent);
-  background: var(--dc-color-accent);
-  border-radius: var(--dc-radius-sm);
-  box-shadow: var(--dc-shadow-sm);
-  transition: background-color var(--dc-duration-fast) var(--dc-ease-standard), transform var(--dc-duration-fast) var(--dc-ease-standard);
-}
-
-[data-dc-component="node-handle"] > [data-dc-part="icon"] {
-  line-height: 0;
-}
-
-[data-dc-component="node"] > [data-dc-component="node-handle"] {
-  opacity: 0;
-  transition: opacity var(--dc-duration-fast) var(--dc-ease-standard);
-}
-
-[data-dc-component="node"][data-dc-state~="hovered"] > [data-dc-component="node-handle"],
-[data-dc-component="node"] > [data-dc-component="node-handle"]:focus-visible {
-  opacity: 1;
-}
-
-[data-dc-component="node"][data-dc-state~="selected"] > [data-dc-component="node-handle"] {
-  opacity: 0;
-}
-
-[data-dc-component="node-handle"]:hover > [data-dc-part="surface"] {
-  background: var(--dc-color-accent-hover);
-}
-
-[data-dc-component="node-handle"]:active > [data-dc-part="surface"] {
-  background: var(--dc-color-accent-active);
-}
-
-[data-dc-component="node-handle"]:focus-visible {
-  outline: none;
-}
-
-[data-dc-component="node-handle"]:focus-visible > [data-dc-part="surface"] {
-  outline: 2px solid var(--dc-color-focus-ring);
-  outline-offset: 2px;
-}
-
-[data-dc-component="node-handle-anchor"] {
-  opacity: 0;
-  transition: opacity var(--dc-duration-fast) var(--dc-ease-standard);
-}
-
-[data-dc-component="node-handle-anchor"][data-dc-state~="visible"] {
-  opacity: 0.15;
-}
-
-[data-dc-component="node-handle-anchor"][data-dc-state~="visible"]:hover,
-[data-dc-component="node-handle-anchor"][data-dc-state~="visible"]:focus-within {
-  opacity: 1;
 }
 
 [data-dc-component="node-toolbar"] {
@@ -501,8 +423,7 @@
   background: var(--dc-color-danger);
 }
 
-[data-dc-component="node-toolbar"] > [data-dc-part="action"]:disabled,
-[data-dc-component="node-toolbar"] > [data-dc-part="action"][data-dc-state~="disabled"] {
+[data-dc-component="node-toolbar"] > [data-dc-part="action"]:disabled {
   color: var(--dc-color-on-accent);
   background: var(--dc-color-accent);
   opacity: 0.42;
@@ -512,51 +433,11 @@
   border: var(--dc-node-selection-stroke-width) solid var(--dc-color-accent);
 }
 
-[data-dc-component="node-selection"] > [data-dc-part="block-start-edge"],
-[data-dc-component="node-selection"] > [data-dc-part="inline-end-edge"],
-[data-dc-component="node-selection"] > [data-dc-part="block-end-edge"],
-[data-dc-component="node-selection"] > [data-dc-part="inline-start-edge"] {
-  background: var(--dc-color-accent);
-}
-
-[data-dc-component="container-region"][data-dc-state~="active"] {
-  outline: 1px dashed var(--dc-color-accent);
-  outline-offset: -1px;
-}
-
-[data-dc-component="container-region"][data-dc-state~="forbidden"] {
-  outline-color: var(--dc-color-danger);
-}
-
 [data-dc-component="drop-indicator"] {
   background: var(--dc-color-accent-subtle);
   border: 2px dashed var(--dc-color-accent);
   border-radius: var(--dc-radius-lg);
   animation: dc-theme-fade-in var(--dc-duration-fast) ease;
-}
-
-[data-dc-component="widget-fallback"] {
-  color: var(--dc-color-danger);
-  font-size: var(--dc-font-size-sm);
-  border: 1px dashed var(--dc-color-danger);
-  border-radius: var(--dc-radius-md);
-}
-
-[data-dc-component="forbidden-overlay"] {
-  color: var(--dc-color-danger);
-  font-size: var(--dc-font-size-sm);
-  font-weight: var(--dc-font-weight-medium);
-  line-height: 1.5;
-  background: var(--dc-color-danger-subtle);
-  border: 2px dashed var(--dc-color-danger);
-  border-radius: var(--dc-radius-lg);
-  animation: dc-theme-forbidden-pulse 1.5s ease-in-out infinite;
-}
-
-[data-dc-component="forbidden-overlay"] > [data-dc-part="text"] {
-  background: var(--dc-color-surface);
-  border: 1px solid color-mix(in srgb, var(--dc-color-danger), transparent 70%);
-  border-radius: var(--dc-radius-md);
 }
 
 /* Form fields */
@@ -598,11 +479,7 @@
 
 /* Motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  [data-dc-component="node-handle"],
-  [data-dc-component="node-handle"] > [data-dc-part="surface"],
-  [data-dc-component="node-handle-anchor"],
-  [data-dc-component="drop-indicator"],
-  [data-dc-component="forbidden-overlay"] {
+  [data-dc-component="drop-indicator"] {
     transition: none;
     animation: none;
   }
@@ -615,10 +492,4 @@
 @keyframes dc-theme-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-@keyframes dc-theme-forbidden-pulse {
-  0%,
-  100% { opacity: 0.8; }
-  50% { opacity: 1; }
 }

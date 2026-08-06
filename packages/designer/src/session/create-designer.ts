@@ -1,26 +1,70 @@
 import type { DocumentSchema } from '@dragcraft/core'
+import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
+import type { I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/i18n'
 import type { AuthoringEngine } from '../authoring/types'
+import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { MaterialDefinition } from '../materials/types'
+import type { ContainerShellSource, DesignerExtensions, DesignerWorkspaceController, DesignerWorkspaceOptions } from '../types'
+import { createI18n } from '@dragcraft/i18n'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import {
   createMaterialCatalog,
   DesignerConfigurationError,
 } from '../materials/create-material-catalog'
+import { designerMessages } from '../messages'
+import { createDesignerWorkspace } from '../workspace'
 
 export const DOCUMENT_SCHEMA_VERSION = '1'
 
 export interface CreateDesignerOptions {
+  readonly containerShell?: ContainerShellSource
   readonly createNodeId?: () => string
+  readonly extensions?: DesignerExtensions
+  readonly fieldComponentMap?: FieldComponentMap
+  readonly globalConfigSchema?: FormSchema
   readonly limits?: {
     readonly maxDiagnostics?: number
   }
+  readonly locale?: string
   readonly materials: readonly MaterialDefinition[]
   readonly maxHistoryEntries?: number
+  readonly messages?: LocaleMessages
   readonly schema?: unknown
+  readonly workspace?: DesignerWorkspaceOptions
 }
 
 export interface DesignerInstance extends AuthoringEngine {
   dispose: () => void
+}
+
+export interface DesignerInternals {
+  readonly catalog: MaterialCatalog
+  readonly containerShell?: ContainerShellSource
+  readonly extensions: DesignerExtensions
+  readonly fieldComponentMap?: FieldComponentMap
+  readonly globalConfigSchema: FormSchema | null
+  readonly i18n: I18nInstance
+  readonly maxDiagnostics?: number
+  readonly workspace: DesignerWorkspaceController
+}
+
+const internalsByInstance = new WeakMap<DesignerInstance, DesignerInternals>()
+
+function createDesignerI18n(locale: string, messages?: LocaleMessages): I18nInstance {
+  const defaults = Object.fromEntries(Object.entries(designerMessages).map(([key, value]) => {
+    return [key, { ...value } satisfies MessageTree]
+  }))
+  const i18n = createI18n(locale, defaults)
+  for (const [messageLocale, localeMessages] of Object.entries(messages ?? {}))
+    i18n.mergeMessages(messageLocale, localeMessages)
+  return i18n
+}
+
+export function getDesignerInternals(instance: DesignerInstance): DesignerInternals {
+  const internals = internalsByInstance.get(instance)
+  if (!internals)
+    throw new TypeError('DesignerInstance was not created by createDesigner()')
+  return internals
 }
 
 function createEmptyDocument(): DocumentSchema {
@@ -52,8 +96,21 @@ export function createDesigner(options: CreateDesignerOptions): DesignerInstance
     schema,
   })
 
-  return Object.freeze({
+  const instance = Object.freeze({
     ...engine,
     dispose(): void {},
   })
+  internalsByInstance.set(instance, Object.freeze({
+    catalog,
+    ...(options.containerShell ? { containerShell: options.containerShell } : {}),
+    extensions: Object.freeze({ ...options.extensions }),
+    ...(options.fieldComponentMap ? { fieldComponentMap: options.fieldComponentMap } : {}),
+    globalConfigSchema: options.globalConfigSchema ?? null,
+    i18n: createDesignerI18n(options.locale ?? 'zh-CN', options.messages),
+    ...(options.limits?.maxDiagnostics === undefined
+      ? {}
+      : { maxDiagnostics: options.limits.maxDiagnostics }),
+    workspace: createDesignerWorkspace(options.workspace),
+  }))
+  return instance
 }

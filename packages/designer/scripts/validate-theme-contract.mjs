@@ -15,7 +15,6 @@ const errors = []
 const structureEntries = [
   '@dragcraft/ui/structure.css',
   '../styles/structure.css',
-  '@dragcraft/renderer/structure.css',
   '@dragcraft/form-generator/structure.css',
 ]
 
@@ -75,7 +74,7 @@ function validateRecipe(relativePath) {
   const root = readCss(relativePath)
   validatePublicProperties(root)
   const inheritableProperties = /^(?:color|font(?:-.+)?|letter-spacing|line-height|text-align)$/
-  const contentBoundaryComponents = /data-dc-component=["'](?:designer|root-renderer|renderer-frame-boundary|container-shell|canvas-surface|canvas|node)["']/
+  const contentBoundaryComponents = /data-dc-component=["'](?:designer|renderer-frame-boundary|application-surface|canvas|node-host)["']/
 
   root.walkDecls((decl) => {
     if (decl.important)
@@ -166,7 +165,6 @@ function validateRenderedHooks() {
     'packages/designer/src/components',
     'packages/designer/src/presentation',
     'packages/designer/src/presentation/recovery',
-    'packages/renderer/src/components',
     'packages/form-generator/src/components',
   ]
   const renderedComponents = new Set()
@@ -203,7 +201,7 @@ function validateRenderedHooks() {
 }
 
 function validatePackageStyleExports() {
-  for (const packageName of ['ui', 'renderer', 'form-generator']) {
+  for (const packageName of ['ui', 'form-generator']) {
     const currentPackageRoot = path.join(repoRoot, 'packages', packageName)
     const packageJson = JSON.parse(fs.readFileSync(path.join(currentPackageRoot, 'package.json'), 'utf8'))
     if (packageJson.exports?.['./structure.css'] !== './dist/structure.css')

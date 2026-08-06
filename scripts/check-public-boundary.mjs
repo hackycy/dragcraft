@@ -60,6 +60,7 @@ const files = [
     .filter(file => file !== path.join(repoRoot, 'docs/package.json')),
   ...collectFiles('examples', publicTextExtensions),
   ...collectFiles('playground', publicTextExtensions),
+  ...collectFiles('packages/designer/fixtures/public-consumer', publicTextExtensions),
   ...collectFiles('skills/dragcraft', publicTextExtensions),
 ]
 

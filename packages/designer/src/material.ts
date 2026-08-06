@@ -1,54 +1,46 @@
-import type { DesignerWidgetMeta, ResolvedMaterialItem } from './types'
+import type { Component } from 'vue'
+import type { MaterialDefinition } from './materials/types'
 
 type Translate = (key: string, fallback?: string) => string
 
-function resolveText(
-  key: string | undefined,
-  fallback: string | undefined,
-  t: Translate,
-): string | undefined {
-  if (!key)
-    return fallback
-  return t(key, fallback ?? '')
+export interface ResolvedMaterialItem {
+  readonly title: string
+  readonly description?: string
+  readonly icon?: Component | string
+  readonly thumbnail?: string
+  readonly tags: readonly string[]
+  readonly keywords: readonly string[]
 }
 
-export function resolveMaterialItem(meta: DesignerWidgetMeta, t: Translate): ResolvedMaterialItem {
-  const material = meta.material
-  const titleFallback = material?.title ?? meta.title
-  const title = resolveText(material?.titleKey ?? meta.titleKey, titleFallback, t) ?? meta.title
+function resolveText(key: string | undefined, fallback: string | undefined, t: Translate): string | undefined {
+  return key ? t(key, fallback ?? '') : fallback
+}
 
+export function resolveMaterialItem(material: MaterialDefinition, t: Translate): ResolvedMaterialItem {
+  const panel = material.panel
   return {
-    title,
-    icon: material?.icon ?? meta.icon,
-    description: resolveText(material?.descriptionKey, material?.description, t),
-    thumbnail: material?.thumbnail,
-    tags: material?.tags ?? [],
-    keywords: material?.keywords ?? [],
+    title: resolveText(panel?.titleKey, panel?.title, t) ?? material.type,
+    description: resolveText(panel?.descriptionKey, panel?.description, t),
+    icon: panel?.icon,
+    thumbnail: panel?.thumbnail,
+    tags: panel?.tags ?? [],
+    keywords: panel?.keywords ?? [],
   }
 }
 
 export function materialItemMatchesQuery(
-  meta: DesignerWidgetMeta,
-  material: ResolvedMaterialItem,
+  material: MaterialDefinition,
+  display: ResolvedMaterialItem,
   query: string,
 ): boolean {
-  const normalizedQuery = query.toLowerCase().trim()
-  if (!normalizedQuery)
+  const normalized = query.toLowerCase().trim()
+  if (!normalized)
     return true
-
-  const values = [
-    meta.type,
-    meta.title,
-    meta.titleKey,
-    meta.icon,
-    meta.group,
-    material.title,
-    material.description,
-    material.tags.join(' '),
-    material.keywords.join(' '),
-  ]
-
-  return values.some(value =>
-    typeof value === 'string' && value.toLowerCase().includes(normalizedQuery),
-  )
+  return [
+    material.type,
+    display.title,
+    display.description,
+    display.tags.join(' '),
+    display.keywords.join(' '),
+  ].some(value => value?.toLowerCase().includes(normalized))
 }

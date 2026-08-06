@@ -1,5 +1,5 @@
+export { useCanvasPan } from './useCanvasPan'
 export { useDesigner } from './useDesigner'
 export { useDragDrop } from './useDragDrop'
-export type { UseDragDropReturn } from './useDragDrop'
 export { usePropertyBinding } from './usePropertyBinding'
 export type { UsePropertyBindingReturn } from './usePropertyBinding'

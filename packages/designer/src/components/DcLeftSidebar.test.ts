@@ -1,176 +1,35 @@
 // @vitest-environment happy-dom
-import type { DesignerContext, DesignerInstance, DesignerSchema, WidgetMeta } from '..'
-import { I18N_KEY } from '@dragcraft/i18n'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
-import { createDesigner, DESIGNER_CONTEXT_KEY } from '..'
-import DcLeftSidebar from './DcLeftSidebar'
-
-function makeMeta(): WidgetMeta {
-  return {
-    type: 'button',
-    title: '按钮',
-    group: 'basic',
-    defaultProps: {},
-    formSchema: { sections: [] },
-  } as WidgetMeta
-}
-
-function makeSchema(): DesignerSchema {
-  return {
-    version: '1.0.0',
-    globalConfig: {},
-    root: {
-      id: 'root',
-      type: 'root',
-      props: {},
-      children: [
-        { id: 'node-a', type: 'button', props: {} },
-      ],
-    },
-  }
-}
-
-function makeContext(instance: DesignerInstance): DesignerContext {
-  return {
-    engine: instance.engine,
-    componentMap: instance.componentMap,
-    widgetGroups: instance.widgetGroups,
-    extensions: instance.extensions,
-    fieldComponentMap: instance.fieldComponentMap,
-    globalConfigSchema: instance.globalConfigSchema,
-    eventHooks: instance.eventHooks,
-    actionInterceptors: instance.actionInterceptors,
-    actionRegistry: instance.actionRegistry,
-    workspace: instance.workspace,
-    activeDestination: ref(null),
-    containerDropDecision: ref(null),
-    dragOverNodeId: ref(null),
-    dragOverIndex: ref(null),
-    handleMaterialDragStart: vi.fn(),
-    handleDragEnd: vi.fn(),
-    handleCanvasDragOver: vi.fn(),
-    handleCanvasDragLeave: vi.fn(),
-    handleCanvasDrop: vi.fn(),
-    handleContainerDragOver: vi.fn(),
-    handleContainerDragLeave: vi.fn(),
-    handleContainerDrop: vi.fn(),
-    isForbidden: ref(false),
-    forbiddenReason: ref(null),
-    searchQuery: ref(''),
-    activeTab: instance.workspace.activeRightPanel,
-    leftPanelActiveTab: instance.workspace.activeLeftPanel,
-  }
-}
-
-function mountSidebar(instance: DesignerInstance) {
-  const host = document.createElement('div')
-  document.body.appendChild(host)
-  const ctx = makeContext(instance)
-  const app = createApp(defineComponent({
-    setup() {
-      provide(DESIGNER_CONTEXT_KEY, ctx)
-      provide(I18N_KEY, instance.i18n)
-      return () => h(DcLeftSidebar)
-    },
-  }))
-  app.mount(host)
-  return { app, host, ctx }
-}
-
-function click(el: Element): void {
-  el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
-}
+import { afterEach, describe, expect, it } from 'vitest'
+import { createApp, defineComponent, h, nextTick } from 'vue'
+import { createDesigner } from '../session/create-designer'
+import DcDesigner from './DcDesigner'
 
 describe('dcLeftSidebar', () => {
   afterEach(() => {
     document.body.innerHTML = ''
   })
 
-  it('shows the material panel by default', async () => {
+  it('switches from the Material Catalog view to the Schema structure view', async () => {
     const designer = createDesigner({
-      engineOptions: { initialSchema: makeSchema() },
-      widgetMetas: [makeMeta()],
+      materials: [{
+        type: 'text',
+        panel: { title: 'Text' },
+        presentation: { kind: 'visual', preview: defineComponent({}) },
+      }],
     })
-    const { app, host } = mountSidebar(designer)
-
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
     try {
+      app.mount(host)
       await nextTick()
-      expect(host.querySelector('.dc-material-panel')).not.toBeNull()
-      expect(host.querySelector('.dc-structure-panel')).toBeNull()
-    }
-    finally {
-      app.unmount()
-      designer.dispose()
-    }
-  })
-
-  it('does not list schema-managed widgets in the standard material panel', async () => {
-    const managed = {
-      ...makeMeta(),
-      type: 'managed',
-      title: 'Managed',
-      authoring: 'schema-managed' as const,
-    }
-    const designer = createDesigner({
-      engineOptions: { initialSchema: makeSchema() },
-      widgetMetas: [makeMeta(), managed],
-    })
-    const { app, host } = mountSidebar(designer)
-
-    try {
+      expect(host.querySelector('[data-dc-component="material-panel"]')).not.toBeNull()
+      const structure = Array.from(host.querySelectorAll<HTMLButtonElement>('.dc-left-sidebar__tab'))
+        .find(button => button.title === '结构树')!
+      structure.click()
       await nextTick()
-      const materials = host.querySelectorAll('.dc-material-item')
-      expect(materials).toHaveLength(1)
-      expect(host.textContent).toContain('按钮')
-      expect(host.textContent).not.toContain('Managed')
-    }
-    finally {
-      app.unmount()
-      designer.dispose()
-    }
-  })
-
-  it('switches to the structure panel from the icon tab', async () => {
-    const designer = createDesigner({
-      engineOptions: { initialSchema: makeSchema() },
-      widgetMetas: [makeMeta()],
-    })
-    const { app, host, ctx } = mountSidebar(designer)
-
-    try {
-      await nextTick()
-      click(host.querySelector('[aria-label="结构树"]')!)
-      await nextTick()
-
-      expect(ctx.leftPanelActiveTab.value).toBe('structure')
-      expect(host.querySelector('.dc-structure-panel')).not.toBeNull()
-      expect(host.querySelector('[data-dc-component="structure-panel"] > [data-dc-part="list"][data-dc-component="scroll-area"]')).not.toBeNull()
-    }
-    finally {
-      app.unmount()
-      designer.dispose()
-    }
-  })
-
-  it('uses materialPanelRenderer for the materials tab content', async () => {
-    const CustomMaterialPanel = defineComponent({
-      setup() {
-        return () => h('div', { class: 'custom-material-panel' }, 'custom')
-      },
-    })
-    const designer = createDesigner({
-      engineOptions: { initialSchema: makeSchema() },
-      widgetMetas: [makeMeta()],
-      extensions: {
-        materialPanelRenderer: CustomMaterialPanel,
-      },
-    })
-    const { app, host } = mountSidebar(designer)
-
-    try {
-      await nextTick()
-      expect(host.querySelector('.custom-material-panel')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="structure-panel"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="material-panel"]')).toBeNull()
     }
     finally {
       app.unmount()

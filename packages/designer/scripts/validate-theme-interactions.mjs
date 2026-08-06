@@ -9,7 +9,6 @@ const recipes = parse('theme/baseline/recipes.css')
 const uiRecipe = parse('../ui/styles/recipe.css')
 const designerStructure = parse('styles/structure.css')
 const formStructure = parse(import.meta.resolve('@dragcraft/form-generator/structure.css'))
-const rendererStructure = parse(import.meta.resolve('@dragcraft/renderer/structure.css'))
 const errors = []
 
 function parse(relativePath) {
@@ -64,23 +63,13 @@ expectDeclarations('drop indicator', recipes, '[data-dc-component="drop-indicato
   border: '2px dashed var(--dc-color-accent)',
 })
 
-expectDeclarations('node drag over', recipes, '[data-dc-component="node"][data-dc-state~="drag-over"]', {
-  'background-color': 'var(--dc-color-accent-subtle)',
-  'outline': '1px dashed var(--dc-color-accent)',
-  'outline-offset': '-1px',
+expectDeclarations('dragging node host', recipes, '[data-dc-component="node-host"][data-dc-state~="dragging"]', {
+  opacity: '0.38',
 })
-expectNoDeclarations('node drag over', recipes, '[data-dc-component="node"][data-dc-state~="drag-over"]', [
-  'border-color',
-  'border-style',
-])
-expectNoDeclarations('node wrapper geometry', rendererStructure, '.dc-node', ['border'])
+expectNoDeclarations('node host geometry', designerStructure, '[data-dc-component="node-host"]', ['border'])
 
 expectDeclarations('container material selection', recipes, '[data-dc-component="node-selection"]', {
   border: 'var(--dc-node-selection-stroke-width) solid var(--dc-color-accent)',
-})
-
-expectDeclarations('default container shell', recipes, '[data-dc-component="container-shell"][data-dc-state~="default"]', {
-  'box-shadow': 'var(--dc-shadow-sm)',
 })
 
 expectDeclarations('node toolbar', recipes, '[data-dc-component="node-toolbar"]', {

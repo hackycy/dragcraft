@@ -1,6 +1,6 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-06 16:44 CST
+Updated: 2026-08-06 18:39 CST
 
 ## Phase Status
 
@@ -9,7 +9,8 @@ Updated: 2026-08-06 16:44 CST
 - Phase 2: complete. The pure Schema Editor, closed operation vocabulary, structural destinations, aggregate bundles, atomic batch execution, and conformance tests are implemented beside the legacy path.
 - Phase 3: complete. Material Catalog, Authoring Engine, bounded snapshot history, four-state document session, and controlled DesignerInstance seams are implemented beside the legacy UI path.
 - Phase 4: complete. Designer Presentation replacement is implemented beside the legacy Renderer path and verified through the ApplicationSurface seam.
-- Phase 5: not started.
+- Phase 5: complete. The workbench consumes DesignerInstance, the package root uses the accepted allowlist, and public consumer/package/theme validation covers the replacement path.
+- Phase 6: not started. Renderer, Widgets, legacy Core protocols and their package dependencies remain for the assigned deletion phase.
 
 ## Phase 0 Evidence
 
@@ -302,11 +303,66 @@ Cycle 28 used `pnpm --filter @dragcraft/designer test --run src/presentation/app
 - `git diff --check`: passed.
 - No Phase 5 module or caller was changed.
 
-## Phase 5 Entry Audit
+## Phase 5 Implementation
 
-- Phase 4 is complete and its accepted Presentation dependency is available.
-- Phase 5 remains explicitly unstarted: no workbench caller, public export, consumer fixture, migration, Phase 6 deletion or product consumer was changed.
-- No Phase 5 red-green result is claimed and no Phase 5 implementation was started.
+- Replaced the legacy Engine/Renderer workbench context with one internal Designer context backed by `DesignerInstance`, its private Material Catalog, resolved-document projection, workspace controller, form bindings, i18n and drag state. These implementation details remain behind the `DcDesigner`/`DesignerInstance` seam.
+- Cut `DcDesigner`, Canvas, material panel, structure tree, property panel, keyboard shortcuts and drag/drop over to the Phase 3 Authoring and Phase 4 Presentation modules. Canvas now mounts `ApplicationSurface`; no Designer production source or theme entry imports Renderer or Widgets.
+- Material search and drag creation consume the same `MaterialDefinition[]` catalog. Root and region drops use `StructuralDestination`; the structure tree follows resolved root/region order and emits owner-relative move, duplicate and remove `AuthoringAction` values.
+- Property and global-config form edits compile `props.*`, `style.*`, `page.*` and `globalConfig.*` bindings to the existing closed Authoring action vocabulary. No container variant, projected index, sort scope or arbitrary command path was restored.
+- Routed Document and Viewport planes through the optional switchable Container Shell while keeping the Interaction Plane as a stable direct child of `ApplicationSurface`, outside Device Frame clipping.
+- Replaced the package root with the accepted runtime allowlist: `createDesigner`, `defineMaterial`, `DcDesigner`, `useDesigner`, `DesignerRegionOutlet`, `DesignerViewportPortal`, `useSurfaceReservation` and `DOCUMENT_SCHEMA_VERSION`, plus the accepted pure-data, host, material, authoring, Presentation and form types.
+- Merged the retained Presentation structure and recipes into Designer CSS, removed the Renderer stylesheet import and legacy Renderer/Widgets hooks, preserved real workbench part hooks, and updated theme validation to scan only UI, Designer Presentation and form-generator ownership.
+- Added a built-output public consumer fixture covering visual, headless, one-level container, Presentation Frame, field adapter and Device Frame integration. Individual negative imports cover Engine, Command, ResolvedDocument, SchemaOperation, legacy ComponentMap/WidgetDefinition, RootRenderer, NodeHost, Geometry Registry and `DesignerSchema`.
+- Extended package export validation to resolve the root and CSS/JSON subpaths, check built declaration paths and enforce the exact runtime export allowlist. The root public-boundary scan now includes the consumer fixture.
+- Added a Designer-local TypeScript project for package-scoped validation; the root project excludes the dedicated fixture because the fixture has its own built-package `paths` and is run explicitly by Designer build/typecheck.
+- Renderer and Widgets packages, Designer dependency declarations and legacy Core protocols were not deleted or changed; those tasks remain Phase 6. Playground and guide consumers were not rewritten; those tasks remain Phase 7.
+
+## Phase 5 Red-Green Evidence
+
+Phase 5 behavior was exercised through the agreed `DcDesigner`/`DesignerInstance` and public package consumer seams. Each production behavior below had an observed red before its minimal green implementation:
+
+| Cycle | Command | Observed red | Following green |
+| --- | --- | --- | --- |
+| 1 | `pnpm --filter @dragcraft/designer test --run src/workbench-cutover.test.ts` | `defineMaterial is not a function` at the public workbench tracer | 1 file, 1 test passed |
+| 2 | same directed workbench command, structure-tree target | selected region child had no `[data-dc-action="remove"]` | targeted test passed |
+| 3 | same directed workbench command, property-edit target | inspector input was absent | targeted test passed after the failed first green below |
+| 4 | `pnpm --filter @dragcraft/designer test --run src/public-interface.test.ts` | legacy interface expectations required `buildComponentMap`, `createEngine` and other removed exports; 2/3 tests failed | 1 file, 3 tests passed with the accepted allowlist |
+| 5 | directed Device Frame workbench target | Interaction Plane remained inside the Container Shell | targeted test passed with Interaction Plane outside the shell |
+| 6 | `pnpm --filter @dragcraft/designer typecheck` | 4 compile-contract errors in page binding, material grouping, deep-readonly Schema input and material icon typing | passed after one incomplete green attempt still reported 3 deep-readonly errors |
+| 7 | `node packages/designer/scripts/validate-theme-contract.mjs` | `document-recovery` was missing and retained workbench part hooks were not emitted | `theme contract valid: 61 tokens, 26 components`; full `check:theme` also passed interaction recipes |
+| 8 | `pnpm --filter @dragcraft/designer check:package-exports` and `check:public-consumer` | built root still exposed the legacy 60+ value surface instead of 8 values; the consumer could not import the replacement types/values | exact runtime allowlist passed and the consumer fixture typechecked |
+| 9 | `pnpm --filter @dragcraft/designer test --run src/components/DcDesigner.test.ts -t 'preserves right-panel'` | the retained right rail emitted no `data-dc-part="rail"` hook, so the assertion failed while reading its attributes | 1 test passed, 2 skipped, with the right rail/extension hooks and tab/tabpanel/toggle ARIA contract restored |
+
+The first attempted green for property editing failed with `Cannot assign to read only property 'text'`: the binding path was mutating a Resolver-owned frozen snapshot. The binding adapter was corrected to clone before constructing `update-node`, and repeating the directed test passed.
+
+The first typecheck green attempt reduced the original four errors but still failed at three call sites because only the caller, not the field-binding seam, accepted `DocumentDeepReadonly`. The internal seam was corrected and repeating the same typecheck passed.
+
+The first public-consumer green attempt, after the new build already passed exact package exports, failed because the fixture incorrectly supplied `BannerProps` as the complete `defineMaterial` generic and used an array instead of `{ types }` for region accepts. The fixture was corrected to use the accepted inference interface; repeating `pnpm --filter @dragcraft/designer check:public-consumer` passed without changing production behavior.
+
+The first right-panel green attempt restored the hooks and ARIA relationships, but the test still expected the expanded-state toggle label. Happy DOM reports a zero-width Designer root, so the component correctly entered compact state and emitted the localized expand-properties label. The assertion was changed to verify the stable accessible contract for that rendered state; repeating the same directed command passed 1 test with 2 skipped.
+
+The material root-drop conformance assertion passed on its first run after the structural-destination implementation. It required no production change and is recorded as added conformance coverage, not claimed as a red-green cycle.
+
+The first full Designer audit after cutover ran `pnpm --filter @dragcraft/designer test --run` and reported 9 failed files, 90 failed tests and 88 passed tests because legacy suites still exercised Engine/Renderer/Widgets implementation seams. In accordance with the deep-module replacement rule, those tests were rewritten at the accepted Designer seam rather than keeping compatibility exports. After the right-panel contract cycle, the final full Designer result is 18 files and 101 tests passed.
+
+## Phase 5 Review And Verification Evidence
+
+- `pnpm --filter @dragcraft/designer test --run`: passed, 18 files and 101 tests.
+- `pnpm --filter @dragcraft/designer typecheck`: passed, including `tsc -p fixtures/public-consumer/tsconfig.json`.
+- `pnpm --filter @dragcraft/designer check:theme`: passed; 61 tokens, 26 emitted components and interaction recipes were valid.
+- `pnpm --filter @dragcraft/designer build`: passed; both public CSS outputs, module/declaration output, publint, exact package exports and the public consumer fixture passed.
+- `pnpm exec eslint packages/designer/src packages/designer/scripts packages/designer/fixtures packages/designer/tsconfig.json scripts/check-public-boundary.mjs`: passed with no output after mechanical fixes.
+- `pnpm check:public-boundary`: passed with `public package boundary valid`.
+- `pnpm --filter @dragcraft/core test --run`: passed, 27 files and 411 tests.
+- The production/theme dependency audit found no `@dragcraft/renderer` or `@dragcraft/widgets` import. Expected removed-name mentions remain only in negative public-interface assertions. Package dependencies remain intentionally until Phase 6.
+- `git diff --check`: passed before this progress update.
+- Final repository gates were executed in the required order:
+  - `pnpm build`: package and docs builds reached 12/14 successful tasks, then failed in the Phase 7 guide consumer because `ContainerRegionOutlet` is no longer exported; Turbo terminated the concurrent playground build with exit 129. No Phase 5 package build failed.
+  - `pnpm lint`: passed; `public package boundary valid`.
+  - `pnpm typecheck`: all 11 package builds passed, including Designer's consumer fixture, then root `tsc` failed only in the unchanged Phase 7 guide/playground sources that still import legacy Designer symbols such as `DesignerSchema`, `WidgetDefinition`, `CommandType`, `createEngine` and `defineContainerWidget`.
+  - `pnpm test`: all package suites passed, including Designer 18 files/101 tests and Core 27 files/411 tests; the run then failed in 5 unchanged guide-project suites at import time because `defineContainerWidget` is no longer a function. The recursive run stopped before playground tests.
+- These repository-gate failures are the expected direct-cutover interval assigned to Phase 7. No compatibility alias or premature product-consumer rewrite was added to make them pass.
+- No implementation finding required a change to the accepted public interface. The `defineMaterial` fixture error was resolved by using its accepted inference contract, so no Wayfinder decision ticket was recreated.
 
 ## Wayfinder Ticket 12 Decision
 
@@ -315,7 +371,7 @@ Cycle 28 used `pnpm --filter @dragcraft/designer test --run src/presentation/app
 - Preview Schema writes are limited to `updateSelf()` through Authoring Policy, Schema Editor, commit and history. Workbench structure operations continue to produce the existing closed `AuthoringAction` values.
 - Material-owned external side effects remain in material Vue or host state and do not enter Dragcraft authoring or history.
 - Ticket 12 supersedes only the `invokeAction()` portions of tickets 06 and 08. `CONTEXT.md` and the architecture map were updated to match.
-- Phase 4 resumed only after this decision and is now complete; Phase 5 remains unstarted.
+- Phase 4 resumed only after this decision and completed before the Phase 5 work recorded above began.
 - `test "$(sed -n '3p' .scratch/layout-semantic-architecture/issues/12-material-preview-action-contract.md)" = "Status: resolved"`: passed.
 - `git diff --check`: passed.
 - `git diff --name-only`: reported only `CONTEXT.md`, the implementation progress, the architecture map and tickets 06, 08 and 12; no implementation file changed.
@@ -340,6 +396,7 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - Phase 0 cannot be marked complete until the user confirms the playground human baseline.
 - No automated Phase 1 blocker or failure remains.
 - No automated Phase 2 blocker or failure remains.
+- No automated Phase 5 package blocker remains. Repository build/typecheck/test still encounter the unchanged product consumers assigned to Phase 7.
 - Package-manager observation, not an automated baseline failure: a non-frozen catalog resolution currently advances `vitepress@next` to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement has no stable registry match. The docs dependency was not changed; frozen installation succeeds.
 - No accepted-interface blocker remains from Wayfinder ticket 12; Phase 4 automated implementation is complete.
 
@@ -348,4 +405,5 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - Phase 2 is complete.
 - Phase 3 is complete.
 - Phase 4 is complete; its accepted public-interface gap was resolved by Wayfinder ticket 12 before implementation resumed.
-- Phase 5 was not started.
+- Phase 5 is complete.
+- Phase 6 was not started; Renderer, Widgets and legacy Core deletion remain untouched.

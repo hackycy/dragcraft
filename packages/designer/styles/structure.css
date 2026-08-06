@@ -675,18 +675,18 @@
   user-select: none;
 }
 
-.dc-canvas__content > .dc-root-renderer {
+.dc-canvas__content > [data-dc-component="renderer-frame-boundary"] {
   display: flow-root;
   width: max-content;
   min-width: 375px;
   min-height: 200px;
 }
 
-.dc-canvas__content--bounded > .dc-root-renderer {
+.dc-canvas__content--bounded > [data-dc-component="renderer-frame-boundary"] {
   min-width: 0;
 }
 
-.dc-canvas__content > .dc-root-renderer > [data-dc-toolbar-boundary] {
+.dc-canvas__content > [data-dc-component="renderer-frame-boundary"][data-dc-toolbar-boundary] {
   margin-block: 0;
   margin-inline: auto;
 }

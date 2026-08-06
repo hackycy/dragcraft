@@ -1,5 +1,5 @@
 import type { ResolvedDocument, StructuralDestination } from '@dragcraft/core'
-import type { PropType } from 'vue'
+import type { Component, PropType } from 'vue'
 import type { AuthoringAction, AuthoringResult } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import { defineComponent, h, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
@@ -27,8 +27,24 @@ export default defineComponent({
       type: Object as PropType<MaterialCatalog>,
       required: true,
     },
+    containerShell: {
+      type: Object as PropType<Component>,
+      default: undefined,
+    },
     onDropAnchor: {
       type: Function as PropType<(destination: StructuralDestination) => void>,
+      default: undefined,
+    },
+    onDrop: {
+      type: Function as PropType<(event: DragEvent) => void>,
+      default: undefined,
+    },
+    onNodeDragStart: {
+      type: Function as PropType<(event: DragEvent, nodeId: string) => void>,
+      default: undefined,
+    },
+    onNodeDragEnd: {
+      type: Function as PropType<() => void>,
       default: undefined,
     },
     execute: {
@@ -107,6 +123,8 @@ export default defineComponent({
       node,
       owner,
       execute: props.execute,
+      onNodeDragStart: props.onNodeDragStart,
+      onNodeDragEnd: props.onNodeDragEnd,
       selected: props.selectedNodeId === node.node.id,
       hovered: props.hoveredNodeId === node.node.id,
       dragging: props.draggingNodeId === node.node.id,
@@ -114,36 +132,40 @@ export default defineComponent({
       renderNode,
     })
 
-    return () => h('div', {
-      'ref': surfaceElement,
-      'data-dc-component': 'application-surface',
-      'style': {
-        '--dc-internal-application-surface-reservation-block-start': `${reservations.totals['block-start'].value}px`,
-        '--dc-internal-application-surface-reservation-block-end': `${reservations.totals['block-end'].value}px`,
-        '--dc-internal-application-surface-reservation-inline-start': `${reservations.totals['inline-start'].value}px`,
-        '--dc-internal-application-surface-reservation-inline-end': `${reservations.totals['inline-end'].value}px`,
-      },
-    }, [
-      h('div', {
+    return () => {
+      const documentPlane = h('div', {
         'data-dc-plane': 'document',
         'onDragleave': handleRootDragLeave,
         'onDragover': handleRootDragOver,
-        'onDrop': () => {
+        'onDrop': (event: DragEvent) => {
           dropDestination.value = null
+          props.onDrop?.(event)
         },
-      }, props.document.root.map(node => renderNode(node, { kind: 'page-root' }))),
-      h('div', {
+      }, props.document.root.map(node => renderNode(node, { kind: 'page-root' })))
+      const viewport = h('div', {
         'ref': viewportPlane,
         'data-dc-plane': 'viewport',
-      }),
-      h(InteractionPlane, {
+      })
+      const preview = props.containerShell
+        ? h(props.containerShell, null, { default: () => [documentPlane, viewport] })
+        : [documentPlane, viewport]
+      return h('div', {
+        'ref': surfaceElement,
+        'data-dc-component': 'application-surface',
+        'style': {
+          '--dc-internal-application-surface-reservation-block-start': `${reservations.totals['block-start'].value}px`,
+          '--dc-internal-application-surface-reservation-block-end': `${reservations.totals['block-end'].value}px`,
+          '--dc-internal-application-surface-reservation-inline-start': `${reservations.totals['inline-start'].value}px`,
+          '--dc-internal-application-surface-reservation-inline-end': `${reservations.totals['inline-end'].value}px`,
+        },
+      }, [preview, h(InteractionPlane, {
         document: props.document,
         diagnostics,
         geometry,
         dropDestination: dropDestination.value,
         execute: props.execute,
         selectedNodeId: props.selectedNodeId,
-      }),
-    ])
+      })])
+    }
   },
 })
