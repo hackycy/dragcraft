@@ -1,6 +1,8 @@
+# Renderer 如何按切片替换
+
 Status: resolved
 Type: grilling
-Blocked by: 02, 03
+Blocked by: 12, 13
 
 ## Question
 

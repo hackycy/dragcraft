@@ -1,6 +1,8 @@
+# 过渡 Adapter 的 seam 如何划分
+
 Status: resolved
 Type: grilling
-Blocked by: 01
+Blocked by: 11
 
 ## Question
 

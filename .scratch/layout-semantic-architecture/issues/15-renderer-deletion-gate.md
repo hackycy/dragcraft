@@ -1,6 +1,8 @@
+# 何时允许删除旧 Renderer
+
 Status: resolved
 Type: grilling
-Blocked by: 04
+Blocked by: 14
 
 ## Question
 
