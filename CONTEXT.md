@@ -72,6 +72,18 @@ _Avoid_: Schema reserve、静态 inset 字段、物料直接修改全局 CSS
 Designer 为每个 Schema 节点拥有的唯一设计态 DOM、几何与交互实体，内部承载 material preview、headless proxy 或 unknown fallback，并向 Interaction Plane 提供选区和 toolbar 锚点。
 _Avoid_: Preview 自管选区、Frame 重复渲染节点、全局 DOM selector
 
+**选中状态（Selection）**:
+Designer 会话当前明确选定的 NodeHost 身份；它驱动该节点的选区和可用的结构操作展示，但不等同于指针悬停或当前拖放目的地。
+_Avoid_: active（未说明是哪一种状态）、hover、drop target
+
+**悬停状态（Hover）**:
+Designer 会话中指针当前命中的 NodeHost 身份，用于呈现选择入口；它不表示已选中，也不授予结构写入权限。
+_Avoid_: active node、Selection、drag-over
+
+**拖放目标（Drop Destination）**:
+Designer 对当前拖放指针推导出的 Structural Destination，用于插入反馈及随后由 Authoring Engine 提交的结构操作；它不改变 Selection，也不是节点的持久化位置。
+_Avoid_: active node、selected owner、视觉 index
+
 **Material Preview Context**:
 Designer 向当前 material preview 提供的只读节点、页面、归属和交互状态，以及经过 Authoring Engine 的唯一受控自更新入口；它不提供命名动作分派，也不承载额外的场景模拟或 Runtime 状态。
 _Avoid_: Engine、可写 Store、完整文档遍历、命名动作入口、previewState、生产 Runtime context
