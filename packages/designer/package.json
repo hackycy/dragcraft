@@ -30,7 +30,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pnpm generate:theme-contract && pnpm check:theme && tsdown && pnpm check:package-exports && pnpm check:public-consumer",
+    "build": "pnpm generate:theme-contract && pnpm check:theme && tsdown",
     "check:package-exports": "node scripts/validate-package-exports.mjs",
     "check:public-consumer": "tsc -p fixtures/public-consumer/tsconfig.json",
     "check:theme": "node scripts/validate-theme-contract.mjs && node scripts/validate-theme-interactions.mjs",

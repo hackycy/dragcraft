@@ -29,6 +29,7 @@ export default defineComponent({
             catalog: context.catalog,
             containerShell: containerShell.value ?? undefined,
             execute: context.executeWorkbenchAction,
+            evaluate: context.evaluateWorkbenchAction,
             selectedNodeId: context.designer.selection.selectedNodeId.value ?? undefined,
             hoveredNodeId: context.designer.selection.hoveredNodeId.value ?? undefined,
             draggingNodeId: context.drag.draggingNodeId.value ?? undefined,

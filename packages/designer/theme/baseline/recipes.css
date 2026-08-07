@@ -445,7 +445,8 @@
   background: var(--dc-color-danger);
 }
 
-[data-dc-component="node-toolbar"] > [data-dc-part="action"]:disabled {
+[data-dc-component="node-toolbar"] > [data-dc-part="action"]:disabled,
+[data-dc-component="node-toolbar"] > [data-dc-part="action"][aria-disabled="true"] {
   color: var(--dc-color-on-accent);
   background: var(--dc-color-accent);
   opacity: 0.42;

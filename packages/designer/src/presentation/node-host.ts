@@ -131,6 +131,12 @@ export default defineComponent({
         ?.container
         ?.regions ?? []
       const resolvedContainer = props.document.containersById.get(props.node.node.id)
+      const rootContainerOwner = props.owner.kind === 'page-root'
+        && props.node.state === 'resolved'
+        && resolvedContainer !== undefined
+      const usesSelectionMask = presentation !== undefined
+        && !props.node.readOnly
+        && !rootContainerOwner
       const content = !presentation
         ? h('div', {
             'aria-readonly': 'true',
@@ -192,6 +198,16 @@ export default defineComponent({
         })
       })
 
+      const selectionMask = usesSelectionMask
+        ? h('div', {
+            class: 'dc-internal-node-host__selection-mask',
+            onClick: (event: MouseEvent) => {
+              event.stopPropagation()
+              props.execute?.({ type: 'select-node', nodeId: props.node.node.id })
+            },
+          })
+        : null
+
       const host = h('div', {
         'ref': hostElement,
         'aria-readonly': !presentation || props.node.readOnly ? 'true' : undefined,
@@ -206,6 +222,8 @@ export default defineComponent({
         ].filter(Boolean).join(' ') || undefined,
         'style': props.node.node.style,
         'onClick': (event: MouseEvent) => {
+          if (event.target !== event.currentTarget)
+            return
           event.stopPropagation()
           props.execute?.({ type: 'select-node', nodeId: props.node.node.id })
         },
@@ -215,7 +233,7 @@ export default defineComponent({
         'onMouseleave': () => {
           props.execute?.({ type: 'hover-node', nodeId: null })
         },
-      }, [content, ...recovery])
+      }, [content, selectionMask, ...recovery])
 
       return presentation?.kind === 'visual' && presentation.frame
         ? h(PresentationFrame, {

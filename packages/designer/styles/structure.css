@@ -769,6 +769,13 @@
   min-width: 0;
 }
 
+[data-dc-component="node-host"] > .dc-internal-node-host__selection-mask {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  cursor: pointer;
+}
+
 [data-dc-component="empty-state"] {
   display: flex;
   flex-direction: column;
@@ -898,6 +905,10 @@
 
 [data-dc-component="node-toolbar"] > [data-dc-action="drag"]:active {
   cursor: grabbing;
+}
+
+[data-dc-component="node-toolbar"] > [data-dc-action="drag"][aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 [data-dc-component="forbidden-overlay"] {

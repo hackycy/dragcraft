@@ -1,6 +1,6 @@
 import type { ResolvedDocument, StructuralDestination } from '@dragcraft/core'
 import type { Component, PropType } from 'vue'
-import type { AuthoringAction, AuthoringResult } from '../authoring/types'
+import type { AuthoringAction, AuthoringResult, SchemaAuthoringAction } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import { useI18n } from '@dragcraft/i18n'
 import { IconPlus } from '@dragcraft/icons'
@@ -51,6 +51,10 @@ export default defineComponent({
     },
     execute: {
       type: Function as PropType<(action: AuthoringAction) => AuthoringResult>,
+      default: undefined,
+    },
+    evaluate: {
+      type: Function as PropType<(action: SchemaAuthoringAction) => AuthoringResult>,
       default: undefined,
     },
     selectedNodeId: { type: String, default: undefined },
@@ -172,10 +176,12 @@ export default defineComponent({
       }, [preview, h(InteractionPlane, {
         document: props.document,
         diagnostics,
+        catalog: props.catalog,
         geometry,
         dropDestination: dropDestination.value,
         dropRejectionCode: props.dropRejectionCode,
         execute: props.execute,
+        evaluate: props.evaluate,
         hoveredNodeId: props.hoveredNodeId,
         onNodeDragStart: props.onNodeDragStart,
         onNodeDragEnd: props.onNodeDragEnd,

@@ -1,11 +1,13 @@
 import type { ResolvedDocument, StructuralDestination } from '@dragcraft/core'
 import type { PropType } from 'vue'
-import type { AuthoringAction, AuthoringResult } from '../authoring/types'
+import type { AuthoringAction, AuthoringResult, SchemaAuthoringAction } from '../authoring/types'
+import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { GeometryRegistry } from './geometry-registry'
 import type { PresentationDiagnosticRegistry } from './presentation-diagnostics'
 import { useI18n } from '@dragcraft/i18n'
 import { IconArrowDown, IconArrowUp, IconComponent, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
+import { projectNodeToolbarActions } from './node-action-projection'
 
 export default defineComponent({
   name: 'DcInteractionPlane',
@@ -18,6 +20,10 @@ export default defineComponent({
       type: Object as PropType<ResolvedDocument>,
       required: true,
     },
+    catalog: {
+      type: Object as PropType<MaterialCatalog>,
+      required: true,
+    },
     selectedNodeId: { type: String, default: undefined },
     hoveredNodeId: { type: String, default: undefined },
     dropDestination: {
@@ -27,6 +33,10 @@ export default defineComponent({
     dropRejectionCode: { type: String, default: undefined },
     execute: {
       type: Function as PropType<(action: AuthoringAction) => AuthoringResult>,
+      default: undefined,
+    },
+    evaluate: {
+      type: Function as PropType<(action: SchemaAuthoringAction) => AuthoringResult>,
       default: undefined,
     },
     onNodeDragStart: {
@@ -63,21 +73,26 @@ export default defineComponent({
       const hoveredRect = props.hoveredNodeId && props.hoveredNodeId !== props.selectedNodeId
         ? props.geometry.rects.value.get(props.hoveredNodeId)
         : undefined
-      const selectedSiblings = selectedLocation?.kind === 'container-region'
-        ? props.document.containersById
-          .get(selectedLocation.containerId)
-          ?.regions
-          .get(selectedLocation.regionId)
-          ?.children
-        : selectedLocation
-          ? props.document.root
-          : undefined
-      const previousNodeId = selectedLocation
-        ? selectedSiblings?.[selectedLocation.index - 1]?.node.id
+      const hoveredNode = props.hoveredNodeId
+        ? props.document.nodesById.get(props.hoveredNodeId)
         : undefined
-      const nextNodeId = selectedLocation
-        ? selectedSiblings?.[selectedLocation.index + 1]?.node.id
+      const hoveredLocation = props.hoveredNodeId
+        ? props.document.locationsById.get(props.hoveredNodeId)
         : undefined
+      const hoveredRootContainerOwner = Boolean(
+        hoveredNode?.state === 'resolved'
+        && hoveredLocation?.kind === 'page-root'
+        && props.hoveredNodeId
+        && props.document.containersById.has(props.hoveredNodeId),
+      )
+      const toolbarActions = props.selectedNodeId
+        ? projectNodeToolbarActions({
+            catalog: props.catalog,
+            document: props.document,
+            evaluate: props.evaluate,
+            nodeId: props.selectedNodeId,
+          }).filter(action => action.visible)
+        : []
       const position = props.dropRejectionCode ? undefined : props.dropDestination?.position
       const dropRect = position?.kind === 'before' || position?.kind === 'after'
         ? props.geometry.rects.value.get(position.nodeId)
@@ -93,8 +108,9 @@ export default defineComponent({
           'title': label,
           'style': {
             position: 'absolute',
-            left: `${hoveredRect.right - 32}px`,
+            left: hoveredRootContainerOwner ? '0px' : `${hoveredRect.right - 32}px`,
             top: `${hoveredRect.top + 4}px`,
+            transform: hoveredRootContainerOwner ? 'translateX(calc(-100% - 8px))' : undefined,
           },
           'onClick': () => props.execute?.({ type: 'select-node', nodeId: props.hoveredNodeId! }),
         }, [
@@ -123,10 +139,46 @@ export default defineComponent({
               h('span', { 'data-dc-part': 'inline-start-edge' }),
             ]
           : undefined))
-        if (props.execute) {
+        if (props.execute && toolbarActions.length > 0) {
           const rootToolbar = selectedLocation?.kind === 'page-root'
           const regionToolbar = selectedLocation?.kind === 'container-region'
           const regionPlacement = selectedRect.top >= 42 ? 'top-end' : 'bottom-end'
+          const toolbarActionNodes = toolbarActions.map((action) => {
+            const definition = {
+              'drag': { fallback: '拖拽排序', icon: IconDrag, key: 'action.drag' },
+              'move-up': { fallback: '上移', icon: IconArrowUp, key: 'action.move-up' },
+              'move-down': { fallback: '下移', icon: IconArrowDown, key: 'action.move-down' },
+              'duplicate': { fallback: '复制', icon: IconCopy, key: 'action.duplicate' },
+              'remove': { fallback: '删除', icon: IconDelete, key: 'action.delete' },
+            }[action.name]
+            const label = t(definition.key, definition.fallback)
+            if (action.name === 'drag') {
+              return h('div', {
+                'data-dc-action': action.name,
+                'data-dc-part': 'action',
+                'draggable': !action.disabled,
+                'aria-disabled': action.disabled ? 'true' : undefined,
+                'aria-label': label,
+                'title': label,
+                'onDragstart': action.disabled
+                  ? undefined
+                  : (event: DragEvent) => props.onNodeDragStart?.(event, props.selectedNodeId!),
+                'onDragend': action.disabled ? undefined : () => props.onNodeDragEnd?.(),
+              }, [h(definition.icon)])
+            }
+            return h('button', {
+              'type': 'button',
+              'data-dc-action': action.name,
+              'data-dc-part': 'action',
+              'data-dc-state': action.name === 'remove' ? 'danger' : undefined,
+              'aria-label': label,
+              'title': label,
+              'disabled': action.disabled,
+              'onClick': action.disabled || !action.action
+                ? undefined
+                : () => props.execute?.(action.action!),
+            }, [h(definition.icon)])
+          })
           children.push(h('div', {
             'data-dc-component': 'node-toolbar',
             'data-dc-node-id': props.selectedNodeId,
@@ -149,89 +201,7 @@ export default defineComponent({
                   ? 'translateY(calc(-100% - 8px))'
                   : undefined,
             },
-          }, [
-            h('div', {
-              'data-dc-action': 'drag',
-              'data-dc-part': 'action',
-              'draggable': true,
-              'aria-label': t('action.drag', '拖拽排序'),
-              'title': t('action.drag', '拖拽排序'),
-              'onDragstart': (event: DragEvent) => props.onNodeDragStart?.(event, props.selectedNodeId!),
-              'onDragend': () => props.onNodeDragEnd?.(),
-            }, [h(IconDrag)]),
-            h('button', {
-              'type': 'button',
-              'data-dc-action': 'move-up',
-              'data-dc-part': 'action',
-              'aria-label': t('action.move-up', '上移'),
-              'title': t('action.move-up', '上移'),
-              'disabled': !selectedOwner || !previousNodeId,
-              'onClick': () => {
-                if (!selectedOwner || !previousNodeId)
-                  return
-                props.execute?.({
-                  type: 'move-node',
-                  nodeId: props.selectedNodeId!,
-                  to: {
-                    owner: selectedOwner,
-                    position: { kind: 'before', nodeId: previousNodeId },
-                  },
-                })
-              },
-            }, [h(IconArrowUp)]),
-            h('button', {
-              'type': 'button',
-              'data-dc-action': 'move-down',
-              'data-dc-part': 'action',
-              'aria-label': t('action.move-down', '下移'),
-              'title': t('action.move-down', '下移'),
-              'disabled': !selectedOwner || !nextNodeId,
-              'onClick': () => {
-                if (!selectedOwner || !nextNodeId)
-                  return
-                props.execute?.({
-                  type: 'move-node',
-                  nodeId: props.selectedNodeId!,
-                  to: {
-                    owner: selectedOwner,
-                    position: { kind: 'after', nodeId: nextNodeId },
-                  },
-                })
-              },
-            }, [h(IconArrowDown)]),
-            h('button', {
-              'type': 'button',
-              'data-dc-action': 'duplicate',
-              'data-dc-part': 'action',
-              'aria-label': t('action.duplicate', '复制'),
-              'title': t('action.duplicate', '复制'),
-              'disabled': !selectedOwner,
-              'onClick': () => {
-                if (!selectedOwner)
-                  return
-                props.execute?.({
-                  type: 'duplicate-node',
-                  nodeId: props.selectedNodeId!,
-                  to: {
-                    owner: selectedOwner,
-                    position: { kind: 'after', nodeId: props.selectedNodeId! },
-                  },
-                })
-              },
-            }, [h(IconCopy)]),
-            h('button', {
-              'type': 'button',
-              'data-dc-action': 'remove',
-              'data-dc-part': 'action',
-              'data-dc-state': 'danger',
-              'aria-label': t('action.delete', '删除'),
-              'title': t('action.delete', '删除'),
-              'onClick': () => props.execute?.({
-                type: 'remove-node',
-                nodeId: props.selectedNodeId!,
-              }),
-            }, [h(IconDelete)]),
-          ]))
+          }, toolbarActionNodes))
         }
       }
       if (dropRect && position && (position.kind === 'before' || position.kind === 'after')) {

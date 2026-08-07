@@ -239,6 +239,106 @@ describe('phase 5 workbench cutover', () => {
     }
   })
 
+  it('projects the same resolved action state to Canvas and Structure without actions for read-only nodes', async () => {
+    const restrictedMaterial = defineMaterial({
+      type: 'restricted',
+      authoring: {
+        policy: {
+          duplicate: 'denied',
+          move: 'denied',
+          remove: 'denied',
+        },
+      },
+      panel: { title: 'Restricted', group: 'basic' },
+      presentation: { kind: 'headless' },
+    })
+    const designer = createDesigner({
+      materials: [restrictedMaterial],
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [
+          { id: 'first', type: 'restricted', props: {} },
+          { id: 'restricted', type: 'restricted', props: {} },
+          { id: 'unknown', type: 'remote-card', props: {} },
+        ],
+        structure: { root: ['first', 'restricted', 'unknown'], containers: {} },
+      },
+    })
+    designer.execute({ type: 'select-node', nodeId: 'restricted' })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="application-surface"]')!
+      const restricted = host.querySelector<HTMLElement>('[data-dc-node-id="restricted"]')!
+      const unknown = host.querySelector<HTMLElement>('[data-dc-node-id="unknown"]')!
+      surface.getBoundingClientRect = () => ({ left: 0, top: 0 }) as DOMRect
+      restricted.getBoundingClientRect = () => ({
+        left: 10,
+        top: 60,
+        right: 110,
+        bottom: 100,
+        width: 100,
+        height: 40,
+      }) as DOMRect
+      unknown.getBoundingClientRect = () => ({
+        left: 10,
+        top: 100,
+        right: 110,
+        bottom: 140,
+        width: 100,
+        height: 40,
+      }) as DOMRect
+      window.dispatchEvent(new Event('resize'))
+      await new Promise(resolve => window.requestAnimationFrame(() => resolve(undefined)))
+      await nextTick()
+
+      const canvasToolbar = host.querySelector<HTMLElement>(
+        '[data-dc-component="node-toolbar"][data-dc-node-id="restricted"]',
+      )!
+      const canvasAction = (name: string) => canvasToolbar.querySelector<HTMLButtonElement>(`[data-dc-action="${name}"]`)
+      expect(canvasAction('drag')?.getAttribute('draggable')).toBe('false')
+      expect(canvasAction('drag')?.getAttribute('aria-disabled')).toBe('true')
+      expect(['move-up', 'move-down', 'duplicate', 'remove'].map(name => canvasAction(name)?.disabled))
+        .toEqual([true, true, true, true])
+
+      Array.from(host.querySelectorAll<HTMLButtonElement>('.dc-left-sidebar__tab'))
+        .find(button => button.title === '结构树')!
+        .click()
+      await nextTick()
+
+      const structureItem = host.querySelector<HTMLElement>(
+        '[data-dc-component="structure-item"][data-dc-node-id="restricted"]',
+      )!
+      const structureActions = Array.from(structureItem.querySelectorAll<HTMLButtonElement>('[data-dc-action]'))
+      expect(structureActions.map(action => action.dataset.dcAction)).toEqual([
+        'move-up',
+        'move-down',
+        'duplicate',
+        'remove',
+      ])
+      expect(structureActions.map(action => action.disabled)).toEqual([true, true, true, true])
+
+      designer.execute({ type: 'select-node', nodeId: 'unknown' })
+      await nextTick()
+
+      expect(host.querySelector('[data-dc-component="node-toolbar"][data-dc-node-id="unknown"]')).toBeNull()
+      expect(host.querySelectorAll(
+        '[data-dc-component="structure-item"][data-dc-node-id="unknown"] [data-dc-action]',
+      )).toHaveLength(0)
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
   it('translates property edits into update-node Authoring Actions', async () => {
     const InputField = defineComponent({
       props: { modelValue: { type: String, default: '' } },

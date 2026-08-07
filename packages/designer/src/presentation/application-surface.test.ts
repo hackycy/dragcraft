@@ -290,6 +290,104 @@ describe('applicationSurface', () => {
     }
   })
 
+  it('keeps Container Owner selection entry and Region child selection projection distinct', async () => {
+    const execute = vi.fn(() => ({ status: 'committed' as const }))
+    const ContainerPreview = defineComponent({
+      setup: () => () => h(DesignerRegionOutlet, { regionId: 'content' }),
+    })
+    const materials = [
+      {
+        type: 'stack',
+        schema: { container: { regions: [{ id: 'content' }] } },
+        presentation: { kind: 'visual' as const, preview: ContainerPreview },
+      },
+      { type: 'text', presentation: { kind: 'headless' as const } },
+    ]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [
+        { id: 'stack', type: 'stack', props: {} },
+        { id: 'child', type: 'text', props: {} },
+      ],
+      structure: {
+        root: ['stack'],
+        containers: { stack: { regions: { content: ['child'] } } },
+      },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const selectedNodeId = ref<string | undefined>()
+    const hoveredNodeId = ref<string | undefined>('stack')
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp(defineComponent({
+      setup: () => () => h(ApplicationSurface, {
+        document: resolved,
+        catalog,
+        execute,
+        hoveredNodeId: hoveredNodeId.value,
+        selectedNodeId: selectedNodeId.value,
+      }),
+    }))
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="application-surface"]')!
+      const container = host.querySelector<HTMLElement>('[data-dc-node-id="stack"]')!
+      const child = host.querySelector<HTMLElement>('[data-dc-node-id="child"]')!
+      surface.getBoundingClientRect = () => ({ left: 100, top: 200 }) as DOMRect
+      container.getBoundingClientRect = () => ({
+        left: 112,
+        top: 224,
+        right: 432,
+        bottom: 344,
+        width: 320,
+        height: 120,
+      }) as DOMRect
+      child.getBoundingClientRect = () => ({
+        left: 128,
+        top: 256,
+        right: 408,
+        bottom: 296,
+        width: 280,
+        height: 40,
+      }) as DOMRect
+      window.dispatchEvent(new Event('resize'))
+      await new Promise(resolve => window.requestAnimationFrame(() => resolve(undefined)))
+      await nextTick()
+
+      const handle = host.querySelector<HTMLButtonElement>('[data-dc-component="node-handle"]')!
+      expect(handle.style.left).toBe('0px')
+      expect(handle.style.transform).toBe('translateX(calc(-100% - 8px))')
+
+      hoveredNodeId.value = undefined
+      selectedNodeId.value = 'stack'
+      await nextTick()
+
+      const rootSelection = host.querySelector<HTMLElement>('[data-dc-component="node-selection"]')!
+      const rootToolbar = host.querySelector<HTMLElement>('[data-dc-component="node-toolbar"]')!
+      expect(rootSelection.dataset.dcState).toBe('root-segment')
+      expect(rootToolbar.dataset.placement).toBe('left-start')
+      expect(rootToolbar.dataset.orientation).toBe('vertical')
+
+      selectedNodeId.value = 'child'
+      await nextTick()
+
+      const regionSelection = host.querySelector<HTMLElement>('[data-dc-component="node-selection"]')!
+      const regionToolbar = host.querySelector<HTMLElement>('[data-dc-component="node-toolbar"]')!
+      expect(regionSelection.dataset.dcState).toBe('material-bounds')
+      expect(regionToolbar.dataset.orientation).toBe('horizontal')
+      expect(regionToolbar.dataset.placement).toMatch(/^(top|bottom)-end$/)
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
   it('routes root drop anchors and feedback through the Interaction Plane', async () => {
     const onDropAnchor = vi.fn()
     const materials = [{ type: 'text', presentation: { kind: 'headless' as const } }]
@@ -1011,6 +1109,87 @@ describe('applicationSurface', () => {
         [{ type: 'select-node', nodeId: 'first' }],
         [{ type: 'hover-node', nodeId: null }],
       ])
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('uses a selection mask by default without taking over unmasked or Container Owner preview input', async () => {
+    const execute = vi.fn(() => ({ status: 'committed' as const }))
+    const defaultPreviewClicks = vi.fn()
+    const unmaskedPreviewClicks = vi.fn()
+    const containerPreviewClicks = vi.fn()
+    const DefaultPreview = defineComponent({
+      setup: () => () => h('button', {
+        'data-testid': 'default-preview-button',
+        'onClick': defaultPreviewClicks,
+      }, 'Default preview action'),
+    })
+    const UnmaskedPreview = defineComponent({
+      setup: () => () => h('button', {
+        'data-testid': 'unmasked-preview-button',
+        'style': { position: 'relative', zIndex: 2 },
+        'onClick': unmaskedPreviewClicks,
+      }, 'Unmasked preview action'),
+    })
+    const ContainerPreview = defineComponent({
+      setup: () => () => h('button', {
+        'data-testid': 'container-preview-button',
+        'onClick': containerPreviewClicks,
+      }, 'Container preview action'),
+    })
+    const materials = [
+      { type: 'default', presentation: { kind: 'visual' as const, preview: DefaultPreview } },
+      { type: 'unmasked', presentation: { kind: 'visual' as const, preview: UnmaskedPreview } },
+      {
+        type: 'container',
+        schema: { container: { regions: [{ id: 'content' }] } },
+        presentation: { kind: 'visual' as const, preview: ContainerPreview },
+      },
+    ]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [
+        { id: 'default', type: 'default', props: {} },
+        { id: 'unmasked', type: 'unmasked', props: {} },
+        { id: 'container', type: 'container', props: {} },
+      ],
+      structure: {
+        root: ['default', 'unmasked', 'container'],
+        containers: { container: { regions: { content: [] } } },
+      },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () => h(ApplicationSurface, { document: resolved, catalog, execute }),
+    })
+
+    try {
+      app.mount(host)
+      await nextTick()
+
+      const defaultMask = host.querySelector<HTMLButtonElement>(
+        '[data-dc-node-id="default"] .dc-internal-node-host__selection-mask',
+      )!
+      defaultMask.click()
+      expect(defaultPreviewClicks).not.toHaveBeenCalled()
+      expect(execute).toHaveBeenCalledWith({ type: 'select-node', nodeId: 'default' })
+
+      execute.mockClear()
+      host.querySelector<HTMLButtonElement>('[data-testid="unmasked-preview-button"]')!.click()
+      expect(unmaskedPreviewClicks).toHaveBeenCalledOnce()
+      expect(execute).not.toHaveBeenCalled()
+
+      host.querySelector<HTMLButtonElement>('[data-testid="container-preview-button"]')!.click()
+      expect(containerPreviewClicks).toHaveBeenCalledOnce()
+      expect(execute).not.toHaveBeenCalled()
     }
     finally {
       app.unmount()

@@ -4,6 +4,7 @@ import { IconArrowDown, IconArrowUp, IconCopy, IconDelete } from '@dragcraft/ico
 import { DcScrollArea } from '@dragcraft/ui'
 import { defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
+import { projectNodeToolbarActions } from '../presentation/node-action-projection'
 
 type ResolvedNode = ResolvedDocument['root'][number]
 
@@ -18,50 +19,38 @@ export default defineComponent({
       const title = material?.panel?.titleKey
         ? t(material.panel.titleKey, material.panel.title ?? node.node.type)
         : material?.panel?.title ?? node.node.type
-      const location = document.locationsById.get(node.node.id)
-      const owner = location?.kind === 'container-region'
-        ? { kind: 'container-region' as const, containerId: location.containerId, regionId: location.regionId }
-        : location
-          ? { kind: 'page-root' as const }
-          : null
-      const siblings = location?.kind === 'container-region'
-        ? document.containersById.get(location.containerId)?.regions.get(location.regionId)?.children ?? []
-        : location
-          ? document.root
-          : []
-      const previous = location ? siblings[location.index - 1]?.node.id : undefined
-      const next = location ? siblings[location.index + 1]?.node.id : undefined
-      const action = (name: string, label: string, icon: typeof IconDelete, disabled: boolean, execute: () => void) => h('button', {
-        'type': 'button',
-        'class': ['dc-structure-panel__action', { 'dc-structure-panel__delete': name === 'remove' }],
-        'data-dc-part': 'action',
-        'data-dc-action': name,
-        'data-dc-state': name === 'remove' ? 'danger' : undefined,
-        'title': label,
-        'aria-label': label,
-        disabled,
-        'onClick': (event: MouseEvent) => {
-          event.stopPropagation()
-          execute()
-        },
-      }, [h(icon, { size: 15 })])
-      const actions = owner
-        ? h('div', { 'class': 'dc-structure-panel__actions', 'data-dc-part': 'actions' }, [
-            action('move-up', t('action.move-up', '上移'), IconArrowUp, !previous, () => {
-              if (previous)
-                context.executeWorkbenchAction({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'before', nodeId: previous } } })
-            }),
-            action('move-down', t('action.move-down', '下移'), IconArrowDown, !next, () => {
-              if (next)
-                context.executeWorkbenchAction({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: next } } })
-            }),
-            action('duplicate', t('action.duplicate', '复制'), IconCopy, false, () => {
-              context.executeWorkbenchAction({ type: 'duplicate-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: node.node.id } } })
-            }),
-            action('remove', t('action.delete', '删除'), IconDelete, false, () => {
-              context.executeWorkbenchAction({ type: 'remove-node', nodeId: node.node.id })
-            }),
-          ])
+      const actionStates = projectNodeToolbarActions({
+        catalog: context.catalog,
+        document,
+        evaluate: context.evaluateWorkbenchAction,
+        nodeId: node.node.id,
+      }).filter(action => action.visible && action.name !== 'drag')
+      const actions = actionStates.length > 0
+        ? h('div', { 'class': 'dc-structure-panel__actions', 'data-dc-part': 'actions' }, actionStates.map((action) => {
+            const definition = {
+              'move-up': { fallback: '上移', icon: IconArrowUp, key: 'action.move-up' },
+              'move-down': { fallback: '下移', icon: IconArrowDown, key: 'action.move-down' },
+              'duplicate': { fallback: '复制', icon: IconCopy, key: 'action.duplicate' },
+              'remove': { fallback: '删除', icon: IconDelete, key: 'action.delete' },
+            }[action.name]
+            const label = t(definition.key, definition.fallback)
+            return h('button', {
+              'type': 'button',
+              'class': ['dc-structure-panel__action', { 'dc-structure-panel__delete': action.name === 'remove' }],
+              'data-dc-part': 'action',
+              'data-dc-action': action.name,
+              'data-dc-state': action.name === 'remove' ? 'danger' : undefined,
+              'title': label,
+              'aria-label': label,
+              'disabled': action.disabled,
+              'onClick': action.disabled || !action.action
+                ? undefined
+                : (event: MouseEvent) => {
+                    event.stopPropagation()
+                    context.executeWorkbenchAction(action.action!)
+                  },
+            }, [h(definition.icon, { size: 15 })])
+          }))
         : null
       return h('div', {
         'class': ['dc-structure-panel__item', { 'dc-structure-panel__item--selected': selected }],
