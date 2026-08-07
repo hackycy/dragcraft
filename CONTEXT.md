@@ -72,6 +72,14 @@ _Avoid_: Schema reserve、静态 inset 字段、物料直接修改全局 CSS
 Designer 为每个 Schema 节点拥有的唯一设计态 DOM、几何与交互实体，内部承载 material preview、headless proxy 或 unknown fallback，并向 Interaction Plane 提供选区和 toolbar 锚点。
 _Avoid_: Preview 自管选区、Frame 重复渲染节点、全局 DOM selector
 
+**Designer 交互契约（Designer Interaction Contract）**:
+现有工作台和画布对使用者可观察的行为、默认容器 UI 与会话状态连续性；底层重构必须以当前实现为可执行基线保持等价，但不承诺保留旧 Core 或内部接口。
+_Avoid_: 旧 UI 实现、视觉近似、最终人工验收项
+
+**重构过渡 Adapter（Refactoring Transition Adapter）**:
+仅在重构分支内部把现有 Designer/Renderer 读写接口连接到新 Document、Resolver、Schema Editor 与 Authoring Engine 的临时模块；完成调用方切换后删除，不构成公共兼容契约。
+_Avoid_: v2 兼容层、双写、公共 migration adapter、永久 facade
+
 **Material Preview Context**:
 Designer 向当前 material preview 提供的只读节点、页面、归属和交互状态，以及经过 Authoring Engine 的受控自更新与 action 入口；它不承载额外的场景模拟或 Runtime 状态。
 _Avoid_: Engine、可写 Store、完整文档遍历、previewState、生产 Runtime context
@@ -115,6 +123,38 @@ _Avoid_: Command Bus、可变 draft、Designer Store
 **Authoring Engine**:
 设计器中协调 Authoring Action、Policy、Schema Editor、提交与 Schema History 的有状态模块，现有交互入口通过它读写文档。
 _Avoid_: Schema Structure Resolver、Runtime Renderer
+
+**Designer Session**:
+Designer 内部长期保留的会话接口，向工作台与画布提供只读文档查询、物料展示查询、selection/hover/drag/history 状态以及 `evaluate`/`execute` 写入入口；它不暴露旧 Engine、Command、Registry、LayoutPlan 或 EventHub。
+_Avoid_: DesignerEngine facade、Renderer context、UI Store
+
+**会话核心事实（Session Core Facts）**:
+Designer Session 中必须跨底层实现切换保留的当前 Document 快照、Resolver diagnostics、Schema History 时间线与游标，以及按稳定 node id 维护的 Selection；这些事实不能因后端接管而重建或清空。
+_Avoid_: Schema 持久化字段、完整 UI 状态、临时渲染快照
+
+**会话投影（Session Projection）**:
+由当前 DOM、浏览器几何或指针推导的 Hover、Drop Destination、Selection geometry、Drop indicator、Surface Reservation 等短暂状态；后端切换后可重新测量、重新命中或清空，不能保存悬空引用。
+_Avoid_: 可持久化 layout、Schema state、拖放历史
+
+**Cutover Fence**:
+Designer 后端实现切换的交互闸门；切换只能发生在 active drag 之外的空闲点，若被强制触发必须取消 drag 并清除 feedback，不重放 native pointer 或 drop 事件。
+_Avoid_: 双后端拖放、事件重放、并行 Schema 状态
+
+**交互耦合簇（Interaction Cluster）**:
+必须作为一个可验证切片共同替换的 Designer 交互职责集合，因为其中任一职责的行为依赖其余职责的状态、DOM 或坐标系；节点交互、Container Region 和 Root Surface 是不同的交互耦合簇。
+_Avoid_: 按文件逐个重写、按组件名拆分、跨切片共享临时状态
+
+**切片级回退（Slice Rollback）**:
+在同一 seam 处将一个完整交互耦合簇切回其旧实现；同一节点和同一交互事件始终只有一个 active implementation，不通过双渲染、双写或事件复制实现回退。
+_Avoid_: shadow renderer、双 DOM 对比、双 Schema commit
+
+**删除闸门（Deletion Gate）**:
+允许删除旧 Renderer、旧 Engine Adapter 与旧 Core 协议前必须同时满足的依赖、交互基线、产品场景、状态恢复、CSS/发布和静态边界证据集合；它是不可逆清理的前置条件，不是删除后的补测清单。
+_Avoid_: 最终人工验收项、import 清理、代码覆盖率门槛
+
+**清理提交（Cleanup Commit）**:
+只删除已被新实现替代的旧 Renderer、Adapter、协议、测试和依赖的独立提交；不在其中新增交互行为或修复产品偏差，使删除动作可以单独审查和回退。
+_Avoid_: 混合重构提交、删除时顺便改行为、不可区分的最终合并
 
 **布局语义（Layout Semantics）**:
 描述节点如何占据空间、依附参照物、参与滚动与避让以及形成叠放关系的声明；它独立于文档结构。
