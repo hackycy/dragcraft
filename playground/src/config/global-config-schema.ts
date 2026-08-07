@@ -1,4 +1,5 @@
 import type { FormSchema } from '@dragcraft/designer'
+import { localizedSection } from '../components/widgets/localized-section'
 
 /**
  * Global configuration form schema for the property panel "Global" tab.
@@ -6,7 +7,7 @@ import type { FormSchema } from '@dragcraft/designer'
  */
 export const globalConfigSchema: FormSchema = {
   sections: [
-    {
+    localizedSection('global', 'page', {
       title: '页面设置',
       fields: [
         {
@@ -29,8 +30,8 @@ export const globalConfigSchema: FormSchema = {
           },
         },
       ],
-    },
-    {
+    }),
+    localizedSection('global', 'style', {
       title: '样式设置',
       fields: [
         {
@@ -72,6 +73,6 @@ export const globalConfigSchema: FormSchema = {
           },
         },
       ],
-    },
+    }),
   ],
 }

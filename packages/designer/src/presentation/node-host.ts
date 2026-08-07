@@ -44,14 +44,6 @@ export default defineComponent({
       type: Function as PropType<(destination: StructuralDestination) => void>,
       default: undefined,
     },
-    onNodeDragStart: {
-      type: Function as PropType<(event: DragEvent, nodeId: string) => void>,
-      default: undefined,
-    },
-    onNodeDragEnd: {
-      type: Function as PropType<() => void>,
-      default: undefined,
-    },
     renderNode: {
       type: Function as PropType<(node: ResolvedNode, owner: PresentationOwner) => VNode>,
       required: true,
@@ -212,9 +204,7 @@ export default defineComponent({
           props.hovered ? 'hovered' : null,
           props.dragging ? 'dragging' : null,
         ].filter(Boolean).join(' ') || undefined,
-        'draggable': true,
-        'onDragstart': (event: DragEvent) => props.onNodeDragStart?.(event, props.node.node.id),
-        'onDragend': () => props.onNodeDragEnd?.(),
+        'style': props.node.node.style,
         'onClick': (event: MouseEvent) => {
           event.stopPropagation()
           props.execute?.({ type: 'select-node', nodeId: props.node.node.id })

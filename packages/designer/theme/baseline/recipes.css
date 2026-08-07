@@ -373,6 +373,16 @@
   background: var(--dc-color-surface);
 }
 
+[data-dc-component="empty-state"] {
+  color: var(--dc-color-text-subtle);
+  font-size: var(--dc-font-size-sm);
+}
+
+[data-dc-component="empty-state"] > [data-dc-part="icon"] {
+  font-size: var(--dc-empty-state-icon-size);
+  opacity: var(--dc-empty-state-icon-opacity);
+}
+
 [data-dc-component="document-recovery"],
 [data-dc-component="presentation-recovery"] {
   color: var(--dc-color-text-subtle);
@@ -388,6 +398,18 @@
 [data-dc-component="node-host"][aria-readonly="true"] {
   outline: 1px dashed var(--dc-color-warning);
   outline-offset: -1px;
+}
+
+[data-dc-component="node-handle"] {
+  color: var(--dc-color-accent);
+  background: transparent;
+}
+
+[data-dc-component="node-handle"] > [data-dc-part="surface"] {
+  color: var(--dc-color-on-accent);
+  background: var(--dc-color-accent);
+  border-radius: var(--dc-radius-sm);
+  box-shadow: var(--dc-shadow-sm);
 }
 
 [data-dc-component="node-toolbar"] {
@@ -433,11 +455,32 @@
   border: var(--dc-node-selection-stroke-width) solid var(--dc-color-accent);
 }
 
+[data-dc-component="node-selection"][data-dc-state~="root-segment"] > [data-dc-part] {
+  background: var(--dc-color-accent);
+}
+
 [data-dc-component="drop-indicator"] {
   background: var(--dc-color-accent-subtle);
   border: 2px dashed var(--dc-color-accent);
   border-radius: var(--dc-radius-lg);
   animation: dc-theme-fade-in var(--dc-duration-fast) ease;
+}
+
+[data-dc-component="forbidden-overlay"] {
+  color: var(--dc-color-danger);
+  font-size: var(--dc-font-size-sm);
+  font-weight: var(--dc-font-weight-medium);
+  line-height: 1.5;
+  background: var(--dc-color-danger-subtle);
+  border: 2px dashed var(--dc-color-danger);
+  border-radius: var(--dc-radius-lg);
+  animation: dc-theme-forbidden-pulse 1.5s ease-in-out infinite;
+}
+
+[data-dc-component="forbidden-overlay"] > [data-dc-part="text"] {
+  background: var(--dc-color-surface);
+  border: 1px solid color-mix(in srgb, var(--dc-color-danger), transparent 70%);
+  border-radius: var(--dc-radius-md);
 }
 
 /* Form fields */
@@ -479,7 +522,8 @@
 
 /* Motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  [data-dc-component="drop-indicator"] {
+  [data-dc-component="drop-indicator"],
+  [data-dc-component="forbidden-overlay"] {
     transition: none;
     animation: none;
   }
@@ -492,4 +536,9 @@
 @keyframes dc-theme-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes dc-theme-forbidden-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
 }

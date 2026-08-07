@@ -3,6 +3,40 @@ import { DesignerConfigurationError } from '../materials/create-material-catalog
 import { createDesigner, DOCUMENT_SCHEMA_VERSION } from './create-designer'
 
 describe('createDesigner session', () => {
+  it('switches localization synchronously without replacing the current document', () => {
+    const designer = createDesigner({ materials: [] })
+    const document = designer.document.value
+
+    expect(designer.localization.locale.value).toBe('zh-CN')
+    expect(designer.localization.translate('panel.materials.title')).toBe('物料')
+
+    designer.localization.setLocale('en')
+
+    expect(designer.localization.locale.value).toBe('en')
+    expect(designer.localization.translate('panel.materials.title')).toBe('Materials')
+    expect(designer.document.value).toBe(document)
+  })
+
+  it('rejects invalid localization values without changing the active locale', () => {
+    expect(() => createDesigner({ locale: '', materials: [] })).toThrowError(TypeError)
+
+    const designer = createDesigner({ locale: 'en', materials: [] })
+
+    expect(() => designer.localization.setLocale('')).toThrowError(TypeError)
+    expect(() => designer.localization.setLocale(null as never)).toThrowError(TypeError)
+    expect(designer.localization.locale.value).toBe('en')
+  })
+
+  it('keeps localization readable and ignores locale changes after dispose', () => {
+    const designer = createDesigner({ locale: 'en', materials: [] })
+
+    designer.dispose()
+    designer.localization.setLocale('zh-CN')
+
+    expect(designer.localization.locale.value).toBe('en')
+    expect(designer.localization.translate('panel.materials.title')).toBe('Materials')
+  })
+
   it('creates the canonical empty version-1 document when schema is omitted', () => {
     const designer = createDesigner({ materials: [] })
 

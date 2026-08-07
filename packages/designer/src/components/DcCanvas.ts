@@ -32,6 +32,7 @@ export default defineComponent({
             selectedNodeId: context.designer.selection.selectedNodeId.value ?? undefined,
             hoveredNodeId: context.designer.selection.hoveredNodeId.value ?? undefined,
             draggingNodeId: context.drag.draggingNodeId.value ?? undefined,
+            dropRejectionCode: context.drag.dropRejectionCode.value ?? undefined,
             onDropAnchor: context.drag.setDestination,
             onDrop: context.drag.handleDrop,
             onNodeDragStart: context.drag.handleNodeDragStart,
@@ -44,6 +45,7 @@ export default defineComponent({
           })
       const themeStates = [
         dragging.value ? 'dragging' : null,
+        context.drag.dropRejectionCode.value ? 'forbidden' : null,
         canvasPan.panEnabled.value ? 'hand' : null,
         canvasPan.isPanning.value ? 'panning' : null,
       ].filter(Boolean).join(' ') || undefined
@@ -51,6 +53,7 @@ export default defineComponent({
       return h('div', {
         'class': ['dc-canvas', {
           'dc-canvas--dragging': dragging.value,
+          'dc-canvas--forbidden': !!context.drag.dropRejectionCode.value,
           'dc-canvas--hand': canvasPan.panEnabled.value,
           'dc-canvas--panning': canvasPan.isPanning.value,
         }],

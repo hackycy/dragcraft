@@ -18,7 +18,9 @@ export interface SurfaceGeometryPoint {
 export interface GeometryRegistry {
   readonly rects: Readonly<ShallowRef<ReadonlyMap<string, SurfaceGeometryRect>>>
   readonly dispose: () => void
+  readonly getRegionRect: (containerId: string, regionId: string) => SurfaceGeometryRect | undefined
   readonly registerNode: (nodeId: string, element: HTMLElement) => () => void
+  readonly registerRegion: (containerId: string, regionId: string, element: HTMLElement) => () => void
   readonly observeSize: (element: HTMLElement, listener: () => void) => () => void
   readonly scheduleMeasure: () => void
   readonly setBoundary: (element: HTMLElement | null) => void
@@ -30,9 +32,11 @@ export const GEOMETRY_REGISTRY_KEY: InjectionKey<GeometryRegistry>
 
 export function createGeometryRegistry(): GeometryRegistry {
   const elements = new Map<string, HTMLElement>()
+  const regionElements = new Map<string, HTMLElement>()
   const observationCounts = new Map<Element, number>()
   const sizeListeners = new Map<Element, Set<() => void>>()
   const rects = shallowRef<ReadonlyMap<string, SurfaceGeometryRect>>(new Map())
+  const regionRects = shallowRef<ReadonlyMap<string, SurfaceGeometryRect>>(new Map())
   let boundary: HTMLElement | null = null
   let frame: number | null = null
   let disposed = false
@@ -104,8 +108,25 @@ export function createGeometryRegistry(): GeometryRegistry {
         bottom: top + height,
       }))
     }
+    const nextRegionRects = new Map<string, SurfaceGeometryRect>()
+    for (const [key, element] of regionElements) {
+      const rect = element.getBoundingClientRect()
+      const left = (rect.left - boundaryRect.left) / scaleX
+      const top = (rect.top - boundaryRect.top) / scaleY
+      const width = rect.width / scaleX
+      const height = rect.height / scaleY
+      nextRegionRects.set(key, Object.freeze({
+        left,
+        top,
+        width,
+        height,
+        right: left + width,
+        bottom: top + height,
+      }))
+    }
     sizeListeners.forEach(listeners => listeners.forEach(listener => listener()))
     rects.value = next
+    regionRects.value = nextRegionRects
   }
 
   function scheduleMeasure(): void {
@@ -136,6 +157,31 @@ export function createGeometryRegistry(): GeometryRegistry {
       if (elements.get(nodeId) !== element)
         return
       elements.delete(nodeId)
+      unobserve(element)
+      scheduleMeasure()
+    }
+  }
+
+  function regionKey(containerId: string, regionId: string): string {
+    return JSON.stringify([containerId, regionId])
+  }
+
+  function getRegionRect(containerId: string, regionId: string): SurfaceGeometryRect | undefined {
+    return regionRects.value.get(regionKey(containerId, regionId))
+  }
+
+  function registerRegion(containerId: string, regionId: string, element: HTMLElement): () => void {
+    const key = regionKey(containerId, regionId)
+    const previous = regionElements.get(key)
+    if (previous && previous !== element)
+      unobserve(previous)
+    regionElements.set(key, element)
+    observe(element)
+    scheduleMeasure()
+    return () => {
+      if (regionElements.get(key) !== element)
+        return
+      regionElements.delete(key)
       unobserve(element)
       scheduleMeasure()
     }
@@ -178,9 +224,11 @@ export function createGeometryRegistry(): GeometryRegistry {
     window.removeEventListener('resize', scheduleMeasure)
     window.removeEventListener('scroll', scheduleMeasure, true)
     elements.clear()
+    regionElements.clear()
     observationCounts.clear()
     sizeListeners.clear()
     rects.value = new Map()
+    regionRects.value = new Map()
   }
 
   window.addEventListener('resize', scheduleMeasure)
@@ -189,8 +237,10 @@ export function createGeometryRegistry(): GeometryRegistry {
   return Object.freeze({
     rects,
     dispose,
+    getRegionRect,
     observeSize,
     registerNode,
+    registerRegion,
     scheduleMeasure,
     setBoundary,
     toSurfacePoint,

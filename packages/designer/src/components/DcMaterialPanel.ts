@@ -15,6 +15,8 @@ export default defineComponent({
     const filteredGroups = computed(() => {
       const byGroup = new Map<string, MaterialDefinition[]>()
       for (const material of context.catalog.materials) {
+        if (!material.panel)
+          continue
         const display = resolveMaterialItem(material, t)
         if (!materialItemMatchesQuery(material, display, context.searchQuery.value))
           continue
@@ -25,7 +27,7 @@ export default defineComponent({
       }
       return Array.from(byGroup, ([name, materials]) => ({
         name,
-        title: name === 'default' ? t('panel.materials.title', '物料') : name,
+        title: name === 'default' ? t('panel.materials.title', '物料') : t(`group.${name}`, name),
         materials,
       }))
     })

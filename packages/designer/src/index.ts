@@ -73,6 +73,7 @@ export {
 export type {
   CreateDesignerOptions,
   DesignerInstance,
+  DesignerLocalization,
 } from './session/create-designer'
 
 export type {

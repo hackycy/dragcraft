@@ -1,12 +1,15 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/i18n'
+import type { Ref } from 'vue'
 import type { ConfirmAuthoringAction } from '../authoring/create-authoring-confirmation-coordinator'
+import type { AuthoringEngineSession } from '../authoring/create-authoring-engine'
 import type { AuthoringEngine } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { MaterialDefinition } from '../materials/types'
 import type { ContainerShellSource, DesignerExtensions, DesignerWorkspaceController, DesignerWorkspaceOptions } from '../types'
 import { createI18n } from '@dragcraft/i18n'
+import { readonly } from 'vue'
 import { createAuthoringConfirmationCoordinator } from '../authoring/create-authoring-confirmation-coordinator'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import {
@@ -38,12 +41,20 @@ export interface CreateDesignerOptions {
 
 export interface DesignerInstance extends AuthoringEngine {
   dispose: () => void
+  readonly localization: DesignerLocalization
+}
+
+export interface DesignerLocalization {
+  readonly locale: Readonly<Ref<string>>
+  setLocale: (locale: string) => void
+  translate: (key: string, fallback?: string) => string
 }
 
 export interface DesignerInternals {
   readonly catalog: MaterialCatalog
   readonly containerShell?: ContainerShellSource
   readonly executeWorkbenchAction: AuthoringEngine['execute']
+  readonly evaluateWorkbenchAction: AuthoringEngineSession['evaluate']
   readonly extensions: DesignerExtensions
   readonly fieldComponentMap?: FieldComponentMap
   readonly globalConfigSchema: FormSchema | null
@@ -62,6 +73,11 @@ function createDesignerI18n(locale: string, messages?: LocaleMessages): I18nInst
   for (const [messageLocale, localeMessages] of Object.entries(messages ?? {}))
     i18n.mergeMessages(messageLocale, localeMessages)
   return i18n
+}
+
+function assertLocale(locale: unknown): asserts locale is string {
+  if (typeof locale !== 'string' || locale.length === 0)
+    throw new TypeError('locale must be a non-empty string')
 }
 
 export function getDesignerInternals(instance: DesignerInstance): DesignerInternals {
@@ -88,6 +104,8 @@ export function createDesigner(options: CreateDesignerOptions): DesignerInstance
     && (!Number.isInteger(options.maxHistoryEntries) || options.maxHistoryEntries < 0)) {
     throw new DesignerConfigurationError('HISTORY_LIMIT_INVALID', 'maxHistoryEntries')
   }
+  const locale = options.locale === undefined ? 'zh-CN' : options.locale
+  assertLocale(locale)
   const catalog = createMaterialCatalog(options.materials)
   const schema = Object.hasOwn(options, 'schema')
     ? options.schema
@@ -104,19 +122,41 @@ export function createDesigner(options: CreateDesignerOptions): DesignerInstance
     confirm: options.confirmAuthoringAction,
     engine,
   })
+  let disposed = false
+  const i18n = createDesignerI18n(locale, options.messages)
+  const localization: DesignerLocalization = Object.freeze({
+    locale: readonly(i18n.locale),
+    setLocale: (nextLocale: string) => {
+      if (disposed)
+        return
+      assertLocale(nextLocale)
+      i18n.setLocale(nextLocale)
+    },
+    translate: i18n.t,
+  })
 
   const instance = Object.freeze({
-    ...engine,
-    dispose: confirmation.dispose,
+    document: engine.document,
+    dispose: () => {
+      disposed = true
+      confirmation.dispose()
+    },
+    execute: engine.execute,
+    exportSchema: engine.exportSchema,
+    history: engine.history,
+    importSchema: engine.importSchema,
+    localization,
+    selection: engine.selection,
   })
   internalsByInstance.set(instance, Object.freeze({
     catalog,
     ...(options.containerShell ? { containerShell: options.containerShell } : {}),
     executeWorkbenchAction: confirmation.execute,
+    evaluateWorkbenchAction: engine.evaluate,
     extensions: Object.freeze({ ...options.extensions }),
     ...(options.fieldComponentMap ? { fieldComponentMap: options.fieldComponentMap } : {}),
     globalConfigSchema: options.globalConfigSchema ?? null,
-    i18n: createDesignerI18n(options.locale ?? 'zh-CN', options.messages),
+    i18n,
     ...(options.limits?.maxDiagnostics === undefined
       ? {}
       : { maxDiagnostics: options.limits.maxDiagnostics }),

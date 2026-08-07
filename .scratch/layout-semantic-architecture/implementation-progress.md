@@ -1,6 +1,6 @@
 # Layout Semantic Architecture Implementation Progress
 
-Updated: 2026-08-07 00:49 CST
+Updated: 2026-08-07 13:47 CST
 
 ## Phase Status
 
@@ -8,10 +8,10 @@ Updated: 2026-08-07 00:49 CST
 - Phase 1: complete. Final-named DocumentSchema, definition snapshot, Schema Structure Resolver, immutable ResolvedDocument query model, and conformance tests are implemented beside the legacy path.
 - Phase 2: complete. The pure Schema Editor, closed operation vocabulary, structural destinations, aggregate bundles, atomic batch execution, and conformance tests are implemented beside the legacy path.
 - Phase 3: complete. Material Catalog, Authoring Engine, bounded snapshot history, four-state document session, and controlled DesignerInstance seams are implemented beside the legacy UI path.
-- Phase 4: complete. Designer Presentation replacement is implemented beside the legacy Renderer path and verified through the ApplicationSurface seam.
-- Phase 5: complete. The workbench consumes DesignerInstance, the package root uses the accepted allowlist, and public consumer/package/theme validation covers the replacement path.
+- Phase 4: automated UI parity corrections are complete for Device Frame planes, toolbar affordance/geometry, node style, empty/start/end/region/forbidden drop feedback, selection edges, hover handle and framework empty state. Exact Playground business empty-state parity is stopped on open Wayfinder ticket 15.
+- Phase 5: automated UI parity corrections are complete for Designer Localization, material groups/cards, Structure/toolbar actions, Playground inspector field sets, Color/Array/Spacing adapters and implementation-only CSS properties.
 - Phase 6: complete. Renderer, Widgets, legacy Core protocols, their implementation-coupled tests and obsolete package dependencies are removed; Core is a Vue-free pure module with only the accepted Document, Resolver and Editor interface.
-- Phase 7: automated implementation complete. Playground and Guide use the accepted public Designer seam, the Guide Runtime is autonomous, and all automated gates pass; the human Playground acceptance checklist remains intentionally unconfirmed.
+- Phase 7: public consumer cutover and runtime localization are implemented. Exact Playground custom empty-state parity is stopped on open Wayfinder ticket 15, and the human Playground acceptance checklist remains unconfirmed.
 
 ## Phase 0 Evidence
 
@@ -527,6 +527,77 @@ Final conformance audits:
 
 Automated Phase 7 implementation is complete. The Playground human acceptance checklist below remains unchecked because browser geometry and interaction quality require human acceptance; no agent acceptance claim is made.
 
+## Phase 1-7 UI Parity Audit
+
+The audit compared the replacement branch with `origin/main` under the accepted constraint that Phase 1-7 may replace logic and internal module ownership but must preserve the existing Designer UI and interaction behavior.
+
+Confirmed implementation defects that do not require a public interface change:
+
+- Device Frame topology places Document and Viewport planes below the host shell, but `structure.css` targeted only direct ApplicationSurface children; ApplicationSurface also clipped its sibling Interaction Plane.
+- NodeHost made the complete preview draggable and the selected-node toolbar omitted the established drag affordance.
+- Catalog-only/headless materials without `panel` metadata were exposed as draggable material-panel items.
+- Further review found unresolved Phase 4/5 parity defects: NodeHost does not project persisted `node.style`; toolbar positioning remains on the trailing side with hard-coded English labels; empty/end drop feedback and forbidden-state feedback are incomplete; palette group labels are raw keys; main's node-handle/selection-edge/forbidden/empty-state theme recipes and Playground empty state were removed; and the rewritten Playground inspector/field presentation differs from main. These remain unmodified after the architecture stop below.
+- Consumer presentation code also introduced `--pg-*` and `--guide-*` implementation variables instead of the required `--dc-internal-<owner>-<name>` convention. This is UI scope/standards drift, not part of the accepted logical refactor.
+
+Completed red-green slices before the stop:
+
+| Cycle | Directed command | Observed red | Following green |
+| --- | --- | --- | --- |
+| 1 | `pnpm --filter @dragcraft/designer test --run src/presentation/structure-css.test.ts` | 1/1 failed because ApplicationSurface had `overflow: hidden`; shell-nested Document/Viewport selectors also no longer represented the real topology | 1 file and 1/1 test passed after the public structural stylesheet allowed Interaction Plane overflow and selected shell-nested planes |
+| 2 | `pnpm --filter @dragcraft/designer test --run src/presentation/application-surface.test.ts -t 'starts node dragging from the selected-node toolbar affordance'` | 1 failed and 26 skipped because `[data-dc-action="drag"]` was absent | 1 passed and 26 skipped after drag callbacks moved from the complete NodeHost to the selected-node toolbar affordance |
+| 3 | `pnpm --filter @dragcraft/designer test --run src/components/DcDesigner.test.ts -t 'omits catalog-only materials from the material panel'` | 1 failed and 3 skipped; actual titles were `['hidden', 'Visible']` instead of `['Visible']` | 1 passed and 3 skipped after the panel projection ignored materials without `panel` metadata |
+
+Architecture stop:
+
+- Main switches locale through the same Designer session's mutable i18n controller. The replacement public `DesignerInstance` has no locale operation and `CreateDesignerOptions.locale` is initialization-only.
+- Phase 7 currently exports the Schema, disposes the Designer and creates a new instance when locale changes. This preserves only Schema data and loses selection, hover, undo/redo history, pending confirmation and preview-local state.
+- Preserving the accepted UI behavior requires a new or changed public locale seam. Open Wayfinder ticket 14, `Designer 运行时本地化宿主契约`, records the conflict and required decision.
+- Development stopped before writing a locale test or changing a locale/public interface. The accepted plan, resolved tickets and `CONTEXT.md` were not modified.
+
+Actual audit commands and results:
+
+- `git merge-base origin/main HEAD`: returned `2a7e45b8973eb879dfca2a10d58827886a70fccf`; `origin/main` is the exact branch base.
+- `git diff --name-status origin/main...HEAD`: showed the Phase 1-7 replacement, including Designer presentation/workbench/theme and Playground consumer files.
+- `git log --reverse --format='%h %s' origin/main..HEAD`: showed the accepted-plan commit followed by Phase 1-7 implementation commits through `e6c34ff`.
+- `git diff --numstat origin/main...HEAD -- packages/designer/theme/baseline/recipes.css playground/src/App.vue playground/src/components/widgets/basic.ts playground/src/components/widgets/container.ts`: showed substantial UI rewrites in each file, including 13 additions/142 deletions in the Designer interaction recipes and 48 additions/121 deletions in Playground App.
+- `rg -n -- "--(?:pg|guide)-" playground/src/components/widgets packages/designer examples/guide-project/src/domain/widgets`: found the new Playground container/divider and Guide container implementation variables outside the required prefix convention.
+- `rg -n "readonly locale|setLocale|getDesignerInternals|toggleLocale" packages/designer/src/session packages/designer/src/index.ts packages/designer/src/public-interface.test.ts packages/designer/fixtures/public-consumer/consumer.ts playground/src/App.vue`: found initialization-only `locale?: string`, private `DesignerInternals.i18n`, and the Playground recreation path; no public runtime locale operation exists.
+- `sed -n '108,119p' playground/src/App.vue`: showed `toggleLocale()` exporting the Schema, disposing the current Designer and creating a replacement instance.
+- `git diff --check`: passed before the ticket/progress edits.
+
+Verification after the architecture stop:
+
+- `pnpm build`: failed with 8 successful tasks out of 10 reached. `@dragcraft/docs` reported 7 `ENOENT` errors because VitePress code includes still reference Phase 6/7-deleted Guide files including `runtime/layout.ts`, `editor/actions.ts`, `editor/extensions.ts`, `editor/messages.ts` and `editor/schema-migrations.ts`; Turbo then cancelled the concurrent Designer build. This is a real repository gate failure and was not changed because docs are assigned to Phase 8.
+- `pnpm --filter @dragcraft/designer build`: theme contract, interaction recipes, tsdown/publint and package exports passed. Its final public-consumer command failed because the ignored package-local `node_modules/.bin/tsc` still targets absent `typescript@6.0.3`, while the frozen lockfile resolves 5.9.3.
+- `pnpm install --frozen-lockfile --offline --trust-lockfile`: passed with `Already up to date`; `pnpm install --frozen-lockfile --offline --force --trust-lockfile` also passed with `Already up to date`. Neither command rewrote the stale package-local generated shim, and no manifest or lockfile changed.
+- `pnpm exec tsc -p packages/designer/fixtures/public-consumer/tsconfig.json`: passed using the root lockfile-resolved TypeScript 5.9.3 binary.
+- `pnpm exec tsc -p packages/designer/tsconfig.json`: passed with no output.
+- `pnpm exec eslint packages/designer/src/components/DcDesigner.test.ts packages/designer/src/components/DcMaterialPanel.ts packages/designer/src/composables/useDragDrop.test.ts packages/designer/src/presentation/application-surface.test.ts packages/designer/src/presentation/application-surface.ts packages/designer/src/presentation/interaction-plane.ts packages/designer/src/presentation/node-host.ts packages/designer/src/presentation/structure-css.test.ts`: first failed only on one padded blank line added by this audit; after removing that line, the exact command passed with no output.
+- `pnpm --filter @dragcraft/designer test --run`: first run passed 18 files and failed the legacy drag/drop test because it still fired `dragstart` on the complete NodeHost. After updating that integration test to select the node and use the restored toolbar affordance, the same command passed 19 files and 112/112 tests.
+- `pnpm exec tsc`: passed with no output after all audit test edits.
+- `pnpm --filter @dragcraft/core test --run`: passed 2 files and 65/65 tests, covering the retained Phase 1 Resolver and Phase 2 Editor suites.
+- `pnpm --filter @dragcraft/device-frames test --run`: passed 3 files and 14/14 tests.
+- `pnpm --filter guide-project test --run`: passed 5 files and 10/10 tests.
+- `pnpm exec vitest run playground/src/components/widgets/container.test.ts playground/src/components/widgets/mini-program.test.ts`: passed 2 files and 4/4 tests.
+- `pnpm check:public-boundary`: passed with `public package boundary valid`.
+- `pnpm check:obsolete-protocols`: failed with `packages/renderer still exists`. Read-only follow-up showed no tracked file under `packages/renderer`; the ignored directory contains only stale `dist`, `node_modules` and `.turbo` artifacts from before package deletion. The audit did not delete these local generated artifacts after the architecture stop.
+- `test "$(sed -n '3p' .scratch/layout-semantic-architecture/issues/14-runtime-designer-locale-contract.md)" = "Status: open"`: passed.
+- `git diff --check`: passed after the implementation, ticket and progress edits.
+
+## Wayfinder Ticket 14 Decision
+
+- Ticket 14 is resolved. The public seam is the dedicated `DesignerInstance.localization` deep module with a read-only locale, synchronous `setLocale(locale)` and `translate(key, fallback?)`; the private `I18nInstance`, writable locale and runtime `mergeMessages()` remain hidden.
+- Designer Localization updates all Designer-owned and Form Generator key-based text. Material groups resolve `group.${group}` with raw-group fallback, and host UI such as DevicePicker consumes the same `translate()` function. Material Preview remains user-owned and receives no localization context.
+- Locale changes preserve Designer identity, Document reference, selection, hover, history, pending confirmation and mounted Preview instances. They create no Action, Operation, history entry or diagnostic, and they do not re-invoke a pending confirmation callback.
+- Locale keys are exact and case-sensitive. Unknown non-empty locales are accepted with fallback/key resolution; empty or runtime non-string values throw `TypeError` without mutation. After `dispose()`, localization remains readable and `setLocale()` is a no-op.
+- Ticket 14 supersedes only the runtime localization portion of ticket 08. The decision session updated `CONTEXT.md`, tickets 08 and 14, the architecture map and this progress file; no production implementation or test was changed during the decision.
+- Phase 7 implementation did not resume in this decision session.
+- `test "$(sed -n '3p' .scratch/layout-semantic-architecture/issues/14-runtime-designer-locale-contract.md)" = "Status: resolved"`: passed.
+- The first consistency-search attempt used a double-quoted pattern containing Markdown backticks; zsh tried to execute `DesignerInstance.localization` and printed `command not found`, so that attempt was discarded as invalid verification.
+- `rg -n 'Designer 本地化|DesignerInstance\.localization|DesignerLocalization|Ticket 14|ticket 14|Superseded in part by:.*14' CONTEXT.md .scratch/layout-semantic-architecture/map.md .scratch/layout-semantic-architecture/issues/08-public-designer-contract.md .scratch/layout-semantic-architecture/issues/14-runtime-designer-locale-contract.md .scratch/layout-semantic-architecture/implementation-progress.md`: passed and found the glossary term, ticket 08 supersede marker, resolved ticket interface, map decision and progress entries.
+- `git status --short -- CONTEXT.md .scratch/layout-semantic-architecture/map.md .scratch/layout-semantic-architecture/issues/08-public-designer-contract.md .scratch/layout-semantic-architecture/issues/14-runtime-designer-locale-contract.md .scratch/layout-semantic-architecture/implementation-progress.md`: listed exactly the five decision artifacts, with ticket 14 still untracked because it was created during the preceding UI audit.
+- `git diff --check`: passed.
+
 ## Wayfinder Ticket 12 Decision
 
 - Ticket 12 is resolved: `MaterialPreviewContext.invokeAction(name, payload?)` is deleted from the accepted public interface.
@@ -538,6 +609,69 @@ Automated Phase 7 implementation is complete. The Playground human acceptance ch
 - `test "$(sed -n '3p' .scratch/layout-semantic-architecture/issues/12-material-preview-action-contract.md)" = "Status: resolved"`: passed.
 - `git diff --check`: passed.
 - `git diff --name-only`: reported only `CONTEXT.md`, the implementation progress, the architecture map and tickets 06, 08 and 12; no implementation file changed.
+
+## Phase 1-7 UI Parity Implementation
+
+Implementation resumed only after Wayfinder ticket 14 resolved the runtime localization interface. The accepted public seams remained the public consumer, mounted `DcDesigner` / Application Surface Vue integration and the existing CSS/theme contract.
+
+Completed UI corrections:
+
+- Implemented the resolved `DesignerInstance.localization` deep module with read-only locale, synchronous `setLocale()` and `translate()`. Playground locale changes retain the same Designer instance, Document, selection and history; DevicePicker consumes the same translator.
+- Restored localized Material groups/cards, Structure Panel and toolbar action text. Group keys use `group.${group}` with raw-key fallback.
+- Projected persistent `node.style` onto the unique NodeHost and restored toolbar anchoring/orientation, stable action dimensions, drag cursor and toolbar-owned node dragging.
+- Restored root/region empty, start and end drop feedback, policy/Core forbidden preflight feedback, default empty state, root four-edge selection, hovered-node handle and the corresponding Standard-theme recipes.
+- Replaced `--pg-*` / `--guide-*` variables with `--dc-internal-playground-*` / `--dc-internal-guide-*`.
+- Restored Playground Material/Form localization, all main-compatible Basic/Form/Mini inspector field sets, Color/Array/Spacing field adapters and their styles. Spacing binds to accepted `style.margin` / `style.padding` CSS shorthand paths and writes through the existing node binding interface.
+- Updated the theme manifest for the emitted `empty-state`, `node-handle`, selection-edge, drop and forbidden hooks; no TypeScript public interface changed.
+
+### UI Red-Green Evidence
+
+The earlier Designer slices used directed tests at the agreed mounted/public seams. Effective red tests covered:
+
+- `src/session/create-designer.test.ts`: same-session localization, invalid values and dispose behavior.
+- `src/components/DcDesigner.test.ts`: material group localization and catalog-only material filtering.
+- `src/presentation/application-surface.test.ts`: node style, hover handle, empty root/region and end feedback, toolbar drag affordance and forbidden feedback.
+- `src/presentation/structure-css.test.ts`: toolbar geometry, default empty state, four-edge root selection, hover handle and forbidden recipes.
+- `src/composables/useDragDrop.test.ts`: denied-material preflight without commit/history mutation.
+- `src/components/DcStructurePanel.test.ts`: localized Structure actions.
+
+Playground vertical slices and their actual commands/results:
+
+| Cycle | Directed command | Observed red | Following green |
+| --- | --- | --- | --- |
+| Locale groups | `cd playground && pnpm exec vitest run --config vite.config.ts src/App.test.ts` | 1/1 failed because English group titles remained `basic`, `form`, `navigation`, `action`, `layout` | 1/1 passed after Playground messages and same-session translation were connected |
+| Material cards | same App command | 1/1 failed: all cards except Text remained Chinese and Navigation Bar was missing | 1/1 passed with all 19 translated cards, including Navigation Bar |
+| Inspector messages | `cd playground && pnpm exec vitest run --config vite.config.ts src/components/widgets/localization.test.ts` | 1/1 failed because the first required section key was `undefined` | 2/2 passed after all current Material/global sections, labels, placeholders and options resolved in `zh-CN` and `en` |
+| Tab fields | `cd playground && pnpm exec vitest run --config vite.config.ts src/App.test.ts -t "preserves the tab bar"` | 1 failed and 1 skipped because 0 Array items were rendered instead of 4 | 1 passed and 1 skipped after local Array/Color adapters; adding item 5 also updated the Tab Bar preview |
+| Spacing | `cd playground && pnpm exec vitest run --config vite.config.ts src/App.test.ts -t "preserves spacing"` | 1 failed and 2 skipped because 0 Spacing controls were rendered instead of 2 | intermediate red showed whole `style` replacement is outside the binding interface; final 1 passed and 2 skipped with `style.margin` / `style.padding` shorthand and live NodeHost projection |
+| Basic/Form parity | `cd playground && pnpm exec vitest run --config vite.config.ts src/components/widgets/localization.test.ts -t "preserves the basic"` | 1 failed and 1 skipped; Button lacked the `type` field | 2/2 localization-contract tests passed after all Basic/Form field sets matched main |
+| Mini parity | `cd playground && pnpm exec vitest run --config vite.config.ts src/components/widgets/localization.test.ts -t "preserves the mini-program"` | 1 failed and 2 skipped; Floating Button had no non-spacing fields | 3/3 localization-contract tests passed after Floating Button and Swiper inspector behavior was restored |
+
+Two setup failures were not counted as red: running the Playground test from the repository root could not resolve Vue, and running before Designer `dist` existed could not collect the test. `pnpm --filter @dragcraft/designer exec tsdown` then passed before the effective Playground red cycles.
+
+### Ticket 15 Architecture Stop
+
+- Main's Playground-specific empty state used deleted `rendererExtensions.emptyState` to render phone/arrow icons and idle/drag-over copy.
+- Current `DesignerExtensions` exposes rail, panel and material-item adapters only. Application Surface owns a hard-coded framework empty-state VNode and does not expose its internal drag state.
+- CSS/message overrides cannot legally mount the original Vue icons or reproduce its drag-over content. Exact parity therefore requires a new or changed public interface.
+- Created open Wayfinder ticket 15, `Designer 空态展示扩展契约`. No empty-state interface, export, public test or product implementation was added after the gap was confirmed.
+
+### UI Verification Evidence
+
+- `pnpm --filter @dragcraft/designer test --run`: passed 19 files and 127/127 tests after formatting.
+- `cd playground && pnpm exec vitest run --config vite.config.ts`: passed 4 files and 10/10 tests.
+- `pnpm --filter @dragcraft/core test --run`: passed 2 files and 65/65 tests.
+- `pnpm --filter @dragcraft/device-frames test --run`: passed 3 files and 14/14 tests.
+- `pnpm --filter guide-project test`: passed 5 files and 10/10 tests.
+- `pnpm --filter playground build`: passed after 3194 modules; Vite emitted only the existing large-chunk warning.
+- In-app browser at `http://localhost:9981/`: desktop 1280x720 reported body width 1280, Designer 1280x672, 19 Material cards, 20 visible NodeHosts and 0 recovery/diagnostic elements. Tab Inspector rendered one Array, three Color and two Spacing controls with property-panel `scrollWidth === clientWidth === 275`; locale switch showed `Basic/Form/Navigation/Action/Layout`, `Tab list`, English section titles and `Preview device`. Mobile 390x844 reported body width 390, a two-row 88px header and a 390x756 Designer with no horizontal page overflow or visible element overlap.
+- `pnpm --filter @dragcraft/designer generate:theme-contract && pnpm --filter @dragcraft/designer check:theme`: first check failed because the new DOM hooks were absent from the manifest; after declaring the already-emitted hooks it passed with `theme contract valid: 61 tokens, 29 components` and `theme interaction recipes valid`.
+- `rg -n --glob '!**/dist/**' -- '--(?:pg|guide)-' playground/src examples/guide-project/src`: no output, exit 1, confirming no forbidden short implementation prefix remains.
+- `pnpm exec tsc -p packages/designer/fixtures/public-consumer/tsconfig.json` and `pnpm exec tsc -p examples/guide-project/tsconfig.json`: both passed with no output using root TypeScript 5.9.3.
+- `pnpm build`: reached 8 successful tasks out of 10 and failed only in Phase 8 docs with 7 `ENOENT` includes for Guide files removed by Phase 6/7; Turbo cancelled the concurrent Designer build.
+- First `pnpm lint` failed with 106 auto-fixable formatting errors in UI files. After targeted `pnpm exec eslint --fix ...`, the second `pnpm lint` passed ESLint and `public package boundary valid`, then failed only because ignored generated `packages/renderer` remnants still exist.
+- `pnpm typecheck`: built 8/9 package tasks; Designer theme, bundle, publint and package exports passed, then its package-local generated `.bin/tsc` failed because it still targets absent `typescript@6.0.3`. Frozen/offline install and `--force` both reported `Already up to date`; the equivalent root TypeScript 5.9.3 public-consumer and Guide commands above passed.
+- `git diff --check`: passed after all UI implementation, formatting, theme manifest, ticket and progress edits.
 
 ## Playground Human Baseline
 
@@ -559,9 +693,12 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 - Phase 0 cannot be marked complete until the user confirms the playground human baseline.
 - No automated Phase 1 blocker or failure remains.
 - No automated Phase 2 blocker or failure remains.
-- No automated Phase 5 package blocker remains.
-- No automated Phase 6 blocker or failure remains.
-- No automated Phase 7 blocker or failure remains; only the explicitly human Playground acceptance checklist is outstanding.
+- Phase 5 automated UI parity is complete; Playground human acceptance remains open.
+- No tracked-source Phase 6 package or protocol reference remains.
+- Phase 6 tracked-source removal is complete, but the current worktree's obsolete-protocol command remains red until ignored generated remnants under `packages/renderer` are removed outside this architecture decision stop.
+- No accepted-interface blocker remains from Wayfinder ticket 14; Phase 7 uses the resolved localization contract.
+- Open Wayfinder ticket 15 blocks exact Playground custom empty-state parity because the accepted `DesignerExtensions` interface has no empty-state Adapter.
+- The root `pnpm build` gate is red because active VitePress documents include Guide files deleted by Phase 6/7. Correcting those documents belongs to Phase 8 and was not pulled into this Phase 1-7 UI audit.
 - Package-manager observation, not an automated baseline failure: a non-frozen catalog resolution currently advances `vitepress@next` to `2.0.0-alpha.19`, whose `vite@^8.2.0` requirement has no stable registry match. The docs dependency was not changed; frozen installation succeeds.
 - No accepted-interface blocker remains from Wayfinder ticket 12; Phase 4 automated implementation is complete.
 - No accepted-interface blocker remains from Wayfinder ticket 13; Phase 7 completed through the resolved host-confirmation contract.
@@ -570,8 +707,8 @@ The following Phase 0 items remain intentionally unconfirmed and must not be mar
 
 - Phase 2 is complete.
 - Phase 3 is complete.
-- Phase 4 is complete; its accepted public-interface gap was resolved by Wayfinder ticket 12 before implementation resumed.
-- Phase 5 is complete.
+- Phase 4 automated UI corrections are complete except exact Playground business empty-state parity, which is stopped on ticket 15.
+- Phase 5 automated UI parity is complete.
 - Phase 6 is complete.
-- Phase 7 automated implementation is complete; human Playground acceptance remains unchecked.
+- Phase 7 public consumer cutover and ticket 14 localization are implemented; ticket 15 and the human Playground acceptance checklist remain open.
 - Phase 8 was not started.

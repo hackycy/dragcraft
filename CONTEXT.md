@@ -128,6 +128,10 @@ _Avoid_: 节点所有权、文档层级
 Designer 或外部 Schema 消费端根据节点类型解释展示与空间关系的宿主规则；外部消费策略不属于 Dragcraft interface，任何消费策略都不进入持久化 Schema。
 _Avoid_: Schema 布局字段、Dragcraft Runtime、共享跨平台 renderer
 
+**Designer 本地化（Designer Localization）**:
+Designer 工作台当前语言与消息解析的会话能力；切换语言保留同一设计会话，且不改变文档 Schema 或 history。
+_Avoid_: I18nInstance、重建 Designer、文档 locale
+
 **外部状态（External State）**:
 不属于文档事实、会随消费场景变化的数据，例如登录用户、权限、路由或设备；Dragcraft 不定义这类状态的 Designer 或生产 Runtime interface，额外展示模拟由框架使用者在物料实现外部自行拥有。
 _Avoid_: Schema 全局配置、解析器上下文、Designer previewState

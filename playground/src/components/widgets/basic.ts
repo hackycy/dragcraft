@@ -2,6 +2,7 @@ import type { MaterialDefinition } from '@dragcraft/designer'
 import type { PropType } from 'vue'
 import { defineMaterial } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
+import { localizedSection } from './localized-section'
 
 const protectedRemoval = { remove: 'confirmation-required' as const }
 
@@ -87,8 +88,8 @@ export const DividerWidget = defineComponent({
   setup: props => () => h('div', {
     class: ['pg-widget-divider', `pg-widget-divider--${props.direction}`],
     style: {
-      '--pg-divider-color': props.color,
-      '--pg-divider-size': `${props.thickness}px`,
+      '--dc-internal-playground-divider-color': props.color,
+      '--dc-internal-playground-divider-size': `${props.thickness}px`,
     },
   }),
 })
@@ -100,13 +101,13 @@ export const basicMaterials: readonly MaterialDefinition[] = [
     authoring: { policy: protectedRemoval },
     panel: { title: '文本', titleKey: 'widget.text.title', group: 'basic', icon: '文', keywords: ['copy', 'paragraph', '文案'] },
     inspector: { formSchema: { sections: [
-      { title: '内容', fields: [{ key: 'content', label: '文本内容', component: 'Textarea' }] },
-      { title: '样式', fields: [
+      localizedSection('text', 'content', { title: '内容', fields: [{ key: 'content', label: '文本内容', component: 'Textarea' }] }),
+      localizedSection('text', 'style', { title: '样式', fields: [
         { key: 'fontSize', label: '字号', component: 'InputNumber', componentProps: { min: 10, max: 72 } },
         { key: 'fontWeight', label: '字重', component: 'Select', componentProps: { options: [{ label: '常规', value: 'normal' }, { label: '粗体', value: 'bold' }] } },
-        { key: 'color', label: '文字颜色', component: 'Input' },
+        { key: 'color', label: '文字颜色', component: 'Color' },
         { key: 'textAlign', label: '对齐方式', component: 'Select', componentProps: { options: [{ label: '左', value: 'left' }, { label: '中', value: 'center' }, { label: '右', value: 'right' }] } },
-      ] },
+      ] }),
     ] } },
     presentation: { kind: 'visual', preview: TextWidget },
   }),
@@ -115,11 +116,12 @@ export const basicMaterials: readonly MaterialDefinition[] = [
     schema: { defaultProps: { text: '按钮', type: 'button', disabled: false, size: 'medium' } },
     authoring: { policy: protectedRemoval },
     panel: { title: '按钮', titleKey: 'widget.button.title', group: 'basic', icon: '钮', keywords: ['action', 'submit'] },
-    inspector: { formSchema: { sections: [{ title: '基础设置', fields: [
-      { key: 'text', label: '按钮文字', component: 'Input' },
+    inspector: { formSchema: { sections: [localizedSection('button', 'basic', { title: '基础设置', fields: [
+      { key: 'text', label: '按钮文字', component: 'Input', componentProps: { placeholder: '请输入按钮文字' } },
+      { key: 'type', label: '按钮类型', component: 'Select', componentProps: { options: [{ label: '普通按钮', value: 'button' }, { label: '提交按钮', value: 'submit' }, { label: '重置按钮', value: 'reset' }] } },
       { key: 'size', label: '尺寸', component: 'Select', componentProps: { options: [{ label: '小', value: 'small' }, { label: '中', value: 'medium' }, { label: '大', value: 'large' }] } },
       { key: 'disabled', label: '禁用', component: 'Switch' },
-    ] }] } },
+    ] })] } },
     presentation: { kind: 'visual', preview: ButtonWidget },
   }),
   defineMaterial({
@@ -127,12 +129,11 @@ export const basicMaterials: readonly MaterialDefinition[] = [
     schema: { defaultProps: { src: '', alt: '', objectFit: 'contain', height: 180 } },
     authoring: { policy: protectedRemoval },
     panel: { title: '图片', titleKey: 'widget.image.title', group: 'basic', icon: '图', keywords: ['image', 'media'] },
-    inspector: { formSchema: { sections: [{ title: '基础设置', fields: [
-      { key: 'src', label: '图片地址', component: 'Input' },
-      { key: 'alt', label: '替代文本', component: 'Input' },
-      { key: 'height', label: '高度', component: 'InputNumber', componentProps: { min: 80, max: 600 } },
+    inspector: { formSchema: { sections: [localizedSection('image', 'basic', { title: '基础设置', fields: [
+      { key: 'src', label: '图片地址', component: 'Input', componentProps: { placeholder: '请输入图片 URL' } },
+      { key: 'alt', label: '替代文本', component: 'Input', componentProps: { placeholder: '图片无法显示时的替代文本' } },
       { key: 'objectFit', label: '填充方式', component: 'Select', componentProps: { options: [{ label: '覆盖', value: 'cover' }, { label: '包含', value: 'contain' }] } },
-    ] }] } },
+    ] })] } },
     presentation: { kind: 'visual', preview: ImageWidget },
   }),
   defineMaterial({
@@ -140,11 +141,12 @@ export const basicMaterials: readonly MaterialDefinition[] = [
     schema: { defaultProps: { text: '链接', href: '#', target: '_self', color: '#1677ff' } },
     authoring: { policy: protectedRemoval },
     panel: { title: '链接', titleKey: 'widget.link.title', group: 'basic', icon: '链', keywords: ['link', 'url'] },
-    inspector: { formSchema: { sections: [{ title: '基础设置', fields: [
-      { key: 'text', label: '链接文字', component: 'Input' },
-      { key: 'href', label: '链接地址', component: 'Input' },
-      { key: 'color', label: '颜色', component: 'Input' },
-    ] }] } },
+    inspector: { formSchema: { sections: [localizedSection('link', 'basic', { title: '基础设置', fields: [
+      { key: 'text', label: '链接文字', component: 'Input', componentProps: { placeholder: '请输入链接文字' } },
+      { key: 'href', label: '链接地址', component: 'Input', componentProps: { placeholder: 'https://example.com' } },
+      { key: 'target', label: '打开方式', component: 'Select', componentProps: { options: [{ label: '当前窗口', value: '_self' }, { label: '新窗口', value: '_blank' }] } },
+      { key: 'color', label: '链接颜色', component: 'Color' },
+    ] })] } },
     presentation: { kind: 'visual', preview: LinkWidget },
   }),
   defineMaterial({
@@ -152,10 +154,11 @@ export const basicMaterials: readonly MaterialDefinition[] = [
     schema: { defaultProps: { direction: 'horizontal', color: '#e8e8e8', thickness: 1 } },
     authoring: { policy: protectedRemoval },
     panel: { title: '分割线', titleKey: 'widget.divider.title', group: 'basic', icon: '线' },
-    inspector: { formSchema: { sections: [{ title: '基础设置', fields: [
-      { key: 'color', label: '颜色', component: 'Input' },
+    inspector: { formSchema: { sections: [localizedSection('divider', 'basic', { title: '基础设置', fields: [
+      { key: 'direction', label: '方向', component: 'Select', componentProps: { options: [{ label: '水平', value: 'horizontal' }, { label: '垂直', value: 'vertical' }] } },
+      { key: 'color', label: '颜色', component: 'Color' },
       { key: 'thickness', label: '粗细', component: 'InputNumber', componentProps: { min: 1, max: 10 } },
-    ] }] } },
+    ] })] } },
     presentation: { kind: 'visual', preview: DividerWidget },
   }),
 ]

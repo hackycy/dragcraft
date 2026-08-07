@@ -19,10 +19,10 @@ body {
 /* ── Mini-program preview brand ──────────── */
 
 :root {
-  --pg-brand: #07c160;
-  --pg-brand-hover: #06ad56;
-  --pg-brand-subtle: rgba(7, 193, 96, 0.08);
-  --pg-brand-ring: rgba(7, 193, 96, 0.2);
+  --dc-internal-playground-brand: #07c160;
+  --dc-internal-playground-brand-hover: #06ad56;
+  --dc-internal-playground-brand-subtle: rgba(7, 193, 96, 0.08);
+  --dc-internal-playground-brand-ring: rgba(7, 193, 96, 0.2);
 }
 
 .dc-root-renderer {
@@ -42,8 +42,8 @@ body {
 }
 
 .mp-empty-state--drag-over {
-  color: var(--pg-brand);
-  background: var(--pg-brand-subtle);
+  color: var(--dc-internal-playground-brand);
+  background: var(--dc-internal-playground-brand-subtle);
 }
 
 .mp-empty-state__icon {
@@ -114,7 +114,7 @@ body {
   font-weight: 500;
   letter-spacing: 0.5px;
   border: none;
-  background: var(--pg-brand);
+  background: var(--dc-internal-playground-brand);
   color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -152,7 +152,7 @@ body {
 .dc-node--widget input:focus,
 .dc-node--widget textarea:focus,
 .dc-node--widget select:focus {
-  border-color: var(--pg-brand);
+  border-color: var(--dc-internal-playground-brand);
   background: #ffffff;
 }
 

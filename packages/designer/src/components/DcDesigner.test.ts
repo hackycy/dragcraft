@@ -122,4 +122,62 @@ describe('dcDesigner', () => {
       designer.dispose()
     }
   })
+
+  it('omits catalog-only materials from the material panel', async () => {
+    const designer = createDesigner({
+      materials: [
+        { type: 'hidden', presentation: { kind: 'headless' } },
+        { type: 'visible', panel: { title: 'Visible' }, presentation: { kind: 'headless' } },
+      ],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+    try {
+      app.mount(host)
+      await nextTick()
+
+      expect(Array.from(host.querySelectorAll<HTMLElement>('[data-dc-component="material-item"]'))
+        .map(item => item.textContent?.trim()))
+        .toEqual(['Visible'])
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
+  it('localizes material groups in the mounted designer with raw-key fallback', async () => {
+    const designer = createDesigner({
+      locale: 'zh-CN',
+      materials: [
+        { type: 'text', panel: { group: 'basic', title: 'Text' }, presentation: { kind: 'headless' } },
+        { type: 'aside', panel: { group: 'misc', title: 'Aside' }, presentation: { kind: 'headless' } },
+      ],
+      messages: {
+        'zh-CN': { group: { basic: '基础' } },
+        'en': { group: { basic: 'Basic' } },
+      },
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+    try {
+      app.mount(host)
+      await nextTick()
+      const groupTitles = () => Array.from(host.querySelectorAll<HTMLElement>('.dc-material-group__title'))
+        .map(title => title.textContent)
+
+      expect(groupTitles()).toEqual(['基础', 'misc'])
+
+      designer.localization.setLocale('en')
+      await nextTick()
+
+      expect(groupTitles()).toEqual(['Basic', 'misc'])
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
 })

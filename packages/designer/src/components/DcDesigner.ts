@@ -30,7 +30,11 @@ export default defineComponent({
     const leftPanelRef = ref<HTMLElement | null>(null)
     const rightPanelRef = ref<HTMLElement | null>(null)
     const searchQuery = ref('')
-    const drag = useDragDrop(props.instance, internals.executeWorkbenchAction)
+    const drag = useDragDrop(
+      props.instance,
+      internals.executeWorkbenchAction,
+      internals.evaluateWorkbenchAction,
+    )
     const resolvedDocument = computed(() => {
       const state = props.instance.document.value
       if (state.status === 'rejected')

@@ -1,7 +1,8 @@
-import type { JsonObject, MaterialDefinition } from '@dragcraft/designer'
+import type { FieldSchema, JsonObject, MaterialDefinition } from '@dragcraft/designer'
 import type { Component, PropType } from 'vue'
 import { defineMaterial } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
+import { localizedSection } from './localized-section'
 
 interface OptionItem extends JsonObject {
   label: string
@@ -112,14 +113,14 @@ function formMaterial(
   title: string,
   preview: Component,
   defaultProps: JsonObject,
-  fields: Array<{ key: string, label: string, component: string }>,
+  fields: FieldSchema[],
 ): MaterialDefinition {
   return defineMaterial({
     type,
     schema: { defaultProps },
     authoring: { policy: protectedRemoval },
-    panel: { title, group: 'form', icon: title.slice(0, 1) },
-    inspector: { formSchema: { sections: [{ title: '基础设置', fields }] } },
+    panel: { title, titleKey: `widget.${type}.title`, group: 'form', icon: title.slice(0, 1) },
+    inspector: { formSchema: { sections: [localizedSection(type, 'basic', { title: '基础设置', fields })] } },
     presentation: { kind: 'visual', preview },
   })
 }
@@ -135,18 +136,25 @@ export const formMaterials: readonly MaterialDefinition[] = [
   formMaterial('form-textarea', '多行文本', FormTextareaWidget, { label: '标签', placeholder: '请输入', value: '', rows: 3, required: false, disabled: false }, [
     { key: 'label', label: '标签', component: 'Input' },
     { key: 'placeholder', label: '占位文本', component: 'Input' },
-    { key: 'rows', label: '行数', component: 'InputNumber' },
+    { key: 'value', label: '默认值', component: 'Textarea', componentProps: { rows: 2 } },
+    { key: 'rows', label: '行数', component: 'InputNumber', componentProps: { min: 1, max: 20 } },
+    { key: 'required', label: '必填', component: 'Switch' },
+    { key: 'disabled', label: '禁用', component: 'Switch' },
   ]),
   formMaterial('form-select', '下拉选择', FormSelectWidget, { label: '标签', placeholder: '请选择', value: '', options: defaultOptions, required: false, disabled: false }, [
     { key: 'label', label: '标签', component: 'Input' },
     { key: 'placeholder', label: '占位文本', component: 'Input' },
+    { key: 'required', label: '必填', component: 'Switch' },
+    { key: 'disabled', label: '禁用', component: 'Switch' },
   ]),
   formMaterial('form-checkbox', '复选框', FormCheckboxWidget, { label: '复选框', checked: false, disabled: false }, [
     { key: 'label', label: '标签', component: 'Input' },
     { key: 'checked', label: '默认选中', component: 'Switch' },
+    { key: 'disabled', label: '禁用', component: 'Switch' },
   ]),
   formMaterial('form-radio-group', '单选组', FormRadioWidget, { label: '单选组', value: '', options: defaultOptions, direction: 'horizontal', disabled: false }, [
     { key: 'label', label: '标签', component: 'Input' },
-    { key: 'direction', label: '方向', component: 'Select' },
+    { key: 'direction', label: '方向', component: 'Select', componentProps: { options: [{ label: '水平', value: 'horizontal' }, { label: '垂直', value: 'vertical' }] } },
+    { key: 'disabled', label: '禁用', component: 'Switch' },
   ]),
 ]

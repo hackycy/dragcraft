@@ -2,6 +2,7 @@ import type { MaterialDefinition, RegionDropGeometryContext, StructuralDestinati
 import type { PropType } from 'vue'
 import { defineMaterial, DesignerRegionOutlet } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
+import { localizedSection } from './localized-section'
 
 type FlexDirection = 'row' | 'column'
 type FlexAlign = 'stretch' | 'flex-start' | 'center' | 'flex-end'
@@ -39,10 +40,10 @@ export const FlexContainer = defineComponent({
     ),
     class: 'pg-container-flex',
     style: {
-      '--pg-container-direction': props.direction,
-      '--pg-container-wrap': props.wrap ? 'wrap' : 'nowrap',
-      '--pg-container-gap': `${props.gap}px`,
-      '--pg-container-align': props.align,
+      '--dc-internal-playground-container-direction': props.direction,
+      '--dc-internal-playground-container-wrap': props.wrap ? 'wrap' : 'nowrap',
+      '--dc-internal-playground-container-gap': `${props.gap}px`,
+      '--dc-internal-playground-container-align': props.align,
     },
   }),
 })
@@ -64,8 +65,8 @@ export const SplitContainer = defineComponent({
   setup: props => () => h('div', {
     class: 'pg-split pg-split--top-one-bottom-two',
     style: {
-      '--pg-split-gap': `${props.gap}px`,
-      '--pg-split-primary-size': props.primarySize,
+      '--dc-internal-playground-split-gap': `${props.gap}px`,
+      '--dc-internal-playground-split-primary-size': props.primarySize,
     },
   }, [
     region('top', 'pg-split__top'),
@@ -85,12 +86,12 @@ export const containerMaterials: readonly MaterialDefinition[] = [
     },
     authoring: { policy: { remove: 'confirmation-required' } },
     panel: { title: 'Flex 容器', titleKey: 'widget.flex-container.title', group: 'layout', icon: '容' },
-    inspector: { formSchema: { sections: [{ title: '布局', fields: [
+    inspector: { formSchema: { sections: [localizedSection('flex-container', 'layout', { title: '布局', fields: [
       { key: 'direction', label: '方向', component: 'Select', componentProps: { options: [{ label: '横向', value: 'row' }, { label: '纵向', value: 'column' }] } },
       { key: 'wrap', label: '自动换行', component: 'Switch' },
       { key: 'gap', label: '间距', component: 'InputNumber' },
       { key: 'align', label: '对齐', component: 'Select', componentProps: { options: [{ label: '拉伸', value: 'stretch' }, { label: '起点', value: 'flex-start' }, { label: '居中', value: 'center' }, { label: '终点', value: 'flex-end' }] } },
-    ] }] } },
+    ] })] } },
     presentation: { kind: 'visual', preview: FlexContainer },
   }),
   defineMaterial({
@@ -105,10 +106,10 @@ export const containerMaterials: readonly MaterialDefinition[] = [
     },
     authoring: { policy: { remove: 'confirmation-required' } },
     panel: { title: '异形容器', titleKey: 'widget.split-container.title', group: 'layout', icon: '分' },
-    inspector: { formSchema: { sections: [{ title: '布局', fields: [
+    inspector: { formSchema: { sections: [localizedSection('split-container', 'layout', { title: '布局', fields: [
       { key: 'gap', label: '间距', component: 'InputNumber' },
       { key: 'primarySize', label: '主区域尺寸', component: 'Input' },
-    ] }] } },
+    ] })] } },
     presentation: { kind: 'visual', preview: SplitContainer },
   }),
 ]

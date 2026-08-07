@@ -28,6 +28,10 @@ export interface CreateAuthoringEngineOptions {
   readonly schema: unknown
 }
 
+export interface AuthoringEngineSession extends AuthoringEngine {
+  readonly evaluate: (action: SchemaAuthoringAction) => AuthoringResult
+}
+
 function toDocumentState(
   resolution: ReturnType<typeof resolveSchema>,
 ): DesignerDocumentState {
@@ -89,7 +93,7 @@ function duplicateNodeBundle(
   }
 }
 
-export function createAuthoringEngine(options: CreateAuthoringEngineOptions): AuthoringEngine {
+export function createAuthoringEngine(options: CreateAuthoringEngineOptions): AuthoringEngineSession {
   const resolverOptions = { maxDiagnostics: options.maxDiagnostics }
   const initial = resolveSchema(options.schema, options.catalog.schemaDefinitions, resolverOptions)
   let currentDocument: ResolvedDocument | null = initial.status === 'rejected'
@@ -137,12 +141,15 @@ export function createAuthoringEngine(options: CreateAuthoringEngineOptions): Au
     return JSON.parse(JSON.stringify(currentDocument.schema)) as DocumentSchema
   }
 
-  function compileAction(action: SchemaAuthoringAction): SchemaOperation | AuthoringResult {
+  function compileAction(
+    action: SchemaAuthoringAction,
+    createNodeId: () => string = options.createNodeId,
+  ): SchemaOperation | AuthoringResult {
     if (!currentDocument)
       return { status: 'rejected', code: 'NO_DOCUMENT' }
     switch (action.type) {
       case 'create-node': {
-        const bundle = options.catalog.createBundle(action.materialType, options.createNodeId)
+        const bundle = options.catalog.createBundle(action.materialType, createNodeId)
         if (!bundle)
           return { status: 'rejected', code: 'MATERIAL_NOT_FOUND' }
         return { type: 'insert-bundle', bundle, to: action.to }
@@ -150,7 +157,7 @@ export function createAuthoringEngine(options: CreateAuthoringEngineOptions): Au
       case 'move-node':
         return { type: 'move', nodeId: action.nodeId, to: action.to }
       case 'duplicate-node': {
-        const bundle = duplicateNodeBundle(currentDocument, action.nodeId, options.createNodeId)
+        const bundle = duplicateNodeBundle(currentDocument, action.nodeId, createNodeId)
         if (!bundle)
           return { status: 'rejected', code: 'NODE_NOT_FOUND' }
         return { type: 'insert-bundle', bundle, to: action.to }
@@ -166,6 +173,37 @@ export function createAuthoringEngine(options: CreateAuthoringEngineOptions): Au
       case 'update-page':
         return { type: 'update-page', page: action.page }
     }
+  }
+
+  function evaluate(action: SchemaAuthoringAction): AuthoringResult {
+    if (!currentDocument)
+      return { status: 'rejected', code: 'NO_DOCUMENT' }
+    const policy = evaluateAuthoringPolicy(options.catalog, currentDocument, action)
+    if (policy.decision === 'confirmation-required' && action.confirmed !== true)
+      return { status: 'confirmation-required', code: policy.code }
+    if (policy.decision === 'denied')
+      return { status: 'rejected', code: policy.code }
+    let evaluationId = 0
+    const existingIds = new Set(currentDocument.nodesById.keys())
+    const createEvaluationNodeId = () => {
+      let id: string
+      do {
+        id = `__dc_authoring_evaluation_${evaluationId++}`
+      } while (existingIds.has(id))
+      existingIds.add(id)
+      return id
+    }
+    const operation = compileAction(action, createEvaluationNodeId)
+    if ('status' in operation)
+      return operation
+    const result = applySchemaOperation(
+      currentDocument,
+      operation,
+      options.catalog.schemaDefinitions,
+    )
+    return result.status === 'rejected'
+      ? { status: 'rejected', code: result.code }
+      : { status: result.status }
   }
 
   function execute(action: Parameters<AuthoringEngine['execute']>[0]): AuthoringResult {
@@ -237,6 +275,7 @@ export function createAuthoringEngine(options: CreateAuthoringEngineOptions): Au
 
   return Object.freeze({
     document,
+    evaluate,
     exportSchema,
     history: snapshotHistory.state,
     importSchema,

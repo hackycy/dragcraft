@@ -7,6 +7,7 @@ import {
 } from '@dragcraft/designer'
 import { defineComponent, h, ref } from 'vue'
 import { IconMaterial, IconNavHome, IconNavRecent, IconPlus } from '../icons'
+import { localizedSection } from './localized-section'
 
 interface TabItem extends JsonObject {
   label: string
@@ -148,8 +149,15 @@ export const SwiperWidget = defineComponent({
     images: { type: Array as PropType<string[]>, default: () => DEFAULT_IMAGES },
     showIndicator: { type: Boolean, default: true },
     height: { type: Number, default: 180 },
+    borderRadius: { type: Number, default: undefined },
   },
-  setup: props => () => h('div', { class: 'pg-widget-swiper', style: { height: `${props.height}px` } }, [
+  setup: props => () => h('div', {
+    class: 'pg-widget-swiper',
+    style: {
+      height: `${props.height}px`,
+      ...(props.borderRadius === undefined ? {} : { borderRadius: `${props.borderRadius}px` }),
+    },
+  }, [
     props.images[0]
       ? h('img', { class: 'pg-widget-swiper__image', src: props.images[0], alt: 'carousel item' })
       : h('div', { class: 'pg-widget-swiper__empty' }, 'Carousel'),
@@ -194,7 +202,8 @@ export const miniProgramMaterials: readonly MaterialDefinition[] = [
     type: 'navbar',
     schema: { defaultProps: { title: '页面标题' } },
     authoring: { policy: protectedRemoval },
-    inspector: { formSchema: { sections: [{ title: '标题设置', fields: [{ key: 'title', label: '标题', component: 'Input' }] }] } },
+    panel: { title: '导航栏', titleKey: 'widget.navbar.title', group: 'navigation', icon: '导' },
+    inspector: { formSchema: { sections: [localizedSection('navbar', 'title', { title: '标题设置', fields: [{ key: 'title', label: '标题', component: 'Input' }] })] } },
     presentation: { kind: 'visual', preview: NavbarWidget, frame: NavbarFrame },
   }),
   defineMaterial({
@@ -207,11 +216,33 @@ export const miniProgramMaterials: readonly MaterialDefinition[] = [
       },
     },
     panel: { title: 'Tab 栏', titleKey: 'widget.tab-bar.title', group: 'navigation', icon: '栏' },
-    inspector: { formSchema: { sections: [{ title: 'Tab 配置', fields: [
-      { key: 'activeIndex', label: '当前选中', component: 'InputNumber' },
-      { key: 'backgroundColor', label: '背景颜色', component: 'Input' },
-      { key: 'activeColor', label: '选中颜色', component: 'Input' },
-    ] }] } },
+    inspector: { formSchema: { sections: [
+      localizedSection('tab-bar', 'tabs', { title: 'Tab 配置', fields: [
+        {
+          key: 'tabs',
+          label: 'Tab 列表',
+          component: 'Array',
+          componentProps: {
+            title: 'Tab 列表',
+            titleKey: 'widget.tab-bar.field.tabs.label',
+            itemFields: [
+              { key: 'label', label: '标签文字', labelKey: 'widget.tab-bar.field.tabs.item.label.label', component: 'Input', componentProps: { placeholder: '请输入标签文字' }, placeholderKey: 'widget.tab-bar.field.tabs.item.label.placeholder' },
+              { key: 'icon', label: '图标', labelKey: 'widget.tab-bar.field.tabs.item.icon.label', component: 'Input', componentProps: { placeholder: 'home/category/cart/user' }, placeholderKey: 'widget.tab-bar.field.tabs.item.icon.placeholder' },
+            ],
+            defaultItem: { label: '新标签', icon: 'home' },
+            sortable: true,
+            minItems: 2,
+            maxItems: 5,
+          },
+        },
+        { key: 'activeIndex', label: '当前选中', component: 'InputNumber', componentProps: { min: 0, max: 10 } },
+      ] }),
+      localizedSection('tab-bar', 'style', { title: '样式设置', fields: [
+        { key: 'backgroundColor', label: '背景颜色', component: 'Color' },
+        { key: 'activeColor', label: '选中颜色', component: 'Color' },
+        { key: 'inactiveColor', label: '未选中颜色', component: 'Color' },
+      ] }),
+    ] } },
     presentation: { kind: 'visual', preview: TabBarWidget, frame: TabBarFrame },
   }),
   defineMaterial({
@@ -219,6 +250,21 @@ export const miniProgramMaterials: readonly MaterialDefinition[] = [
     schema: { defaultProps: { label: '+', side: 'right', bottom: 16, sideOffset: 16, size: 52, backgroundColor: '#07c160', textColor: '#ffffff' } },
     authoring: { policy: protectedRemoval },
     panel: { title: '浮动按钮', titleKey: 'widget.floating-button.title', group: 'action', icon: '浮' },
+    inspector: { formSchema: { sections: [
+      localizedSection('floating-button', 'content', { title: '内容', fields: [
+        { key: 'label', label: '按钮文字', component: 'Input' },
+      ] }),
+      localizedSection('floating-button', 'position', { title: '位置', fields: [
+        { key: 'side', label: '水平位置', component: 'Select', componentProps: { options: [{ label: '右侧', value: 'right' }, { label: '左侧', value: 'left' }] } },
+        { key: 'bottom', label: '底部距离', component: 'InputNumber', componentProps: { min: 0, max: 120 } },
+        { key: 'sideOffset', label: '侧边距离', component: 'InputNumber', componentProps: { min: 0, max: 120 } },
+      ] }),
+      localizedSection('floating-button', 'style', { title: '样式', fields: [
+        { key: 'size', label: '尺寸', component: 'InputNumber', componentProps: { min: 36, max: 88 } },
+        { key: 'backgroundColor', label: '背景颜色', component: 'Color' },
+        { key: 'textColor', label: '文字颜色', component: 'Color' },
+      ] }),
+    ] } },
     presentation: { kind: 'visual', preview: FloatingButtonWidget, frame: FloatingFrame },
   }),
   defineMaterial({
@@ -226,32 +272,45 @@ export const miniProgramMaterials: readonly MaterialDefinition[] = [
     schema: { defaultProps: { images: DEFAULT_IMAGES, showIndicator: true, height: 180 } },
     authoring: { policy: protectedRemoval },
     panel: { title: '轮播', titleKey: 'widget.swiper.title', group: 'basic', icon: '播' },
-    inspector: { formSchema: { sections: [{ title: '基础设置', fields: [
-      { key: 'showIndicator', label: '显示指示器', component: 'Switch' },
-      { key: 'height', label: '高度', component: 'InputNumber' },
-    ] }] } },
+    inspector: { formSchema: { sections: [
+      localizedSection('swiper', 'basic', { title: '基础设置', fields: [
+        {
+          key: 'images',
+          label: '图片列表',
+          component: 'Textarea',
+          valueFormat: value => Array.isArray(value) ? value.join('\n') : value,
+          parseValue: value => String(value ?? '').split('\n').map(item => item.trim()).filter(Boolean),
+          componentProps: { rows: 4, placeholder: '每行一个图片 URL' },
+        },
+      ] }),
+      localizedSection('swiper', 'style', { title: '样式设置', fields: [
+        { key: 'showIndicator', label: '显示指示器', component: 'Switch' },
+        { key: 'height', label: '高度 (px)', component: 'InputNumber', componentProps: { min: 80, max: 500 } },
+        { key: 'borderRadius', label: '圆角 (px)', component: 'InputNumber', componentProps: { min: 0, max: 50 } },
+      ] }),
+    ] } },
     presentation: { kind: 'visual', preview: SwiperWidget },
   }),
   defineMaterial({
     type: 'purchase-bar',
     schema: { defaultProps: { secondaryLabel: '加入购物车', primaryLabel: '立即购买' } },
     authoring: { policy: protectedRemoval },
-    panel: { title: '购买栏', group: 'action', icon: '购' },
+    panel: { title: '购买栏', titleKey: 'widget.purchase-bar.title', group: 'action', icon: '购' },
     presentation: { kind: 'visual', preview: PurchaseBarWidget, frame: PurchaseBarFrame },
   }),
   defineMaterial({
     type: 'promo-dialog',
     schema: { defaultProps: { title: '限时优惠', content: '现在下单可享会员折扣。' } },
     authoring: { policy: protectedRemoval },
-    panel: { title: '浮层对话框', group: 'action', icon: '窗' },
+    panel: { title: '浮层对话框', titleKey: 'widget.promo-dialog.title', group: 'action', icon: '窗' },
     presentation: { kind: 'visual', preview: DialogWidget, frame: DialogFrame },
   }),
   defineMaterial({
     type: 'analytics-config',
     schema: { defaultProps: { eventName: 'page_view' } },
     authoring: { policy: protectedRemoval },
-    panel: { title: '分析配置', group: 'action', icon: '析' },
-    inspector: { formSchema: { sections: [{ title: '事件设置', fields: [{ key: 'eventName', label: '事件名', component: 'Input' }] }] } },
+    panel: { title: '分析配置', titleKey: 'widget.analytics-config.title', group: 'action', icon: '析' },
+    inspector: { formSchema: { sections: [localizedSection('analytics-config', 'event', { title: '事件设置', fields: [{ key: 'eventName', label: '事件名', component: 'Input' }] })] } },
     presentation: { kind: 'headless' },
   }),
 ]

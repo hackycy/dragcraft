@@ -21,7 +21,7 @@ export const ColumnContainerWidget = defineComponent({
     regionId: 'content',
     class: 'guide-column-container__region',
     resolveDropAnchor: resolveVerticalDropAnchor,
-    style: { '--guide-column-gap': `${props.gap}px` },
+    style: { '--dc-internal-guide-column-gap': `${props.gap}px` },
   }),
 })
 

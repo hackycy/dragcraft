@@ -2,6 +2,8 @@ import type { ResolvedDocument, StructuralDestination } from '@dragcraft/core'
 import type { Component, PropType } from 'vue'
 import type { AuthoringAction, AuthoringResult } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
+import { useI18n } from '@dragcraft/i18n'
+import { IconPlus } from '@dragcraft/icons'
 import { defineComponent, h, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { VIEWPORT_PLANE_TARGET_KEY } from './designer-viewport-portal'
 import { createGeometryRegistry, GEOMETRY_REGISTRY_KEY } from './geometry-registry'
@@ -54,8 +56,10 @@ export default defineComponent({
     selectedNodeId: { type: String, default: undefined },
     hoveredNodeId: { type: String, default: undefined },
     draggingNodeId: { type: String, default: undefined },
+    dropRejectionCode: { type: String, default: undefined },
   },
   setup(props) {
+    const { t } = useI18n()
     const surfaceElement = ref<HTMLElement | null>(null)
     const viewportPlane = ref<HTMLElement | null>(null)
     const dropDestination = ref<StructuralDestination | null>(null)
@@ -123,8 +127,6 @@ export default defineComponent({
       node,
       owner,
       execute: props.execute,
-      onNodeDragStart: props.onNodeDragStart,
-      onNodeDragEnd: props.onNodeDragEnd,
       selected: props.selectedNodeId === node.node.id,
       hovered: props.hoveredNodeId === node.node.id,
       dragging: props.draggingNodeId === node.node.id,
@@ -133,6 +135,15 @@ export default defineComponent({
     })
 
     return () => {
+      const rootNodes = props.document.root.map(node => renderNode(node, { kind: 'page-root' }))
+      const emptyState = rootNodes.length === 0 && !dropDestination.value && !props.dropRejectionCode
+        ? h('div', {
+            'data-dc-component': 'empty-state',
+          }, [
+            h('span', { 'data-dc-part': 'icon', 'aria-hidden': 'true' }, [h(IconPlus, { size: 32 })]),
+            h('span', { 'data-dc-part': 'text' }, t('canvas.empty', '拖拽组件到这里')),
+          ])
+        : null
       const documentPlane = h('div', {
         'data-dc-plane': 'document',
         'onDragleave': handleRootDragLeave,
@@ -141,7 +152,7 @@ export default defineComponent({
           dropDestination.value = null
           props.onDrop?.(event)
         },
-      }, props.document.root.map(node => renderNode(node, { kind: 'page-root' })))
+      }, [emptyState, ...rootNodes])
       const viewport = h('div', {
         'ref': viewportPlane,
         'data-dc-plane': 'viewport',
@@ -163,7 +174,11 @@ export default defineComponent({
         diagnostics,
         geometry,
         dropDestination: dropDestination.value,
+        dropRejectionCode: props.dropRejectionCode,
         execute: props.execute,
+        hoveredNodeId: props.hoveredNodeId,
+        onNodeDragStart: props.onNodeDragStart,
+        onNodeDragEnd: props.onNodeDragEnd,
         selectedNodeId: props.selectedNodeId,
       })])
     }

@@ -49,6 +49,9 @@ describe('dcStructurePanel', () => {
       await nextTick()
       expect(Array.from(host.querySelectorAll<HTMLElement>('[data-dc-component="structure-item"]'))
         .map(item => item.dataset.dcNodeId)).toEqual(['container', 'child', 'tail'])
+      const firstItem = host.querySelector<HTMLElement>('[data-dc-component="structure-item"]')!
+      expect(Array.from(firstItem.querySelectorAll<HTMLElement>('[data-dc-action]')).map(action => action.title))
+        .toEqual(['上移', '下移', '复制', '删除'])
     }
     finally {
       app.unmount()

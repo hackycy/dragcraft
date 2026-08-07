@@ -34,6 +34,7 @@ Type: map
 - [Schema Resolver 诊断预算契约](issues/11-resolver-diagnostic-budget-contract.md) — Resolver 通过可选 options 拥有默认 200、硬上限 2000 的调用级诊断预算，四态统一返回可准确表达稳定截断的 DiagnosticReport，非法预算静默回退到默认值。
 - [Material Preview 动作编译契约](issues/12-material-preview-action-contract.md) — 删除 `MaterialPreviewContext.invokeAction()` 及其假设的命名动作 seam；Preview 只通过 `updateSelf()` 写入自身 Schema，工作台继续产生既有封闭 `AuthoringAction`，外部副作用归物料 Vue 或宿主状态所有。
 - [Authoring 确认与宿主交互契约](issues/13-authoring-confirmation-host-contract.md) — `createDesigner()` 提供可选的最小宿主确认 callback；`DcDesigner` 私有协调同步 Engine 的确认、单飞、陈旧检查和原子 batch 重试，程序化 `execute()` 保持同步且不恢复通用 interceptor。
+- [Designer 运行时本地化宿主契约](issues/14-runtime-designer-locale-contract.md) — `DesignerInstance.localization` 以只读 locale、同步 `setLocale()` 和 `translate()` 恢复同一设计会话内的语言切换；它保留 Document、selection、history、confirmation 与 Preview 实例，不公开内部 i18n 或运行时消息 mutation。
 
 ## Out of scope
 

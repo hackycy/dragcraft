@@ -47,18 +47,18 @@ export default defineComponent({
       }, [h(icon, { size: 15 })])
       const actions = owner
         ? h('div', { 'class': 'dc-structure-panel__actions', 'data-dc-part': 'actions' }, [
-            action('move-up', 'Move node up', IconArrowUp, !previous, () => {
+            action('move-up', t('action.move-up', '上移'), IconArrowUp, !previous, () => {
               if (previous)
                 context.executeWorkbenchAction({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'before', nodeId: previous } } })
             }),
-            action('move-down', 'Move node down', IconArrowDown, !next, () => {
+            action('move-down', t('action.move-down', '下移'), IconArrowDown, !next, () => {
               if (next)
                 context.executeWorkbenchAction({ type: 'move-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: next } } })
             }),
-            action('duplicate', 'Duplicate node', IconCopy, false, () => {
+            action('duplicate', t('action.duplicate', '复制'), IconCopy, false, () => {
               context.executeWorkbenchAction({ type: 'duplicate-node', nodeId: node.node.id, to: { owner, position: { kind: 'after', nodeId: node.node.id } } })
             }),
-            action('remove', 'Remove node', IconDelete, false, () => {
+            action('remove', t('action.delete', '删除'), IconDelete, false, () => {
               context.executeWorkbenchAction({ type: 'remove-node', nodeId: node.node.id })
             }),
           ])

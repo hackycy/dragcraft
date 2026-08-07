@@ -1,5 +1,5 @@
 import type { StructuralDestination } from '@dragcraft/core'
-import type { AuthoringAction, AuthoringResult } from '../authoring/types'
+import type { AuthoringAction, AuthoringResult, SchemaAuthoringAction } from '../authoring/types'
 import type { DesignerDragState } from '../context'
 import type { DesignerInstance } from '../session/create-designer'
 import { ref } from 'vue'
@@ -20,10 +20,12 @@ function setDragPayload(event: DragEvent, payload: DragPayload): void {
 export function useDragDrop(
   designer: DesignerInstance,
   execute: (action: AuthoringAction) => AuthoringResult = designer.execute,
+  evaluate?: (action: SchemaAuthoringAction) => AuthoringResult,
 ): DesignerDragState {
   const activeDestination = ref<StructuralDestination | null>(null)
   const draggingMaterialType = ref<string | null>(null)
   const draggingNodeId = ref<string | null>(null)
+  const dropRejectionCode = ref<string | null>(null)
 
   function handleMaterialDragStart(event: DragEvent, materialType: string): void {
     draggingMaterialType.value = materialType
@@ -41,10 +43,18 @@ export function useDragDrop(
     draggingMaterialType.value = null
     draggingNodeId.value = null
     activeDestination.value = null
+    dropRejectionCode.value = null
   }
 
   function setDestination(destination: StructuralDestination): void {
     activeDestination.value = destination
+    const action: SchemaAuthoringAction | null = draggingMaterialType.value
+      ? { type: 'create-node', materialType: draggingMaterialType.value, to: destination }
+      : draggingNodeId.value
+        ? { type: 'move-node', nodeId: draggingNodeId.value, to: destination }
+        : null
+    const result = action ? evaluate?.(action) : undefined
+    dropRejectionCode.value = result?.status === 'rejected' ? result.code : null
   }
 
   function handleDrop(event: DragEvent): AuthoringResult {
@@ -52,11 +62,13 @@ export function useDragDrop(
     const destination = activeDestination.value
     const materialType = draggingMaterialType.value
     const nodeId = draggingNodeId.value
-    const result = destination && materialType
-      ? execute({ type: 'create-node', materialType, to: destination })
-      : destination && nodeId
-        ? execute({ type: 'move-node', nodeId, to: destination })
-        : { status: 'rejected' as const, code: 'NO_DRAG_PAYLOAD' }
+    const result = dropRejectionCode.value
+      ? { status: 'rejected' as const, code: dropRejectionCode.value }
+      : destination && materialType
+        ? execute({ type: 'create-node', materialType, to: destination })
+        : destination && nodeId
+          ? execute({ type: 'move-node', nodeId, to: destination })
+          : { status: 'rejected' as const, code: 'NO_DRAG_PAYLOAD' }
     handleDragEnd()
     return result
   }
@@ -65,6 +77,7 @@ export function useDragDrop(
     activeDestination,
     draggingMaterialType,
     draggingNodeId,
+    dropRejectionCode,
     handleDragEnd,
     handleDrop,
     handleMaterialDragStart,

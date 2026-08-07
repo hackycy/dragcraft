@@ -2,6 +2,17 @@ import type { MessageTree } from '@dragcraft/i18n'
 
 export const designerMessages: Record<string, MessageTree> = {
   'zh-CN': {
+    action: {
+      'drag': '拖拽排序',
+      'move-up': '上移',
+      'move-down': '下移',
+      'duplicate': '复制',
+      'delete': '删除',
+    },
+    forbidden: {
+      default: '当前物料不满足创建条件，无法添加到画布',
+    },
+    canvas: { 'empty': '拖拽组件到这里', 'node-handle': '选中组件' },
     panel: {
       materials: { title: '物料' },
       left: {
@@ -46,6 +57,17 @@ export const designerMessages: Record<string, MessageTree> = {
     },
   },
   'en': {
+    action: {
+      'drag': 'Drag to sort',
+      'move-up': 'Move up',
+      'move-down': 'Move down',
+      'duplicate': 'Duplicate',
+      'delete': 'Delete',
+    },
+    forbidden: {
+      default: 'This component cannot be added to the canvas',
+    },
+    canvas: { 'empty': 'Drag components here', 'node-handle': 'Select component' },
     panel: {
       materials: { title: 'Materials' },
       left: {

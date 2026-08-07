@@ -712,11 +712,11 @@
   display: block;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
-  contain: layout paint;
+  overflow: visible;
+  contain: layout;
 }
 
-[data-dc-component="application-surface"] > [data-dc-plane="document"] {
+[data-dc-component="application-surface"] [data-dc-plane="document"] {
   position: relative;
   z-index: 1;
   min-width: 0;
@@ -741,7 +741,7 @@
   );
 }
 
-[data-dc-component="application-surface"] > [data-dc-plane="viewport"],
+[data-dc-component="application-surface"] [data-dc-plane="viewport"],
 [data-dc-component="application-surface"] > [data-dc-plane="interaction"] {
   position: absolute;
   inset: 0;
@@ -749,12 +749,12 @@
   min-height: 0;
 }
 
-[data-dc-component="application-surface"] > [data-dc-plane="viewport"] {
+[data-dc-component="application-surface"] [data-dc-plane="viewport"] {
   z-index: 2;
   pointer-events: none;
 }
 
-[data-dc-component="application-surface"] > [data-dc-plane="viewport"] > *,
+[data-dc-component="application-surface"] [data-dc-plane="viewport"] > *,
 [data-dc-component="application-surface"] > [data-dc-plane="interaction"] > * {
   pointer-events: auto;
 }
@@ -767,6 +767,16 @@
 [data-dc-component="node-host"] {
   position: relative;
   min-width: 0;
+}
+
+[data-dc-component="empty-state"] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  gap: 8px;
+  pointer-events: none;
 }
 
 [data-dc-component="designer-region-outlet"] {
@@ -785,9 +795,129 @@
   position: absolute;
 }
 
+[data-dc-component="node-selection"][data-dc-state~="root-segment"] {
+  border: 0;
+}
+
+[data-dc-component="node-selection"][data-dc-state~="root-segment"] > [data-dc-part] {
+  position: absolute;
+  display: block;
+}
+
+[data-dc-component="node-selection"] > [data-dc-part="block-start-edge"],
+[data-dc-component="node-selection"] > [data-dc-part="block-end-edge"] {
+  right: 0;
+  left: 0;
+  height: var(--dc-node-selection-root-block-overlap, var(--dc-node-selection-stroke-width, 2px));
+}
+
+[data-dc-component="node-selection"] > [data-dc-part="block-start-edge"] {
+  bottom: 100%;
+}
+
+[data-dc-component="node-selection"] > [data-dc-part="block-end-edge"] {
+  top: 100%;
+}
+
+[data-dc-component="node-selection"] > [data-dc-part="inline-start-edge"],
+[data-dc-component="node-selection"] > [data-dc-part="inline-end-edge"] {
+  top: calc(-1 * var(--dc-node-selection-root-block-overlap, var(--dc-node-selection-stroke-width, 2px)));
+  bottom: calc(-1 * var(--dc-node-selection-root-block-overlap, var(--dc-node-selection-stroke-width, 2px)));
+  width: var(--dc-node-selection-root-inline-overlap, var(--dc-node-selection-stroke-width, 2px));
+}
+
+[data-dc-component="node-selection"] > [data-dc-part="inline-start-edge"] {
+  left: 0;
+}
+
+[data-dc-component="node-selection"] > [data-dc-part="inline-end-edge"] {
+  right: 0;
+}
+
+[data-dc-component="node-handle"] {
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+[data-dc-component="node-handle"] > [data-dc-part="surface"] {
+  position: absolute;
+  inset: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-dc-component="node-handle"] [data-dc-part="icon"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
 [data-dc-component="node-toolbar"] {
   position: absolute;
+  z-index: 3;
+  display: flex;
+  gap: 3px;
+  padding: 4px;
   pointer-events: auto;
+}
+
+[data-dc-component="node-toolbar"][data-orientation="vertical"] {
+  flex-direction: column;
+}
+
+[data-dc-component="node-toolbar"][data-orientation="horizontal"] {
+  right: max(
+    8px,
+    calc(100% - var(--dc-internal-node-toolbar-anchor-inline-end))
+  );
+  flex-flow: row nowrap;
+}
+
+[data-dc-component="node-toolbar"] > [data-dc-part="action"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+[data-dc-component="node-toolbar"] > [data-dc-action="drag"] {
+  cursor: grab;
+}
+
+[data-dc-component="node-toolbar"] > [data-dc-action="drag"]:active {
+  cursor: grabbing;
+}
+
+[data-dc-component="forbidden-overlay"] {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  pointer-events: none;
+}
+
+[data-dc-component="forbidden-overlay"] > [data-dc-part="text"] {
+  box-sizing: border-box;
+  max-width: min(280px, calc(100% - 32px));
+  padding: 6px 10px;
+  overflow-wrap: anywhere;
+  text-align: center;
+  white-space: normal;
 }
 
 [data-dc-component="presentation-recovery"] {

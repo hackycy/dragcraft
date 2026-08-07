@@ -7,18 +7,18 @@ import {
   DevicePicker,
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
-import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 import { Modal } from 'ant-design-vue'
-import { computed, h, onBeforeUnmount, ref, shallowRef } from 'vue'
+import { computed, h, onBeforeUnmount, ref } from 'vue'
+import { buildPlaygroundFieldComponentMap } from './components/fields'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
 import { playgroundMaterials } from './components/widgets'
+import { playgroundWidgetMessages } from './components/widgets/messages'
 import { globalConfigSchema } from './config/global-config-schema'
 import { templateRegistry } from './config/templates'
 import { useTemplateSwitch } from './composables/useTemplateSwitch'
 import SchemaIOModal from './shared/SchemaIOModal.vue'
 import { useSchemaIO } from './shared/use-schema-io'
 
-const locale = ref('zh-CN')
 const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
 const activeDeviceFrame = computed(() => BUILT_IN_DEVICE_FRAMES.find(
   definition => definition.id === activeDeviceFrameId.value,
@@ -38,11 +38,15 @@ function renderMaterialIcon(icon: Component | string | undefined) {
   ])
 }
 
+let translatePlayground = (key: string, fallback?: string) => fallback ?? key
+
 const materialItemRenderer: DesignerExtensions['materialItemRenderer'] = ({ material }) => h('div', {
   class: 'pg-material-card',
 }, [
   renderMaterialIcon(material.panel?.icon),
-  h('span', { class: 'pg-material-card__title' }, material.panel?.title ?? material.type),
+  h('span', { class: 'pg-material-card__title' }, material.panel?.titleKey
+    ? translatePlayground(material.panel.titleKey, material.panel.title ?? material.type)
+    : material.panel?.title ?? material.type),
 ])
 
 interface ConfirmModalOptions {
@@ -79,10 +83,10 @@ function createPlaygroundDesigner(schema: unknown): DesignerInstance {
     schema,
     materials: playgroundMaterials as readonly MaterialDefinition[],
     containerShell: activeContainerShell,
-    fieldComponentMap: createAntDesignVueFields(),
+    fieldComponentMap: buildPlaygroundFieldComponentMap((key, fallback) => translatePlayground(key, fallback)),
     globalConfigSchema,
-    locale: locale.value,
     maxHistoryEntries: 50,
+    messages: playgroundWidgetMessages,
     confirmAuthoringAction: request => confirmWithModal({
       title: request.action === 'remove' ? '确认删除' : '确认操作',
       content: request.action === 'remove'
@@ -95,9 +99,10 @@ function createPlaygroundDesigner(schema: unknown): DesignerInstance {
   })
 }
 
-const designer = shallowRef(createPlaygroundDesigner(templateRegistry[0].schema))
-const exportSchema = () => designer.value.exportSchema()
-const importSchema = (schema: unknown) => designer.value.importSchema(schema)
+const designer = createPlaygroundDesigner(templateRegistry[0].schema)
+translatePlayground = designer.localization.translate
+const exportSchema = () => designer.exportSchema()
+const importSchema = (schema: unknown) => designer.importSchema(schema)
 
 const templateSwitch = useTemplateSwitch({
   importSchema,
@@ -111,13 +116,11 @@ const templateSwitch = useTemplateSwitch({
 const io = useSchemaIO(exportSchema, importSchema)
 
 function toggleLocale() {
-  const schema = designer.value.exportSchema()
-  locale.value = locale.value === 'zh-CN' ? 'en' : 'zh-CN'
-  designer.value.dispose()
-  designer.value = createPlaygroundDesigner(schema)
+  const locale = designer.localization.locale.value
+  designer.localization.setLocale(locale === 'zh-CN' ? 'en' : 'zh-CN')
 }
 
-onBeforeUnmount(() => designer.value.dispose())
+onBeforeUnmount(() => designer.dispose())
 </script>
 
 <template>
@@ -125,7 +128,7 @@ onBeforeUnmount(() => designer.value.dispose())
     <PlaygroundHeader
       :active-template-id="templateSwitch.activeTemplateId.value"
       :templates="templateSwitch.templates"
-      :locale="locale"
+      :locale="designer.localization.locale.value"
       @template-switch="templateSwitch.switchTemplate"
       @import-open="io.handleImportOpen()"
       @export-open="io.handleExport()"
@@ -135,12 +138,13 @@ onBeforeUnmount(() => designer.value.dispose())
         <DevicePicker
           :definitions="BUILT_IN_DEVICE_FRAMES"
           :model-value="activeDeviceFrameId"
+          :translate="designer.localization.translate"
           @update:model-value="selectDeviceFrame"
         />
       </template>
     </PlaygroundHeader>
 
-    <DcDesigner :key="locale" :instance="designer" />
+    <DcDesigner :instance="designer" />
 
     <SchemaIOModal
       :show-export-modal="io.showExportModal.value"

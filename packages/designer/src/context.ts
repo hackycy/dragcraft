@@ -8,6 +8,7 @@ export interface DesignerDragState {
   readonly activeDestination: Ref<StructuralDestination | null>
   readonly draggingMaterialType: Ref<string | null>
   readonly draggingNodeId: Ref<string | null>
+  readonly dropRejectionCode: Ref<string | null>
   readonly handleDragEnd: () => void
   readonly handleDrop: (event: DragEvent) => AuthoringResult
   readonly handleMaterialDragStart: (event: DragEvent, materialType: string) => void

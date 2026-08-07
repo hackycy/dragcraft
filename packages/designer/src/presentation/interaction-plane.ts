@@ -3,7 +3,8 @@ import type { PropType } from 'vue'
 import type { AuthoringAction, AuthoringResult } from '../authoring/types'
 import type { GeometryRegistry } from './geometry-registry'
 import type { PresentationDiagnosticRegistry } from './presentation-diagnostics'
-import { IconArrowDown, IconArrowUp, IconCopy, IconDelete } from '@dragcraft/icons'
+import { useI18n } from '@dragcraft/i18n'
+import { IconArrowDown, IconArrowUp, IconComponent, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
 
 export default defineComponent({
@@ -18,12 +19,22 @@ export default defineComponent({
       required: true,
     },
     selectedNodeId: { type: String, default: undefined },
+    hoveredNodeId: { type: String, default: undefined },
     dropDestination: {
       type: Object as PropType<StructuralDestination | null>,
       default: null,
     },
+    dropRejectionCode: { type: String, default: undefined },
     execute: {
       type: Function as PropType<(action: AuthoringAction) => AuthoringResult>,
+      default: undefined,
+    },
+    onNodeDragStart: {
+      type: Function as PropType<(event: DragEvent, nodeId: string) => void>,
+      default: undefined,
+    },
+    onNodeDragEnd: {
+      type: Function as PropType<() => void>,
       default: undefined,
     },
     diagnostics: {
@@ -32,6 +43,7 @@ export default defineComponent({
     },
   },
   setup(props) {
+    const { t } = useI18n()
     return () => {
       const selectedRect = props.selectedNodeId
         ? props.geometry.rects.value.get(props.selectedNodeId)
@@ -48,6 +60,9 @@ export default defineComponent({
         : selectedLocation
           ? { kind: 'page-root' as const }
           : undefined
+      const hoveredRect = props.hoveredNodeId && props.hoveredNodeId !== props.selectedNodeId
+        ? props.geometry.rects.value.get(props.hoveredNodeId)
+        : undefined
       const selectedSiblings = selectedLocation?.kind === 'container-region'
         ? props.document.containersById
           .get(selectedLocation.containerId)
@@ -63,15 +78,36 @@ export default defineComponent({
       const nextNodeId = selectedLocation
         ? selectedSiblings?.[selectedLocation.index + 1]?.node.id
         : undefined
-      const position = props.dropDestination?.position
+      const position = props.dropRejectionCode ? undefined : props.dropDestination?.position
       const dropRect = position?.kind === 'before' || position?.kind === 'after'
         ? props.geometry.rects.value.get(position.nodeId)
         : undefined
       const children = []
+      if (hoveredRect && props.hoveredNodeId && props.execute) {
+        const label = t('canvas.node-handle', '选中组件')
+        children.push(h('button', {
+          'type': 'button',
+          'data-dc-component': 'node-handle',
+          'data-dc-node-id': props.hoveredNodeId,
+          'aria-label': label,
+          'title': label,
+          'style': {
+            position: 'absolute',
+            left: `${hoveredRect.right - 32}px`,
+            top: `${hoveredRect.top + 4}px`,
+          },
+          'onClick': () => props.execute?.({ type: 'select-node', nodeId: props.hoveredNodeId! }),
+        }, [
+          h('span', { 'data-dc-part': 'surface' }, [
+            h('span', { 'data-dc-part': 'icon', 'aria-hidden': 'true' }, [h(IconComponent, { size: 12 })]),
+          ]),
+        ]))
+      }
       if (selectedRect && props.selectedNodeId) {
         children.push(h('div', {
           'data-dc-component': 'node-selection',
           'data-dc-node-id': props.selectedNodeId,
+          'data-dc-state': selectedOwner?.kind === 'page-root' ? 'root-segment' : 'material-bounds',
           'style': {
             position: 'absolute',
             left: `${selectedRect.left}px`,
@@ -79,23 +115,56 @@ export default defineComponent({
             width: `${selectedRect.width}px`,
             height: `${selectedRect.height}px`,
           },
-        }))
+        }, selectedOwner?.kind === 'page-root'
+          ? [
+              h('span', { 'data-dc-part': 'block-start-edge' }),
+              h('span', { 'data-dc-part': 'inline-end-edge' }),
+              h('span', { 'data-dc-part': 'block-end-edge' }),
+              h('span', { 'data-dc-part': 'inline-start-edge' }),
+            ]
+          : undefined))
         if (props.execute) {
+          const rootToolbar = selectedLocation?.kind === 'page-root'
+          const regionToolbar = selectedLocation?.kind === 'container-region'
+          const regionPlacement = selectedRect.top >= 42 ? 'top-end' : 'bottom-end'
           children.push(h('div', {
             'data-dc-component': 'node-toolbar',
             'data-dc-node-id': props.selectedNodeId,
+            'data-orientation': rootToolbar ? 'vertical' : regionToolbar ? 'horizontal' : undefined,
+            'data-placement': rootToolbar ? 'left-start' : regionToolbar ? regionPlacement : undefined,
             'style': {
-              position: 'absolute',
-              left: `${selectedRect.right}px`,
-              top: `${selectedRect.top}px`,
+              'position': 'absolute',
+              'left': rootToolbar ? '0px' : regionToolbar ? undefined : `${selectedRect.right}px`,
+              '--dc-internal-node-toolbar-anchor-inline-end': regionToolbar
+                ? `${selectedRect.right}px`
+                : undefined,
+              'top': rootToolbar
+                ? `clamp(8px, ${selectedRect.top}px, calc(100% - 158px))`
+                : regionToolbar && regionPlacement === 'bottom-end'
+                  ? `${selectedRect.bottom + 8}px`
+                  : `${selectedRect.top}px`,
+              'transform': rootToolbar
+                ? 'translateX(calc(-100% - 8px))'
+                : regionToolbar && regionPlacement === 'top-end'
+                  ? 'translateY(calc(-100% - 8px))'
+                  : undefined,
             },
           }, [
+            h('div', {
+              'data-dc-action': 'drag',
+              'data-dc-part': 'action',
+              'draggable': true,
+              'aria-label': t('action.drag', '拖拽排序'),
+              'title': t('action.drag', '拖拽排序'),
+              'onDragstart': (event: DragEvent) => props.onNodeDragStart?.(event, props.selectedNodeId!),
+              'onDragend': () => props.onNodeDragEnd?.(),
+            }, [h(IconDrag)]),
             h('button', {
               'type': 'button',
               'data-dc-action': 'move-up',
               'data-dc-part': 'action',
-              'aria-label': 'Move node up',
-              'title': 'Move node up',
+              'aria-label': t('action.move-up', '上移'),
+              'title': t('action.move-up', '上移'),
               'disabled': !selectedOwner || !previousNodeId,
               'onClick': () => {
                 if (!selectedOwner || !previousNodeId)
@@ -114,8 +183,8 @@ export default defineComponent({
               'type': 'button',
               'data-dc-action': 'move-down',
               'data-dc-part': 'action',
-              'aria-label': 'Move node down',
-              'title': 'Move node down',
+              'aria-label': t('action.move-down', '下移'),
+              'title': t('action.move-down', '下移'),
               'disabled': !selectedOwner || !nextNodeId,
               'onClick': () => {
                 if (!selectedOwner || !nextNodeId)
@@ -134,8 +203,8 @@ export default defineComponent({
               'type': 'button',
               'data-dc-action': 'duplicate',
               'data-dc-part': 'action',
-              'aria-label': 'Duplicate node',
-              'title': 'Duplicate node',
+              'aria-label': t('action.duplicate', '复制'),
+              'title': t('action.duplicate', '复制'),
               'disabled': !selectedOwner,
               'onClick': () => {
                 if (!selectedOwner)
@@ -155,8 +224,8 @@ export default defineComponent({
               'data-dc-action': 'remove',
               'data-dc-part': 'action',
               'data-dc-state': 'danger',
-              'aria-label': 'Remove node',
-              'title': 'Remove node',
+              'aria-label': t('action.delete', '删除'),
+              'title': t('action.delete', '删除'),
               'onClick': () => props.execute?.({
                 type: 'remove-node',
                 nodeId: props.selectedNodeId!,
@@ -176,6 +245,78 @@ export default defineComponent({
           },
         }))
       }
+      else if (position?.kind === 'end' && props.dropDestination) {
+        const owner = props.dropDestination.owner
+        const siblings = owner.kind === 'page-root'
+          ? props.document.root
+          : props.document.containersById
+            .get(owner.containerId)
+            ?.regions
+            .get(owner.regionId)
+            ?.children ?? []
+        const endRect = props.geometry.rects.value.get(siblings.at(-1)?.node.id ?? '')
+        if (endRect) {
+          children.push(h('div', {
+            'data-dc-component': 'drop-indicator',
+            'data-dc-state': 'end',
+            'style': {
+              position: 'absolute',
+              left: `${endRect.left}px`,
+              top: `${endRect.bottom}px`,
+              width: `${endRect.width}px`,
+            },
+          }))
+        }
+        else if (owner.kind === 'page-root' && siblings.length === 0) {
+          children.push(h('div', {
+            'data-dc-component': 'drop-indicator',
+            'data-dc-state': 'empty end',
+            'style': {
+              position: 'absolute',
+              inset: '8px',
+            },
+          }))
+        }
+        else if (owner.kind === 'container-region' && siblings.length === 0) {
+          const regionRect = props.geometry.getRegionRect(owner.containerId, owner.regionId)
+          if (regionRect) {
+            children.push(h('div', {
+              'data-dc-component': 'drop-indicator',
+              'data-dc-state': 'empty end',
+              'style': {
+                position: 'absolute',
+                left: `${regionRect.left}px`,
+                top: `${regionRect.top}px`,
+                width: `${regionRect.width}px`,
+                height: `${regionRect.height}px`,
+              },
+            }))
+          }
+        }
+      }
+      else if (position?.kind === 'start' && props.dropDestination) {
+        const owner = props.dropDestination.owner
+        const siblings = owner.kind === 'page-root'
+          ? props.document.root
+          : props.document.containersById
+            .get(owner.containerId)
+            ?.regions
+            .get(owner.regionId)
+            ?.children ?? []
+        const startRect = props.geometry.rects.value.get(siblings[0]?.node.id ?? '')
+        if (startRect) {
+          children.push(h('div', {
+            'data-dc-component': 'drop-indicator',
+            'data-dc-state': 'start',
+            'style': {
+              position: 'absolute',
+              left: `${startRect.left}px`,
+              top: `${startRect.top}px`,
+              width: `${startRect.width}px`,
+            },
+          }))
+        }
+      }
       for (const diagnostic of props.diagnostics.diagnostics.value) {
         children.push(h('div', {
           'role': 'status',
@@ -185,6 +326,17 @@ export default defineComponent({
           'data-dc-container-id': diagnostic.containerId,
           'data-dc-region-id': diagnostic.regionId,
         }))
+      }
+      if (props.dropRejectionCode) {
+        children.push(h('div', {
+          'data-dc-component': 'forbidden-overlay',
+          'data-dc-rejection-code': props.dropRejectionCode,
+        }, [
+          h('span', { 'data-dc-part': 'text' }, t(
+            'forbidden.default',
+            '当前物料不满足创建条件，无法添加到画布',
+          )),
+        ]))
       }
       return h('div', {
         'data-dc-plane': 'interaction',

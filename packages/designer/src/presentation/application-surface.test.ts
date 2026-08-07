@@ -67,6 +67,43 @@ describe('applicationSurface', () => {
     }
   })
 
+  it('projects persisted node style onto the unique NodeHost', async () => {
+    const materials = [{ type: 'text', presentation: { kind: 'headless' as const } }]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [{
+        id: 'styled',
+        type: 'text',
+        props: {},
+        style: { backgroundColor: 'rgb(1, 2, 3)', color: 'white', minHeight: '24px' },
+      }],
+      structure: { root: ['styled'], containers: {} },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () => h(ApplicationSurface, { document: resolved, catalog }),
+    })
+
+    try {
+      app.mount(host)
+      await nextTick()
+
+      const nodeHost = host.querySelector<HTMLElement>('[data-dc-node-id="styled"]')!
+      expect(nodeHost.style.backgroundColor).toBe('rgb(1, 2, 3)')
+      expect(nodeHost.style.color).toBe('white')
+      expect(nodeHost.style.minHeight).toBe('24px')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
   it('provides a read-only preview context and routes self updates as authoring actions', async () => {
     const execute = vi.fn(() => ({ status: 'committed' as const }))
     let seenContext: MaterialPreviewContext | undefined
@@ -192,7 +229,60 @@ describe('applicationSurface', () => {
       expect(selection.style.cssText).toContain('top: 24px')
       expect(selection.style.cssText).toContain('width: 120px')
       expect(selection.style.cssText).toContain('height: 48px')
+      expect(selection.dataset.dcState).toBe('root-segment')
+      expect(Array.from(selection.querySelectorAll('[data-dc-part]')).map(edge => edge.getAttribute('data-dc-part')))
+        .toEqual(['block-start-edge', 'inline-end-edge', 'block-end-edge', 'inline-start-edge'])
       expect(host.querySelector('[data-dc-plane="document"] [data-dc-component="node-selection"]')).toBeNull()
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('projects a selection handle for the hovered unselected NodeHost', async () => {
+    const execute = vi.fn(() => ({ status: 'committed' as const }))
+    const materials = [{ type: 'text', presentation: { kind: 'headless' as const } }]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [{ id: 'first', type: 'text', props: {} }],
+      structure: { root: ['first'], containers: {} },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () => h(ApplicationSurface, {
+        document: resolved,
+        catalog,
+        execute,
+        hoveredNodeId: 'first',
+      }),
+    })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="application-surface"]')!
+      const node = host.querySelector<HTMLElement>('[data-dc-node-id="first"]')!
+      surface.getBoundingClientRect = () => ({ left: 100, top: 200 }) as DOMRect
+      node.getBoundingClientRect = () => ({ left: 112, top: 224, width: 120, height: 48, right: 232, bottom: 272 }) as DOMRect
+      window.dispatchEvent(new Event('resize'))
+      await new Promise(resolve => window.requestAnimationFrame(() => resolve(undefined)))
+      await nextTick()
+
+      const handle = host.querySelector<HTMLButtonElement>(
+        '[data-dc-plane="interaction"] [data-dc-component="node-handle"]',
+      )!
+      expect(handle.title).toBe('选中组件')
+      expect(handle.style.left).toBe('100px')
+      expect(handle.style.top).toBe('28px')
+
+      handle.click()
+      expect(execute).toHaveBeenCalledWith({ type: 'select-node', nodeId: 'first' })
     }
     finally {
       app.unmount()
@@ -255,6 +345,190 @@ describe('applicationSurface', () => {
       expect(host.querySelector(
         '[data-dc-plane="interaction"] [data-dc-component="drop-indicator"]',
       )).toBeNull()
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('shows root drop feedback when the document plane is empty', async () => {
+    const onDropAnchor = vi.fn()
+    const materials = [{ type: 'text', presentation: { kind: 'headless' as const } }]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [],
+      structure: { root: [], containers: {} },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () => h(ApplicationSurface, { document: resolved, catalog, onDropAnchor }),
+    })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const documentPlane = host.querySelector<HTMLElement>('[data-dc-plane="document"]')!
+      const emptyState = documentPlane.querySelector<HTMLElement>('[data-dc-component="empty-state"]')!
+      expect(emptyState.querySelector('[data-dc-part="text"]')?.textContent).toBe('拖拽组件到这里')
+
+      documentPlane.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }))
+      await nextTick()
+
+      expect(onDropAnchor).toHaveBeenCalledWith({
+        owner: { kind: 'page-root' },
+        position: { kind: 'end' },
+      })
+      const indicator = host.querySelector<HTMLElement>(
+        '[data-dc-plane="interaction"] [data-dc-component="drop-indicator"]',
+      )!
+      expect(indicator).not.toBeNull()
+      expect(indicator.dataset.dcState).toBe('empty end')
+      expect(indicator.style.inset).toBe('8px')
+      expect(documentPlane.querySelector('[data-dc-component="empty-state"]')).toBeNull()
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('shows end-anchor feedback after the last region child', async () => {
+    const onDropAnchor = vi.fn()
+    let dropPosition: 'start' | 'end' = 'end'
+    const ContainerPreview = defineComponent({
+      setup: () => () => h(DesignerRegionOutlet, {
+        regionId: 'content',
+        resolveDropAnchor: () => ({ kind: dropPosition }),
+      }),
+    })
+    const materials = [
+      {
+        type: 'stack',
+        schema: { container: { regions: [{ id: 'content' }] } },
+        presentation: { kind: 'visual' as const, preview: ContainerPreview },
+      },
+      { type: 'text', presentation: { kind: 'headless' as const } },
+    ]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [
+        { id: 'stack', type: 'stack', props: {} },
+        { id: 'child', type: 'text', props: {} },
+      ],
+      structure: {
+        root: ['stack'],
+        containers: { stack: { regions: { content: ['child'] } } },
+      },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () => h(ApplicationSurface, { document: resolved, catalog, onDropAnchor }),
+    })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="application-surface"]')!
+      const child = host.querySelector<HTMLElement>('[data-dc-node-id="child"]')!
+      const region = host.querySelector<HTMLElement>('[data-dc-region-outlet="content"]')!
+      surface.getBoundingClientRect = () => ({ left: 80, top: 100 }) as DOMRect
+      child.getBoundingClientRect = () => ({ left: 88, top: 150, right: 388, bottom: 190, width: 300, height: 40 }) as DOMRect
+      window.dispatchEvent(new Event('resize'))
+      await new Promise(resolve => window.requestAnimationFrame(() => resolve(undefined)))
+
+      region.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }))
+      await nextTick()
+
+      expect(onDropAnchor).toHaveBeenCalledWith({
+        owner: { kind: 'container-region', containerId: 'stack', regionId: 'content' },
+        position: { kind: 'end' },
+      })
+      const indicator = host.querySelector<HTMLElement>(
+        '[data-dc-plane="interaction"] [data-dc-component="drop-indicator"]',
+      )!
+      expect(indicator.dataset.dcState).toBe('end')
+      expect(indicator.style.top).toBe('90px')
+      expect(indicator.style.left).toBe('8px')
+      expect(indicator.style.width).toBe('300px')
+
+      dropPosition = 'start'
+      region.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }))
+      await nextTick()
+
+      const startIndicator = host.querySelector<HTMLElement>(
+        '[data-dc-plane="interaction"] [data-dc-component="drop-indicator"]',
+      )!
+      expect(startIndicator.dataset.dcState).toBe('start')
+      expect(startIndicator.style.top).toBe('50px')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('shows empty-region feedback through the Interaction Plane', async () => {
+    const onDropAnchor = vi.fn()
+    const ContainerPreview = defineComponent({
+      setup: () => () => h(DesignerRegionOutlet, { regionId: 'content' }),
+    })
+    const materials = [{
+      type: 'stack',
+      schema: { container: { regions: [{ id: 'content' }] } },
+      presentation: { kind: 'visual' as const, preview: ContainerPreview },
+    }]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [{ id: 'stack', type: 'stack', props: {} }],
+      structure: {
+        root: ['stack'],
+        containers: { stack: { regions: { content: [] } } },
+      },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () => h(ApplicationSurface, { document: resolved, catalog, onDropAnchor }),
+    })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="application-surface"]')!
+      const region = host.querySelector<HTMLElement>('[data-dc-region-outlet="content"]')!
+      surface.getBoundingClientRect = () => ({ left: 80, top: 100 }) as DOMRect
+      region.getBoundingClientRect = () => ({ left: 92, top: 136, right: 372, bottom: 256, width: 280, height: 120 }) as DOMRect
+      window.dispatchEvent(new Event('resize'))
+      await new Promise(resolve => window.requestAnimationFrame(() => resolve(undefined)))
+
+      region.dispatchEvent(new Event('dragover', { bubbles: true, cancelable: true }))
+      await nextTick()
+
+      const indicator = host.querySelector<HTMLElement>(
+        '[data-dc-plane="interaction"] [data-dc-component="drop-indicator"]',
+      )!
+      expect(indicator).not.toBeNull()
+      expect(indicator.dataset.dcState).toBe('empty end')
+      expect(indicator.style.left).toBe('12px')
+      expect(indicator.style.top).toBe('36px')
+      expect(indicator.style.width).toBe('280px')
+      expect(indicator.style.height).toBe('120px')
+      expect(region.querySelector('[data-dc-component="drop-indicator"]')).toBeNull()
     }
     finally {
       app.unmount()
@@ -494,10 +768,72 @@ describe('applicationSurface', () => {
       const remove = host.querySelector<HTMLButtonElement>(
         '[data-dc-plane="interaction"] [data-dc-component="node-toolbar"] [data-dc-action="remove"]',
       )!
+      const toolbar = remove.closest<HTMLElement>('[data-dc-component="node-toolbar"]')!
       expect(remove).not.toBeNull()
+      expect(toolbar.dataset.placement).toBe('left-start')
+      expect(toolbar.dataset.orientation).toBe('vertical')
+      expect(toolbar.style.left).toBe('0px')
+      expect(toolbar.style.transform).toBe('translateX(calc(-100% - 8px))')
       remove.click()
 
       expect(execute).toHaveBeenCalledWith({ type: 'remove-node', nodeId: 'first' })
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('starts node dragging from the selected-node toolbar affordance', async () => {
+    const execute = vi.fn(() => ({ status: 'committed' as const }))
+    const onNodeDragStart = vi.fn()
+    const onNodeDragEnd = vi.fn()
+    const materials = [{ type: 'text', presentation: { kind: 'headless' as const } }]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [{ id: 'first', type: 'text', props: {} }],
+      structure: { root: ['first'], containers: {} },
+    }
+    const catalog = createMaterialCatalog(materials)
+    const resolved = resolveDocument(schema, materials)
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () => h(ApplicationSurface, {
+        document: resolved,
+        catalog,
+        execute,
+        onNodeDragStart,
+        onNodeDragEnd,
+        selectedNodeId: 'first',
+      }),
+    })
+
+    try {
+      app.mount(host)
+      await nextTick()
+      const surface = host.querySelector<HTMLElement>('[data-dc-component="application-surface"]')!
+      const node = host.querySelector<HTMLElement>('[data-dc-node-id="first"]')!
+      surface.getBoundingClientRect = () => ({ left: 0, top: 0 }) as DOMRect
+      node.getBoundingClientRect = () => ({ left: 10, top: 20, right: 110, bottom: 60, width: 100, height: 40 }) as DOMRect
+      window.dispatchEvent(new Event('resize'))
+      await new Promise(resolve => window.requestAnimationFrame(() => resolve(undefined)))
+      await nextTick()
+
+      const drag = host.querySelector<HTMLElement>('[data-dc-action="drag"]')!
+      expect(drag).not.toBeNull()
+      expect(drag.getAttribute('draggable')).toBe('true')
+      expect(node.hasAttribute('draggable')).toBe(false)
+      expect(['drag', 'move-up', 'move-down', 'duplicate', 'remove'].map((action) => {
+        return host.querySelector<HTMLElement>(`[data-dc-action="${action}"]`)?.title
+      })).toEqual(['拖拽排序', '上移', '下移', '复制', '删除'])
+
+      drag.dispatchEvent(new DragEvent('dragstart', { bubbles: true }))
+      drag.dispatchEvent(new DragEvent('dragend', { bubbles: true }))
+      expect(onNodeDragStart).toHaveBeenCalledWith(expect.any(DragEvent), 'first')
+      expect(onNodeDragEnd).toHaveBeenCalledOnce()
     }
     finally {
       app.unmount()
@@ -607,6 +943,13 @@ describe('applicationSurface', () => {
       window.dispatchEvent(new Event('resize'))
       await new Promise(resolve => window.requestAnimationFrame(() => resolve(undefined)))
       await nextTick()
+
+      const toolbar = host.querySelector<HTMLElement>('[data-dc-component="node-toolbar"]')!
+      expect(toolbar.dataset.placement).toBe('bottom-end')
+      expect(toolbar.dataset.orientation).toBe('horizontal')
+      expect(toolbar.style.left).toBe('')
+      expect(toolbar.style.getPropertyValue('--dc-internal-node-toolbar-anchor-inline-end')).toBe('110px')
+      expect(toolbar.style.top).toBe('68px')
 
       host.querySelector<HTMLButtonElement>('[data-dc-action="move-up"]')!.click()
       host.querySelector<HTMLButtonElement>('[data-dc-action="move-down"]')!.click()

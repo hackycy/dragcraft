@@ -3,6 +3,7 @@ import App from './App.vue'
 import 'ant-design-vue/dist/reset.css'
 import '@dragcraft/designer/standard.css'
 import '@dragcraft/device-frames/styles.css'
+import './components/fields/styles.css'
 import './components/widgets/styles.css'
 import './styles/playground.css'
 

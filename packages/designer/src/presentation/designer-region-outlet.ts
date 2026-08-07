@@ -3,6 +3,7 @@ import type { Component, InjectionKey, PropType, Ref, VNode } from 'vue'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { PresentationOwner } from './node-host'
 import { defineComponent, h, inject, mergeProps, onBeforeUnmount, watch } from 'vue'
+import { GEOMETRY_REGISTRY_KEY } from './geometry-registry'
 import { PRESENTATION_DIAGNOSTIC_REGISTRY_KEY } from './presentation-diagnostics'
 
 type ResolvedNode = ResolvedDocument['root'][number]
@@ -67,7 +68,27 @@ export default defineComponent({
     const regionContext = context
     const registration = regionContext.registerOutlet(props.regionId)
     const diagnostics = inject(PRESENTATION_DIAGNOSTIC_REGISTRY_KEY)
+    const geometry = inject(GEOMETRY_REGISTRY_KEY)
     let unregisterDiagnostic: (() => void) | undefined
+    let outletElement: HTMLElement | null = null
+    let unregisterGeometry: (() => void) | undefined
+    function syncGeometry(): void {
+      unregisterGeometry?.()
+      unregisterGeometry = registration.primary.value && outletElement
+        ? geometry?.registerRegion(regionContext.containerId, props.regionId, outletElement)
+        : undefined
+    }
+    function setOutletElement(value: unknown): void {
+      const direct = value instanceof HTMLElement ? value : null
+      const componentElement = value && typeof value === 'object'
+        ? (value as { readonly $el?: unknown }).$el
+        : null
+      const next = direct ?? (componentElement instanceof HTMLElement ? componentElement : null)
+      if (outletElement === next)
+        return
+      outletElement = next
+      syncGeometry()
+    }
     const stopWatchingPrimary = watch(registration.primary, (primary) => {
       unregisterDiagnostic?.()
       unregisterDiagnostic = primary
@@ -77,10 +98,12 @@ export default defineComponent({
             containerId: regionContext.containerId,
             regionId: props.regionId,
           })
+      syncGeometry()
     }, { immediate: true })
     onBeforeUnmount(() => {
       stopWatchingPrimary()
       unregisterDiagnostic?.()
+      unregisterGeometry?.()
       registration.unregister()
     })
 
@@ -139,6 +162,7 @@ export default defineComponent({
       }
 
       return h(props.as, mergeProps(attrs, {
+        'ref': setOutletElement,
         'data-dc-component': 'designer-region-outlet',
         'data-dc-container-id': regionContext.containerId,
         'data-dc-region-outlet': props.regionId,
