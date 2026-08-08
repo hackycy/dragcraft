@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
-import type { DesignerSchema, NodePlacement } from '@dragcraft/core'
+import type { DesignerSchema, NodePlacement } from '@dragcraft/legacy-core'
 import type { Component } from 'vue'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { createEngine } from '@dragcraft/core'
+import { createEngine } from '@dragcraft/legacy-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, inject, nextTick, readonly, ref, shallowRef } from 'vue'
 import { createRendererTestSession } from '../../test/renderer-session'

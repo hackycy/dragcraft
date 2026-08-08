@@ -1,4 +1,4 @@
-import type { ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CoreWidgetMeta, CreationBlockReason, DesignerSchema, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode } from '@dragcraft/core'
+import type { ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CoreWidgetMeta, CreationBlockReason, DesignerSchema, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'

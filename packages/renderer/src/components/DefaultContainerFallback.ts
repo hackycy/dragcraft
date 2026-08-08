@@ -1,4 +1,4 @@
-import type { NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { NodeOwner, SchemaNode } from '@dragcraft/legacy-core'
 import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
 import WidgetRenderer from './WidgetRenderer'

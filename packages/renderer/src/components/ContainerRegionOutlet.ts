@@ -1,4 +1,4 @@
-import type { SchemaNode } from '@dragcraft/core'
+import type { SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, PropType, VNode } from 'vue'
 import type { ResolveContainerDropIndex } from '../types'
 import { computed, defineComponent, h, mergeProps } from 'vue'

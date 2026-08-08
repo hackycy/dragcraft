@@ -42,6 +42,7 @@ catalogs:
   testing:
     '@playwright/test': ^1.62.1
     '@vue/test-utils': ^2.4.11
+    fast-check: ^4.9.0
     happy-dom: ^20.10.6
     tinyexec: ^1.0.2
     vitest: ^4.0.7

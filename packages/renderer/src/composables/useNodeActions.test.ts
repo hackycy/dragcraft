@@ -1,6 +1,6 @@
-import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/legacy-core'
 import type { RendererContext, RendererSessionMaterials } from '../types'
-import { createContainerPlan, findNodeById, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
+import { createContainerPlan, findNodeById, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/legacy-core'
 import { describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
 import { createNodeActionRegistry } from '../action-registry'

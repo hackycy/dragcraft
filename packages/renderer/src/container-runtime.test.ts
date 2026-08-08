@@ -1,6 +1,6 @@
-import type { ContainerRegionDefinition, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { ContainerRegionDefinition, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/legacy-core'
 import type { RendererContext } from './types'
-import { createContainerPlan } from '@dragcraft/core'
+import { createContainerPlan } from '@dragcraft/legacy-core'
 import { describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import { createContainerRuntime } from './container-runtime'

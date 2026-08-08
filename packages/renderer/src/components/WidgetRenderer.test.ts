@@ -1,9 +1,9 @@
-import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode, WidgetMeta } from '@dragcraft/legacy-core'
 // @vitest-environment happy-dom
 import type { Component } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
-import { createContainerPlan, createEngine, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
+import { createContainerPlan, createEngine, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/legacy-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { createRendererTestSession } from '../../test/renderer-session'

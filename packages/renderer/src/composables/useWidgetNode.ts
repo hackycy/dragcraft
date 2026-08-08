@@ -1,4 +1,4 @@
-import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/core'
+import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext, RendererWidgetMeta } from '../types'
 import { computed } from 'vue'

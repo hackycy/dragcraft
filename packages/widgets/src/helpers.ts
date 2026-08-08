@@ -1,4 +1,4 @@
-import type { ContainerDefinition, DesignerEngine, WidgetMeta } from '@dragcraft/core'
+import type { ContainerDefinition, DesignerEngine, WidgetMeta } from '@dragcraft/legacy-core'
 import type { Component } from 'vue'
 import type { WidgetDefinition } from './types'
 

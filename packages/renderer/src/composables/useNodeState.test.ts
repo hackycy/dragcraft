@@ -1,4 +1,4 @@
-import type { DesignerEngine } from '@dragcraft/core'
+import type { DesignerEngine } from '@dragcraft/legacy-core'
 import type { RendererContext } from '../types'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { ref } from 'vue'

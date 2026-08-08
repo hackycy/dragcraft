@@ -1,4 +1,4 @@
-import type { NodeOwner } from '@dragcraft/core'
+import type { NodeOwner } from '@dragcraft/legacy-core'
 import type { NodeSelectionProjectionKind } from './selection-presentation'
 
 export type NodeInteractionGeometryMode = 'root-band' | 'node-box'

@@ -1,4 +1,4 @@
-import type { ContainerDefinition } from '@dragcraft/core'
+import type { ContainerDefinition } from '@dragcraft/legacy-core'
 import type { WidgetDefinition } from './types'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
 import { buildComponentMap, defineContainerWidget, filterByGroup, getWidgetMetas, registerWidgets } from './index'

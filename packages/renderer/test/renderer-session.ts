@@ -1,4 +1,4 @@
-import type { Command, DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { Command, DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/legacy-core'
 import type { AuthoringAction, AuthoringResult, RendererSessionProjection, RendererWidgetMeta } from '../src/types'
 import {
   buildSchemaIndex,
@@ -10,7 +10,7 @@ import {
   resolveNodeLayout,
   validateSubtreeCreation,
   validateSubtreeDeletion,
-} from '@dragcraft/core'
+} from '@dragcraft/legacy-core'
 import { computed, ref } from 'vue'
 
 /** Test-only Legacy projection for mounting Renderer without importing Designer. */

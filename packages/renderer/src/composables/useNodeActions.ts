@@ -1,4 +1,4 @@
-import type { NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { NodeOwner, SchemaNode } from '@dragcraft/legacy-core'
 import type { ComputedRef } from 'vue'
 import type { NodeActionContext, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'

@@ -1,4 +1,4 @@
-import type { DesignerSchema, LayoutEdge, NodeOwner, ResolvedChromePlacement, SchemaNode } from '@dragcraft/core'
+import type { DesignerSchema, LayoutEdge, NodeOwner, ResolvedChromePlacement, SchemaNode } from '@dragcraft/legacy-core'
 import type { RendererContext, RendererLayoutEntry, RendererLayoutProjection, RendererOptions } from './types'
 import { computed, inject, ref } from 'vue'
 import { createNodeActionRegistry } from './action-registry'

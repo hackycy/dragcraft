@@ -1,4 +1,4 @@
-import type { CoreWidgetMeta } from '@dragcraft/core'
+import type { CoreWidgetMeta } from '@dragcraft/legacy-core'
 import type { Component } from 'vue'
 
 // ──────────────────────────────────────────

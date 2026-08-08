@@ -1,6 +1,6 @@
-import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/legacy-core'
 import type { RendererContext } from '../types'
-import { createContainerPlan, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
+import { createContainerPlan, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/legacy-core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import { useWidgetNode } from './useWidgetNode'

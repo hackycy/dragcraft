@@ -3,7 +3,7 @@ import type {
   ContainerRegionId,
   ContainerVariantId,
   SchemaNode,
-} from '@dragcraft/core'
+} from '@dragcraft/legacy-core'
 import type { ComputedRef, InjectionKey } from 'vue'
 import type { AuthoringResult, DeepReadonly, RendererContext } from './types'
 import { cloneDeep } from '@dragcraft/utils'
