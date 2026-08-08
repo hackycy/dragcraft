@@ -423,8 +423,8 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 
 | Gate | Status | Unlock evidence |
 | --- | --- | --- |
-| G0 Executable Baseline | pending | 文档整理提交后开始；需要自动与人工基线全部通过 |
-| G1 Legacy Read Cutover | blocked | G0 Exit |
+| G0 Executable Baseline | passed | `pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser` 通过；Chromium 基线 14/14；三个 Playground 模板人工验收通过 |
+| G1 Legacy Read Cutover | pending | G0 Exit 已满足 |
 | G2 Legacy Write Cutover | blocked | G1 Exit |
 | G3 Pure Next Foundation | blocked | G2 Exit |
 | G4 NextDesignerSession Contract | blocked | G3 Exit |

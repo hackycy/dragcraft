@@ -51,6 +51,8 @@ const MiniProgramEmptyState = defineComponent({
           'mp-empty-state': true,
           'mp-empty-state--drag-over': props.isDragOver,
         },
+        'data-dc-component': 'empty-state',
+        'data-dc-state': props.isDragOver ? 'drag-over' : undefined,
       }, [
         h('div', { class: 'mp-empty-state__icon' }, [
           props.isDragOver
@@ -189,6 +191,12 @@ function toggleLocale() {
   const next = designer.i18n.locale.value === 'zh-CN' ? 'en' : 'zh-CN'
   designer.i18n.setLocale(next)
 }
+
+async function handleTemplateSwitch(id: string, target: HTMLSelectElement) {
+  const switched = await templateSwitch.switchTemplate(id)
+  if (!switched)
+    target.value = templateSwitch.activeTemplateId.value
+}
 </script>
 
 <template>
@@ -197,7 +205,7 @@ function toggleLocale() {
       :active-template-id="templateSwitch.activeTemplateId.value"
       :templates="templateSwitch.templates"
       :locale="designer.i18n.locale.value"
-      @template-switch="templateSwitch.switchTemplate"
+      @template-switch="handleTemplateSwitch"
       @import-open="io.handleImportOpen()"
       @export-open="io.handleExport()"
       @toggle-locale="toggleLocale"

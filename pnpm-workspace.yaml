@@ -40,6 +40,7 @@ catalogs:
   shared:
     lodash-es: ^4.17.23
   testing:
+    '@playwright/test': ^1.62.1
     '@vue/test-utils': ^2.4.11
     happy-dom: ^20.10.6
     tinyexec: ^1.0.2

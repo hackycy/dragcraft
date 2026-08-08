@@ -19,12 +19,14 @@
     "skills:check": "node skills/check.mjs",
     "skills:test": "vitest run skills/check.test.mjs",
     "test": "pnpm build:packages && pnpm -r test",
+    "test:browser": "pnpm build:packages && playwright test",
     "typecheck": "pnpm build:packages && tsc",
     "prepare": "simple-git-hooks"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:cli",
     "@antfu/utils": "catalog:inlined",
+    "@playwright/test": "catalog:testing",
     "@tsdown/css": "catalog:cli",
     "@types/node": "catalog:types",
     "bumpp": "catalog:cli",

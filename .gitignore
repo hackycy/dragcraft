@@ -4,6 +4,7 @@
 *.log
 *.tgz
 coverage
+test-results
 dist
 lib-cov
 logs

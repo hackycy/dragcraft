@@ -9,7 +9,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  templateSwitch: [id: string]
+  templateSwitch: [id: string, target: HTMLSelectElement]
   importOpen: []
   exportOpen: []
   toggleLocale: []
@@ -23,7 +23,7 @@ const emit = defineEmits<{
     <select
       class="playground-header__select"
       :value="activeTemplateId"
-      @change="emit('templateSwitch', ($event.target as HTMLSelectElement).value)"
+      @change="emit('templateSwitch', ($event.target as HTMLSelectElement).value, $event.target as HTMLSelectElement)"
     >
       <option
         v-for="t in templates"

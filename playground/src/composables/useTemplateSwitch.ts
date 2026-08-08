@@ -26,21 +26,22 @@ export function useTemplateSwitch(options: UseTemplateSwitchOptions) {
     return current !== baseline
   }
 
-  function switchTemplate(id: string) {
+  async function switchTemplate(id: string): Promise<boolean> {
     if (id === activeTemplateId.value)
-      return
+      return false
 
     const target = templates.find(t => t.id === id)
     if (!target)
-      return
+      return false
 
     if (isModified()) {
-      if (confirmSwitch && !confirmSwitch())
-        return
+      if (confirmSwitch && !(await confirmSwitch()))
+        return false
     }
 
     importSchema(target.schema)
     activeTemplateId.value = id
+    return true
   }
 
   function resetTemplate() {
