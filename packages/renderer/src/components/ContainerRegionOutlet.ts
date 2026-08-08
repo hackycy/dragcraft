@@ -1,6 +1,6 @@
 import type { SchemaNode } from '@dragcraft/core'
 import type { Component, PropType, VNode } from 'vue'
-import type { RendererWidgetMeta, ResolveContainerDropIndex } from '../types'
+import type { ResolveContainerDropIndex } from '../types'
 import { computed, defineComponent, h, mergeProps } from 'vue'
 import { useContainerRuntime } from '../container-runtime'
 import { useRendererContext } from '../context'
@@ -33,9 +33,9 @@ export default defineComponent({
     )
     const regionNodes = computed(() => runtime.getRegionNodes(props.regionId))
     const containerMeta = computed(() => {
-      const containerNode = ctx.schemaIndex.value.index.get(runtime.nodeId.value)?.node
+      const containerNode = ctx.session.document.getNode(runtime.nodeId.value)
       return containerNode
-        ? ctx.engine.registry.getWidget(containerNode.type) as RendererWidgetMeta | undefined
+        ? ctx.session.materials.get(containerNode.type)
         : undefined
     })
     const isEmpty = computed(() => regionNodes.value.length === 0)
@@ -153,7 +153,7 @@ export default defineComponent({
 
       if (isForbidden.value) {
         children.push(h(ForbiddenOverlay, {
-          widgetType: ctx.engine.store.dragTarget.value?.widgetType ?? '',
+          widgetType: ctx.session.state.dragTarget.value?.widgetType ?? '',
           reason: ctx.containerDropDecision.value,
         }))
       }

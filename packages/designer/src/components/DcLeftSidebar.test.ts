@@ -1,9 +1,12 @@
 // @vitest-environment happy-dom
 import type { DesignerContext, DesignerInstance, DesignerSchema, WidgetMeta } from '..'
+import type { DesignerSession } from '../session/types'
 import { I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { createDesigner, DESIGNER_CONTEXT_KEY } from '..'
+import { DESIGNER_SESSION_KEY } from '../session/context'
+import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
 import DcLeftSidebar from './DcLeftSidebar'
 
 function makeMeta(): WidgetMeta {
@@ -63,13 +66,14 @@ function makeContext(instance: DesignerInstance): DesignerContext {
   }
 }
 
-function mountSidebar(instance: DesignerInstance) {
+function mountSidebar(instance: DesignerInstance, session = createLegacyDesignerSessionAdapter(instance.engine)) {
   const host = document.createElement('div')
   document.body.appendChild(host)
   const ctx = makeContext(instance)
   const app = createApp(defineComponent({
     setup() {
       provide(DESIGNER_CONTEXT_KEY, ctx)
+      provide(DESIGNER_SESSION_KEY, session)
       provide(I18N_KEY, instance.i18n)
       return () => h(DcLeftSidebar)
     },
@@ -124,6 +128,36 @@ describe('dcLeftSidebar', () => {
       expect(materials).toHaveLength(1)
       expect(host.textContent).toContain('按钮')
       expect(host.textContent).not.toContain('Managed')
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
+  it('reads material metadata from the DesignerSession projection', async () => {
+    const designer = createDesigner({
+      engineOptions: { initialSchema: makeSchema() },
+      widgetMetas: [makeMeta()],
+    })
+    const legacySession = createLegacyDesignerSessionAdapter(designer.engine)
+    const session: DesignerSession = {
+      ...legacySession,
+      materials: {
+        ...legacySession.materials,
+        getAll: () => [{
+          ...makeMeta(),
+          type: 'session-button',
+          title: 'Session Button',
+        }],
+      },
+    }
+    const { app, host } = mountSidebar(designer, session)
+
+    try {
+      await nextTick()
+      expect(host.textContent).toContain('Session Button')
+      expect(host.textContent).not.toContain('按钮')
     }
     finally {
       app.unmount()

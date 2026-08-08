@@ -1,10 +1,13 @@
 // @vitest-environment happy-dom
 import type { DesignerInstance, DesignerSchema, WidgetMeta } from '..'
+import type { DesignerSession } from '../session/types'
 import type { DesignerContext } from '../types'
 import { I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { computed, createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { CommandType, createDesigner, DESIGNER_CONTEXT_KEY } from '..'
+import { DESIGNER_SESSION_KEY } from '../session/context'
+import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
 import DcStructurePanel from './DcStructurePanel'
 
 function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
@@ -116,13 +119,14 @@ function makeContext(instance: DesignerInstance): DesignerContext {
   }
 }
 
-function mountPanel(instance: DesignerInstance) {
+function mountPanel(instance: DesignerInstance, session = createLegacyDesignerSessionAdapter(instance.engine)) {
   const host = document.createElement('div')
   document.body.appendChild(host)
   const ctx = makeContext(instance)
   const app = createApp(defineComponent({
     setup() {
       provide(DESIGNER_CONTEXT_KEY, ctx)
+      provide(DESIGNER_SESSION_KEY, session)
       provide(I18N_KEY, instance.i18n)
       return () => h(DcStructurePanel)
     },
@@ -156,6 +160,49 @@ describe('dcStructurePanel', () => {
       expect(host.textContent).toContain('node-a')
       expect(host.textContent).toContain('文本')
       expect(host.textContent).toContain('node-b')
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
+  it('reads tree node metadata and position from the DesignerSession projection', async () => {
+    const designer = createDesigner({
+      engineOptions: { initialSchema: makeSchema() },
+      widgetMetas: [makeMeta({ type: 'button', title: 'Legacy Button' })],
+    })
+    const projectedNode = { id: 'session-node', type: 'session-button', props: {} }
+    const projectedMeta = makeMeta({ type: 'session-button', title: 'Session Button' })
+    const legacySession = createLegacyDesignerSessionAdapter(designer.engine)
+    const session: DesignerSession = {
+      ...legacySession,
+      document: {
+        ...legacySession.document,
+        root: computed(() => ({ id: 'root', type: 'root', props: {}, children: [projectedNode] })),
+        rootNodes: computed(() => [projectedNode]),
+        getStructurePosition: nodeId => nodeId === projectedNode.id
+          ? {
+              owner: { kind: 'root', sortScope: 'content' },
+              index: 0,
+              siblingCount: 1,
+              sortScope: 'content',
+              lockedIndices: new Set(),
+            }
+          : null,
+      },
+      materials: {
+        ...legacySession.materials,
+        get: type => type === projectedNode.type ? projectedMeta : undefined,
+      },
+    }
+    const { app, host } = mountPanel(designer, session)
+
+    try {
+      await nextTick()
+      expect(host.textContent).toContain('Session Button')
+      expect(host.textContent).toContain('session-node')
+      expect(host.textContent).not.toContain('Legacy Button')
     }
     finally {
       app.unmount()
@@ -377,7 +424,7 @@ describe('dcStructurePanel', () => {
     }
   })
 
-  it('resolves root structure actions with one schema and lock pass per revision', async () => {
+  it('resolves root structure actions with one session lock pass per revision', async () => {
     const nodeCount = 12
     const sortable = vi.fn(() => true)
     const unrelatedVisible = vi.fn(() => true)
@@ -404,7 +451,7 @@ describe('dcStructurePanel', () => {
     try {
       await nextTick()
       expect(host.querySelectorAll('[data-dc-component="structure-item"]')).toHaveLength(nodeCount)
-      expect(getSchema).toHaveBeenCalledOnce()
+      expect(getSchema).not.toHaveBeenCalled()
       expect(sortable).toHaveBeenCalledTimes(nodeCount)
       expect(unrelatedVisible).not.toHaveBeenCalled()
     }

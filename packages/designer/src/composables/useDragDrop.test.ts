@@ -1,7 +1,10 @@
 // @vitest-environment happy-dom
-import type { ContainerDefinition, DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { ContainerDefinition, DesignerEngine, DesignerSchema, NodeDestination, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DesignerSession } from '../session/types'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
+import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
 import { useDragDrop } from './useDragDrop'
 
 function makeNode(id: string, type = 'text', layout?: SchemaNode['layout']): SchemaNode {
@@ -110,6 +113,36 @@ describe('useDragDrop', () => {
     expect(dd.dragOverIndex.value).toBeNull()
     expect(dd.isForbidden.value).toBe(false)
     expect(dd.forbiddenReason.value).toBeNull()
+  })
+
+  it('uses the DesignerSession drag projection for destination and feedback state', () => {
+    const legacySession = createLegacyDesignerSessionAdapter(engine)
+    const activeDestination = ref<NodeDestination | null>(null)
+    const containerDropDecision = ref(null)
+    const isForbidden = ref(false)
+    const forbiddenReason = ref(null)
+    const session: DesignerSession = {
+      ...legacySession,
+      state: {
+        ...legacySession.state,
+        drag: {
+          activeDestination,
+          containerDropDecision,
+          isForbidden,
+          forbiddenReason,
+        },
+      },
+    }
+
+    const dd = useDragDrop(engine, session)
+    activeDestination.value = { kind: 'root', sortScope: 'content', index: 1 }
+    isForbidden.value = true
+
+    expect(dd.activeDestination).toBe(activeDestination)
+    expect(dd.containerDropDecision).toBe(containerDropDecision)
+    expect(dd.isForbidden).toBe(isForbidden)
+    expect(dd.forbiddenReason).toBe(forbiddenReason)
+    expect(dd.dragOverDestination.value).toEqual({ kind: 'root', sortScope: 'content', index: 1 })
   })
 
   it('handles arbitrary sort scope identifiers during canvas drag-over', () => {

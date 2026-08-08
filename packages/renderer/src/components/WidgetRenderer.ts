@@ -1,7 +1,7 @@
 import type { NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPlane } from '../selection-presentation'
-import { createContainerPlan, normalizeStyleValueMap } from '@dragcraft/core'
+import { normalizeStyleValueMap } from '@dragcraft/core'
 import { computed, defineComponent, h, inject, provide, ref, Teleport } from 'vue'
 import { useNodeActions } from '../composables/useNodeActions'
 import { useNodeDrag } from '../composables/useNodeDrag'
@@ -90,7 +90,7 @@ export default defineComponent({
     provide(NODE_SELECTION_PLANE_KEY, subtreeSelectionPlane)
 
     const containerPlan = computed(() => props.node.container
-      ? createContainerPlan(props.node, ctx.engine.registry)
+      ? ctx.session.materials.resolveContainer(props.node)
       : null)
     const isResolvedContainer = computed(() => {
       const plan = containerPlan.value
@@ -179,8 +179,8 @@ export default defineComponent({
     }
 
     return () => {
-      // Read schema.value to establish reactive dependency
-      void ctx.engine.store.schema.value
+      // Read the session snapshot to establish the node revision dependency.
+      void ctx.schema.value
 
       const node = props.node
       const interactionLayerTarget = resolveInteractionLayerTarget(nodeElRef.value)

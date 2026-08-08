@@ -1,8 +1,7 @@
-import type { DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { ComputedRef } from 'vue'
 import type { NodeActionContext, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
-import { buildSchemaIndex, createLayoutPlan, getLockedIndices, getLockedIndicesFromNodes, getSortScopeEntries, resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
 
 export interface UseNodeActionsReturn {
@@ -13,34 +12,44 @@ export interface UseNodeActionsReturn {
 }
 
 function resolveUncachedPosition(node: SchemaNode, owner: NodeOwner, ctx: RendererContext) {
-  const schema = ctx.schema.value as DesignerSchema
+  const position = ctx.session.document.getStructurePosition(node.id)
+  if (position) {
+    return {
+      owner: position.owner,
+      index: position.index,
+      siblingCount: position.siblingCount,
+      sortScope: position.sortScope,
+      lockedIndices: new Set(position.lockedIndices),
+    }
+  }
   if (owner.kind === 'container') {
-    const container = buildSchemaIndex(schema).index.get(owner.containerId)?.node
-    const siblings = container?.container?.regions[owner.regionId] ?? []
+    const siblings = ctx.session.document.getRegionNodes(owner.containerId, owner.regionId)
     return {
       owner,
       index: siblings.findIndex(item => item.id === node.id),
       siblingCount: siblings.length,
       sortScope: false as const,
-      lockedIndices: getLockedIndicesFromNodes(siblings, ctx.engine.registry, schema),
+      lockedIndices: ctx.session.materials.getLockedIndices(siblings),
     }
   }
 
-  const layout = resolveNodeLayout(node, ctx.engine.registry, schema)
-  const entries = layout.sortScope === false
-    ? []
-    : getSortScopeEntries(createLayoutPlan(schema, ctx.engine.registry), layout.sortScope)
+  const layout = ctx.session.materials.resolveLayout(node)
+  const siblings = layout.sortScope === false
+    ? ctx.session.document.rootNodes.value
+    : ctx.session.document.rootNodes.value.filter(candidate =>
+        ctx.session.materials.resolveLayout(candidate).sortScope === layout.sortScope,
+      )
   return {
     owner: {
       kind: 'root' as const,
       sortScope: layout.sortScope === false ? undefined : layout.sortScope,
     },
-    index: entries.findIndex(entry => entry.node.id === node.id),
-    siblingCount: entries.length,
+    index: siblings.findIndex(candidate => candidate.id === node.id),
+    siblingCount: siblings.length,
     sortScope: layout.sortScope,
     lockedIndices: layout.sortScope === false
       ? new Set<number>()
-      : getLockedIndices(schema.root.children ?? [], ctx.engine.registry, schema, layout.sortScope),
+      : ctx.session.materials.getLockedIndices(siblings),
   }
 }
 
@@ -62,7 +71,7 @@ export function useNodeActions(
     const node = getNode()
     const schema = ctx.schema.value
     const owner = getOwner()
-    const meta = engine.registry.getWidget(node.type)
+    const meta = ctx.session.materials.get(node.type)
     const position = ctx.resolveNodeActionPosition?.(node, owner)
       ?? resolveUncachedPosition(node, owner, ctx)
 
@@ -70,6 +79,7 @@ export function useNodeActions(
       node,
       ...position,
       meta,
+      materials: ctx.session.materials,
       engine,
       schema,
     }

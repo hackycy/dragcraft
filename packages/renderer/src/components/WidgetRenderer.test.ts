@@ -3,9 +3,10 @@ import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode, WidgetMeta 
 import type { Component } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
-import { CommandType, createEngine } from '@dragcraft/core'
+import { CommandType, createContainerPlan, createEngine, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { createRendererTestSession } from '../../test/renderer-session'
 import { createNodeActionRegistry } from '../action-registry'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
 import { RENDERER_CONTEXT_KEY } from '../types'
@@ -63,6 +64,41 @@ function makeContext(meta: WidgetMeta): RendererContext {
       },
     } as unknown as DesignerEngine,
     schema: computed(() => schema),
+    session: {
+      document: {
+        root: computed(() => schema.root),
+        rootNodes: computed(() => schema.root.children ?? []),
+        globalConfig: computed(() => schema.globalConfig),
+        version: computed(() => schema.version),
+        diagnostics: computed(() => []),
+        getNode: (id: string) => schema.root.children?.find(node => node.id === id) ?? null,
+        getOwner: () => null,
+        getStructurePosition: () => null,
+        getRegionNodes: () => [],
+      },
+      materials: {
+        get: () => meta,
+        getAll: () => [meta],
+        resolveCapability: (node: SchemaNode, capability: any) => resolveAuthoringCapability(
+          meta,
+          { node, schema },
+          capability,
+        ),
+        resolveLayout: (node: SchemaNode) => resolveNodeLayout(
+          node,
+          { getWidget: () => meta } as unknown as DesignerEngine['registry'],
+          schema,
+        ),
+        resolveContainer: (node: SchemaNode) => createContainerPlan(
+          node,
+          { getWidget: () => meta } as unknown as DesignerEngine['registry'],
+        ),
+        getLockedIndices: () => new Set<number>(),
+        canCreateSubtree: () => true,
+        canDeleteSubtree: () => true,
+      },
+      state: { dragTarget },
+    } as unknown as RendererContext['session'],
     componentMap: {
       'floating-button': defineComponent({
         setup() {
@@ -79,6 +115,8 @@ function makeContext(meta: WidgetMeta): RendererContext {
       unregister: vi.fn(),
       resolve: vi.fn(() => []),
     } as unknown as NodeActionRegistry,
+    selectedNodeId,
+    hoveredNodeId,
     dragOverNodeId: ref(null),
   } as unknown as RendererContext
 }
@@ -779,6 +817,7 @@ describe('widgetRenderer', () => {
       setup() {
         return () => h(RootRenderer, {
           engine,
+          session: createRendererTestSession(engine),
           componentMap: { 'split-layout': ExternalContainer },
         })
       },
@@ -852,6 +891,7 @@ describe('widgetRenderer', () => {
       setup() {
         return () => h(RootRenderer, {
           engine,
+          session: createRendererTestSession(engine),
           componentMap: {
             'split-layout': ExternalContainer,
             'text': defineComponent({ setup: () => () => h('span', 'child') }),
@@ -1007,7 +1047,7 @@ function mountRoot(engine: DesignerEngine, componentMap: Record<string, Componen
   document.body.appendChild(host)
   const app = createApp(defineComponent({
     setup() {
-      return () => h(RootRenderer, { engine, componentMap })
+      return () => h(RootRenderer, { engine, session: createRendererTestSession(engine), componentMap })
     },
   }))
   app.mount(host)

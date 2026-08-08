@@ -11,14 +11,14 @@ export function useNodeState(
   getNodeId: () => string,
   ctx: RendererContext,
 ): NodeInteractionState {
-  const { engine, dragOverNodeId } = ctx
+  const { dragOverNodeId, hoveredNodeId, selectedNodeId } = ctx
 
   const isSelected = computed(
-    () => engine.store.selectedNodeId.value === getNodeId(),
+    () => selectedNodeId.value === getNodeId(),
   )
 
   const isHovered = computed(
-    () => engine.store.hoveredNodeId.value === getNodeId(),
+    () => hoveredNodeId.value === getNodeId(),
   )
 
   const isDragOver = computed(

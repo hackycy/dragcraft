@@ -4,6 +4,7 @@ import { useI18n } from '@dragcraft/i18n'
 import { IconChevronLeft, IconChevronRight, IconGlobalConfig, IconProperties } from '@dragcraft/icons'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
+import { useDesignerSession } from '../session/context'
 import DcPropertyPanel from './DcPropertyPanel'
 
 interface RightPanelTab {
@@ -34,7 +35,8 @@ export default defineComponent({
   setup() {
     const { t } = useI18n()
     const { engine, extensions, activeTab, workspace } = useDesignerContext()
-    const hasSelectedNode = computed(() => engine.store.selectedNodeId.value !== null)
+    const session = useDesignerSession()
+    const hasSelectedNode = computed(() => session.state.selectedNodeId.value !== null)
 
     const renderTabButton = (tab: RightPanelTab) => {
       const label = t(tab.labelKey, tab.fallback)

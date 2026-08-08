@@ -1,6 +1,7 @@
-import type { LayoutEdge, LayoutPlan, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from '@dragcraft/core'
+import type { LayoutEdge, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from '@dragcraft/core'
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPresentationHost } from '../selection-presentation'
+import type { RendererLayoutProjection } from '../types'
 import { DEFAULT_LAYOUT_REGION } from '@dragcraft/core'
 import { DcScrollArea } from '@dragcraft/ui'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
@@ -102,7 +103,7 @@ function layerItemStyle(placement: ResolvedLayerPlacement): Record<string, strin
   return style
 }
 
-function insetVariables(plan: LayoutPlan): Record<string, string> {
+function insetVariables(plan: RendererLayoutProjection): Record<string, string> {
   const sized: Record<LayoutEdge, string[]> = {
     'block-start': [],
     'block-end': [],
@@ -159,7 +160,7 @@ export default defineComponent({
       required: true,
     },
     layoutPlan: {
-      type: Object as PropType<LayoutPlan>,
+      type: Object as PropType<RendererLayoutProjection>,
       required: true,
     },
     surfaceStyle: {

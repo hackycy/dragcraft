@@ -1,7 +1,6 @@
-import type { BehaviorPredicate, DesignerSchema, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/core'
+import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef } from 'vue'
 import type { NodeInteractionState, RendererContext, RendererWidgetMeta } from '../types'
-import { resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
 import { computed } from 'vue'
 import { runBeforeAfterHook } from '../event-hooks'
 import { useNodeState } from './useNodeState'
@@ -50,17 +49,17 @@ export function useWidgetNode(
   getNode: () => SchemaNode,
   ctx: RendererContext,
 ): UseWidgetNodeReturn {
-  const { engine, componentMap, eventHooks } = ctx
+  const { engine, componentMap, eventHooks, session } = ctx
 
   const state = useNodeState(() => getNode().id, ctx)
 
   const meta = computed<RendererWidgetMeta | undefined>(() =>
-    engine.registry.getWidget(getNode().type) as RendererWidgetMeta | undefined,
+    session.materials.get(getNode().type),
   )
   const resolvedComponent = computed(() => componentMap[getNode().type])
-  const layout = computed(() => resolveNodeLayout(getNode(), engine.registry, ctx.schema.value as DesignerSchema))
+  const layout = computed(() => session.materials.resolveLayout(getNode()))
   const inSortScope = computed(() => layout.value.sortScope !== false)
-  const isDragging = computed(() => engine.store.dragTarget.value?.sourceNodeId === getNode().id)
+  const isDragging = computed(() => session.state.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
   function readInstanceCtx(): InstanceBehaviorContext {
     return { node: getNode(), schema: ctx.schema.value }
@@ -77,17 +76,17 @@ export function useWidgetNode(
   const useMask = computed(() => resolveMetaBehavior(meta.value?.mask))
 
   const selectable = computed(() =>
-    resolveAuthoringCapability(meta.value, readInstanceCtx(), 'selectable'),
+    session.materials.resolveCapability(getNode(), 'selectable'),
   )
 
   const sortable = computed(() =>
-    resolveAuthoringCapability(meta.value, readInstanceCtx(), 'sortable'),
+    session.materials.resolveCapability(getNode(), 'sortable'),
   )
 
   const draggable = computed(() => {
     if (!inSortScope.value || !sortable.value)
       return false
-    return resolveAuthoringCapability(meta.value, readInstanceCtx(), 'draggable')
+    return session.materials.resolveCapability(getNode(), 'draggable')
   })
 
   const wrapperClasses = computed<Array<string | Record<string, boolean>>>(() => [
@@ -127,14 +126,14 @@ export function useWidgetNode(
 
   const handleMouseEnter = () => {
     const nodeId = getNode().id
-    if (engine.store.hoveredNodeId.value === nodeId)
+    if (ctx.hoveredNodeId.value === nodeId)
       return
     engine.store.hoverNode(nodeId)
     eventHooks.onHoverChange?.({ nodeId })
   }
 
   const handleMouseLeave = () => {
-    if (engine.store.hoveredNodeId.value !== getNode().id)
+    if (ctx.hoveredNodeId.value !== getNode().id)
       return
     engine.store.hoverNode(null)
     eventHooks.onHoverChange?.({ nodeId: null })

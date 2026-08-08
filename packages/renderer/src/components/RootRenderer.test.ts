@@ -6,6 +6,7 @@ import path from 'node:path'
 import { createEngine } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, inject, nextTick, readonly, ref, shallowRef } from 'vue'
+import { createRendererTestSession } from '../../test/renderer-session'
 import { NODE_SELECTION_PLANE_KEY } from '../selection-presentation'
 import RootRenderer from './RootRenderer'
 
@@ -48,6 +49,7 @@ function mountDefaultRootRenderer(schema: DesignerSchema) {
   const app = createApp(defineComponent({
     setup: () => () => h(RootRenderer, {
       engine,
+      session: createRendererTestSession(engine),
       componentMap: { 'test-widget': TestWidget },
     }),
   }))
@@ -66,16 +68,18 @@ function mountRootRenderer(containerShell: Component) {
   document.body.appendChild(host)
   const engine = createEngine()
   engine.store.setDragTarget({ sourceNodeId: null, widgetType: 'navbar' })
+  const session = createRendererTestSession(engine)
+  session.state.drag.isForbidden.value = true
+  session.state.drag.forbiddenReason.value = { message: '页面只能配置一个导航栏' }
 
   const app = createApp(defineComponent({
     setup() {
       return () => h(RootRenderer, {
         engine,
+        session,
         componentMap: {},
         extensions: { containerShell },
         dragOverNodeId: ref('root'),
-        isForbidden: ref(true),
-        forbiddenReason: ref({ message: '页面只能配置一个导航栏' }),
       })
     },
   }))
@@ -146,6 +150,7 @@ describe('rootRenderer forbidden overlay', () => {
     const app = createApp(defineComponent({
       setup: () => () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap: {},
         dragOverNodeId: ref<string | null>('root'),
         dragOverIndex: ref<number | null>(0),
@@ -182,6 +187,7 @@ describe('rootRenderer forbidden overlay', () => {
     const app = createApp(defineComponent({
       setup: () => () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap: { 'test-widget': TestWidget },
         dragOverNodeId,
         dragOverIndex,
@@ -215,6 +221,7 @@ describe('rootRenderer forbidden overlay', () => {
     const app = createApp(defineComponent({
       setup: () => () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap: { 'test-widget': TestWidget },
         dragOverNodeId: ref<string | null>('root'),
         dragOverIndex: ref<number | null>(null),
@@ -254,6 +261,7 @@ describe('rootRenderer forbidden overlay', () => {
     const app = createApp(defineComponent({
       setup: () => () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap: { 'test-widget': TestWidget, 'secondary-widget': TestWidget },
         dragOverNodeId: ref<string | null>('root'),
         dragOverIndex: ref<number | null>(0),
@@ -298,6 +306,7 @@ describe('rootRenderer forbidden overlay', () => {
     const app = createApp(defineComponent({
       setup: () => () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap: { 'test-widget': TestWidget, 'secondary-widget': TestWidget },
         dragOverNodeId: ref<string | null>('root'),
         activeDestination: ref({ kind: 'root' as const, sortScope: 'shared', index: 0 }),
@@ -497,6 +506,7 @@ describe('rootRenderer forbidden overlay', () => {
     const app = createApp(defineComponent({
       setup: () => () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap: { 'test-widget': TestWidget },
       }),
     }))
@@ -505,7 +515,7 @@ describe('rootRenderer forbidden overlay', () => {
 
     try {
       expect(host.querySelectorAll('[data-dc-component="node"]')).toHaveLength(3)
-      expect(getSchema).toHaveBeenCalledTimes(1)
+      expect(getSchema).not.toHaveBeenCalled()
     }
     finally {
       app.unmount()
@@ -565,6 +575,7 @@ describe('rootRenderer forbidden overlay', () => {
     const app = createApp(defineComponent({
       setup: () => () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap: { 'test-widget': TestWidget },
         extensions: { containerShell: shellSource },
       }),
@@ -613,6 +624,7 @@ describe('rootRenderer forbidden overlay', () => {
       setup() {
         return () => h(RootRenderer, {
           engine,
+          session: createRendererTestSession(engine),
           componentMap: {},
         })
       },

@@ -1,5 +1,6 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { RendererContext } from '../types'
+import { createContainerPlan, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import { useWidgetNode } from './useWidgetNode'
@@ -24,40 +25,73 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
   const selectedNodeId = ref<string | null>(null)
   const hoveredNodeId = ref<string | null>(null)
   const dragTarget = ref<{ sourceNodeId: string, widgetType: string | null } | null>(null)
+  const engine = {
+    store: {
+      schema: ref(schema),
+      selectedNodeId,
+      hoveredNodeId,
+      dragTarget,
+      selectNode: vi.fn((id: string | null) => {
+        selectedNodeId.value = id
+      }),
+      hoverNode: vi.fn((id: string | null) => {
+        hoveredNodeId.value = id
+      }),
+      setDragTarget: vi.fn((target: { sourceNodeId: string, widgetType: string | null } | null) => {
+        dragTarget.value = target
+      }),
+    },
+    state: {
+      getSchema: () => schema,
+      getNodeById: (id: string) => schema.root.children?.find(node => node.id === id) ?? null,
+      getSelectedNodeId: () => null,
+      getHoveredNodeId: () => null,
+      getDragTarget: () => null,
+    },
+    registry: {
+      getWidget: vi.fn(() => undefined),
+    },
+  } as unknown as DesignerEngine
+  const session = {
+    document: {
+      root: computed(() => schema.root),
+      rootNodes: computed(() => schema.root.children ?? []),
+      globalConfig: computed(() => schema.globalConfig),
+      version: computed(() => schema.version),
+      diagnostics: computed(() => []),
+      getNode: (id: string) => schema.root.children?.find(node => node.id === id) ?? null,
+      getOwner: () => null,
+      getStructurePosition: () => null,
+      getRegionNodes: (containerId: string, regionId: string) =>
+        schema.root.children?.find(node => node.id === containerId)?.container?.regions[regionId] ?? [],
+    },
+    materials: {
+      get: (type: string) => engine.registry.getWidget(type),
+      getAll: () => [],
+      resolveCapability: (node: SchemaNode, capability: any) => resolveAuthoringCapability(
+        engine.registry.getWidget(node.type),
+        { node, schema },
+        capability,
+      ),
+      resolveLayout: (node: SchemaNode) => resolveNodeLayout(node, engine.registry, schema),
+      resolveContainer: (node: SchemaNode) => createContainerPlan(node, engine.registry),
+      getLockedIndices: () => new Set<number>(),
+      canCreateSubtree: () => true,
+      canDeleteSubtree: () => true,
+    },
+    state: { dragTarget },
+  } as unknown as RendererContext['session']
   return {
-    engine: {
-      store: {
-        schema: ref(schema),
-        selectedNodeId,
-        hoveredNodeId,
-        dragTarget,
-        selectNode: vi.fn((id: string | null) => {
-          selectedNodeId.value = id
-        }),
-        hoverNode: vi.fn((id: string | null) => {
-          hoveredNodeId.value = id
-        }),
-        setDragTarget: vi.fn((target: { sourceNodeId: string, widgetType: string | null } | null) => {
-          dragTarget.value = target
-        }),
-      },
-      state: {
-        getSchema: () => schema,
-        getNodeById: (id: string) => schema.root.children?.find(node => node.id === id) ?? null,
-        getSelectedNodeId: () => null,
-        getHoveredNodeId: () => null,
-        getDragTarget: () => null,
-      },
-      registry: {
-        getWidget: vi.fn(() => undefined),
-      },
-    } as unknown as DesignerEngine,
+    engine,
+    session,
     schema: computed(() => schema),
     componentMap: {},
     extensions: {},
     eventHooks: {},
     actionInterceptors: [],
     actionRegistry: {} as RendererContext['actionRegistry'],
+    selectedNodeId,
+    hoveredNodeId,
     dragOverNodeId: ref(null),
     ...overrides,
   } as RendererContext

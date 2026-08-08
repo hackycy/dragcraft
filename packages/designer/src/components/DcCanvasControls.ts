@@ -4,6 +4,7 @@ import { useI18n } from '@dragcraft/i18n'
 import { IconCenter, IconHand, IconPointer, IconRedo, IconUndo } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
+import { useDesignerSession } from '../session/context'
 
 interface ControlButtonOptions {
   key: 'undo' | 'redo' | 'pointer' | 'hand' | 'center'
@@ -32,6 +33,7 @@ export default defineComponent({
   setup(props, { emit }) {
     const { t } = useI18n()
     const { engine } = useDesignerContext()
+    const session = useDesignerSession()
 
     const renderHistoryButton = (options: ControlButtonOptions): VNodeChild => h('button', {
       'type': 'button',
@@ -46,7 +48,7 @@ export default defineComponent({
     }, [h(options.icon, { size: 17 })])
 
     return () => {
-      const history = engine.history.state.value
+      const history = session.state.history.value
       return h('div', { 'class': 'dc-canvas-controls', 'data-dc-component': 'canvas-controls' }, [
         h('div', {
           'class': 'dc-canvas-controls__history',

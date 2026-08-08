@@ -1,19 +1,11 @@
-import type { Command, DeepReadonly, DesignerEngine, DesignerSchema, InstanceBehaviorContext, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { Command, DeepReadonly, DesignerEngine, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
-import type { RendererWidgetMeta } from './types'
-import { CommandType, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget, resolveAuthoringCapability, validateSubtreeCreation, validateSubtreeDeletion } from '@dragcraft/core'
+import type { RendererSessionMaterials, RendererWidgetMeta } from './types'
+import { CommandType, isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
-
-/**
- * Builds an InstanceBehaviorContext from a NodeActionContext.
- * Schema is already read reactively by the calling computed (in useNodeActions).
- */
-function toInstanceCtx(ctx: NodeActionContext): InstanceBehaviorContext {
-  return { node: ctx.node, schema: ctx.schema }
-}
 
 function canReorder(ctx: NodeActionContext): boolean {
   return ctx.owner.kind !== 'root' || ctx.sortScope !== false
@@ -22,22 +14,16 @@ function canReorder(ctx: NodeActionContext): boolean {
 function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
   if (ctx.lockedIndices)
     return ctx.lockedIndices
-
-  const schema = ctx.schema as DesignerSchema
   if (ctx.owner.kind === 'container') {
-    const containerOwner = ctx.owner
-    const owner = schema.root.children?.find(node => node.id === containerOwner.containerId)
-    const nodes = owner?.container?.regions[containerOwner.regionId] ?? []
-    return getLockedIndicesFromNodes(nodes, ctx.engine.registry, schema)
+    const owner = ctx.owner
+    const nodes = ctx.schema.root.children
+      ?.find(node => node.id === owner.containerId)
+      ?.container
+      ?.regions[owner.regionId] ?? []
+    return ctx.materials.getLockedIndices(nodes)
   }
-
-  const children = schema.root.children ?? []
-  return getLockedIndices(
-    children,
-    ctx.engine.registry,
-    schema,
-    ctx.sortScope === false ? undefined : ctx.sortScope,
-  )
+  const nodes = ctx.schema.root.children ?? []
+  return ctx.materials.getLockedIndices(nodes)
 }
 
 // ──────────────────────────────────────────
@@ -60,6 +46,8 @@ export interface NodeActionContext {
   sortScope: string | false
   /** The widget meta, if registered */
   meta: RendererWidgetMeta | undefined
+  /** Semantic material and authoring facts from the session read projection. */
+  materials: RendererSessionMaterials
   /** The engine instance for executing commands */
   engine: DesignerEngine
   /** Safe schema snapshot shared by all action predicates for this resolution. */
@@ -178,18 +166,17 @@ export const ActionKey = {
 
 function isBuiltInActionAuthorized(key: string, ctx: NodeActionContext): boolean | undefined {
   if (key === ActionKey.DRAG || key === ActionKey.MOVE_UP || key === ActionKey.MOVE_DOWN) {
-    const instanceCtx = toInstanceCtx(ctx)
-    return resolveAuthoringCapability(ctx.meta, instanceCtx, 'draggable')
-      && resolveAuthoringCapability(ctx.meta, instanceCtx, 'sortable')
+    return ctx.materials.resolveCapability(ctx.node, 'draggable')
+      && ctx.materials.resolveCapability(ctx.node, 'sortable')
   }
   if (key === ActionKey.DELETE) {
-    return resolveAuthoringCapability(ctx.meta, toInstanceCtx(ctx), 'deletable')
-      && validateSubtreeDeletion(ctx.node, ctx.schema, ctx.engine.registry).ok
+    return ctx.materials.resolveCapability(ctx.node, 'deletable')
+      && ctx.materials.canDeleteSubtree(ctx.node)
   }
   if (key === ActionKey.DUPLICATE) {
     if (isSchemaManagedWidget(ctx.meta))
       return false
-    return validateSubtreeCreation(ctx.node, ctx.schema, ctx.engine.registry).ok
+    return ctx.materials.canCreateSubtree(ctx.node)
   }
   return undefined
 }

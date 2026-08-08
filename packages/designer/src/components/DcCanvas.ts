@@ -2,6 +2,7 @@ import { RootRenderer } from '@dragcraft/renderer'
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useCanvasPan } from '../composables/useCanvasPan'
 import { useDesignerContext } from '../context'
+import { useDesignerSession } from '../session/context'
 import DcCanvasControls from './DcCanvasControls'
 
 export default defineComponent({
@@ -9,16 +10,13 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
+    const session = useDesignerSession()
     const {
       engine,
       componentMap,
       extensions,
-      activeDestination,
-      containerDropDecision,
       dragOverNodeId,
       dragOverIndex,
-      isForbidden,
-      forbiddenReason,
       handleCanvasDragOver,
       handleCanvasDragLeave,
       handleCanvasDrop,
@@ -29,6 +27,11 @@ export default defineComponent({
       actionInterceptors,
       actionRegistry,
     } = ctx
+    const {
+      activeDestination,
+      containerDropDecision,
+      isForbidden,
+    } = session.state.drag
     const viewportRef = ref<HTMLElement | null>(null)
     const stageRef = ref<HTMLElement | null>(null)
     const contentRef = ref<HTMLElement | null>(null)
@@ -49,7 +52,7 @@ export default defineComponent({
         engine.store.selectNode(null)
     }
 
-    const isDragging = computed(() => engine.store.dragTarget.value !== null)
+    const isDragging = computed(() => session.state.dragTarget.value !== null)
 
     function observeCanvasTarget(): void {
       const content = contentRef.value
@@ -149,6 +152,7 @@ export default defineComponent({
             }, [
               h(RootRenderer, {
                 engine,
+                session,
                 componentMap,
                 extensions: rendererExtensions.value,
                 eventHooks,
@@ -161,8 +165,6 @@ export default defineComponent({
                 onContainerDrop: handleContainerDrop,
                 dragOverNodeId,
                 dragOverIndex,
-                isForbidden,
-                forbiddenReason,
                 interactionBoundary: viewportRef,
               }),
             ]),

@@ -7,7 +7,7 @@ import type {
 } from '@dragcraft/core'
 import type { ComputedRef, InjectionKey } from 'vue'
 import type { DeepReadonly, RendererContext } from './types'
-import { CommandType, createContainerPlan } from '@dragcraft/core'
+import { CommandType } from '@dragcraft/core'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed, inject } from 'vue'
 
@@ -41,10 +41,10 @@ export function createContainerRuntime(
   ctx: RendererContext,
 ): ContainerRuntime {
   const resolveNode = (): SchemaNode => {
-    void ctx.engine.store.schema.value
-    return getNode()
+    void ctx.schema.value
+    return ctx.session.document.getNode(getNode().id) as SchemaNode ?? getNode()
   }
-  const plan = computed(() => createContainerPlan(resolveNode(), ctx.engine.registry))
+  const plan = computed(() => ctx.session.materials.resolveContainer(resolveNode()))
 
   return {
     nodeId: computed(() => resolveNode().id),
@@ -63,7 +63,9 @@ export function createContainerRuntime(
           }))
         : [],
     )),
-    getRegionNodes: regionId => toReadonlySnapshot(resolveNode().container?.regions[regionId] ?? []),
+    getRegionNodes: regionId => toReadonlySnapshot(
+      ctx.session.document.getRegionNodes(resolveNode().id, regionId),
+    ),
     requestVariantChange: variant => ctx.engine.execute({
       type: CommandType.CHANGE_CONTAINER_VARIANT,
       payload: { containerId: getNode().id, variant },

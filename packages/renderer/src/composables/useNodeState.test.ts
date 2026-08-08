@@ -25,6 +25,8 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
     eventHooks: {},
     actionInterceptors: [],
     actionRegistry: {} as RendererContext['actionRegistry'],
+    selectedNodeId,
+    hoveredNodeId,
     dragOverNodeId: ref(null),
     ...overrides,
   } as RendererContext
@@ -49,6 +51,16 @@ describe('useNodeState', () => {
     const state = useNodeState(() => 'node-1', ctx)
     ctx.engine.store.selectNode('node-2')
     expect(state.isSelected.value).toBe(false)
+  })
+
+  it('reads selection from the session projection instead of the engine store', () => {
+    const sessionSelection = ref<string | null>('node-1')
+    ctx = makeContext({ selectedNodeId: sessionSelection })
+    const state = useNodeState(() => 'node-1', ctx)
+
+    expect(state.isSelected.value).toBe(true)
+    ctx.engine.store.selectNode(null)
+    expect(state.isSelected.value).toBe(true)
   })
 
   it('isHovered is true when hoveredNodeId matches', () => {

@@ -6,6 +6,7 @@ import { CommandType, createEngine } from '@dragcraft/core'
 import { createI18n, I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
+import { createRendererTestSession } from '../../test/renderer-session'
 import { rendererMessages } from '../messages'
 import ContainerRegionOutlet from './ContainerRegionOutlet'
 import RootRenderer from './RootRenderer'
@@ -113,6 +114,7 @@ function mountExternalSplit(options: MountOptions = {}) {
       provide(I18N_KEY, createI18n('zh-CN', rendererMessages))
       return () => h(RootRenderer, {
         engine,
+        session: createRendererTestSession(engine),
         componentMap,
         extensions: options.extensions,
         activeDestination: options.activeDestination,
@@ -334,7 +336,7 @@ describe('containerRegionOutlet', () => {
       region.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }))
 
       expect(registeredResolveDropIndex).toHaveBeenCalledTimes(2)
-      expect(getNodeById).not.toHaveBeenCalled()
+      expect(getNodeById).toHaveBeenCalledOnce()
       expect(getSchema).not.toHaveBeenCalled()
     }
     finally {

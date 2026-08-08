@@ -1,6 +1,6 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core'
-import type { RendererContext } from '../types'
-import { findNodeById } from '@dragcraft/core'
+import type { RendererContext, RendererSessionMaterials } from '../types'
+import { createContainerPlan, findNodeById, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
 import { describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
 import { createNodeActionRegistry } from '../action-registry'
@@ -28,9 +28,32 @@ function makeContext(schema: DesignerSchema): RendererContext {
     },
     registry,
   } as unknown as DesignerEngine
+  const materials: RendererSessionMaterials = {
+    get: type => registry.getWidget(type),
+    getAll: () => [],
+    resolveCapability: (node, capability) => resolveAuthoringCapability(
+      registry.getWidget(node.type),
+      { node, schema },
+      capability,
+    ),
+    resolveLayout: node => resolveNodeLayout(node as SchemaNode, registry, schema),
+    resolveContainer: node => createContainerPlan(node as SchemaNode, registry),
+    getLockedIndices: () => new Set<number>(),
+    canCreateSubtree: () => true,
+    canDeleteSubtree: () => true,
+  }
   return {
     engine,
     schema: computed(() => schema),
+    session: {
+      document: {
+        rootNodes: computed(() => schema.root.children ?? []),
+        getStructurePosition: () => null,
+        getRegionNodes: (containerId: string, regionId: string) =>
+          schema.root.children?.find(node => node.id === containerId)?.container?.regions[regionId] ?? [],
+      },
+      materials,
+    } as unknown as RendererContext['session'],
     actionRegistry: createNodeActionRegistry(),
     actionInterceptors: [],
   } as unknown as RendererContext

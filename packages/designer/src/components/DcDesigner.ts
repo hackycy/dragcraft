@@ -3,6 +3,8 @@ import type { DesignerContext, DesignerInstance } from '../types'
 import { I18N_KEY } from '@dragcraft/i18n'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useDragDrop } from '../composables/useDragDrop'
+import { DESIGNER_SESSION_KEY } from '../session/context'
+import { getDesignerSession } from '../session/get-designer-session'
 import { DESIGNER_CONTEXT_KEY } from '../types'
 import DcCanvas from './DcCanvas'
 import DcLeftSidebar from './DcLeftSidebar'
@@ -26,6 +28,7 @@ export default defineComponent({
   },
 
   setup(props) {
+    const session = getDesignerSession(props.instance)
     const {
       engine,
       componentMap,
@@ -43,7 +46,7 @@ export default defineComponent({
     const leftPanelRef = ref<HTMLElement | null>(null)
     const rightPanelRef = ref<HTMLElement | null>(null)
     const searchQuery = ref('')
-    const dragDrop = useDragDrop(engine)
+    const dragDrop = useDragDrop(engine, session)
     let resizeObserver: ResizeObserver | null = null
     const focusTimers = new Set<ReturnType<typeof setTimeout>>()
 
@@ -77,6 +80,7 @@ export default defineComponent({
       leftPanelActiveTab: workspace.activeLeftPanel,
     }
     provide(DESIGNER_CONTEXT_KEY, ctx)
+    provide(DESIGNER_SESSION_KEY, session)
     provide(I18N_KEY, i18n)
     const { t } = i18n
 

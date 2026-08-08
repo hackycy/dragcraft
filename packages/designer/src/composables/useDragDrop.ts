@@ -1,25 +1,21 @@
-import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { CommandExecutionResult, DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
 import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
+import type { DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
 import {
-  buildSchemaIndex,
   clampInsertIndex,
   CommandType,
-  createLayoutPlan,
   DEFAULT_LAYOUT_REGION,
   DEFAULT_SORT_SCOPE,
   findNearestValidIndex,
-  getLockedIndices,
-  getSortScopeEntries,
   getValidDropIndices,
-  resolveDestination,
-  resolveNodeLayout,
   resolvePlacementDecision,
   resolveWidgetCreation,
 } from '@dragcraft/core'
 import { hideNativeDragImage } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
+import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
 
 // ──────────────────────────────────────────
 // Return type
@@ -64,7 +60,7 @@ export interface UseDragDropReturn {
   forbiddenReason: Ref<DropRejectionReason | null>
 }
 
-export type DropRejectionReason = CreationBlockReason & { details?: Record<string, unknown> }
+export type DropRejectionReason = DesignerSessionDropRejectionReason
 
 // ──────────────────────────────────────────
 // Composable
@@ -77,10 +73,13 @@ export type DropRejectionReason = CreationBlockReason & { details?: Record<strin
  * Manages all drag-drop state including visual drop index computation
  * and sortable constraint validation.
  */
-export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
-  const dragOverDestination = ref<NodeDestination | null>(null)
+export function useDragDrop(
+  engine: DesignerEngine,
+  session: DesignerSession = createLegacyDesignerSessionAdapter(engine),
+): UseDragDropReturn {
+  const dragOverDestination = session.state.drag.activeDestination
   const activeDestination = dragOverDestination
-  const containerDropDecision = ref<PlacementDecision | null>(null)
+  const containerDropDecision = session.state.drag.containerDropDecision
   const dragOverNodeId = computed({
     get: () => {
       const destination = dragOverDestination.value
@@ -113,32 +112,42 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
       }
     },
   })
-  const isForbidden = ref(false)
-  const forbiddenReason = ref<DropRejectionReason | null>(null)
+  const isForbidden = session.state.drag.isForbidden
+  const forbiddenReason = session.state.drag.forbiddenReason
   let dropGeometry: {
     canvas: HTMLElement
     sortScope: string
     midpoints: number[]
   } | null = null
   let dropGeometryFrame: number | null = null
-  const schemaSnapshot = computed<DesignerSchema>(() => {
-    void engine.store.schema.value
-    return engine.state.getSchema() as DesignerSchema
+  const schemaSnapshot = computed<DesignerSchema>(() => session.document.schema?.value as DesignerSchema ?? {
+    version: session.document.version.value,
+    globalConfig: session.document.globalConfig.value as Record<string, unknown>,
+    root: session.document.root.value as DesignerSchema['root'],
   })
+
+  function getActiveSortScopeNodes(sortScope: string): SchemaNode[] {
+    return session.document.rootNodes.value
+      .filter(node => session.materials.resolveLayout(node).sortScope === sortScope)
+      .slice()
+      .sort((a, b) => {
+        const positionA = session.document.getStructurePosition(a.id)?.index ?? 0
+        const positionB = session.document.getStructurePosition(b.id)?.index ?? 0
+        return positionA - positionB
+      }) as SchemaNode[]
+  }
 
   // ── Sortable constraint computeds ──
 
   const lockedIndices = computed(() => {
-    const schema = schemaSnapshot.value
-    const children = schema.root.children ?? []
     const sortScope = getActiveSortScope()
     if (sortScope === false)
       return new Set<number>()
-    return getLockedIndices(children, engine.registry, schema, sortScope)
+    return session.materials.getLockedIndices(getActiveSortScopeNodes(sortScope))
   })
 
   const validDropIndices = computed(() => {
-    const dragTarget = engine.store.dragTarget.value
+    const dragTarget = session.state.dragTarget.value
     if (!dragTarget)
       return null
     const sortScope = getActiveSortScope()
@@ -149,10 +158,10 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   })
 
   const createDecision = computed(() => {
-    const target = engine.store.dragTarget.value
+    const target = session.state.dragTarget.value
     if (!target?.widgetType)
       return { allowed: true }
-    const meta = engine.registry.getWidget(target.widgetType)
+    const meta = session.materials.get(target.widgetType)
     if (!meta)
       return { allowed: true }
     return resolveWidgetCreation(meta, {
@@ -175,26 +184,21 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
   }
 
   function getActiveSortScopeEntries(sortScope: string) {
-    const schema = schemaSnapshot.value
-    return getSortScopeEntries(
-      createLayoutPlan(schema, engine.registry),
-      sortScope,
-    )
+    return getActiveSortScopeNodes(sortScope)
   }
 
   function getActiveSortScope(): string | false {
-    const target = engine.store.dragTarget.value
+    const target = session.state.dragTarget.value
     if (!target)
       return DEFAULT_SORT_SCOPE
     if (target.sourceNodeId) {
-      const schema = schemaSnapshot.value
-      const node = buildSchemaIndex(schema).index.get(target.sourceNodeId)?.node
+      const node = session.document.getNode(target.sourceNodeId)
       if (!node)
         return false
-      return resolveNodeLayout(node, engine.registry, schema).sortScope
+      return session.materials.resolveLayout(node).sortScope
     }
     if (target.widgetType) {
-      const meta = engine.registry.getWidget(target.widgetType)
+      const meta = session.materials.get(target.widgetType)
       return meta ? resolveMetaSortScope(meta) : DEFAULT_SORT_SCOPE
     }
     return DEFAULT_SORT_SCOPE
@@ -221,7 +225,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     engine.store.setDragTarget(null)
   }
 
-  watch(engine.store.dragTarget, (target) => {
+  watch(session.state.dragTarget, (target) => {
     if (!target)
       clearDragOverState()
   })
@@ -314,7 +318,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     if (target instanceof Element && target.closest('[data-dc-container-region]'))
       return
     e.preventDefault()
-    const dragTarget = engine.store.dragTarget.value
+    const dragTarget = session.state.dragTarget.value
     if (e.dataTransfer) {
       e.dataTransfer.dropEffect = dragTarget?.sourceNodeId ? 'move' : 'copy'
     }
@@ -364,7 +368,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
 
   function commitDrop(): CommandExecutionResult {
     const destination = dragOverDestination.value
-    const dragTarget = engine.store.dragTarget.value
+    const dragTarget = session.state.dragTarget.value
     if (!destination || !dragTarget)
       return { ok: false, code: 'DROP_TARGET_MISSING' }
 
@@ -378,7 +382,7 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     }
     else {
       const meta = dragTarget.widgetType
-        ? engine.registry.getWidget(dragTarget.widgetType) as RendererWidgetMeta | undefined
+        ? session.materials.get(dragTarget.widgetType)
         : undefined
       if (!meta) {
         result = { ok: false, code: 'DRAGGED_WIDGET_META_MISSING' }
@@ -429,35 +433,41 @@ export function useDragDrop(engine: DesignerEngine): UseDragDropReturn {
     destination: Extract<NodeDestination, { kind: 'container' }>,
   ): PlacementDecision {
     const schema = schemaSnapshot.value
-    const dragTarget = engine.store.dragTarget.value
+    const dragTarget = session.state.dragTarget.value
     if (!dragTarget)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
     const source = dragTarget.sourceNodeId
-      ? buildSchemaIndex(schema).index.get(dragTarget.sourceNodeId)
+      ? session.document.getNode(dragTarget.sourceNodeId) as SchemaNode | null
       : undefined
     const child = dragTarget.sourceNodeId
-      ? source?.node
+      ? source
       : (() => {
           const meta = dragTarget.widgetType
-            ? engine.registry.getWidget(dragTarget.widgetType) as RendererWidgetMeta | undefined
+            ? session.materials.get(dragTarget.widgetType)
             : undefined
           return meta ? createSchemaNode(meta) : null
         })()
     if (!child)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
-    const targetResult = resolveDestination(schema, engine.registry, destination)
+    const targetResult = session.document.resolveDestination?.(destination)
+    if (!targetResult)
+      return { allowed: false, code: 'CONTAINER_UNRESOLVED' }
     if (!targetResult.ok)
       return { allowed: false, code: targetResult.code, message: targetResult.message }
     const target = targetResult.value
     if (!target.container || !target.definition || !target.variant || !target.region)
       return { allowed: false, code: 'CONTAINER_DESTINATION_REQUIRED' }
-    const sameRegion = source?.owner === destination.containerId
-      && source.regionId === destination.regionId
+    const sourceOwner = dragTarget.sourceNodeId
+      ? session.document.getOwner(dragTarget.sourceNodeId)
+      : null
+    const sameRegion = sourceOwner?.kind === 'container'
+      && sourceOwner.containerId === destination.containerId
+      && sourceOwner.regionId === destination.regionId
     return resolvePlacementDecision({
       definition: target.definition,
       region: target.region,
       child,
-      childHasContainerCapability: Boolean(engine.registry.getWidget(child.type)?.container),
+      childHasContainerCapability: Boolean(session.materials.get(child.type)?.container),
       targetCount: target.children.length - (sameRegion ? 1 : 0),
       callbackContext: {
         operation: dragTarget.sourceNodeId ? 'move' : 'add',

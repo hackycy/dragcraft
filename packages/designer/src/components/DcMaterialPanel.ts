@@ -6,6 +6,7 @@ import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import { materialItemMatchesQuery, resolveMaterialItem } from '../material'
+import { useDesignerSession } from '../session/context'
 import DcMaterialGroup from './DcMaterialGroup'
 
 export default defineComponent({
@@ -13,12 +14,13 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
+    const session = useDesignerSession()
     const { t } = useI18n()
-    const { engine, searchQuery, widgetGroups } = ctx
+    const { searchQuery, widgetGroups } = ctx
 
     // Filter widgets by search query, grouped by widget group
     const filteredGroups = computed(() => {
-      const allWidgets = (engine.registry.getAllWidgets() as DesignerWidgetMeta[])
+      const allWidgets = (session.materials.getAll() as DesignerWidgetMeta[])
         .filter(isWidgetVisibleInMaterialPanel)
       const query = searchQuery.value.toLowerCase().trim()
 

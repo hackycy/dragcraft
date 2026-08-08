@@ -76,7 +76,7 @@ export function readPath(source: unknown, path: string): unknown {
 
 export function readBindingValue(
   binding: ResolvedFieldBinding,
-  schema: DeepReadonly<DesignerSchema>,
+  schema: Pick<DeepReadonly<DesignerSchema>, 'globalConfig' | 'root'>,
   node: DeepReadonly<SchemaNode> | null,
 ): unknown {
   if (binding.scope === 'container')

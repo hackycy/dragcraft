@@ -2,10 +2,11 @@ import type { CommandExecutionResult, DeepReadonly, DesignerEngine, SchemaNode, 
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
-import { resolveAuthoringCapability } from '@dragcraft/core'
+import type { DesignerSession } from '../session/types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
 import { createBindingCommand, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
+import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
 
 export interface UsePropertyBindingOptions {
   globalConfigSchema?: FormSchema | null
@@ -74,21 +75,26 @@ function forceFieldDisabled(field: FieldSchema): void {
 export function usePropertyBinding(
   engine: DesignerEngine,
   options: UsePropertyBindingOptions = {},
+  session: DesignerSession = createLegacyDesignerSessionAdapter(engine),
 ): UsePropertyBindingReturn {
   const translate = options.t ?? ((key: string, fallback?: string) => fallback ?? key)
+  const bindingDocument = computed(() => ({
+    globalConfig: session.document.globalConfig.value,
+    root: session.document.root.value,
+  }))
 
   const selectedNode = computed<DeepReadonly<SchemaNode> | null>(() => {
-    const nodeId = engine.store.selectedNodeId.value
+    const nodeId = session.state.selectedNodeId.value
     if (!nodeId)
       return null
-    return engine.state.getNodeById(nodeId)
+    return session.document.getNode(nodeId)
   })
 
   const selectedWidgetMeta = computed<WidgetMeta | undefined>(() => {
     const node = selectedNode.value
     if (!node)
       return undefined
-    return engine.registry.getWidget(node.type)
+    return session.materials.get(node.type)
   })
 
   const selectedFormSchema = computed<FormSchema | null>(() => {
@@ -98,12 +104,8 @@ export function usePropertyBinding(
       return null
     // WidgetMeta.formSchema is Record<string, unknown> but structured as FormSchema.
     const schema = cloneDeep(meta.formSchema as FormSchema)
-    const authoringContext = {
-      node,
-      schema: engine.store.schema.value,
-    }
-    const configurable = resolveAuthoringCapability(meta, authoringContext, 'configurable')
-    const variantChangeable = resolveAuthoringCapability(meta, authoringContext, 'variantChangeable')
+    const configurable = session.materials.resolveCapability(node, 'configurable')
+    const variantChangeable = session.materials.resolveCapability(node, 'variantChangeable')
 
     const variantOptions = meta.container
       ? Object.entries(meta.container.variants).map(([value, variant]) => ({
@@ -146,7 +148,6 @@ export function usePropertyBinding(
     const node = selectedNode.value
     if (!node)
       return {}
-    const schema = engine.state.getSchema()
     const values = { ...node.props }
     for (const section of selectedFormSchema.value?.sections ?? []) {
       for (const field of section.fields) {
@@ -154,7 +155,7 @@ export function usePropertyBinding(
           getFieldBinding(field),
           { scope: 'node', path: `props.${field.key}` },
         )
-        const value = readBindingValue(binding, schema, node)
+        const value = readBindingValue(binding, bindingDocument.value, node)
         if (value !== undefined)
           values[field.key] = value
       }
@@ -163,15 +164,14 @@ export function usePropertyBinding(
   })
 
   const globalConfigValues = computed<Record<string, unknown>>(() => {
-    const schema = engine.state.getSchema()
-    const values = { ...schema.globalConfig }
+    const values = { ...session.document.globalConfig.value }
     for (const section of options.globalConfigSchema?.sections ?? []) {
       for (const field of section.fields) {
         const binding = resolveFieldBinding(
           getFieldBinding(field),
           { scope: 'globalConfig', path: field.key },
         )
-        const value = readBindingValue(binding, schema, null)
+        const value = readBindingValue(binding, bindingDocument.value, null)
         if (value !== undefined)
           values[field.key] = value
       }
@@ -193,7 +193,7 @@ export function usePropertyBinding(
   }
 
   function handlePropertyChange(key: string, value: unknown): CommandExecutionResult | null {
-    const nodeId = engine.store.selectedNodeId.value
+    const nodeId = session.state.selectedNodeId.value
     if (!nodeId)
       return null
 

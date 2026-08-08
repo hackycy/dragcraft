@@ -424,8 +424,8 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 | Gate | Status | Unlock evidence |
 | --- | --- | --- |
 | G0 Executable Baseline | passed | `pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser` 通过；Chromium 基线 14/14；三个 Playground 模板人工验收通过 |
-| G1 Legacy Read Cutover | pending | G0 Exit 已满足 |
-| G2 Legacy Write Cutover | blocked | G1 Exit |
+| G1 Legacy Read Cutover | passed | Renderer session projection、DesignerSession 读取迁移完成；Legacy Adapter 是生产旧读取唯一 allowlist；directed tests Designer 113/113、Renderer 187/187；完整仓库 gate 和 Chromium 14/14 通过 |
+| G2 Legacy Write Cutover | pending | G1 Exit 已满足 |
 | G3 Pure Next Foundation | blocked | G2 Exit |
 | G4 NextDesignerSession Contract | blocked | G3 Exit |
 | G5 Next UI Harness | blocked | G4 Exit |

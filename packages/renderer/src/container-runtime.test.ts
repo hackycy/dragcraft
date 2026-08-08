@@ -1,8 +1,8 @@
 import type { ContainerRegionDefinition, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { RendererContext } from './types'
-import { CommandType } from '@dragcraft/core'
+import { CommandType, createContainerPlan } from '@dragcraft/core'
 import { describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { createContainerRuntime } from './container-runtime'
 
 function makeSplitNode(): SchemaNode {
@@ -20,7 +20,7 @@ function makeSplitNode(): SchemaNode {
   }
 }
 
-function makeContext(): RendererContext {
+function makeContext(node: { value: SchemaNode }): RendererContext {
   const meta: WidgetMeta = {
     type: 'split-layout',
     title: 'Split layout',
@@ -50,13 +50,31 @@ function makeContext(): RendererContext {
       registry: { getWidget: vi.fn(() => meta) },
       store: { schema: ref({}) },
     } as unknown as DesignerEngine,
+    schema: computed(() => ({
+      version: '1.0.0',
+      globalConfig: {},
+      root: { id: 'root', type: 'root', props: {}, children: [node.value] },
+    })),
+    session: {
+      document: {
+        getNode: (id: string) => id === node.value.id ? node.value : null,
+        getRegionNodes: (containerId: string, regionId: string) =>
+          containerId === node.value.id ? node.value.container?.regions[regionId] ?? [] : [],
+      },
+      materials: {
+        resolveContainer: (container: SchemaNode) => createContainerPlan(
+          container,
+          { getWidget: () => meta } as unknown as DesignerEngine['registry'],
+        ),
+      },
+    } as unknown as RendererContext['session'],
   } as unknown as RendererContext
 }
 
 describe('container runtime', () => {
   it('exposes reactive container state and delegates variant changes', () => {
     const node = ref(makeSplitNode())
-    const ctx = makeContext()
+    const ctx = makeContext(node)
     const runtime = createContainerRuntime(() => node.value, ctx)
 
     expect(runtime.nodeId.value).toBe('layout')
@@ -84,7 +102,7 @@ describe('container runtime', () => {
 
   it('returns detached region definition and node snapshots', () => {
     const node = ref(makeSplitNode())
-    const ctx = makeContext()
+    const ctx = makeContext(node)
     const runtime = createContainerRuntime(() => node.value, ctx)
 
     const definitions = runtime.regionDefinitions.value as ContainerRegionDefinition[]

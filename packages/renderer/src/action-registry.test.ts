@@ -2,7 +2,7 @@ import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core
 import type { NodeActionContext } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererWidgetMeta } from './types'
-import { getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed } from '@dragcraft/core'
+import { createContainerPlan, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveAuthoringCapability, resolveNodeLayout, validateSubtreeCreation, validateSubtreeDeletion } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
 
@@ -69,7 +69,7 @@ function makeMeta(overrides?: Partial<RendererWidgetMeta>): RendererWidgetMeta {
 }
 
 function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>): NodeActionContext {
-  return {
+  const context = {
     node: makeNode(),
     owner: { kind: 'root', sortScope: 'content' },
     index: 0,
@@ -79,7 +79,36 @@ function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>)
     engine,
     schema: engine.state.getSchema(),
     ...overrides,
+  } as NodeActionContext
+  context.materials = {
+    get: type => type === context.node.type
+      ? context.meta
+      : engine.registry.getWidget(type) as RendererWidgetMeta | undefined,
+    getAll: () => [],
+    resolveCapability: (node, capability) => resolveAuthoringCapability(
+      node.id === context.node.id ? context.meta : engine.registry.getWidget(node.type),
+      { node, schema: context.schema },
+      capability,
+    ),
+    resolveLayout: node => resolveNodeLayout(node as SchemaNode, engine.registry, context.schema as DesignerSchema),
+    resolveContainer: node => createContainerPlan(node as SchemaNode, engine.registry),
+    getLockedIndices: nodes => getLockedIndicesFromNodes(
+      nodes as SchemaNode[],
+      engine.registry,
+      context.schema as DesignerSchema,
+    ),
+    canCreateSubtree: node => validateSubtreeCreation(
+      node,
+      context.schema,
+      engine.registry,
+    ).ok,
+    canDeleteSubtree: node => validateSubtreeDeletion(
+      node,
+      context.schema,
+      engine.registry,
+    ).ok,
   }
+  return context
 }
 
 it('accepts renderer-specific widget metadata with Vue UI fields', () => {

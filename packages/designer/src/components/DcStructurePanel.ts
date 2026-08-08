@@ -1,14 +1,14 @@
-import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { MaybePromise, NodeActionContext, ResolvedNodeAction, SelectHookPayload } from '@dragcraft/renderer'
-import { createContainerPlan, createLayoutPlan, getLockedIndicesFromNodes, resolveNodeLayout } from '@dragcraft/core'
 import { useI18n } from '@dragcraft/i18n'
 import { ActionKey } from '@dragcraft/renderer'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
+import { useDesignerSession } from '../session/context'
 
 interface StructureItem {
-  node: SchemaNode
+  node: DeepReadonly<SchemaNode>
   title: string
   actions: ResolvedNodeAction[]
   regions: ContainerStructureRegion[]
@@ -18,7 +18,7 @@ interface ContainerStructureRegion {
   id: string
   title: string
   owner: Extract<NodeOwner, { kind: 'container' }>
-  nodes: SchemaNode[]
+  nodes: readonly DeepReadonly<SchemaNode>[]
   lockedIndices: Set<number>
 }
 
@@ -27,12 +27,11 @@ function isPromiseLike(value: unknown): value is Promise<unknown> {
 }
 
 function createContainerStructureRegions(
-  node: SchemaNode,
-  engine: DesignerEngine,
+  node: DeepReadonly<SchemaNode>,
+  session: ReturnType<typeof useDesignerSession>,
   t: (key: string, fallback?: string) => string,
-  schema: DesignerSchema,
 ): ContainerStructureRegion[] {
-  const result = createContainerPlan(node, engine.registry)
+  const result = session.materials.resolveContainer(node)
   if (!result.ok)
     return []
 
@@ -47,7 +46,7 @@ function createContainerStructureRegions(
       regionId: region.definition.id,
     },
     nodes: region.nodes,
-    lockedIndices: getLockedIndicesFromNodes(region.nodes, engine.registry, schema),
+    lockedIndices: session.materials.getLockedIndices(region.nodes),
   }))
 }
 
@@ -56,16 +55,18 @@ export default defineComponent({
 
   setup() {
     const ctx = useDesignerContext()
+    const session = useDesignerSession()
     const { t } = useI18n()
     const { engine, actionRegistry, actionInterceptors, eventHooks } = ctx
     const selectPending = { value: false }
-    const schemaSnapshot = computed(() => {
-      void engine.store.schema.value
-      return engine.state.getSchema() as DesignerSchema
-    })
+    const actionSchema = computed<DesignerSchema>(() => ({
+      version: session.document.version.value,
+      globalConfig: session.document.globalConfig.value as Record<string, unknown>,
+      root: session.document.root.value as SchemaNode,
+    }))
 
     const createStructureItem = (
-      node: SchemaNode,
+      node: DeepReadonly<SchemaNode>,
       owner: NodeOwner,
       index: number,
       siblingCount: number,
@@ -73,7 +74,7 @@ export default defineComponent({
       schema: DesignerSchema,
       lockedIndices: Set<number>,
     ): StructureItem => {
-      const meta = engine.registry.getWidget(node.type)
+      const meta = session.materials.get(node.type)
       const actionCtx: NodeActionContext = {
         node,
         owner,
@@ -81,6 +82,7 @@ export default defineComponent({
         siblingCount,
         sortScope,
         meta,
+        materials: session.materials,
         engine,
         schema,
         lockedIndices,
@@ -97,46 +99,22 @@ export default defineComponent({
           ? (meta.titleKey ? t(meta.titleKey, meta.title) : meta.title)
           : node.type,
         actions,
-        regions: createContainerStructureRegions(node, engine, t, schema),
+        regions: createContainerStructureRegions(node, session, t),
       }
     }
 
     const items = computed<StructureItem[]>(() => {
-      const schema = schemaSnapshot.value
-      const children = schema.root.children ?? []
-      const plan = createLayoutPlan(schema, engine.registry)
-      const positions = new Map<string, {
-        index: number
-        siblingCount: number
-        lockedIndices: Set<number>
-      }>()
-      for (const entries of plan.sortScopes.values()) {
-        const lockedIndices = getLockedIndicesFromNodes(
-          entries.map(entry => entry.node),
-          engine.registry,
-          schema,
-        )
-        entries.forEach((entry, index) => positions.set(entry.node.id, {
-          index,
-          siblingCount: entries.length,
-          lockedIndices,
-        }))
-      }
-
+      const children = session.document.rootNodes.value
       return children.map((node, rootIndex) => {
-        const layout = resolveNodeLayout(node, engine.registry, schema)
-        const position = positions.get(node.id)
+        const position = session.document.getStructurePosition(node.id)
         return createStructureItem(
           node,
-          {
-            kind: 'root',
-            sortScope: layout.sortScope === false ? undefined : layout.sortScope,
-          },
+          position?.owner ?? { kind: 'root' },
           position?.index ?? rootIndex,
           position?.siblingCount ?? children.length,
-          layout.sortScope,
-          schema,
-          position?.lockedIndices ?? new Set(),
+          position?.sortScope ?? false,
+          actionSchema.value,
+          new Set(position?.lockedIndices ?? []),
         )
       })
     })
@@ -186,7 +164,7 @@ export default defineComponent({
         })
     }
 
-    const handleSelect = (node: SchemaNode, e: MouseEvent) => {
+    const handleSelect = (node: DeepReadonly<SchemaNode>, e: MouseEvent) => {
       if (selectPending.value)
         return
 
@@ -236,7 +214,7 @@ export default defineComponent({
     }
 
     const renderItem = (item: StructureItem) => {
-      const selected = engine.store.selectedNodeId.value === item.node.id
+      const selected = session.state.selectedNodeId.value === item.node.id
 
       return h('div', {
         'class': [
@@ -286,7 +264,7 @@ export default defineComponent({
               index,
               region.nodes.length,
               false,
-              schemaSnapshot.value,
+              actionSchema.value,
               region.lockedIndices,
             )
             return h('div', { key: node.id, class: 'dc-structure-panel__row' }, [renderItem(item)])

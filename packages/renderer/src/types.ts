@@ -1,4 +1,4 @@
-import type { Command, ContainerRegionId, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, LayoutPlan, NodeDestination, NodeOwner, PlacementDecision, SchemaIndexResult, SchemaNode } from '@dragcraft/core'
+import type { Command, ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, HistoryState, LayoutEdge, NodeDestination, NodeOwner, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
@@ -116,6 +116,79 @@ export interface RendererWidgetMeta extends CoreWidgetMeta {
   actions?: WidgetActionConfig
   wrapper?: Component
   containerAdapter?: RendererContainerAdapter
+}
+
+/**
+ * Renderer-facing subset of the internal DesignerSession seam.
+ * It is declared locally so Renderer stays independent of the Designer package.
+ */
+export interface RendererSessionMaterials {
+  get: (type: string) => RendererWidgetMeta | undefined
+  getAll: () => readonly RendererWidgetMeta[]
+  resolveCapability: (
+    node: CoreDeepReadonly<SchemaNode>,
+    capability: 'selectable' | 'configurable' | 'draggable' | 'sortable' | 'deletable' | 'variantChangeable',
+  ) => boolean
+  resolveLayout: (node: CoreDeepReadonly<SchemaNode>) => ResolvedNodeLayout
+  resolveContainer: (node: CoreDeepReadonly<SchemaNode>) => ContainerPlanResult
+  getLockedIndices: (nodes: readonly CoreDeepReadonly<SchemaNode>[]) => Set<number>
+  canCreateSubtree: (node: CoreDeepReadonly<SchemaNode>) => boolean
+  canDeleteSubtree: (node: CoreDeepReadonly<SchemaNode>) => boolean
+}
+
+export interface RendererSessionProjection {
+  readonly document: {
+    readonly version: Readonly<Ref<string>>
+    readonly root: Readonly<Ref<CoreDeepReadonly<SchemaNode>>>
+    readonly rootNodes: Readonly<Ref<readonly CoreDeepReadonly<SchemaNode>[]>>
+    readonly globalConfig: Readonly<Ref<CoreDeepReadonly<Record<string, unknown>>>>
+    readonly diagnostics: Readonly<Ref<readonly SchemaDiagnostic[]>>
+    getNode: (nodeId: string) => CoreDeepReadonly<SchemaNode> | null
+    getOwner: (nodeId: string) => NodeOwner | null
+    getStructurePosition: (nodeId: string) => {
+      readonly owner: NodeOwner
+      readonly index: number
+      readonly siblingCount: number
+      readonly sortScope: string | false
+      readonly lockedIndices: ReadonlySet<number>
+    } | null
+    getRegionNodes: (containerId: string, regionId: string) => readonly CoreDeepReadonly<SchemaNode>[]
+  }
+  readonly materials: RendererSessionMaterials
+  readonly state: {
+    readonly selectedNodeId: Readonly<Ref<string | null>>
+    readonly hoveredNodeId: Readonly<Ref<string | null>>
+    readonly dragTarget: Readonly<Ref<{ sourceNodeId: string | null, widgetType: string | null } | null>>
+    readonly drag: {
+      readonly activeDestination: Ref<NodeDestination | null>
+      readonly containerDropDecision: Ref<PlacementDecision | null>
+      readonly isForbidden: Ref<boolean>
+      readonly forbiddenReason: Ref<CreationBlockReason | null>
+    }
+    readonly history: Readonly<Ref<HistoryState>>
+  }
+}
+
+/** Renderer-owned grouping derived from semantic session facts for presentation only. */
+export interface RendererLayoutEntry {
+  readonly node: CoreDeepReadonly<SchemaNode>
+  readonly arrayIndex: number
+  readonly layout: ResolvedNodeLayout
+}
+
+export interface RendererLayoutProjection {
+  readonly entries: readonly RendererLayoutEntry[]
+  readonly regions: ReadonlyMap<string, readonly RendererLayoutEntry[]>
+  readonly chrome: readonly RendererLayoutEntry[]
+  readonly layers: ReadonlyMap<string, readonly RendererLayoutEntry[]>
+  readonly sortScopes: ReadonlyMap<string, readonly RendererLayoutEntry[]>
+  readonly insets: {
+    readonly contributors: readonly {
+      readonly edge: LayoutEdge
+      readonly sourceNodeId: string
+      readonly reserve: Extract<RendererLayoutEntry['layout']['placement'], { kind: 'chrome' }>['reserve']
+    }[]
+  }
 }
 
 /**
@@ -330,8 +403,10 @@ export interface ContainerDropRendererOptions {
  * extensions or hooks, remount RootRenderer with a different `key`.
  */
 export interface RendererOptions extends ContainerDropRendererOptions {
-  /** The core engine instance (read-only consumption) */
+  /** The legacy engine remains available only for existing write handlers. */
   engine: DesignerEngine
+  /** Semantic read projection supplied by the Designer host. */
+  session: RendererSessionProjection
   /** Maps node.type -> Vue component for rendering */
   componentMap: ComponentMap
   /** Optional extension point overrides */
@@ -371,13 +446,13 @@ export interface RendererOptions extends ContainerDropRendererOptions {
  * Internal context provided to all renderer descendants via provide/inject.
  */
 export interface RendererContext extends ContainerDropRendererOptions {
+  /** Retained for G2 mutation cutover; renderer reads must use session. */
   engine: DesignerEngine
-  /** One safe schema snapshot shared by the renderer tree for each schema revision. */
+  session: RendererSessionProjection
+  /** One semantic schema snapshot shared by the renderer tree for each session revision. */
   schema: ComputedRef<DeepReadonly<DesignerSchema>>
-  /** Root layout projection cached for the current schema revision. */
-  layoutPlan: ComputedRef<LayoutPlan>
-  /** Ownership index cached for the current schema revision. */
-  schemaIndex: ComputedRef<SchemaIndexResult>
+  /** Renderer-owned layout grouping derived from session document and material facts. */
+  layout: ComputedRef<RendererLayoutProjection>
   /** Resolves action geometry and lock constraints from revision-scoped caches. */
   resolveNodeActionPosition?: (node: SchemaNode, owner: NodeOwner) => {
     owner: NodeOwner
@@ -391,6 +466,8 @@ export interface RendererContext extends ContainerDropRendererOptions {
   eventHooks: RendererEventHooks
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
+  selectedNodeId: Ref<string | null>
+  hoveredNodeId: Ref<string | null>
   dragOverNodeId: Ref<string | null>
   activeDestination: Ref<NodeDestination | null>
   containerDropDecision: Ref<PlacementDecision | null>

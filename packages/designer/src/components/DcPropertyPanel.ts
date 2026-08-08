@@ -5,12 +5,14 @@ import { DcScrollArea } from '@dragcraft/ui'
 import { defineComponent, h, watch } from 'vue'
 import { usePropertyBinding } from '../composables/usePropertyBinding'
 import { useDesignerContext } from '../context'
+import { useDesignerSession } from '../session/context'
 
 export default defineComponent({
   name: 'DcPropertyPanel',
 
   setup() {
     const ctx = useDesignerContext()
+    const session = useDesignerSession()
     const { t } = useI18n()
     const { engine, fieldComponentMap, globalConfigSchema, activeTab } = ctx
     const {
@@ -20,11 +22,11 @@ export default defineComponent({
       globalConfigValues,
       handlePropertyChange,
       handleGlobalConfigChange,
-    } = usePropertyBinding(engine, { globalConfigSchema, t })
+    } = usePropertyBinding(engine, { globalConfigSchema, t }, session)
 
     // Auto-switch to Widget tab when a node is selected
     watch(
-      () => engine.store.selectedNodeId.value,
+      () => session.state.selectedNodeId.value,
       (newId) => {
         if (newId) {
           activeTab.value = 'widget'

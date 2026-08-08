@@ -1,112 +1,163 @@
-import type { DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
-import type { RendererContext, RendererOptions } from './types'
-import { buildSchemaIndex, createLayoutPlan, getLockedIndicesFromNodes } from '@dragcraft/core'
+import type { DesignerSchema, LayoutEdge, NodeOwner, ResolvedChromePlacement, SchemaNode } from '@dragcraft/core'
+import type { RendererContext, RendererLayoutEntry, RendererLayoutProjection, RendererOptions } from './types'
 import { computed, inject, ref } from 'vue'
 import { createNodeActionRegistry } from './action-registry'
 import { createDefaultEventHooks } from './event-hooks'
 import { RENDERER_CONTEXT_KEY } from './types'
 
+function pushEntry(
+  entries: Map<string, RendererLayoutEntry[]>,
+  key: string,
+  entry: RendererLayoutEntry,
+): void {
+  const group = entries.get(key)
+  if (group)
+    group.push(entry)
+  else
+    entries.set(key, [entry])
+}
+
+function sortEntries(entries: RendererLayoutEntry[]): void {
+  entries.sort((a, b) => {
+    const orderA = a.layout.order ?? a.arrayIndex
+    const orderB = b.layout.order ?? b.arrayIndex
+    return orderA === orderB ? a.arrayIndex - b.arrayIndex : orderA - orderB
+  })
+}
+
+function edgeOrder(edge: LayoutEdge): number {
+  return ['block-start', 'inline-start', 'inline-end', 'block-end'].indexOf(edge)
+}
+
+function createRendererLayoutProjection(options: RendererOptions): RendererLayoutProjection {
+  const entries: RendererLayoutEntry[] = []
+  const regions = new Map<string, RendererLayoutEntry[]>()
+  const chrome: RendererLayoutEntry[] = []
+  const layers = new Map<string, RendererLayoutEntry[]>()
+  const sortScopes = new Map<string, RendererLayoutEntry[]>()
+
+  options.session.document.rootNodes.value.forEach((node, arrayIndex) => {
+    const entry: RendererLayoutEntry = {
+      node,
+      arrayIndex,
+      layout: options.session.materials.resolveLayout(node),
+    }
+    entries.push(entry)
+    if (entry.layout.placement.kind === 'flow') {
+      pushEntry(regions, entry.layout.placement.region, entry)
+      if (entry.layout.placement.sortScope !== false)
+        pushEntry(sortScopes, entry.layout.placement.sortScope, entry)
+      return
+    }
+    if (entry.layout.placement.kind === 'chrome') {
+      chrome.push(entry)
+      return
+    }
+    pushEntry(layers, entry.layout.placement.layer, entry)
+  })
+
+  sortEntries(entries)
+  regions.forEach(sortEntries)
+  sortScopes.forEach(sortEntries)
+  layers.forEach(sortEntries)
+  chrome.sort((a, b) => {
+    const placementA = a.layout.placement as ResolvedChromePlacement
+    const placementB = b.layout.placement as ResolvedChromePlacement
+    const edgeDelta = edgeOrder(placementA.edge) - edgeOrder(placementB.edge)
+    if (edgeDelta !== 0)
+      return edgeDelta
+    const orderA = a.layout.order ?? a.arrayIndex
+    const orderB = b.layout.order ?? b.arrayIndex
+    return orderA === orderB ? a.arrayIndex - b.arrayIndex : orderA - orderB
+  })
+
+  return {
+    entries,
+    regions,
+    chrome,
+    layers,
+    sortScopes,
+    insets: {
+      contributors: chrome.flatMap((entry) => {
+        const placement = entry.layout.placement as ResolvedChromePlacement
+        return placement.avoidContent
+          ? [{ edge: placement.edge, sourceNodeId: entry.node.id, reserve: placement.reserve }]
+          : []
+      }),
+    },
+  }
+}
+
 /**
- * Creates a RendererContext from options.
+ * Creates a RendererContext from the semantic session projection.
  * Called internally by RootRenderer.
  */
 export function createRendererContext(options: RendererOptions): RendererContext {
-  const schema = computed(() => {
-    void options.engine.store.schema.value
-    return options.engine.state.getSchema()
-  })
-  const mutableSchema = () => schema.value as DesignerSchema
-  const layoutPlan = computed(() => createLayoutPlan(mutableSchema(), options.engine.registry))
-  const schemaIndex = computed(() => buildSchemaIndex(mutableSchema()))
-  const rootActionPositions = computed(() => {
-    const positions = new Map<string, {
-      index: number
-      siblingCount: number
-      sortScope: string | false
-      lockedIndices: Set<number>
-    }>()
-    for (const [sortScope, entries] of layoutPlan.value.sortScopes) {
-      const lockedIndices = getLockedIndicesFromNodes(
-        entries.map(entry => entry.node),
-        options.engine.registry,
-        mutableSchema(),
-      )
-      entries.forEach((entry, index) => positions.set(entry.node.id, {
-        index,
-        siblingCount: entries.length,
-        sortScope,
-        lockedIndices,
-      }))
-    }
-    for (const entry of layoutPlan.value.entries) {
-      if (!positions.has(entry.node.id)) {
-        positions.set(entry.node.id, {
-          index: entry.arrayIndex,
-          siblingCount: layoutPlan.value.entries.length,
-          sortScope: false,
-          lockedIndices: new Set(),
-        })
-      }
-    }
-    return positions
-  })
-  const containerLockedIndices = computed(() => {
-    const result = new Map<string, Map<string, Set<number>>>()
-    for (const container of mutableSchema().root.children ?? []) {
-      if (!container.container)
-        continue
-      const regions = new Map<string, Set<number>>()
-      for (const [regionId, nodes] of Object.entries(container.container.regions)) {
-        regions.set(regionId, getLockedIndicesFromNodes(
-          nodes,
-          options.engine.registry,
-          mutableSchema(),
-        ))
-      }
-      result.set(container.id, regions)
-    }
-    return result
-  })
+  const schema = computed(() => ({
+    version: options.session.document.version.value,
+    globalConfig: options.session.document.globalConfig.value,
+    root: options.session.document.root.value,
+  }) as DesignerSchema)
+  const layout = computed(() => createRendererLayoutProjection(options))
 
   function resolveNodeActionPosition(node: SchemaNode, owner: NodeOwner) {
-    if (owner.kind === 'container') {
-      const container = schemaIndex.value.index.get(owner.containerId)?.node
-      const siblings = container?.container?.regions[owner.regionId] ?? []
+    const position = options.session.document.getStructurePosition(node.id)
+    if (position) {
       return {
-        owner,
-        index: schemaIndex.value.index.get(node.id)?.index ?? -1,
-        siblingCount: siblings.length,
-        sortScope: false as const,
-        lockedIndices: containerLockedIndices.value.get(owner.containerId)?.get(owner.regionId) ?? new Set<number>(),
+        owner: position.owner,
+        index: position.index,
+        siblingCount: position.siblingCount,
+        sortScope: position.sortScope,
+        lockedIndices: new Set(position.lockedIndices),
       }
     }
 
-    const position = rootActionPositions.value.get(node.id)
+    if (owner.kind === 'container') {
+      const siblings = options.session.document.getRegionNodes(owner.containerId, owner.regionId)
+      return {
+        owner,
+        index: siblings.findIndex(item => item.id === node.id),
+        siblingCount: siblings.length,
+        sortScope: false as const,
+        lockedIndices: options.session.materials.getLockedIndices(siblings),
+      }
+    }
+
+    const rootNodes = options.session.document.rootNodes.value
+    const nodeLayout = options.session.materials.resolveLayout(node)
+    const siblings = nodeLayout.sortScope === false
+      ? rootNodes
+      : rootNodes.filter(candidate => options.session.materials.resolveLayout(candidate).sortScope === nodeLayout.sortScope)
     return {
       owner: {
         kind: 'root' as const,
-        sortScope: position?.sortScope === false ? undefined : position?.sortScope,
+        ...(nodeLayout.sortScope === false ? {} : { sortScope: nodeLayout.sortScope }),
       },
-      index: position?.index ?? -1,
-      siblingCount: position?.siblingCount ?? 0,
-      sortScope: position?.sortScope ?? false,
-      lockedIndices: position?.lockedIndices ?? new Set<number>(),
+      index: siblings.findIndex(item => item.id === node.id),
+      siblingCount: siblings.length,
+      sortScope: nodeLayout.sortScope,
+      lockedIndices: nodeLayout.sortScope === false
+        ? new Set<number>()
+        : options.session.materials.getLockedIndices(siblings),
     }
   }
+
   return {
     engine: options.engine,
+    session: options.session,
     schema,
-    layoutPlan,
-    schemaIndex,
+    layout,
     resolveNodeActionPosition,
     componentMap: options.componentMap,
     extensions: options.extensions ?? {},
     eventHooks: options.eventHooks ?? createDefaultEventHooks(),
     actionInterceptors: options.actionInterceptors ?? [],
     actionRegistry: options.actionRegistry ?? createNodeActionRegistry(),
+    selectedNodeId: options.session.state.selectedNodeId,
+    hoveredNodeId: options.session.state.hoveredNodeId,
     dragOverNodeId: options.dragOverNodeId ?? ref(null),
-    activeDestination: options.activeDestination ?? ref(null),
-    containerDropDecision: options.containerDropDecision ?? ref(null),
+    activeDestination: options.activeDestination ?? options.session.state.drag.activeDestination,
+    containerDropDecision: options.containerDropDecision ?? options.session.state.drag.containerDropDecision,
     onContainerDragOver: options.onContainerDragOver,
     onContainerDragLeave: options.onContainerDragLeave,
     onContainerDrop: options.onContainerDrop,

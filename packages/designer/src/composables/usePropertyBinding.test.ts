@@ -1,7 +1,10 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { FormSchema } from '@dragcraft/form-generator'
+import type { DesignerSession } from '../session/types'
 import { CommandType, createEngine } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { computed, ref } from 'vue'
+import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
 import { usePropertyBinding } from './usePropertyBinding'
 
 function makeNode(id: string, type = 'text', props: Record<string, unknown> = {}): SchemaNode {
@@ -79,6 +82,48 @@ describe('usePropertyBinding', () => {
   it('selectedWidgetMeta is undefined when no node selected', () => {
     const { selectedWidgetMeta } = usePropertyBinding(engine)
     expect(selectedWidgetMeta.value).toBeUndefined()
+  })
+
+  it('reads selected-node, material, and document values from the session projection', () => {
+    const projectedNode = makeNode('session-node', 'session-text', { label: 'Projected' })
+    const projectedMeta = makeMeta('session-text', {
+      sections: [{
+        title: 'Basic',
+        fields: [{ key: 'label', label: 'Label', component: 'Input' }],
+      }],
+    })
+    const legacySession = createLegacyDesignerSessionAdapter(engine)
+    const session: DesignerSession = {
+      ...legacySession,
+      document: {
+        ...legacySession.document,
+        root: computed(() => ({ id: 'root', type: 'root', props: {}, children: [] })),
+        globalConfig: computed(() => ({ theme: 'projected' })),
+        getNode: nodeId => nodeId === projectedNode.id ? projectedNode : null,
+      },
+      materials: {
+        ...legacySession.materials,
+        get: type => type === projectedNode.type ? projectedMeta : undefined,
+        resolveCapability: () => true,
+      },
+      state: {
+        ...legacySession.state,
+        selectedNodeId: ref(projectedNode.id),
+      },
+    }
+    const globalConfigSchema: FormSchema = {
+      sections: [{
+        title: 'Page',
+        fields: [{ key: 'theme', label: 'Theme', component: 'Input' }],
+      }],
+    }
+
+    const binding = usePropertyBinding(engine, { globalConfigSchema }, session)
+
+    expect(binding.selectedNode.value).toEqual(projectedNode)
+    expect(binding.selectedWidgetMeta.value).toBe(projectedMeta)
+    expect(binding.selectedNodeProps.value).toEqual({ label: 'Projected' })
+    expect(binding.globalConfigValues.value).toEqual({ theme: 'projected' })
   })
 
   it('selectedFormSchema returns formSchema from meta', () => {

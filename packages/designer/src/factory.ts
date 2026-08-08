@@ -5,6 +5,8 @@ import { createEngine } from '@dragcraft/core'
 import { createI18n } from '@dragcraft/i18n'
 import { createDefaultActions, createNodeActionRegistry, rendererMessages } from '@dragcraft/renderer'
 import { designerMessages } from './messages'
+import { registerDesignerSession } from './session/get-designer-session'
+import { createLegacyDesignerSessionAdapter } from './session/legacy-designer-session-adapter'
 import { createDesignerWorkspace } from './workspace'
 
 function mergeDefaultMessages(): Record<string, MessageTree> {
@@ -110,7 +112,7 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     engine.dispose()
   }
 
-  return {
+  const instance: DesignerInstance = {
     engine,
     componentMap,
     widgetGroups,
@@ -124,4 +126,6 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
     workspace,
     dispose,
   }
+  registerDesignerSession(instance, createLegacyDesignerSessionAdapter(engine))
+  return instance
 }
