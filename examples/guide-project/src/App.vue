@@ -2,7 +2,6 @@
 import type { DesignerSchema } from '@dragcraft/designer'
 import {
   DcDesigner,
-  EventName,
   useDesigner,
 } from '@dragcraft/designer'
 import {
@@ -10,7 +9,7 @@ import {
   DevicePicker,
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { createPageDesigner } from './editor/create-page-designer'
 import { createMemoryPageRepository, PageRevisionConflictError } from './host/page-repository'
 import { guideRuntimeRegistry, RuntimePage } from './runtime'
@@ -28,7 +27,7 @@ function selectDeviceFrame(id: string) {
     activeDeviceFrameId.value = id
 }
 const designer = createPageDesigner({ containerShell: activeContainerShell })
-const { canRedo, canUndo, exportSchema, redo, schema, undo } = useDesigner(designer)
+const { canRedo, canUndo, exportSchema, importSchema, redo, schema, undo } = useDesigner(designer)
 const repository = createMemoryPageRepository()
 const revision = ref(0)
 const status = ref('尚未保存')
@@ -59,9 +58,16 @@ async function reloadDraft() {
     return
   }
 
-  const result = designer.engine.importSchema(page.schema)
+  const result = importSchema(page.schema)
   if (!result.ok) {
-    status.value = `草稿校验失败：${result.diagnostics.map(item => item.code).join(', ')}`
+    const diagnostics = result.details?.diagnostics
+    const codes = Array.isArray(diagnostics)
+      ? diagnostics
+          .filter((item): item is { code?: string } => typeof item === 'object' && item !== null)
+          .map(item => item.code)
+          .filter((code): code is string => typeof code === 'string')
+      : []
+    status.value = `草稿校验失败：${codes.length > 0 ? codes.join(', ') : result.code}`
     return
   }
 
@@ -73,9 +79,9 @@ function markDraftChanged() {
   status.value = '有未保存的更改'
 }
 
-designer.engine.eventHub.on(EventName.SCHEMA_CHANGED, markDraftChanged)
+const stopWatchingDraft = watch(schema, markDraftChanged, { flush: 'sync' })
 onBeforeUnmount(() => {
-  designer.engine.eventHub.off(EventName.SCHEMA_CHANGED, markDraftChanged)
+  stopWatchingDraft()
   designer.dispose()
 })
 </script>

@@ -1,6 +1,6 @@
 import type { ContainerRegionDefinition, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { RendererContext } from './types'
-import { CommandType, createContainerPlan } from '@dragcraft/core'
+import { createContainerPlan } from '@dragcraft/core'
 import { describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import { createContainerRuntime } from './container-runtime'
@@ -20,7 +20,9 @@ function makeSplitNode(): SchemaNode {
   }
 }
 
-function makeContext(node: { value: SchemaNode }): RendererContext {
+type TestRendererContext = RendererContext & { engine: DesignerEngine }
+
+function makeContext(node: { value: SchemaNode }): TestRendererContext {
   const meta: WidgetMeta = {
     type: 'split-layout',
     title: 'Split layout',
@@ -67,8 +69,9 @@ function makeContext(node: { value: SchemaNode }): RendererContext {
           { getWidget: () => meta } as unknown as DesignerEngine['registry'],
         ),
       },
+      execute: vi.fn(() => ({ ok: true, changed: true })),
     } as unknown as RendererContext['session'],
-  } as unknown as RendererContext
+  } as unknown as TestRendererContext
 }
 
 describe('container runtime', () => {
@@ -93,10 +96,11 @@ describe('container runtime', () => {
     expect(runtime.regionDefinitions.value.map(region => region.id)).toEqual(['main'])
     expect(runtime.getRegionNodes('main').map(child => child.id)).toEqual(['main-child'])
 
-    expect(runtime.requestVariantChange('split')).toEqual({ ok: true })
-    expect(ctx.engine.execute).toHaveBeenCalledWith({
-      type: CommandType.CHANGE_CONTAINER_VARIANT,
-      payload: { containerId: 'layout', variant: 'split' },
+    expect(runtime.requestVariantChange('split')).toEqual({ ok: true, changed: true })
+    expect(ctx.session.execute).toHaveBeenCalledWith({
+      type: 'container.change-variant',
+      containerId: 'layout',
+      variant: 'split',
     })
   })
 

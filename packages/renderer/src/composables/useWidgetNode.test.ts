@@ -20,7 +20,9 @@ function makeMeta(type: string, overrides?: Partial<WidgetMeta>): WidgetMeta {
   } as WidgetMeta
 }
 
-function makeContext(overrides?: Partial<RendererContext>): RendererContext {
+type TestRendererContext = RendererContext & { engine: DesignerEngine }
+
+function makeContext(overrides?: Partial<RendererContext>): TestRendererContext {
   const schema: DesignerSchema = { version: '1.0.0', globalConfig: {}, root: { id: 'root', type: 'root', props: {}, children: [] } }
   const selectedNodeId = ref<string | null>(null)
   const hoveredNodeId = ref<string | null>(null)
@@ -80,6 +82,15 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
       canDeleteSubtree: () => true,
     },
     state: { dragTarget },
+    execute: vi.fn((action: { type: string, nodeId?: string | null, target?: { sourceNodeId: string, widgetType: string | null } | null }) => {
+      if (action.type === 'selection.set')
+        engine.store.selectNode(action.nodeId ?? null)
+      if (action.type === 'hover.set')
+        engine.store.hoverNode(action.nodeId ?? null)
+      if (action.type === 'drag.set')
+        engine.store.setDragTarget(action.target ?? null)
+      return { ok: true, changed: true }
+    }),
   } as unknown as RendererContext['session']
   return {
     engine,
@@ -94,11 +105,11 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
     hoveredNodeId,
     dragOverNodeId: ref(null),
     ...overrides,
-  } as RendererContext
+  } as TestRendererContext
 }
 
 describe('useWidgetNode', () => {
-  let ctx: RendererContext
+  let ctx: TestRendererContext
 
   beforeEach(() => {
     ctx = makeContext()

@@ -1,4 +1,4 @@
-import type { DesignerEngine, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
 import type { PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from '../action-registry'
 import type { ActionInterceptor } from '../action-runtime'
@@ -75,10 +75,6 @@ export default defineComponent({
   name: 'DcRootRenderer',
 
   props: {
-    engine: {
-      type: Object as PropType<DesignerEngine>,
-      required: true,
-    },
     session: {
       type: Object as PropType<RendererSessionProjection>,
       required: true,
@@ -140,7 +136,6 @@ export default defineComponent({
   setup(props) {
     // Create and provide context (stable for the renderer's lifetime)
     const ctx = createRendererContext({
-      engine: props.engine,
       session: props.session,
       componentMap: props.componentMap,
       extensions: props.extensions,

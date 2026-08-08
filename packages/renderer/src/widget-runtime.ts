@@ -1,6 +1,5 @@
 import type { NodeStyle, StyleValueMap } from '@dragcraft/core'
 import type { InjectionKey, Ref } from 'vue'
-import { CommandType } from '@dragcraft/core'
 import { computed, inject } from 'vue'
 import { useRendererContext } from './context'
 
@@ -23,23 +22,19 @@ export function createWidgetRuntimeContext(
   const nodeType = computed(() => getNode().type)
 
   function updateProps(patch: Record<string, unknown>): void {
-    ctx.engine.execute({
-      type: CommandType.UPDATE_PROPS,
-      payload: {
-        nodeId: nodeId.value,
-        props: patch,
-      },
+    ctx.session.execute({
+      type: 'node.update',
+      nodeId: nodeId.value,
+      props: patch,
     })
   }
 
   function updateStyle(patch: NodeStyle): void {
-    ctx.engine.execute({
-      type: CommandType.UPDATE_PROPS,
-      payload: {
-        nodeId: nodeId.value,
-        props: {},
-        style: patch,
-      },
+    ctx.session.execute({
+      type: 'node.update',
+      nodeId: nodeId.value,
+      props: {},
+      style: patch,
     })
   }
 

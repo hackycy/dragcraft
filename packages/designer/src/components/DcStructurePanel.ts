@@ -57,7 +57,7 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const session = useDesignerSession()
     const { t } = useI18n()
-    const { engine, actionRegistry, actionInterceptors, eventHooks } = ctx
+    const { actionRegistry, actionInterceptors, eventHooks } = ctx
     const selectPending = { value: false }
     const actionSchema = computed<DesignerSchema>(() => ({
       version: session.document.version.value,
@@ -83,7 +83,7 @@ export default defineComponent({
         sortScope,
         meta,
         materials: session.materials,
-        engine,
+        session,
         schema,
         lockedIndices,
       }
@@ -136,7 +136,7 @@ export default defineComponent({
     }
 
     const executeSelect = (payload: SelectHookPayload) => {
-      engine.store.selectNode(payload.nodeId)
+      session.execute({ type: 'selection.set', nodeId: payload.nodeId })
       fireAfterSelect({ nodeId: payload.nodeId })
     }
 

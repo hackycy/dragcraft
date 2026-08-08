@@ -21,7 +21,7 @@ export function useNodeDrag(
   getNode: () => SchemaNode,
   ctx: RendererContext,
 ): UseNodeDragReturn {
-  const { engine, eventHooks } = ctx
+  const { eventHooks } = ctx
 
   const handleDragStart = (e: DragEvent) => {
     e.stopPropagation()
@@ -36,10 +36,7 @@ export function useNodeDrag(
       }
     }
 
-    engine.store.setDragTarget({
-      sourceNodeId: nodeId,
-      widgetType: null,
-    })
+    ctx.session.execute({ type: 'drag.set', target: { sourceNodeId: nodeId, widgetType: null } })
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move'
       e.dataTransfer.setData('text/plain', nodeId)
@@ -49,7 +46,7 @@ export function useNodeDrag(
 
   const handleDragEnd = (e: DragEvent) => {
     e.stopPropagation()
-    engine.store.setDragTarget(null)
+    ctx.session.execute({ type: 'drag.set', target: null })
     fireAfterHook(eventHooks.onAfterDrag, { nodeId: getNode().id, event: e })
   }
 

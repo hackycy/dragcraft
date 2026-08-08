@@ -32,7 +32,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const { t } = useI18n()
-    const { engine } = useDesignerContext()
+    useDesignerContext()
     const session = useDesignerSession()
 
     const renderHistoryButton = (options: ControlButtonOptions): VNodeChild => h('button', {
@@ -61,14 +61,14 @@ export default defineComponent({
             label: t('workspace.history.undo', '撤销'),
             icon: IconUndo,
             disabled: !history.canUndo,
-            onClick: () => engine.history.undo(),
+            onClick: () => session.execute({ type: 'history.undo' }),
           }),
           renderHistoryButton({
             key: 'redo',
             label: t('workspace.history.redo', '重做'),
             icon: IconRedo,
             disabled: !history.canRedo,
-            onClick: () => engine.history.redo(),
+            onClick: () => session.execute({ type: 'history.redo' }),
           }),
           h('span', { 'class': 'dc-canvas-controls__divider', 'data-dc-part': 'divider', 'aria-hidden': 'true' }),
           renderHistoryButton({

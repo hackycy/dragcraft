@@ -1,7 +1,8 @@
-import type { DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
-import type { RendererSessionProjection, RendererWidgetMeta } from '../src/types'
+import type { Command, DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { AuthoringAction, AuthoringResult, RendererSessionProjection, RendererWidgetMeta } from '../src/types'
 import {
   buildSchemaIndex,
+  CommandType,
   createContainerPlan,
   createLayoutPlan,
   getLockedIndicesFromNodes,
@@ -20,6 +21,56 @@ export function createRendererTestSession(engine: DesignerEngine): RendererSessi
   const containerDropDecision = ref<PlacementDecision | null>(null)
   const isForbidden = ref(false)
   const forbiddenReason = ref(null)
+
+  function execute(action: AuthoringAction): AuthoringResult {
+    if (action.type === 'selection.set') {
+      const changed = engine.store.selectedNodeId.value !== action.nodeId
+      engine.store.selectNode(action.nodeId)
+      return { ok: true, changed }
+    }
+    if (action.type === 'hover.set') {
+      const changed = engine.store.hoveredNodeId.value !== action.nodeId
+      engine.store.hoverNode(action.nodeId)
+      return { ok: true, changed }
+    }
+    if (action.type === 'drag.set') {
+      engine.store.setDragTarget(action.target)
+      return { ok: true, changed: true }
+    }
+    if (action.type === 'history.undo') {
+      if (!engine.history.state.value.canUndo)
+        return { ok: false, code: 'ACTION_NOT_ALLOWED' }
+      engine.history.undo()
+      return { ok: true, changed: true }
+    }
+    if (action.type === 'history.redo') {
+      if (!engine.history.state.value.canRedo)
+        return { ok: false, code: 'ACTION_NOT_ALLOWED' }
+      engine.history.redo()
+      return { ok: true, changed: true }
+    }
+    if (action.type === 'schema.import') {
+      const result = engine.importSchema(action.schema)
+      return result.ok
+        ? { ok: true, changed: true }
+        : { ok: false, code: 'SCHEMA_IMPORT_REJECTED', details: { diagnostics: result.diagnostics } }
+    }
+
+    const command: Command = action.type === 'node.add'
+      ? { type: CommandType.ADD_NODE, payload: { node: action.node, destination: action.destination } }
+      : action.type === 'node.move'
+        ? { type: CommandType.MOVE_NODE, payload: { nodeId: action.nodeId, destination: action.destination } }
+        : action.type === 'node.remove'
+          ? { type: CommandType.REMOVE_NODE, payload: { nodeId: action.nodeId } }
+          : action.type === 'node.duplicate'
+            ? { type: CommandType.DUPLICATE_NODE, payload: { nodeId: action.nodeId } }
+            : action.type === 'node.update'
+              ? { type: CommandType.UPDATE_PROPS, payload: { nodeId: action.nodeId, props: action.props, style: action.style } }
+              : action.type === 'container.change-variant'
+                ? { type: CommandType.CHANGE_CONTAINER_VARIANT, payload: { containerId: action.containerId, variant: action.variant } }
+                : { type: CommandType.SET_GLOBAL_CONFIG, payload: { config: action.config } }
+    return engine.execute(command)
+  }
 
   return {
     document: {
@@ -130,5 +181,7 @@ export function createRendererTestSession(engine: DesignerEngine): RendererSessi
       },
       history: engine.history.state,
     },
+    evaluate: () => ({ allowed: true }),
+    execute,
   }
 }

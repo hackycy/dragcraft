@@ -1,6 +1,6 @@
-import type { Command } from '@dragcraft/core'
 import type { NodeActionContext } from './action-registry'
 import type { MaybePromise, PendingGuard } from './event-hooks'
+import type { AuthoringAction } from './types'
 
 export type ActionRisk = 'normal' | 'destructive'
 
@@ -15,7 +15,7 @@ export interface ActionInvocation {
   ctx: NodeActionContext
   event: MouseEvent
   risk: ActionRisk
-  command?: Command
+  action?: AuthoringAction
   metadata?: Record<string, unknown>
 }
 

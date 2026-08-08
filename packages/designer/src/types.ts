@@ -1,7 +1,7 @@
-import type { CommandExecutionResult, CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/core'
+import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
-import type { ActionInterceptor, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
+import type { ActionInterceptor, AuthoringAction, AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 
@@ -143,7 +143,6 @@ export interface DesignerOptions {
 // ──────────────────────────────────────────
 
 export interface DesignerRailSlotAPI {
-  engine: DesignerEngine
   workspace: DesignerWorkspaceController
   t: I18nInstance['t']
 }
@@ -212,7 +211,6 @@ export interface DesignerInstance {
  * Internal context provided to all designer descendants via provide/inject.
  */
 export interface DesignerContext {
-  engine: DesignerEngine
   componentMap: ComponentMap
   widgetGroups: WidgetGroupConfig[] | undefined
   extensions: DesignerExtensions
@@ -230,10 +228,10 @@ export interface DesignerContext {
   handleDragEnd: (e: DragEvent) => void
   handleCanvasDragOver: (e: DragEvent) => void
   handleCanvasDragLeave: (e: DragEvent) => void
-  handleCanvasDrop: (e: DragEvent) => CommandExecutionResult
+  handleCanvasDrop: (e: DragEvent) => AuthoringResult
   handleContainerDragOver: (payload: ContainerDropTarget | ContainerDropRejection) => void
   handleContainerDragLeave: (e: DragEvent) => void
-  handleContainerDrop: (e: DragEvent) => CommandExecutionResult
+  handleContainerDrop: (e: DragEvent) => AuthoringResult
   /** Whether the current drag-over is forbidden */
   isForbidden: Ref<boolean>
   /** User-facing reason for the current forbidden drag-over state */
@@ -268,14 +266,14 @@ export type LeftPanelTabKey = 'materials' | 'structure'
  * Return type of useDesigner composable.
  */
 export interface UseDesignerReturn {
-  /** Reactive schema (from engine.store.schema ShallowRef) */
+  /** Reactive schema from the active session document */
   schema: EngineStore['schema']
   /** Currently selected node ID (reactive) */
   selectedNodeId: EngineStore['selectedNodeId']
   /** Currently hovered node ID (reactive) */
   hoveredNodeId: EngineStore['hoveredNodeId']
-  /** Execute a command through the engine */
-  execute: DesignerEngine['execute']
+  /** Execute an authoring action through the active session */
+  execute: (action: AuthoringAction) => AuthoringResult
   /** Undo last change */
   undo: () => void
   /** Redo last undone change */
@@ -285,11 +283,7 @@ export interface UseDesignerReturn {
   /** Whether redo is available */
   canRedo: () => boolean
   /** Import a full schema (replaces current) */
-  importSchema: (schema: DesignerSchema) => void
+  importSchema: (schema: DesignerSchema) => AuthoringResult
   /** Export current schema (deep clone) */
   exportSchema: () => DesignerSchema
-  /** Subscribe to engine events */
-  on: DesignerEngine['eventHub']['on']
-  /** Unsubscribe from engine events */
-  off: DesignerEngine['eventHub']['off']
 }

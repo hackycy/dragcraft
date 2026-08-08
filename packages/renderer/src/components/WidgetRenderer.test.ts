@@ -3,7 +3,7 @@ import type { DesignerEngine, DesignerSchema, NodeOwner, SchemaNode, WidgetMeta 
 import type { Component } from 'vue'
 import type { NodeActionRegistry, ResolvedNodeAction } from '../action-registry'
 import type { RendererContext } from '../types'
-import { CommandType, createContainerPlan, createEngine, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
+import { createContainerPlan, createEngine, resolveAuthoringCapability, resolveNodeLayout } from '@dragcraft/core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { createRendererTestSession } from '../../test/renderer-session'
@@ -26,7 +26,9 @@ function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
   } as WidgetMeta
 }
 
-function makeContext(meta: WidgetMeta): RendererContext {
+type TestRendererContext = RendererContext & { engine: DesignerEngine }
+
+function makeContext(meta: WidgetMeta): TestRendererContext {
   const selectedNodeId = ref<string | null>(null)
   const hoveredNodeId = ref<string | null>(null)
   const dragTarget = ref(null)
@@ -98,6 +100,13 @@ function makeContext(meta: WidgetMeta): RendererContext {
         canDeleteSubtree: () => true,
       },
       state: { dragTarget },
+      execute: vi.fn((action: { type: string, nodeId?: string | null }) => {
+        if (action.type === 'selection.set')
+          selectNode(action.nodeId ?? null)
+        if (action.type === 'hover.set')
+          hoverNode(action.nodeId ?? null)
+        return { ok: true, changed: true }
+      }),
     } as unknown as RendererContext['session'],
     componentMap: {
       'floating-button': defineComponent({
@@ -118,7 +127,7 @@ function makeContext(meta: WidgetMeta): RendererContext {
     selectedNodeId,
     hoveredNodeId,
     dragOverNodeId: ref(null),
-  } as unknown as RendererContext
+  } as unknown as TestRendererContext
 }
 
 function provideTestAction(ctx: RendererContext): void {
@@ -688,13 +697,11 @@ describe('widgetRenderer', () => {
       await nextTick()
 
       host.querySelector<HTMLElement>('.runtime-widget')?.click()
-      expect(ctx.engine.execute).toHaveBeenCalledWith({
-        type: CommandType.UPDATE_PROPS,
-        payload: {
-          nodeId: 'fab',
-          props: {},
-          style: { container: { marginTop: -20 } },
-        },
+      expect(ctx.session.execute).toHaveBeenCalledWith({
+        type: 'node.update',
+        nodeId: 'fab',
+        props: {},
+        style: { container: { marginTop: -20 } },
       })
     }
     finally {

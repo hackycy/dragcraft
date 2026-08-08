@@ -1,7 +1,7 @@
 import type { DesignerEngine, DesignerSchema, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { FormSchema } from '@dragcraft/form-generator'
 import type { DesignerSession } from '../session/types'
-import { CommandType, createEngine } from '@dragcraft/core'
+import { createEngine } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, ref } from 'vue'
 import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
@@ -45,6 +45,7 @@ function makeContainerMeta(componentProps?: Record<string, unknown> | ((ctx: { v
 
 describe('usePropertyBinding', () => {
   let engine: DesignerEngine
+  let session: DesignerSession
 
   beforeEach(() => {
     engine = createEngine()
@@ -52,35 +53,36 @@ describe('usePropertyBinding', () => {
     const imported = engine.importSchema(makeSchema([makeNode('a', 'text', { label: 'Hello' })]))
     if (!imported.ok)
       throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
+    session = createLegacyDesignerSessionAdapter(engine)
   })
 
   it('selectedNode is null when nothing selected', () => {
-    const { selectedNode } = usePropertyBinding(engine)
+    const { selectedNode } = usePropertyBinding(session)
     expect(selectedNode.value).toBeNull()
   })
 
   it('selectedNode reacts to selection changes', () => {
-    const { selectedNode } = usePropertyBinding(engine)
+    const { selectedNode } = usePropertyBinding(session)
     engine.store.selectNode('a')
     expect(selectedNode.value).toBeTruthy()
     expect(selectedNode.value!.id).toBe('a')
   })
 
   it('selectedNode returns null for non-existent node', () => {
-    const { selectedNode } = usePropertyBinding(engine)
+    const { selectedNode } = usePropertyBinding(session)
     engine.store.selectNode('missing')
     expect(selectedNode.value).toBeNull()
   })
 
   it('selectedWidgetMeta returns meta for selected node type', () => {
-    const { selectedWidgetMeta } = usePropertyBinding(engine)
+    const { selectedWidgetMeta } = usePropertyBinding(session)
     engine.store.selectNode('a')
     expect(selectedWidgetMeta.value).toBeTruthy()
     expect(selectedWidgetMeta.value!.type).toBe('text')
   })
 
   it('selectedWidgetMeta is undefined when no node selected', () => {
-    const { selectedWidgetMeta } = usePropertyBinding(engine)
+    const { selectedWidgetMeta } = usePropertyBinding(session)
     expect(selectedWidgetMeta.value).toBeUndefined()
   })
 
@@ -118,7 +120,7 @@ describe('usePropertyBinding', () => {
       }],
     }
 
-    const binding = usePropertyBinding(engine, { globalConfigSchema }, session)
+    const binding = usePropertyBinding(session, { globalConfigSchema })
 
     expect(binding.selectedNode.value).toEqual(projectedNode)
     expect(binding.selectedWidgetMeta.value).toBe(projectedMeta)
@@ -127,7 +129,7 @@ describe('usePropertyBinding', () => {
   })
 
   it('selectedFormSchema returns formSchema from meta', () => {
-    const { selectedFormSchema } = usePropertyBinding(engine)
+    const { selectedFormSchema } = usePropertyBinding(session)
     engine.store.selectNode('a')
     expect(selectedFormSchema.value).toBeTruthy()
     expect(selectedFormSchema.value!.sections).toHaveLength(1)
@@ -150,7 +152,7 @@ describe('usePropertyBinding', () => {
     }]))
     engine.store.selectNode('layout')
 
-    const { selectedFormSchema } = usePropertyBinding(engine)
+    const { selectedFormSchema } = usePropertyBinding(session)
     const [propertyField, variantField] = selectedFormSchema.value!.sections[0].fields
 
     expect(propertyField.disabled).toBeUndefined()
@@ -176,7 +178,7 @@ describe('usePropertyBinding', () => {
     }]))
     engine.store.selectNode('layout')
 
-    const { selectedFormSchema } = usePropertyBinding(engine)
+    const { selectedFormSchema } = usePropertyBinding(session)
     const [propertyField, variantField] = selectedFormSchema.value!.sections[0].fields
 
     expect(propertyField.disabled?.({ values: {} })).toBe(true)
@@ -193,7 +195,7 @@ describe('usePropertyBinding', () => {
     }]))
     engine.store.selectNode('layout')
 
-    const binding = usePropertyBinding(engine, {
+    const binding = usePropertyBinding(session, {
       t: (key, fallback) => key === 'variant.split' ? 'Split' : fallback ?? key,
     })
 
@@ -227,7 +229,7 @@ describe('usePropertyBinding', () => {
     }]))
     engine.store.selectNode('layout')
 
-    const { selectedFormSchema } = usePropertyBinding(engine)
+    const { selectedFormSchema } = usePropertyBinding(session)
     const field = selectedFormSchema.value!.sections[0].fields[0]
     const ctx = { values: { locked: true } }
 
@@ -257,14 +259,14 @@ describe('usePropertyBinding', () => {
     engine.importSchema(makeSchema([makeNode('plain', 'plain', { title: 'Hello' })]))
     engine.store.selectNode('plain')
 
-    const { selectedFormSchema } = usePropertyBinding(engine)
+    const { selectedFormSchema } = usePropertyBinding(session)
 
     expect(selectedFormSchema.value).toEqual(meta.formSchema)
     expect(selectedFormSchema.value!.sections[0].fields[0].componentProps).toEqual(componentProps)
   })
 
   it('selectedNodeProps returns node props', () => {
-    const { selectedNodeProps } = usePropertyBinding(engine)
+    const { selectedNodeProps } = usePropertyBinding(session)
     engine.store.selectNode('a')
     expect(selectedNodeProps.value).toEqual({ label: 'Hello' })
   })
@@ -287,28 +289,29 @@ describe('usePropertyBinding', () => {
     ]))
     engine.store.selectNode('b')
 
-    const { selectedNodeProps } = usePropertyBinding(engine)
+    const { selectedNodeProps } = usePropertyBinding(session)
 
     expect(selectedNodeProps.value.marginTop).toBe(-12)
   })
 
   it('selectedNodeProps returns empty object when no node selected', () => {
-    const { selectedNodeProps } = usePropertyBinding(engine)
+    const { selectedNodeProps } = usePropertyBinding(session)
     expect(selectedNodeProps.value).toEqual({})
   })
 
-  it('handlePropertyChange dispatches UPDATE_PROPS', () => {
-    const spy = vi.spyOn(engine, 'execute')
+  it('handlePropertyChange dispatches node.update', () => {
+    const spy = vi.spyOn(session, 'execute')
     engine.store.selectNode('a')
-    const { handlePropertyChange } = usePropertyBinding(engine)
+    const { handlePropertyChange } = usePropertyBinding(session)
     handlePropertyChange('label', 'World')
     expect(spy).toHaveBeenCalledWith({
-      type: CommandType.UPDATE_PROPS,
-      payload: { nodeId: 'a', props: { label: 'World' } },
+      type: 'node.update',
+      nodeId: 'a',
+      props: { label: 'World' },
     })
   })
 
-  it('handlePropertyChange dispatches CHANGE_CONTAINER_VARIANT for bound variant fields', () => {
+  it('handlePropertyChange dispatches container.change-variant for bound variant fields', () => {
     engine.registerWidget(makeContainerMeta())
     engine.importSchema(makeSchema([{
       id: 'layout',
@@ -316,15 +319,16 @@ describe('usePropertyBinding', () => {
       props: {},
       container: { variant: 'split', regions: { left: [] } },
     }]))
-    const spy = vi.spyOn(engine, 'execute')
+    const spy = vi.spyOn(session, 'execute')
     engine.store.selectNode('layout')
-    const { handlePropertyChange } = usePropertyBinding(engine)
+    const { handlePropertyChange } = usePropertyBinding(session)
 
     handlePropertyChange('variant', 'stacked')
 
     expect(spy).toHaveBeenCalledWith({
-      type: CommandType.CHANGE_CONTAINER_VARIANT,
-      payload: { containerId: 'layout', variant: 'stacked' },
+      type: 'container.change-variant',
+      containerId: 'layout',
+      variant: 'stacked',
     })
   })
 
@@ -343,9 +347,9 @@ describe('usePropertyBinding', () => {
       message: 'Choose another layout.',
       details: { variant: 'stacked' },
     }
-    vi.spyOn(engine, 'execute').mockReturnValue(denial)
+    vi.spyOn(session, 'execute').mockReturnValue(denial)
     engine.store.selectNode('layout')
-    const { handlePropertyChange } = usePropertyBinding(engine)
+    const { handlePropertyChange } = usePropertyBinding(session)
 
     expect(handlePropertyChange('variant', 'stacked')).toEqual(denial)
   })
@@ -364,32 +368,34 @@ describe('usePropertyBinding', () => {
     }
     engine.registerWidget(makeMeta('style-text', styleSchema))
     engine.importSchema(makeSchema([{ id: 'b', type: 'style-text', props: {} }]))
-    const spy = vi.spyOn(engine, 'execute')
+    const spy = vi.spyOn(session, 'execute')
     engine.store.selectNode('b')
-    const { handlePropertyChange } = usePropertyBinding(engine)
+    const { handlePropertyChange } = usePropertyBinding(session)
 
     handlePropertyChange('marginTop', -16)
 
     expect(spy).toHaveBeenCalledWith({
-      type: CommandType.UPDATE_PROPS,
-      payload: { nodeId: 'b', props: {}, style: { container: { marginTop: -16 } } },
+      type: 'node.update',
+      nodeId: 'b',
+      props: {},
+      style: { container: { marginTop: -16 } },
     })
   })
 
   it('handlePropertyChange does nothing when no node selected', () => {
-    const spy = vi.spyOn(engine, 'execute')
-    const { handlePropertyChange } = usePropertyBinding(engine)
+    const spy = vi.spyOn(session, 'execute')
+    const { handlePropertyChange } = usePropertyBinding(session)
     handlePropertyChange('label', 'World')
     expect(spy).not.toHaveBeenCalled()
   })
 
-  it('handleGlobalConfigChange dispatches SET_GLOBAL_CONFIG', () => {
-    const spy = vi.spyOn(engine, 'execute')
-    const { handleGlobalConfigChange } = usePropertyBinding(engine)
+  it('handleGlobalConfigChange dispatches global-config.update', () => {
+    const spy = vi.spyOn(session, 'execute')
+    const { handleGlobalConfigChange } = usePropertyBinding(session)
     handleGlobalConfigChange('theme', 'dark')
     expect(spy).toHaveBeenCalledWith({
-      type: CommandType.SET_GLOBAL_CONFIG,
-      payload: { config: { theme: 'dark' } },
+      type: 'global-config.update',
+      config: { theme: 'dark' },
     })
   })
 
@@ -417,7 +423,7 @@ describe('usePropertyBinding', () => {
       },
     })
 
-    const { globalConfigValues } = usePropertyBinding(engine, { globalConfigSchema: globalSchema })
+    const { globalConfigValues } = usePropertyBinding(session, { globalConfigSchema: globalSchema })
 
     expect(globalConfigValues.value.pageBg).toBe('#fff7e6')
   })
@@ -434,14 +440,16 @@ describe('usePropertyBinding', () => {
         }],
       }],
     }
-    const spy = vi.spyOn(engine, 'execute')
-    const { handleGlobalConfigChange } = usePropertyBinding(engine, { globalConfigSchema: globalSchema })
+    const spy = vi.spyOn(session, 'execute')
+    const { handleGlobalConfigChange } = usePropertyBinding(session, { globalConfigSchema: globalSchema })
 
     handleGlobalConfigChange('pageBg', '#f5f5f5')
 
     expect(spy).toHaveBeenCalledWith({
-      type: CommandType.UPDATE_PROPS,
-      payload: { nodeId: 'root', props: {}, style: { surface: { backgroundColor: '#f5f5f5' } } },
+      type: 'node.update',
+      nodeId: 'root',
+      props: {},
+      style: { surface: { backgroundColor: '#f5f5f5' } },
     })
   })
 })

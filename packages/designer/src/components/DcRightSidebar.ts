@@ -34,7 +34,7 @@ export default defineComponent({
 
   setup() {
     const { t } = useI18n()
-    const { engine, extensions, activeTab, workspace } = useDesignerContext()
+    const { extensions, activeTab, workspace } = useDesignerContext()
     const session = useDesignerSession()
     const hasSelectedNode = computed(() => session.state.selectedNodeId.value !== null)
 
@@ -67,7 +67,7 @@ export default defineComponent({
       const toggleLabel = open
         ? t('workspace.right.close', '收起属性栏')
         : t('workspace.right.open', '展开属性栏')
-      const railExtension = extensions.rightRailRenderer?.({ engine, workspace, t })
+      const railExtension = extensions.rightRailRenderer?.({ workspace, t })
 
       return h('div', {
         'class': 'dc-right-sidebar',

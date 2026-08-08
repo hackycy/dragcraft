@@ -1,5 +1,5 @@
 import type { ActionInterceptor, NodeActionDefinition } from '@dragcraft/designer'
-import { CommandType, createConfirmActionInterceptor } from '@dragcraft/designer'
+import { createConfirmActionInterceptor } from '@dragcraft/designer'
 
 export const guideCustomActions: NodeActionDefinition[] = [{
   key: 'feature-notice',
@@ -8,9 +8,10 @@ export const guideCustomActions: NodeActionDefinition[] = [{
   order: 500,
   visible: ctx => ctx.node.type === 'notice',
   disabled: ctx => ctx.node.props.featured === true,
-  command: ctx => ({
-    type: CommandType.UPDATE_PROPS,
-    payload: { nodeId: ctx.node.id, props: { featured: true } },
+  action: ctx => ({
+    type: 'node.update',
+    nodeId: ctx.node.id,
+    props: { featured: true },
   }),
 }]
 

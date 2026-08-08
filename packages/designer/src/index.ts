@@ -1,5 +1,5 @@
 export {
-  createBindingCommand,
+  createBindingAction,
   readBindingValue,
   resolveFieldBinding,
 } from './bindings/field-binding'

@@ -1,7 +1,6 @@
 import type { DesignerSchema, SchemaNode } from '@dragcraft/core'
-import { CommandType } from '@dragcraft/core'
 import { describe, expect, it } from 'vitest'
-import { createBindingCommand, readBindingValue, resolveFieldBinding } from './field-binding'
+import { createBindingAction, readBindingValue, resolveFieldBinding } from './field-binding'
 
 function makeSchema(): DesignerSchema {
   return {
@@ -61,46 +60,52 @@ describe('field-binding', () => {
     expect(readBindingValue({ scope: 'node', path: 'props.__proto__.polluted' }, schema, node)).toBeUndefined()
   })
 
-  it('creates UPDATE_PROPS commands for node props and styles', () => {
-    expect(createBindingCommand({ scope: 'node', path: 'props.title' }, 'World', 'a')).toEqual({
-      type: CommandType.UPDATE_PROPS,
-      payload: { nodeId: 'a', props: { title: 'World' } },
+  it('creates node.update actions for node props and styles', () => {
+    expect(createBindingAction({ scope: 'node', path: 'props.title' }, 'World', 'a')).toEqual({
+      type: 'node.update',
+      nodeId: 'a',
+      props: { title: 'World' },
     })
 
-    expect(createBindingCommand({ scope: 'node', path: 'style.container.marginTop' }, 12, 'a')).toEqual({
-      type: CommandType.UPDATE_PROPS,
-      payload: { nodeId: 'a', props: {}, style: { container: { marginTop: 12 } } },
-    })
-  })
-
-  it('creates schema-root and globalConfig commands', () => {
-    expect(createBindingCommand({ scope: 'schema', path: 'root.style.surface.backgroundColor' }, '#f5f5f5')).toEqual({
-      type: CommandType.UPDATE_PROPS,
-      payload: { nodeId: 'root', props: {}, style: { surface: { backgroundColor: '#f5f5f5' } } },
-    })
-
-    expect(createBindingCommand({ scope: 'globalConfig', path: 'theme' }, 'dark')).toEqual({
-      type: CommandType.SET_GLOBAL_CONFIG,
-      payload: { config: { theme: 'dark' } },
+    expect(createBindingAction({ scope: 'node', path: 'style.container.marginTop' }, 12, 'a')).toEqual({
+      type: 'node.update',
+      nodeId: 'a',
+      props: {},
+      style: { container: { marginTop: 12 } },
     })
   })
 
-  it('translates container.variant binding into the dedicated command', () => {
-    expect(createBindingCommand({ scope: 'container', path: 'variant' }, 'stacked', 'layout')).toEqual({
-      type: CommandType.CHANGE_CONTAINER_VARIANT,
-      payload: { containerId: 'layout', variant: 'stacked' },
+  it('creates schema-root and globalConfig actions', () => {
+    expect(createBindingAction({ scope: 'schema', path: 'root.style.surface.backgroundColor' }, '#f5f5f5')).toEqual({
+      type: 'node.update',
+      nodeId: 'root',
+      props: {},
+      style: { surface: { backgroundColor: '#f5f5f5' } },
+    })
+
+    expect(createBindingAction({ scope: 'globalConfig', path: 'theme' }, 'dark')).toEqual({
+      type: 'global-config.update',
+      config: { theme: 'dark' },
+    })
+  })
+
+  it('translates container.variant binding into the dedicated action', () => {
+    expect(createBindingAction({ scope: 'container', path: 'variant' }, 'stacked', 'layout')).toEqual({
+      type: 'container.change-variant',
+      containerId: 'layout',
+      variant: 'stacked',
     })
   })
 
   it('rejects arbitrary container writes and invalid variant values', () => {
-    expect(createBindingCommand({ scope: 'container', path: 'regions.left' }, [], 'layout')).toBeNull()
-    expect(createBindingCommand({ scope: 'container', path: 'variant' }, 1, 'layout')).toBeNull()
-    expect(createBindingCommand({ scope: 'container', path: 'variant' }, 'stacked')).toBeNull()
+    expect(createBindingAction({ scope: 'container', path: 'regions.left' }, [], 'layout')).toBeNull()
+    expect(createBindingAction({ scope: 'container', path: 'variant' }, 1, 'layout')).toBeNull()
+    expect(createBindingAction({ scope: 'container', path: 'variant' }, 'stacked')).toBeNull()
   })
 
   it('returns null for unsupported or unsafe paths', () => {
-    expect(createBindingCommand({ scope: 'node', path: 'layout.order' }, 1, 'a')).toBeNull()
-    expect(createBindingCommand({ scope: 'schema', path: 'root.__proto__.polluted' }, true)).toBeNull()
-    expect(createBindingCommand({ scope: 'node', path: 'props.title' }, 'World')).toBeNull()
+    expect(createBindingAction({ scope: 'node', path: 'layout.order' }, 1, 'a')).toBeNull()
+    expect(createBindingAction({ scope: 'schema', path: 'root.__proto__.polluted' }, true)).toBeNull()
+    expect(createBindingAction({ scope: 'node', path: 'props.title' }, 'World')).toBeNull()
   })
 })

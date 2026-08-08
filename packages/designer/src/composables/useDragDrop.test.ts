@@ -108,7 +108,7 @@ describe('useDragDrop', () => {
   })
 
   it('initial state has no drag-over', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     expect(dd.dragOverNodeId.value).toBeNull()
     expect(dd.dragOverIndex.value).toBeNull()
     expect(dd.isForbidden.value).toBe(false)
@@ -134,7 +134,7 @@ describe('useDragDrop', () => {
       },
     }
 
-    const dd = useDragDrop(engine, session)
+    const dd = useDragDrop(session)
     activeDestination.value = { kind: 'root', sortScope: 'content', index: 1 }
     isForbidden.value = true
 
@@ -151,7 +151,7 @@ describe('useDragDrop', () => {
       defaultLayout: { placement: { kind: 'flow', sortScope } },
     })
     engine.registerWidget(meta)
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.handleMaterialDragStart(mockDragEvent(), meta)
     const canvas = document.createElement('div')
     const child = document.createElement('div')
@@ -172,7 +172,7 @@ describe('useDragDrop', () => {
     })
     const meta = makeMeta('image')
     engine.registerWidget(meta)
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.handleMaterialDragStart(mockDragEvent(), meta)
     const canvas = document.createElement('div')
     const child = document.createElement('div')
@@ -196,7 +196,7 @@ describe('useDragDrop', () => {
   })
 
   it('treats a same-position drop as a successful no-op', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     engine.store.setDragTarget({ sourceNodeId: 'a', widgetType: 'text' })
     dd.dragOverIndex.value = 0
 
@@ -209,7 +209,7 @@ describe('useDragDrop', () => {
   })
 
   it('handleMaterialDragStart sets dragTarget with widgetType even when creatable is false', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const meta = makeMeta('image', { creatable: false })
     const e = mockDragEvent()
     dd.handleMaterialDragStart(e, meta)
@@ -221,8 +221,37 @@ describe('useDragDrop', () => {
     expect(e.dataTransfer!.setDragImage).toHaveBeenCalled()
   })
 
+  it('writes material creation through ordered DesignerSession actions', () => {
+    const session = createLegacyDesignerSessionAdapter(engine)
+    const execute = vi.spyOn(session, 'execute')
+    const dd = useDragDrop(session)
+    const meta = makeMeta('image')
+    const event = mockDragEvent()
+    engine.registerWidget(meta)
+
+    dd.handleMaterialDragStart(event, meta)
+    dd.dragOverIndex.value = 0
+    dd.handleCanvasDrop(event)
+
+    expect(execute).toHaveBeenNthCalledWith(1, {
+      type: 'drag.set',
+      target: { sourceNodeId: null, widgetType: 'image' },
+    })
+    expect(execute).toHaveBeenNthCalledWith(2, expect.objectContaining({
+      type: 'node.add',
+      destination: { kind: 'root', sortScope: 'content', index: 0 },
+    }))
+    expect(execute).toHaveBeenNthCalledWith(3, expect.objectContaining({
+      type: 'selection.set',
+    }))
+    expect(execute).toHaveBeenNthCalledWith(4, {
+      type: 'drag.set',
+      target: null,
+    })
+  })
+
   it('handleCanvasDrop adds new widget from material panel', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const execute = vi.spyOn(engine, 'execute')
     const meta = makeMeta('image')
     engine.registerWidget(meta)
@@ -251,7 +280,7 @@ describe('useDragDrop', () => {
   })
 
   it('handleCanvasDrop moves existing node', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const execute = vi.spyOn(engine, 'execute')
     const e = mockDragEvent()
 
@@ -279,7 +308,7 @@ describe('useDragDrop', () => {
   })
 
   it('handleCanvasDrop does nothing when no dragTarget', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const spy = vi.spyOn(engine, 'execute')
     const e = mockDragEvent()
     dd.handleCanvasDrop(e)
@@ -287,7 +316,7 @@ describe('useDragDrop', () => {
   })
 
   it('handleCanvasDrop does nothing when visualIndex is null', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const spy = vi.spyOn(engine, 'execute')
     const meta = makeMeta('image')
     const e = mockDragEvent()
@@ -306,7 +335,7 @@ describe('useDragDrop', () => {
         message: 'Only one singleton is allowed',
       }),
     }))
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const spy = vi.spyOn(engine, 'execute')
     const e = mockDragEvent()
 
@@ -335,7 +364,7 @@ describe('useDragDrop', () => {
     })
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     engine.registerWidget(meta)
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const execute = vi.spyOn(engine, 'execute')
     const event = mockDragEvent()
 
@@ -367,7 +396,7 @@ describe('useDragDrop', () => {
     // Add a singleton node
     engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('s', 'singleton') } })
 
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const spy = vi.spyOn(engine, 'execute')
     const e = mockDragEvent()
 
@@ -380,7 +409,7 @@ describe('useDragDrop', () => {
   })
 
   it('handleDragEnd cleans up state', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.dragOverNodeId.value = 'root'
     dd.dragOverIndex.value = 2
     dd.isForbidden.value = true
@@ -396,7 +425,7 @@ describe('useDragDrop', () => {
   })
 
   it('handleCanvasDragLeave clears state when leaving canvas', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.dragOverNodeId.value = 'root'
     dd.dragOverIndex.value = 1
 
@@ -416,13 +445,13 @@ describe('useDragDrop', () => {
     engine.registerWidget(makeMeta('locked', { sortable: false }))
     engine.execute({ type: CommandType.ADD_NODE, payload: { node: makeNode('l', 'locked') } })
 
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     expect(dd.lockedIndices.value.size).toBe(1)
     expect(dd.lockedIndices.value.has(2)).toBe(true)
   })
 
   it('chrome material drops create outside the content sort scope', () => {
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const meta = makeMeta('tabbar', {
       defaultLayout: { placement: { kind: 'chrome', edge: 'block-end' } },
     })
@@ -448,7 +477,7 @@ describe('useDragDrop', () => {
     })
     // children: [a, b, t(tabbar)]
 
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const meta = makeMeta('image')
     engine.registerWidget(meta)
     const e = mockDragEvent()
@@ -465,7 +494,7 @@ describe('useDragDrop', () => {
 
   it('adds a material to the active container destination without mutating during preflight', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const event = mockContainerDropEvent('layout', 'left')
     const schemaBefore = engine.exportSchema()
 
@@ -494,7 +523,7 @@ describe('useDragDrop', () => {
 
   it('moves a nested node back to the active root destination', () => {
     engine = makeContainerEngine({ left: [makeNode('nested')], right: [] })
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     engine.store.setDragTarget({ sourceNodeId: 'nested', widgetType: null })
     dd.activeDestination.value = { kind: 'root', sortScope: 'content', index: 0 }
 
@@ -507,7 +536,7 @@ describe('useDragDrop', () => {
 
   it('moves a nested node between container regions using the resolved index', () => {
     engine = makeContainerEngine({ left: [makeNode('nested')], right: [makeNode('right')] })
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     engine.store.setDragTarget({ sourceNodeId: 'nested', widgetType: null })
     dd.handleContainerDragOver({
       event: mockDragEvent(),
@@ -525,7 +554,7 @@ describe('useDragDrop', () => {
 
   it('reorders a nested node within the same region using Core index adjustment', () => {
     engine = makeContainerEngine({ left: [makeNode('nested'), makeNode('second')], right: [] })
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     engine.store.setDragTarget({ sourceNodeId: 'nested', widgetType: null })
     dd.handleContainerDragOver({
       event: mockDragEvent(),
@@ -541,7 +570,7 @@ describe('useDragDrop', () => {
 
   it('surfaces a container adapter rejection', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
 
     dd.handleContainerDragOver({
       event: mockDragEvent(),
@@ -566,7 +595,7 @@ describe('useDragDrop', () => {
 
   it('does not commit a stale root destination after a container adapter rejection', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const execute = vi.spyOn(engine, 'execute')
     const schemaBefore = engine.exportSchema()
     dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
@@ -597,7 +626,7 @@ describe('useDragDrop', () => {
 
   it('does not commit a prior same-region destination after a no-target publication', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const execute = vi.spyOn(engine, 'execute')
     const schemaBefore = engine.exportSchema()
     dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
@@ -631,7 +660,7 @@ describe('useDragDrop', () => {
       splitDefinition,
       [makeContainer('other-layout'), makeNode('source')],
     )
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const execute = vi.spyOn(engine, 'execute')
     const schemaBefore = engine.exportSchema()
     engine.store.setDragTarget({ sourceNodeId: 'source', widgetType: null })
@@ -694,7 +723,7 @@ describe('useDragDrop', () => {
     },
   ])('preflights $name rejection without changing schema', ({ definition, regions, source, code }) => {
     engine = makeContainerEngine(regions, definition, [makeContainer('other-layout')])
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     const schemaBefore = engine.exportSchema()
     engine.store.setDragTarget(source)
 
@@ -710,7 +739,7 @@ describe('useDragDrop', () => {
 
   it('surfaces the final Core rejection even after a successful preflight', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
     dd.handleContainerDragOver({
       event: mockDragEvent(),
@@ -743,7 +772,7 @@ describe('useDragDrop', () => {
 
   it('keeps the active container destination while moving within its region', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
     const region = document.createElement('section')
     const child = document.createElement('span')
@@ -760,7 +789,7 @@ describe('useDragDrop', () => {
 
   it('clears container state when leaving its region and at drag end', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
     const region = document.createElement('section')
     dd.handleContainerDragOver({
@@ -787,7 +816,7 @@ describe('useDragDrop', () => {
 
   it('does not let a nested outlet dragover replace its container destination with root', () => {
     engine = makeContainerEngine()
-    const dd = useDragDrop(engine)
+    const dd = useDragDrop(createLegacyDesignerSessionAdapter(engine))
     dd.handleMaterialDragStart(mockDragEvent(), makeMeta('image'))
     dd.handleContainerDragOver({
       event: mockDragEvent(),

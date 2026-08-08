@@ -1,6 +1,6 @@
-import type { Command, DeepReadonly, DesignerSchema, SchemaNode } from '@dragcraft/core'
+import type { DeepReadonly, DesignerSchema, SchemaNode } from '@dragcraft/core'
 import type { FieldBindingScope, FieldBindingTarget } from '@dragcraft/form-generator'
-import { CommandType } from '@dragcraft/core'
+import type { AuthoringAction } from '@dragcraft/renderer'
 
 export type FieldBinding = string | FieldBindingTarget | undefined
 
@@ -88,28 +88,28 @@ export function readBindingValue(
   return node ? readPath(node, binding.path) : undefined
 }
 
-function createNodeBindingCommand(nodeId: string, path: string, value: unknown): Command | null {
+function createNodeBindingAction(nodeId: string, path: string, value: unknown): AuthoringAction | null {
   const [head, rest] = splitHead(path)
   if (head === 'props') {
     const props = setPatchPath(rest, value)
     return props
-      ? { type: CommandType.UPDATE_PROPS, payload: { nodeId, props } }
+      ? { type: 'node.update', nodeId, props }
       : null
   }
   if (head === 'style') {
     const style = setPatchPath(rest, value)
     return style
-      ? { type: CommandType.UPDATE_PROPS, payload: { nodeId, props: {}, style } }
+      ? { type: 'node.update', nodeId, props: {}, style }
       : null
   }
   return null
 }
 
-export function createBindingCommand(
+export function createBindingAction(
   binding: ResolvedFieldBinding,
   value: unknown,
   nodeId?: string,
-): Command | null {
+): AuthoringAction | null {
   if (!isSafePath(binding.path))
     return null
 
@@ -117,15 +117,16 @@ export function createBindingCommand(
     if (!nodeId || binding.path !== 'variant' || typeof value !== 'string')
       return null
     return {
-      type: CommandType.CHANGE_CONTAINER_VARIANT,
-      payload: { containerId: nodeId, variant: value },
+      type: 'container.change-variant',
+      containerId: nodeId,
+      variant: value,
     }
   }
 
   if (binding.scope === 'globalConfig') {
     const config = setPatchPath(binding.path, value)
     return config
-      ? { type: CommandType.SET_GLOBAL_CONFIG, payload: { config } }
+      ? { type: 'global-config.update', config }
       : null
   }
 
@@ -134,13 +135,13 @@ export function createBindingCommand(
     if (head === 'globalConfig') {
       const config = setPatchPath(rest, value)
       return config
-        ? { type: CommandType.SET_GLOBAL_CONFIG, payload: { config } }
+        ? { type: 'global-config.update', config }
         : null
     }
     if (head === 'root')
-      return createNodeBindingCommand('root', rest, value)
+      return createNodeBindingAction('root', rest, value)
     return null
   }
 
-  return nodeId ? createNodeBindingCommand(nodeId, binding.path, value) : null
+  return nodeId ? createNodeBindingAction(nodeId, binding.path, value) : null
 }

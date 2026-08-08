@@ -65,7 +65,7 @@ export function useNodeActions(
   ctx: RendererContext,
   getOwner: () => NodeOwner = () => ({ kind: 'root' }),
 ): UseNodeActionsReturn {
-  const { engine, actionRegistry, actionInterceptors } = ctx
+  const { actionRegistry, actionInterceptors } = ctx
 
   const actionContext = computed<NodeActionContext>(() => {
     const node = getNode()
@@ -80,7 +80,7 @@ export function useNodeActions(
       ...position,
       meta,
       materials: ctx.session.materials,
-      engine,
+      session: ctx.session,
       schema,
     }
   })

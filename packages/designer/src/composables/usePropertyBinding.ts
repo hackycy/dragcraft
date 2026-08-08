@@ -1,12 +1,11 @@
-import type { CommandExecutionResult, DeepReadonly, DesignerEngine, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { DeepReadonly, SchemaNode, WidgetMeta } from '@dragcraft/core'
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
 import type { DesignerSession } from '../session/types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
-import { createBindingCommand, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
-import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
+import { createBindingAction, readBindingValue, resolveFieldBinding } from '../bindings/field-binding'
 
 export interface UsePropertyBindingOptions {
   globalConfigSchema?: FormSchema | null
@@ -29,9 +28,9 @@ export interface UsePropertyBindingReturn {
   /** The current values for the global config form */
   globalConfigValues: ComputedRef<Record<string, unknown>>
   /** Handle property change from the form generator */
-  handlePropertyChange: (key: string, value: unknown) => CommandExecutionResult | null
+  handlePropertyChange: (key: string, value: unknown) => ReturnType<DesignerSession['execute']> | null
   /** Handle global config change */
-  handleGlobalConfigChange: (key: string, value: unknown) => CommandExecutionResult | null
+  handleGlobalConfigChange: (key: string, value: unknown) => ReturnType<DesignerSession['execute']> | null
 }
 
 function findField(schema: FormSchema | null | undefined, key: string): FieldSchema | undefined {
@@ -73,9 +72,8 @@ function forceFieldDisabled(field: FieldSchema): void {
  * to the form-generator, and dispatches property updates as commands.
  */
 export function usePropertyBinding(
-  engine: DesignerEngine,
+  session: DesignerSession,
   options: UsePropertyBindingOptions = {},
-  session: DesignerSession = createLegacyDesignerSessionAdapter(engine),
 ): UsePropertyBindingReturn {
   const translate = options.t ?? ((key: string, fallback?: string) => fallback ?? key)
   const bindingDocument = computed(() => ({
@@ -183,16 +181,16 @@ export function usePropertyBinding(
     binding: ResolvedBinding,
     value: unknown,
     nodeId?: string,
-  ): CommandExecutionResult | null {
-    const command = createBindingCommand(binding, value, nodeId)
-    if (!command) {
+  ): ReturnType<DesignerSession['execute']> | null {
+    const action = createBindingAction(binding, value, nodeId)
+    if (!action) {
       console.warn(`[dragcraft/designer] Unsupported binding path "${binding.path}"`)
       return null
     }
-    return engine.execute(command)
+    return session.execute(action)
   }
 
-  function handlePropertyChange(key: string, value: unknown): CommandExecutionResult | null {
+  function handlePropertyChange(key: string, value: unknown): ReturnType<DesignerSession['execute']> | null {
     const nodeId = session.state.selectedNodeId.value
     if (!nodeId)
       return null
@@ -205,7 +203,7 @@ export function usePropertyBinding(
     return dispatchBinding(binding, value, nodeId)
   }
 
-  function handleGlobalConfigChange(key: string, value: unknown): CommandExecutionResult | null {
+  function handleGlobalConfigChange(key: string, value: unknown): ReturnType<DesignerSession['execute']> | null {
     const field = findField(options.globalConfigSchema, key)
     const binding = resolveFieldBinding(
       getFieldBinding(field),

@@ -14,7 +14,7 @@ import type {
   SchemaDiagnostic,
   SchemaNode,
 } from '@dragcraft/core'
-import type { RendererWidgetMeta } from '@dragcraft/renderer'
+import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
 
 export type DesignerMaterialCapability
@@ -91,4 +91,8 @@ export interface DesignerSession {
   readonly document: DesignerSessionDocument
   readonly materials: DesignerSessionMaterials
   readonly state: DesignerSessionState
+  evaluate: (action: AuthoringAction) => AuthoringDecision
+  execute: (action: AuthoringAction) => AuthoringResult
 }
+
+export type { AuthoringAction, AuthoringDecision, AuthoringResult } from '@dragcraft/renderer'

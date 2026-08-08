@@ -1,4 +1,6 @@
+import type { DesignerSchema } from '@dragcraft/core'
 import type { DesignerInstance, UseDesignerReturn } from '../types'
+import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
 import { getDesignerSession } from '../session/get-designer-session'
 
@@ -13,7 +15,6 @@ import { getDesignerSession } from '../session/get-designer-session'
  * ```
  */
 export function useDesigner(instance: DesignerInstance): UseDesignerReturn {
-  const { engine } = instance
   const session = getDesignerSession(instance)
   const schema = session.document.schema ?? computed(() => ({
     version: session.document.version.value,
@@ -25,14 +26,12 @@ export function useDesigner(instance: DesignerInstance): UseDesignerReturn {
     schema: schema as UseDesignerReturn['schema'],
     selectedNodeId: session.state.selectedNodeId,
     hoveredNodeId: session.state.hoveredNodeId,
-    execute: engine.execute,
-    undo: () => engine.history.undo(),
-    redo: () => engine.history.redo(),
+    execute: action => session.execute(action),
+    undo: () => session.execute({ type: 'history.undo' }),
+    redo: () => session.execute({ type: 'history.redo' }),
     canUndo: () => session.state.history.value.canUndo,
     canRedo: () => session.state.history.value.canRedo,
-    importSchema: schema => engine.importSchema(schema),
-    exportSchema: () => engine.exportSchema(),
-    on: engine.eventHub.on.bind(engine.eventHub),
-    off: engine.eventHub.off.bind(engine.eventHub),
+    importSchema: schema => session.execute({ type: 'schema.import', schema }),
+    exportSchema: () => cloneDeep(schema.value) as unknown as DesignerSchema,
   }
 }

@@ -85,6 +85,9 @@ export type {
 
 // ── Types ────────────────────────────────
 export type {
+  AuthoringAction,
+  AuthoringDecision,
+  AuthoringResult,
   ComponentMap,
   ContainerDropRejection,
   ContainerDropRendererOptions,

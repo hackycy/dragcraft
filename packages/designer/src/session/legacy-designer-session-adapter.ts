@@ -1,8 +1,9 @@
-import type { DesignerEngine, DesignerSchema, NodeDestination, NodeOwner, PlacementDecision, SchemaNode } from '@dragcraft/core'
-import type { RendererWidgetMeta } from '@dragcraft/renderer'
+import type { Command, CommandExecutionResult, DesignerEngine, DesignerSchema, NodeDestination, NodeOwner, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { DesignerSession, DesignerSessionDropRejectionReason } from './types'
 import {
   buildSchemaIndex,
+  CommandType,
   createContainerPlan,
   createLayoutPlan,
   getLockedIndicesFromNodes,
@@ -13,6 +14,39 @@ import {
   validateSubtreeDeletion,
 } from '@dragcraft/core'
 import { computed, ref } from 'vue'
+
+function evaluateLegacyAction(engine: DesignerEngine, action: AuthoringAction): AuthoringDecision {
+  if (action.type === 'history.undo')
+    return { allowed: engine.history.state.value.canUndo }
+  if (action.type === 'history.redo')
+    return { allowed: engine.history.state.value.canRedo }
+  return { allowed: true }
+}
+
+function toLegacyCommand(action: AuthoringAction): Command | null {
+  switch (action.type) {
+    case 'node.add':
+      return { type: CommandType.ADD_NODE, payload: { node: action.node, destination: action.destination } }
+    case 'node.move':
+      return { type: CommandType.MOVE_NODE, payload: { nodeId: action.nodeId, destination: action.destination } }
+    case 'node.remove':
+      return { type: CommandType.REMOVE_NODE, payload: { nodeId: action.nodeId } }
+    case 'node.duplicate':
+      return { type: CommandType.DUPLICATE_NODE, payload: { nodeId: action.nodeId } }
+    case 'node.update':
+      return { type: CommandType.UPDATE_PROPS, payload: { nodeId: action.nodeId, props: action.props, style: action.style } }
+    case 'container.change-variant':
+      return { type: CommandType.CHANGE_CONTAINER_VARIANT, payload: { containerId: action.containerId, variant: action.variant } }
+    case 'global-config.update':
+      return { type: CommandType.SET_GLOBAL_CONFIG, payload: { config: action.config } }
+    default:
+      return null
+  }
+}
+
+function asAuthoringResult(result: CommandExecutionResult): AuthoringResult {
+  return result
+}
 
 /**
  * Projects the one existing legacy Engine state source through DesignerSession.
@@ -85,7 +119,7 @@ export function createLegacyDesignerSessionAdapter(engine: DesignerEngine): Desi
     return positions
   })
 
-  return {
+  const session: DesignerSession = {
     document: {
       schema: computed(() => schema.value),
       version: computed(() => schema.value.version),
@@ -172,5 +206,50 @@ export function createLegacyDesignerSessionAdapter(engine: DesignerEngine): Desi
       },
       history: engine.history.state,
     },
+    evaluate: action => evaluateLegacyAction(engine, action),
+    execute: (action) => {
+      const decision = evaluateLegacyAction(engine, action)
+      if (!decision.allowed)
+        return { ok: false, code: 'ACTION_NOT_ALLOWED', ...decision }
+
+      if (action.type === 'history.undo') {
+        engine.history.undo()
+        return { ok: true, changed: true }
+      }
+      if (action.type === 'history.redo') {
+        engine.history.redo()
+        return { ok: true, changed: true }
+      }
+      if (action.type === 'selection.set') {
+        const changed = engine.store.selectedNodeId.value !== action.nodeId
+        engine.store.selectNode(action.nodeId)
+        return { ok: true, changed }
+      }
+      if (action.type === 'hover.set') {
+        const changed = engine.store.hoveredNodeId.value !== action.nodeId
+        engine.store.hoverNode(action.nodeId)
+        return { ok: true, changed }
+      }
+      if (action.type === 'drag.set') {
+        const current = engine.store.dragTarget.value
+        const changed = current?.sourceNodeId !== action.target?.sourceNodeId
+          || current?.widgetType !== action.target?.widgetType
+        engine.store.setDragTarget(action.target)
+        return { ok: true, changed }
+      }
+      if (action.type === 'schema.import') {
+        const result = engine.importSchema(action.schema)
+        return result.ok
+          ? { ok: true, changed: true }
+          : { ok: false, code: 'SCHEMA_IMPORT_REJECTED', details: { diagnostics: result.diagnostics } }
+      }
+
+      const command = toLegacyCommand(action)
+      return command
+        ? asAuthoringResult(engine.execute(command))
+        : { ok: false, code: 'ACTION_UNSUPPORTED' }
+    },
   }
+
+  return session
 }

@@ -1,9 +1,9 @@
-import type { Command, DeepReadonly, DesignerEngine, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
-import type { RendererSessionMaterials, RendererWidgetMeta } from './types'
-import { CommandType, isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget } from '@dragcraft/core'
+import type { AuthoringAction, RendererSessionMaterials, RendererSessionProjection, RendererWidgetMeta } from './types'
+import { isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
 
@@ -48,8 +48,8 @@ export interface NodeActionContext {
   meta: RendererWidgetMeta | undefined
   /** Semantic material and authoring facts from the session read projection. */
   materials: RendererSessionMaterials
-  /** The engine instance for executing commands */
-  engine: DesignerEngine
+  /** The only authoring entry point available to Renderer. */
+  session: RendererSessionProjection
   /** Safe schema snapshot shared by all action predicates for this resolution. */
   schema: DeepReadonly<DesignerSchema>
   /** Precomputed lock set for the owning sort scope or container region. */
@@ -95,10 +95,10 @@ export interface NodeActionDefinition {
    */
   disabled?: (ctx: NodeActionContext) => boolean
   /**
-   * Command invoked when the action is triggered.
-   * Prefer this for schema writes so the action remains declarative.
+   * Authoring intent invoked when the action is triggered.
+   * Backends translate it privately to their own write model.
    */
-  command?: (ctx: NodeActionContext, event: MouseEvent) => Command | null | undefined
+  action?: (ctx: NodeActionContext, event: MouseEvent) => AuthoringAction | null | undefined
   /**
    * Handler invoked when the action is triggered.
    * Use this for side effects or actions that do not map to a core command.
@@ -202,7 +202,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowUp,
       type: 'button',
       order: 200,
-      metadata: { commandType: CommandType.MOVE_NODE, direction: 'up' },
+      metadata: { actionType: 'node.move', direction: 'up' },
       available: canReorder,
       disabled: (ctx) => {
         if (ctx.index === 0)
@@ -212,12 +212,13 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return false
         return !isMoveAllowed(ctx.index, ctx.index - 1, lockedIndices)
       },
-      command: (ctx) => {
+      action: (ctx) => {
         if (ctx.index <= 0)
           return null
         return {
-          type: CommandType.MOVE_NODE,
-          payload: { nodeId: ctx.node.id, destination: { ...ctx.owner, index: ctx.index - 1 } },
+          type: 'node.move',
+          nodeId: ctx.node.id,
+          destination: { ...ctx.owner, index: ctx.index - 1 },
         }
       },
     },
@@ -227,7 +228,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       icon: IconArrowDown,
       type: 'button',
       order: 300,
-      metadata: { commandType: CommandType.MOVE_NODE, direction: 'down' },
+      metadata: { actionType: 'node.move', direction: 'down' },
       available: canReorder,
       disabled: (ctx) => {
         if (ctx.index >= ctx.siblingCount - 1)
@@ -237,12 +238,13 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return false
         return !isMoveAllowed(ctx.index, ctx.index + 1, lockedIndices)
       },
-      command: (ctx) => {
+      action: (ctx) => {
         if (ctx.index >= ctx.siblingCount - 1)
           return null
         return {
-          type: CommandType.MOVE_NODE,
-          payload: { nodeId: ctx.node.id, destination: { ...ctx.owner, index: ctx.index + 2 } },
+          type: 'node.move',
+          nodeId: ctx.node.id,
+          destination: { ...ctx.owner, index: ctx.index + 2 },
         }
       },
     },
@@ -258,9 +260,9 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
         const lockedIndices = getScopedLockedIndices(ctx)
         return !isInsertAllowed(ctx.index + 1, lockedIndices)
       },
-      command: ctx => ({
-        type: CommandType.DUPLICATE_NODE,
-        payload: { nodeId: ctx.node.id },
+      action: ctx => ({
+        type: 'node.duplicate',
+        nodeId: ctx.node.id,
       }),
     },
     {
@@ -270,7 +272,7 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       type: 'button',
       order: 400,
       risk: 'destructive',
-      metadata: { commandType: CommandType.REMOVE_NODE },
+      metadata: { actionType: 'node.remove' },
       className: 'dc-node__toolbar-btn--delete',
       disabled: (ctx) => {
         if (ctx.owner.kind === 'root' && ctx.sortScope === false)
@@ -280,9 +282,9 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
           return false
         return !isRemoveAllowed(ctx.index, lockedIndices)
       },
-      command: ctx => ({
-        type: CommandType.REMOVE_NODE,
-        payload: { nodeId: ctx.node.id },
+      action: ctx => ({
+        type: 'node.remove',
+        nodeId: ctx.node.id,
       }),
     },
   ]
@@ -390,10 +392,10 @@ export function createNodeActionRegistry(
                 return
 
               event.stopPropagation()
-              const command = def.command?.(ctx, event) ?? undefined
+              const action = def.action?.(ctx, event) ?? undefined
               const execute = () => {
-                if (command)
-                  ctx.engine.execute(command)
+                if (action)
+                  ctx.session.execute(action)
                 return def.handler?.(ctx, event)
               }
 
@@ -403,7 +405,7 @@ export function createNodeActionRegistry(
                 ctx,
                 event,
                 risk: def.risk ?? 'normal',
-                command,
+                action,
                 metadata: def.metadata,
               }, execute, actionInterceptors, pending)
             },

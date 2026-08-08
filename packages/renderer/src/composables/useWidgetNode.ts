@@ -49,7 +49,7 @@ export function useWidgetNode(
   getNode: () => SchemaNode,
   ctx: RendererContext,
 ): UseWidgetNodeReturn {
-  const { engine, componentMap, eventHooks, session } = ctx
+  const { componentMap, eventHooks, session } = ctx
 
   const state = useNodeState(() => getNode().id, ctx)
 
@@ -116,7 +116,7 @@ export function useWidgetNode(
     runBeforeAfterHook(
       eventHooks.onBeforeSelect,
       { nodeId, event: e },
-      () => engine.store.selectNode(nodeId),
+      () => session.execute({ type: 'selection.set', nodeId }),
       eventHooks.onAfterSelect
         ? () => eventHooks.onAfterSelect?.({ nodeId })
         : undefined,
@@ -128,14 +128,14 @@ export function useWidgetNode(
     const nodeId = getNode().id
     if (ctx.hoveredNodeId.value === nodeId)
       return
-    engine.store.hoverNode(nodeId)
+    session.execute({ type: 'hover.set', nodeId })
     eventHooks.onHoverChange?.({ nodeId })
   }
 
   const handleMouseLeave = () => {
     if (ctx.hoveredNodeId.value !== getNode().id)
       return
-    engine.store.hoverNode(null)
+    session.execute({ type: 'hover.set', nodeId: null })
     eventHooks.onHoverChange?.({ nodeId: null })
   }
 

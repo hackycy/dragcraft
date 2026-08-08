@@ -12,7 +12,6 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const session = useDesignerSession()
     const {
-      engine,
       componentMap,
       extensions,
       dragOverNodeId,
@@ -49,7 +48,7 @@ export default defineComponent({
       const target = event.target as HTMLElement
       const nodeEl = target.closest('[data-node-id]') as HTMLElement | null
       if (!nodeEl || nodeEl.dataset.nodeId === 'root')
-        engine.store.selectNode(null)
+        session.execute({ type: 'selection.set', nodeId: null })
     }
 
     const isDragging = computed(() => session.state.dragTarget.value !== null)
@@ -151,7 +150,6 @@ export default defineComponent({
               'data-dc-part': 'content',
             }, [
               h(RootRenderer, {
-                engine,
                 session,
                 componentMap,
                 extensions: rendererExtensions.value,

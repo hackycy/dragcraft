@@ -1,4 +1,4 @@
-import type { Command, ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CoreWidgetMeta, CreationBlockReason, DesignerEngine, DesignerSchema, HistoryState, LayoutEdge, NodeDestination, NodeOwner, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode } from '@dragcraft/core'
+import type { ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CoreWidgetMeta, CreationBlockReason, DesignerSchema, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
@@ -97,10 +97,38 @@ export interface RendererWidgetActionExtra {
   visible?: (ctx: NodeActionContext) => boolean
   available?: (ctx: NodeActionContext) => boolean
   disabled?: (ctx: NodeActionContext) => boolean
-  command?: (ctx: NodeActionContext, event: MouseEvent) => Command | null | undefined
+  action?: (ctx: NodeActionContext, event: MouseEvent) => AuthoringAction | null | undefined
   handler?: (ctx: NodeActionContext, event: MouseEvent) => MaybePromise<void>
   className?: string
 }
+
+/**
+ * Closed authoring intents shared by the Designer UI and Renderer.
+ * Implementations translate these intents to their active backend privately.
+ */
+export type AuthoringAction
+  = | { type: 'history.undo' }
+    | { type: 'history.redo' }
+    | { type: 'selection.set', nodeId: string | null }
+    | { type: 'hover.set', nodeId: string | null }
+    | { type: 'drag.set', target: DragTarget | null }
+    | { type: 'node.add', node: SchemaNode, destination?: NodeDestination }
+    | { type: 'node.move', nodeId: string, destination: NodeDestination }
+    | { type: 'node.remove', nodeId: string }
+    | { type: 'node.duplicate', nodeId: string }
+    | { type: 'node.update', nodeId: string, props: Record<string, unknown>, style?: NodeStyle }
+    | { type: 'container.change-variant', containerId: string, variant: string }
+    | { type: 'global-config.update', config: Record<string, unknown> }
+    | { type: 'schema.import', schema: DesignerSchema }
+
+export interface AuthoringDecision extends CreationBlockReason {
+  allowed: boolean
+  details?: Record<string, unknown>
+}
+
+export type AuthoringResult
+  = | { ok: true, changed: boolean, eventPayload?: unknown }
+    | ({ ok: false, code: string } & CreationBlockReason & { details?: Record<string, unknown> })
 
 export interface WidgetActionConfig {
   only?: string[]
@@ -167,6 +195,8 @@ export interface RendererSessionProjection {
     }
     readonly history: Readonly<Ref<HistoryState>>
   }
+  evaluate: (action: AuthoringAction) => AuthoringDecision
+  execute: (action: AuthoringAction) => AuthoringResult
 }
 
 /** Renderer-owned grouping derived from semantic session facts for presentation only. */
@@ -403,8 +433,6 @@ export interface ContainerDropRendererOptions {
  * extensions or hooks, remount RootRenderer with a different `key`.
  */
 export interface RendererOptions extends ContainerDropRendererOptions {
-  /** The legacy engine remains available only for existing write handlers. */
-  engine: DesignerEngine
   /** Semantic read projection supplied by the Designer host. */
   session: RendererSessionProjection
   /** Maps node.type -> Vue component for rendering */
@@ -446,8 +474,6 @@ export interface RendererOptions extends ContainerDropRendererOptions {
  * Internal context provided to all renderer descendants via provide/inject.
  */
 export interface RendererContext extends ContainerDropRendererOptions {
-  /** Retained for G2 mutation cutover; renderer reads must use session. */
-  engine: DesignerEngine
   session: RendererSessionProjection
   /** One semantic schema snapshot shared by the renderer tree for each session revision. */
   schema: ComputedRef<DeepReadonly<DesignerSchema>>

@@ -14,7 +14,7 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const session = useDesignerSession()
     const { t } = useI18n()
-    const { engine, fieldComponentMap, globalConfigSchema, activeTab } = ctx
+    const { fieldComponentMap, globalConfigSchema, activeTab } = ctx
     const {
       selectedNode,
       selectedFormSchema,
@@ -22,7 +22,7 @@ export default defineComponent({
       globalConfigValues,
       handlePropertyChange,
       handleGlobalConfigChange,
-    } = usePropertyBinding(engine, { globalConfigSchema, t }, session)
+    } = usePropertyBinding(session, { globalConfigSchema, t })
 
     // Auto-switch to Widget tab when a node is selected
     watch(

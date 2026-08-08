@@ -30,7 +30,6 @@ export default defineComponent({
   setup(props) {
     const session = getDesignerSession(props.instance)
     const {
-      engine,
       componentMap,
       widgetGroups,
       extensions,
@@ -46,12 +45,11 @@ export default defineComponent({
     const leftPanelRef = ref<HTMLElement | null>(null)
     const rightPanelRef = ref<HTMLElement | null>(null)
     const searchQuery = ref('')
-    const dragDrop = useDragDrop(engine, session)
+    const dragDrop = useDragDrop(session)
     let resizeObserver: ResizeObserver | null = null
     const focusTimers = new Set<ReturnType<typeof setTimeout>>()
 
     const ctx: DesignerContext = {
-      engine,
       componentMap,
       widgetGroups,
       extensions,
@@ -145,13 +143,13 @@ export default defineComponent({
       if (key === 'z') {
         event.preventDefault()
         if (event.shiftKey)
-          engine.history.redo()
+          session.execute({ type: 'history.redo' })
         else
-          engine.history.undo()
+          session.execute({ type: 'history.undo' })
       }
       else if (key === 'y' && event.ctrlKey) {
         event.preventDefault()
-        engine.history.redo()
+        session.execute({ type: 'history.redo' })
       }
     }
 

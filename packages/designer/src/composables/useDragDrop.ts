@@ -1,10 +1,9 @@
-import type { CommandExecutionResult, DesignerEngine, DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
 import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
-import type { DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
+import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
 import {
   clampInsertIndex,
-  CommandType,
   DEFAULT_LAYOUT_REGION,
   DEFAULT_SORT_SCOPE,
   findNearestValidIndex,
@@ -15,7 +14,6 @@ import {
 import { hideNativeDragImage } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
 import { computed, watch } from 'vue'
-import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
 
 // ──────────────────────────────────────────
 // Return type
@@ -43,15 +41,15 @@ export interface UseDragDropReturn {
   /** Handle dragleave on the canvas (event delegation) */
   handleCanvasDragLeave: (e: DragEvent) => void
   /** Handle drop on the canvas (event delegation) */
-  handleCanvasDrop: (e: DragEvent) => CommandExecutionResult
+  handleCanvasDrop: (e: DragEvent) => AuthoringResult
   /** Handle a material-resolved container destination or adapter rejection. */
   handleContainerDragOver: (payload: ContainerDropTarget | ContainerDropRejection) => void
   /** Clear container feedback after leaving the active region. */
   handleContainerDragLeave: (e: DragEvent) => void
   /** Commit the active container destination. */
-  handleContainerDrop: (e: DragEvent) => CommandExecutionResult
+  handleContainerDrop: (e: DragEvent) => AuthoringResult
   /** Commit the current drag target to the current destination. */
-  commitDrop: () => CommandExecutionResult
+  commitDrop: () => AuthoringResult
   /** Handle drag end (cleanup) */
   handleDragEnd: (e: DragEvent) => void
   /** Whether the current drag-over is forbidden */
@@ -74,8 +72,7 @@ export type DropRejectionReason = DesignerSessionDropRejectionReason
  * and sortable constraint validation.
  */
 export function useDragDrop(
-  engine: DesignerEngine,
-  session: DesignerSession = createLegacyDesignerSessionAdapter(engine),
+  session: DesignerSession,
 ): UseDragDropReturn {
   const dragOverDestination = session.state.drag.activeDestination
   const activeDestination = dragOverDestination
@@ -222,7 +219,7 @@ export function useDragDrop(
   function resetDragState(): void {
     clearDragOverState()
     clearDropGeometry(true)
-    engine.store.setDragTarget(null)
+    session.execute({ type: 'drag.set', target: null })
   }
 
   watch(session.state.dragTarget, (target) => {
@@ -241,7 +238,7 @@ export function useDragDrop(
       : findNearestValidIndex(rawIndex, valid)
   }
 
-  function setForbidden(reason: Extract<CommandExecutionResult, { ok: false }>): void {
+  function setForbidden(reason: Extract<AuthoringResult, { ok: false }>): void {
     isForbidden.value = true
     const rejection: DropRejectionReason = {
       code: reason.code,
@@ -300,9 +297,12 @@ export function useDragDrop(
 
   function handleMaterialDragStart(e: DragEvent, meta: RendererWidgetMeta): void {
     clearDropGeometry(true)
-    engine.store.setDragTarget({
-      sourceNodeId: null,
-      widgetType: meta.type,
+    session.execute({
+      type: 'drag.set',
+      target: {
+        sourceNodeId: null,
+        widgetType: meta.type,
+      },
     })
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'copy'
@@ -366,18 +366,19 @@ export function useDragDrop(
     }
   }
 
-  function commitDrop(): CommandExecutionResult {
+  function commitDrop(): AuthoringResult {
     const destination = dragOverDestination.value
     const dragTarget = session.state.dragTarget.value
     if (!destination || !dragTarget)
       return { ok: false, code: 'DROP_TARGET_MISSING' }
 
-    let result: CommandExecutionResult
+    let result: AuthoringResult
     let selectedNodeId: string | null = null
     if (dragTarget.sourceNodeId) {
-      result = engine.execute({
-        type: CommandType.MOVE_NODE,
-        payload: { nodeId: dragTarget.sourceNodeId, destination },
+      result = session.execute({
+        type: 'node.move',
+        nodeId: dragTarget.sourceNodeId,
+        destination,
       })
     }
     else {
@@ -394,9 +395,10 @@ export function useDragDrop(
       }
       else {
         const node = createSchemaNode(meta)
-        result = engine.execute({
-          type: CommandType.ADD_NODE,
-          payload: { node, destination },
+        result = session.execute({
+          type: 'node.add',
+          node,
+          destination,
         })
         selectedNodeId = node.id
       }
@@ -407,17 +409,17 @@ export function useDragDrop(
     }
     else {
       if (selectedNodeId)
-        engine.store.selectNode(selectedNodeId)
+        session.execute({ type: 'selection.set', nodeId: selectedNodeId })
       resetDragState()
     }
     return result
   }
 
-  function handleCanvasDrop(e: DragEvent): CommandExecutionResult {
+  function handleCanvasDrop(e: DragEvent): AuthoringResult {
     e.preventDefault()
     if (!createDecision.value.allowed) {
       const decision = createDecision.value
-      const result: Extract<CommandExecutionResult, { ok: false }> = {
+      const result: Extract<AuthoringResult, { ok: false }> = {
         ok: false,
         code: decision.code ?? 'NODE_NOT_CREATABLE',
         messageKey: decision.messageKey,
@@ -520,7 +522,7 @@ export function useDragDrop(
     clearDragOverState()
   }
 
-  function handleContainerDrop(e: DragEvent): CommandExecutionResult {
+  function handleContainerDrop(e: DragEvent): AuthoringResult {
     e.preventDefault()
     e.stopPropagation()
     const destination = dragOverDestination.value
@@ -531,7 +533,7 @@ export function useDragDrop(
       && currentTarget.getAttribute('data-dc-container-region') === destination.regionId
     if (!matchesCurrentRegion) {
       dragOverDestination.value = null
-      const result: Extract<CommandExecutionResult, { ok: false }> = {
+      const result: Extract<AuthoringResult, { ok: false }> = {
         ok: false,
         code: 'DROP_TARGET_MISSING',
       }

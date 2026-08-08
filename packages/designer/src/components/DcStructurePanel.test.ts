@@ -89,7 +89,6 @@ function makeStructureMetas(): WidgetMeta[] {
 
 function makeContext(instance: DesignerInstance): DesignerContext {
   return {
-    engine: instance.engine,
     componentMap: instance.componentMap,
     widgetGroups: instance.widgetGroups,
     extensions: instance.extensions,

@@ -4,7 +4,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 import { useNodeState } from './useNodeState'
 
-function makeContext(overrides?: Partial<RendererContext>): RendererContext {
+type TestRendererContext = RendererContext & { engine: DesignerEngine }
+
+function makeContext(overrides?: Partial<RendererContext>): TestRendererContext {
   const selectedNodeId = ref<string | null>(null)
   const hoveredNodeId = ref<string | null>(null)
   return {
@@ -29,11 +31,11 @@ function makeContext(overrides?: Partial<RendererContext>): RendererContext {
     hoveredNodeId,
     dragOverNodeId: ref(null),
     ...overrides,
-  } as RendererContext
+  } as TestRendererContext
 }
 
 describe('useNodeState', () => {
-  let ctx: RendererContext
+  let ctx: TestRendererContext
 
   beforeEach(() => {
     ctx = makeContext()

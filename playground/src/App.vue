@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CommandType, createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
+import { createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable, useDesigner } from '@dragcraft/designer'
 import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@dragcraft/designer'
 import {
   BUILT_IN_DEVICE_FRAMES,
@@ -154,12 +154,10 @@ const designer = createDesigner({
           schema: ctx.schema,
         }, true).allowed
       },
-      command: (ctx: NodeActionContext) => {
+      action: (ctx: NodeActionContext) => {
         return {
-          type: CommandType.DUPLICATE_NODE,
-          payload: {
-            nodeId: ctx.node.id,
-          },
+          type: 'node.duplicate',
+          nodeId: ctx.node.id,
         }
       },
     },

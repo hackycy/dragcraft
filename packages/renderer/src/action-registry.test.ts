@@ -1,8 +1,8 @@
-import type { DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core'
+import type { Command, DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core'
 import type { NodeActionContext } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererWidgetMeta } from './types'
-import { createContainerPlan, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveAuthoringCapability, resolveNodeLayout, validateSubtreeCreation, validateSubtreeDeletion } from '@dragcraft/core'
+import { CommandType, createContainerPlan, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveAuthoringCapability, resolveNodeLayout, validateSubtreeCreation, validateSubtreeDeletion } from '@dragcraft/core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
 
@@ -69,6 +69,14 @@ function makeMeta(overrides?: Partial<RendererWidgetMeta>): RendererWidgetMeta {
 }
 
 function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>): NodeActionContext {
+  const execute = (action: { type: string, nodeId?: string, destination?: unknown }) => {
+    const command: Command = action.type === 'node.move'
+      ? { type: CommandType.MOVE_NODE, payload: { nodeId: action.nodeId, destination: action.destination } }
+      : action.type === 'node.remove'
+        ? { type: CommandType.REMOVE_NODE, payload: { nodeId: action.nodeId } }
+        : { type: CommandType.DUPLICATE_NODE, payload: { nodeId: action.nodeId } }
+    return engine.execute(command)
+  }
   const context = {
     node: makeNode(),
     owner: { kind: 'root', sortScope: 'content' },
@@ -76,7 +84,7 @@ function makeCtx(engine: DesignerEngine, overrides?: Partial<NodeActionContext>)
     siblingCount: 3,
     sortScope: 'content',
     meta: makeMeta(),
-    engine,
+    session: { execute },
     schema: engine.state.getSchema(),
     ...overrides,
   } as NodeActionContext
@@ -616,12 +624,10 @@ describe('resolve', () => {
     expect(afterAction).toHaveBeenCalledWith(expect.objectContaining({
       key: ActionKey.MOVE_UP,
       risk: 'normal',
-      command: {
-        type: 'MOVE_NODE',
-        payload: {
-          nodeId: 'node-1',
-          destination: { kind: 'root', index: 0, sortScope: 'content' },
-        },
+      action: {
+        type: 'node.move',
+        nodeId: 'node-1',
+        destination: { kind: 'root', index: 0, sortScope: 'content' },
       },
       event: expect.anything(),
     }))

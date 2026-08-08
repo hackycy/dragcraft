@@ -143,7 +143,6 @@ export function createRendererContext(options: RendererOptions): RendererContext
   }
 
   return {
-    engine: options.engine,
     session: options.session,
     schema,
     layout,

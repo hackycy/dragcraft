@@ -1,13 +1,11 @@
 import type {
-  CommandExecutionResult,
   ContainerRegionDefinition,
   ContainerRegionId,
   ContainerVariantId,
   SchemaNode,
 } from '@dragcraft/core'
 import type { ComputedRef, InjectionKey } from 'vue'
-import type { DeepReadonly, RendererContext } from './types'
-import { CommandType } from '@dragcraft/core'
+import type { AuthoringResult, DeepReadonly, RendererContext } from './types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed, inject } from 'vue'
 
@@ -31,7 +29,7 @@ export interface ContainerRuntime {
   variant: ComputedRef<ContainerVariantId>
   regionDefinitions: ComputedRef<DeepReadonly<ContainerRegionDefinition[]>>
   getRegionNodes: (regionId: ContainerRegionId) => DeepReadonly<SchemaNode[]>
-  requestVariantChange: (variant: ContainerVariantId) => CommandExecutionResult
+  requestVariantChange: (variant: ContainerVariantId) => AuthoringResult
 }
 
 export const CONTAINER_RUNTIME_CONTEXT_KEY: InjectionKey<ContainerRuntime> = Symbol('dc-container-runtime')
@@ -66,9 +64,10 @@ export function createContainerRuntime(
     getRegionNodes: regionId => toReadonlySnapshot(
       ctx.session.document.getRegionNodes(resolveNode().id, regionId),
     ),
-    requestVariantChange: variant => ctx.engine.execute({
-      type: CommandType.CHANGE_CONTAINER_VARIANT,
-      payload: { containerId: getNode().id, variant },
+    requestVariantChange: variant => ctx.session.execute({
+      type: 'container.change-variant',
+      containerId: getNode().id,
+      variant,
     }),
   }
 }

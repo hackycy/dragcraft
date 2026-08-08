@@ -5,6 +5,7 @@ import { ContainerRegionOutlet } from '@dragcraft/renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, readonly, shallowRef } from 'vue'
 import { createDesigner } from '..'
+import { getDesignerSession } from '../session/get-designer-session'
 import DcDesigner from './DcDesigner'
 
 function makeMeta(): WidgetMeta {
@@ -348,7 +349,7 @@ describe('dcDesigner', () => {
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
-    const undo = vi.spyOn(designer.engine.history, 'undo')
+    const execute = vi.spyOn(getDesignerSession(designer), 'execute')
     const host = document.createElement('div')
     document.body.appendChild(host)
     const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
@@ -362,7 +363,8 @@ describe('dcDesigner', () => {
       root.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true, cancelable: true }))
       search.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, bubbles: true, cancelable: true }))
 
-      expect(undo).toHaveBeenCalledTimes(1)
+      expect(execute).toHaveBeenCalledTimes(1)
+      expect(execute).toHaveBeenCalledWith({ type: 'history.undo' })
     }
     finally {
       app.unmount()
