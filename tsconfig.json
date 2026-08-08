@@ -2,8 +2,12 @@
   "compilerOptions": {
     "target": "ESNext",
     "lib": ["ESNext", "DOM"],
+    "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "paths": {
+      "@dragcraft/designer/dev-harness": ["packages/designer/src/dev/next-designer-harness.ts"]
+    },
     "resolveJsonModule": true,
     "types": ["@types/node"],
     "strict": true,

@@ -1,10 +1,10 @@
 <!-- playground/src/components/PlaygroundHeader.vue -->
 <script setup lang="ts">
-import type { TemplateEntry } from '../config/templates'
+import type { TemplateOption } from '../config/templates'
 
 defineProps<{
   activeTemplateId: string
-  templates: TemplateEntry[]
+  templates: readonly TemplateOption[]
   locale: string
 }>()
 

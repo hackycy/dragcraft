@@ -17,6 +17,7 @@ import type {
   DesignerSessionDropRejectionReason,
   DesignerSessionMaterials,
 } from './types'
+import { resolveSchema } from '@dragcraft/core'
 import { computed, ref } from 'vue'
 import { evaluateAuthoringPolicy } from '../authoring/policy'
 
@@ -34,6 +35,7 @@ type ProjectedDiagnostic = DesignerSessionDocument['diagnostics']['value'][numbe
 type ProjectedContainerPlan = ReturnType<DesignerSessionMaterials['resolveContainer']>
 type ProjectedContainerRegion = Extract<ProjectedContainerPlan, { ok: true }>['plan']['regions'][number]
 type ProjectedContainerNodes = ProjectedContainerRegion['nodes']
+type ProjectedDestination = ReturnType<NonNullable<DesignerSessionDocument['resolveDestination']>>
 type ProjectedSchema = NonNullable<DesignerSessionDocument['schema']>['value']
 type DragTargetValue = DesignerSession['state']['dragTarget']['value']
 type ActiveDestinationValue = DesignerSession['state']['drag']['activeDestination']['value']
@@ -187,11 +189,16 @@ function projectRoot(document: ResolvedDocument): ProjectedNode {
   } as unknown as ProjectedNode
 }
 
-function projectMaterial(catalog: MaterialCatalog, type: string): ProjectedMaterial | undefined {
+function projectMaterial(
+  catalog: MaterialCatalog,
+  type: string,
+  document: ResolvedDocument | null = null,
+): ProjectedMaterial | undefined {
   const material = catalog.getMaterial(type)
   if (!material)
     return undefined
   const regions = material.schema?.container?.regions
+  const hasCreatePolicy = document !== null && catalog.getAuthoring(type)?.policy?.create !== undefined
   return {
     type: material.type,
     title: material.panel?.title ?? material.type,
@@ -200,6 +207,20 @@ function projectMaterial(catalog: MaterialCatalog, type: string): ProjectedMater
     ...(typeof material.panel?.icon === 'string' ? { icon: material.panel.icon } : {}),
     defaultProps: material.schema?.defaultProps ?? {},
     formSchema: material.inspector?.formSchema ?? { sections: [] },
+    ...(hasCreatePolicy
+      ? {
+          creatable: () => {
+            const policy = evaluateAuthoringPolicy(catalog, document, {
+              type: 'create-node',
+              materialType: material.type,
+              to: { owner: { kind: 'page-root' }, position: { kind: 'end' } },
+            })
+            return policy.decision === 'allowed'
+              ? true
+              : { allowed: false, code: policy.code }
+          },
+        }
+      : {}),
     ...(regions
       ? {
           container: {
@@ -357,6 +378,12 @@ function actionDecision(
   }
   if (action.type === 'drag.set')
     return { allowed: true }
+  if (action.type === 'schema.import') {
+    const resolution = resolveSchema(action.schema, catalog.schemaDefinitions)
+    return resolution.status === 'rejected'
+      ? { allowed: false, code: 'SCHEMA_IMPORT_REJECTED' }
+      : { allowed: true }
+  }
   const current = engine.resolvedDocument.value
   if (!current)
     return { allowed: false, code: 'NO_DOCUMENT' }
@@ -446,11 +473,51 @@ export function createNextDesignerSessionAdapter(
           return projected ? [projected] : []
         })
       },
+      resolveDestination: (destination) => {
+        const current = document.value
+        if (!current)
+          return { ok: false, code: 'NO_DOCUMENT' }
+        if (destination.kind === 'root') {
+          return {
+            ok: true,
+            value: {
+              children: root.value.children as unknown as ProjectedContainerNodes,
+              destination,
+            },
+          } as ProjectedDestination
+        }
+
+        const container = current.containersById.get(destination.containerId)
+        const owner = container?.owner
+        const material = owner ? options.catalog.getMaterial(owner.node.type) : undefined
+        const projected = owner ? projectMaterial(options.catalog, owner.node.type) : undefined
+        const definition = projected?.container
+        const variant = definition?.variants.default
+        const region = variant?.regions.find(item => item.id === destination.regionId)
+        const resolvedRegion = container?.regions.get(destination.regionId)
+        if (!owner || !definition || !variant || !region || !resolvedRegion || !material?.schema?.container)
+          return { ok: false, code: 'CONTAINER_UNRESOLVED' }
+
+        return {
+          ok: true,
+          value: {
+            children: resolvedRegion.children.flatMap((child) => {
+              const projectedChild = projectNode(current, child.node.id)
+              return projectedChild ? [projectedChild] : []
+            }) as unknown as ProjectedContainerNodes,
+            destination,
+            container: projectNode(current, owner.node.id) as unknown as ProjectedNode,
+            definition,
+            variant,
+            region,
+          },
+        } as ProjectedDestination
+      },
     },
     materials: {
-      get: type => projectMaterial(options.catalog, type),
+      get: type => projectMaterial(options.catalog, type, document.value),
       getAll: () => options.catalog.getAllMaterials().flatMap((material) => {
-        const projected = projectMaterial(options.catalog, material.type)
+        const projected = projectMaterial(options.catalog, material.type, document.value)
         return projected ? [projected] : []
       }),
       resolveCapability: (node, capability) => resolveCapability(
@@ -474,7 +541,7 @@ export function createNextDesignerSessionAdapter(
         const projectedNode = projectNode(current, node.id)
         if (!projectedNode)
           return { ok: false, code: 'CONTAINER_UNRESOLVED', containerId: node.id }
-        const projected = projectMaterial(options.catalog, node.type)
+        const projected = projectMaterial(options.catalog, node.type, current)
         const variant = projected?.container?.variants.default
         if (!variant)
           return { ok: false, code: 'CONTAINER_UNRESOLVED', containerId: node.id }
@@ -539,6 +606,12 @@ export function createNextDesignerSessionAdapter(
         return resultFromNextAction(options.engine.execute({ type: 'undo' }))
       if (action.type === 'history.redo')
         return resultFromNextAction(options.engine.execute({ type: 'redo' }))
+      if (action.type === 'schema.import') {
+        const result = options.engine.importSchema(action.schema)
+        return result.status === 'rejected'
+          ? { ok: false, code: 'SCHEMA_IMPORT_REJECTED' }
+          : { ok: true, changed: true }
+      }
       const current = options.engine.resolvedDocument.value
       if (!current)
         return { ok: false, code: 'NO_DOCUMENT' }

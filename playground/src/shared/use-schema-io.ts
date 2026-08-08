@@ -1,10 +1,19 @@
-import type { DesignerSchema } from '@dragcraft/designer'
 import { ref } from 'vue'
 
-export function useSchemaIO(
-  exportSchema: () => DesignerSchema,
-  importSchema: (schema: DesignerSchema) => void,
-) {
+export interface UseSchemaIOOptions<Schema> {
+  exportSchema: () => Schema | null
+  importSchema: (schema: Schema) => unknown
+  invalidSchemaMessage: string
+  isValidSchema: (input: unknown) => input is Schema
+}
+
+export function useSchemaIO<Schema>(options: UseSchemaIOOptions<Schema>) {
+  const {
+    exportSchema,
+    importSchema,
+    invalidSchemaMessage,
+    isValidSchema,
+  } = options
   const showExportModal = ref(false)
   const showImportModal = ref(false)
   const exportJson = ref('')
@@ -25,9 +34,9 @@ export function useSchemaIO(
 
   function handleImportConfirm() {
     try {
-      const schema: DesignerSchema = JSON.parse(importJson.value)
-      if (!schema.version || !schema.root) {
-        importError.value = '无效的 Schema 格式：缺少 version 或 root 字段'
+      const schema: unknown = JSON.parse(importJson.value)
+      if (!isValidSchema(schema)) {
+        importError.value = invalidSchemaMessage
         return
       }
       importSchema(schema)

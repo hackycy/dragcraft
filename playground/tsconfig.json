@@ -2,7 +2,11 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "jsxImportSource": "vue"
+    "jsxImportSource": "vue",
+    "baseUrl": "..",
+    "paths": {
+      "@dragcraft/designer/dev-harness": ["packages/designer/src/dev/next-designer-harness.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.vue"]
 }

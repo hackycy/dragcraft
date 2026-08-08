@@ -26,9 +26,10 @@ function policyActionFor(action: SchemaAuthoringAction): MaterialAuthoringPolicy
       return 'unwrap'
     case 'update-node':
       return 'update'
+    case 'insert-bundle':
+      return 'create'
     case 'update-global-config':
     case 'update-page':
-    case 'insert-bundle':
       return undefined
   }
 }
@@ -50,6 +51,14 @@ function nodeIdFor(action: SchemaAuthoringAction): string | undefined {
   }
 }
 
+function materialTypeFor(action: SchemaAuthoringAction, nodeType?: string): string | undefined {
+  if (action.type === 'create-node')
+    return action.materialType
+  if (action.type === 'insert-bundle')
+    return action.bundle.nodes.find(node => node.id === action.bundle.entryId)?.type
+  return nodeType
+}
+
 export function evaluateAuthoringPolicy(
   catalog: MaterialCatalog,
   document: ResolvedDocument,
@@ -64,9 +73,7 @@ export function evaluateAuthoringPolicy(
   if (resolvedNode?.readOnly)
     return { decision: 'denied', code: 'NODE_READ_ONLY' }
 
-  const materialType = action.type === 'create-node'
-    ? action.materialType
-    : resolvedNode?.node.type
+  const materialType = materialTypeFor(action, resolvedNode?.node.type)
   const rule = materialType
     ? catalog.getAuthoring(materialType)?.policy?.[policyAction]
     : undefined

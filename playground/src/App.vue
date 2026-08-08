@@ -18,10 +18,14 @@ import {
   playgroundWidgetMetas,
 } from './components/widgets'
 import { globalConfigSchema } from './config/global-config-schema'
+import { playgroundNextMaterials, playgroundNextTemplates } from './config/next-fixtures'
+import { resolvePlaygroundBackend } from './config/playground-backend'
 import { templateRegistry } from './config/templates'
 import { useTemplateSwitch } from './composables/useTemplateSwitch'
 import SchemaIOModal from './shared/SchemaIOModal.vue'
+import { isFinalDocumentSchema, isLegacyDesignerSchema } from './shared/schema-validation'
 import { useSchemaIO } from './shared/use-schema-io'
+import { createNextDesignerHarness } from '@dragcraft/designer/dev-harness'
 
 // ── Host-owned Active Device Frame ──────────
 
@@ -118,72 +122,118 @@ function confirmWithModal(options: ConfirmModalOptions): Promise<boolean> {
 
 // ── Create designer instance ─────────────────
 
-const designer = createDesigner({
-  engineOptions: {
-    initialSchema: templateRegistry[0].schema,
-    maxHistorySize: 50,
-  },
-  widgetMetas: playgroundWidgetMetas,
-  componentMap: playgroundComponentMap,
-  fieldComponentMap: buildPlaygroundFieldComponentMap(),
-  widgetGroups: playgroundWidgetGroups,
-  globalConfigSchema,
-  messages: playgroundWidgetMessages,
-  actionInterceptors: [
-    createConfirmActionInterceptor({
-      confirm: () => confirmWithModal({
-        title: '确认删除',
-        content: '删除后可通过撤销恢复，是否继续？',
-        okText: '删除',
-        okType: 'danger',
-      }),
+const actionInterceptors = [
+  createConfirmActionInterceptor({
+    confirm: () => confirmWithModal({
+      title: '确认删除',
+      content: '删除后可通过撤销恢复，是否继续？',
+      okText: '删除',
+      okType: 'danger',
     }),
-  ],
-  customActions: [
-    {
-      key: 'duplicate',
-      label: '复制',
-      icon: IconCopy,
-      type: 'button',
-      order: 350,
-      available: (ctx: NodeActionContext) => {
-        if (!ctx.meta)
-          return true
-        return resolveCreatable(ctx.meta.creatable, {
-          widgetType: ctx.node.type,
-          schema: ctx.schema,
-        }, true).allowed
-      },
-      action: (ctx: NodeActionContext) => {
-        return {
-          type: 'node.duplicate',
-          nodeId: ctx.node.id,
-        }
-      },
+  }),
+]
+
+const customActions = [
+  {
+    key: 'duplicate',
+    label: '复制',
+    icon: IconCopy,
+    type: 'button' as const,
+    order: 350,
+    available: (ctx: NodeActionContext) => {
+      if (!ctx.meta)
+        return true
+      return resolveCreatable(ctx.meta.creatable, {
+        widgetType: ctx.node.type,
+        schema: ctx.schema,
+      }, true).allowed
     },
-  ],
-  extensions: {
-    materialItemRenderer,
-    rendererExtensions: {
-      containerShell: activeContainerShell,
-      emptyState: MiniProgramEmptyState,
+    action: (ctx: NodeActionContext) => {
+      return {
+        type: 'node.duplicate' as const,
+        nodeId: ctx.node.id,
+      }
     },
   },
-})
+]
+
+const extensions: DesignerExtensions = {
+  materialItemRenderer,
+  rendererExtensions: {
+    containerShell: activeContainerShell,
+    emptyState: MiniProgramEmptyState,
+  },
+}
+
+const backend = resolvePlaygroundBackend(window.location.search, import.meta.env.DEV)
+const nextDesigner = backend === 'next'
+  ? createNextDesignerHarness({
+      schema: playgroundNextTemplates[0].schema,
+      materials: playgroundNextMaterials,
+      componentMap: playgroundComponentMap,
+      fieldComponentMap: buildPlaygroundFieldComponentMap(),
+      widgetGroups: playgroundWidgetGroups,
+      globalConfigSchema,
+      messages: playgroundWidgetMessages,
+      actionInterceptors,
+      customActions,
+      extensions,
+      maxHistoryEntries: 50,
+    })
+  : null
+const legacyDesigner = backend === 'legacy'
+  ? createDesigner({
+      engineOptions: {
+        initialSchema: templateRegistry[0].schema,
+        maxHistorySize: 50,
+      },
+      widgetMetas: playgroundWidgetMetas,
+      componentMap: playgroundComponentMap,
+      fieldComponentMap: buildPlaygroundFieldComponentMap(),
+      widgetGroups: playgroundWidgetGroups,
+      globalConfigSchema,
+      messages: playgroundWidgetMessages,
+      actionInterceptors,
+      customActions,
+      extensions,
+    })
+  : null
+const designer = nextDesigner ?? legacyDesigner!
 
 const { exportSchema, importSchema } = useDesigner(designer)
 
-const templateSwitch = useTemplateSwitch({
-  importSchema,
-  exportSchema,
-  confirmSwitch: () => confirmWithModal({
+const confirmTemplateSwitch = () => confirmWithModal({
     title: '确认切换模板',
     content: '当前修改将丢失，是否切换？',
     okText: '切换',
-  }),
-})
+  })
+const templateSwitch = nextDesigner
+  ? useTemplateSwitch({
+      importSchema: nextDesigner.importSchema,
+      exportSchema: nextDesigner.exportSchema,
+      templates: playgroundNextTemplates,
+      confirmSwitch: confirmTemplateSwitch,
+    })
+  : useTemplateSwitch({
+      importSchema,
+      exportSchema,
+      templates: templateRegistry,
+      confirmSwitch: confirmTemplateSwitch,
+    })
 
-const io = useSchemaIO(exportSchema, importSchema)
+const io = nextDesigner
+  ? useSchemaIO({
+      exportSchema: nextDesigner.exportSchema,
+      importSchema: nextDesigner.importSchema,
+      invalidSchemaMessage: '无效的 Schema 格式：缺少 version、globalConfig、page、nodes 或 structure 字段',
+      isValidSchema: isFinalDocumentSchema,
+    })
+  : useSchemaIO({
+      exportSchema,
+      importSchema,
+      invalidSchemaMessage: '无效的 Schema 格式：缺少 version 或 root 字段',
+      isValidSchema: isLegacyDesignerSchema,
+    })
 
 function toggleLocale() {
   const next = designer.i18n.locale.value === 'zh-CN' ? 'en' : 'zh-CN'

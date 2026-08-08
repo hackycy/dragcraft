@@ -1,4 +1,5 @@
 import type { DocumentSchema } from '@dragcraft/core'
+import type { DesignerSchema } from '@dragcraft/legacy-core'
 import { describe, expect, it } from 'vitest'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import { createMaterialCatalog } from '../materials/create-material-catalog'
@@ -57,6 +58,73 @@ function createFixture() {
 describeDesignerSessionContract('Next adapter', createFixture)
 
 describe('next adapter backend contract', () => {
+  it('projects root and Region drop destinations for the shared drag seam', () => {
+    const { session } = createFixture()
+    expect(session.document.resolveDestination?.({ kind: 'root', index: 1 })).toMatchObject({
+      ok: true,
+      value: { destination: { kind: 'root', index: 1 } },
+    })
+    const region = session.document.resolveDestination?.({
+      kind: 'container',
+      containerId: 'layout',
+      regionId: 'main',
+      index: 1,
+    })
+    expect(region).toMatchObject({
+      ok: true,
+      value: {
+        destination: { kind: 'container', containerId: 'layout', regionId: 'main', index: 1 },
+        container: { id: 'layout' },
+        region: { id: 'main' },
+      },
+    })
+    if (region?.ok)
+      expect(region.value.children.map(node => node.id)).toEqual(['region-child'])
+  })
+
+  it('applies material creation policy to bundle drops without committing history', () => {
+    const catalog = createMaterialCatalog([
+      {
+        type: 'tab-bar',
+        presentation: { kind: 'headless' },
+        authoring: {
+          policy: {
+            create: ({ schema }) => schema.nodes.some(node => node.type === 'tab-bar') ? 'denied' : 'allowed',
+          },
+        },
+      },
+    ])
+    const engine = createAuthoringEngine({
+      catalog,
+      createNodeId: () => 'generated',
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [{ id: 'existing-tab-bar', type: 'tab-bar', props: {} }],
+        structure: { root: ['existing-tab-bar'], containers: {} },
+      },
+    })
+    const session = createNextDesignerSessionAdapter({ catalog, engine })
+    const action = {
+      type: 'node.add' as const,
+      node: { id: 'new-tab-bar', type: 'tab-bar', props: {} },
+      destination: { kind: 'root' as const, index: 1 },
+    }
+
+    expect(session.evaluate(action)).toEqual({ allowed: false, code: 'POLICY_DENIED' })
+    expect(session.execute(action)).toEqual({ ok: false, code: 'POLICY_DENIED' })
+    expect(session.state.history.value).toMatchObject({ canUndo: false, undoCount: 0 })
+    const creatable = session.materials.get('tab-bar')?.creatable
+    expect(typeof creatable).toBe('function')
+    if (typeof creatable === 'function') {
+      expect(creatable({
+        widgetType: 'tab-bar',
+        schema: session.document.schema!.value,
+      })).toEqual({ allowed: false, code: 'POLICY_DENIED' })
+    }
+  })
+
   it('translates node creation and root/Region moves into one Next history path', () => {
     const { session } = createFixture()
     expect(session.execute({
@@ -114,5 +182,29 @@ describe('next adapter backend contract', () => {
     exported.nodes[0]!.props.changed = true
     expect(session.document.getNode('ordinary')?.props).not.toHaveProperty('changed')
     expect(JSON.parse(JSON.stringify(session.exportSchema()))).toEqual(session.exportSchema())
+  })
+
+  it('imports final Documents without converting Legacy schemas', () => {
+    const { session } = createFixture()
+    const replacement: DocumentSchema = {
+      version: '1',
+      globalConfig: { replacement: true },
+      page: { props: {} },
+      nodes: [{ id: 'replacement', type: 'text', props: {} }],
+      structure: { root: ['replacement'], containers: {} },
+    }
+
+    const action = {
+      type: 'schema.import' as const,
+      schema: replacement as unknown as DesignerSchema,
+    }
+    expect(session.evaluate(action)).toEqual({ allowed: true })
+    expect(session.execute(action)).toEqual({ ok: true, changed: true })
+    expect(session.document.rootNodes.value.map(node => node.id)).toEqual(['replacement'])
+    expect(session.state.history.value).toMatchObject({ canRedo: false, canUndo: false })
+    expect(session.evaluate({
+      type: 'schema.import',
+      schema: { version: '1', globalConfig: {}, root: { id: 'root', type: 'root', props: {} } },
+    })).toEqual({ allowed: false, code: 'SCHEMA_IMPORT_REJECTED' })
   })
 })

@@ -3,10 +3,13 @@ import { contentDetailSchema } from './content-detail-schema'
 import { ecommerceSchema } from './ecommerce-schema'
 import { productDetailSchema } from './product-detail-schema'
 
-export interface TemplateEntry {
+export interface TemplateOption {
   id: string
   label: string
-  schema: DesignerSchema
+}
+
+export interface TemplateEntry<Schema = DesignerSchema> extends TemplateOption {
+  schema: Schema
 }
 
 export const templateRegistry: TemplateEntry[] = [
