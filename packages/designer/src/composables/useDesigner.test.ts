@@ -1,4 +1,4 @@
-import type { DesignerSchema } from '@dragcraft/core'
+import type { DesignerSchema } from '@dragcraft/legacy-core'
 import { describe, expect, it } from 'vitest'
 import { createDesigner } from '../factory'
 import { useDesigner } from './useDesigner'

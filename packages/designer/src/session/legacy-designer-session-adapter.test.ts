@@ -1,5 +1,5 @@
-import type { DesignerEngine, DesignerSchema, WidgetMeta } from '@dragcraft/core'
-import { CommandType, createEngine } from '@dragcraft/core'
+import type { DesignerEngine, DesignerSchema, WidgetMeta } from '@dragcraft/legacy-core'
+import { CommandType, createEngine } from '@dragcraft/legacy-core'
 import { describeDesignerSessionContract } from './designer-session-contract'
 import { createLegacyDesignerSessionAdapter } from './legacy-designer-session-adapter'
 

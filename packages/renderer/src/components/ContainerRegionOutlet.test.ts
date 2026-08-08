@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
-import type { NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, Ref } from 'vue'
 import type { RendererWidgetMeta, ResolveContainerDropIndex } from '../types'
-import { CommandType, createEngine } from '@dragcraft/core'
 import { createI18n, I18N_KEY } from '@dragcraft/i18n'
+import { CommandType, createEngine } from '@dragcraft/legacy-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
 import { createRendererTestSession } from '../../test/renderer-session'

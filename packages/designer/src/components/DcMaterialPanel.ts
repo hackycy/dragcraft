@@ -1,7 +1,7 @@
 import type { DesignerWidgetMeta } from '../types'
-import { isWidgetVisibleInMaterialPanel } from '@dragcraft/core'
 import { useI18n } from '@dragcraft/i18n'
 import { IconClose, IconSearch } from '@dragcraft/icons'
+import { isWidgetVisibleInMaterialPanel } from '@dragcraft/legacy-core'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'

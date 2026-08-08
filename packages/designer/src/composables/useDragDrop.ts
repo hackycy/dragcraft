@@ -1,4 +1,4 @@
-import type { DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/legacy-core'
 import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
 import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
@@ -10,7 +10,7 @@ import {
   getValidDropIndices,
   resolvePlacementDecision,
   resolveWidgetCreation,
-} from '@dragcraft/core'
+} from '@dragcraft/legacy-core'
 import { hideNativeDragImage } from '@dragcraft/renderer'
 import { generateShortId } from '@dragcraft/utils'
 import { computed, watch } from 'vue'

@@ -1,4 +1,4 @@
-import type { DesignerSchema, SchemaNode } from '@dragcraft/core'
+import type { DesignerSchema, SchemaNode } from '@dragcraft/legacy-core'
 import { describe, expect, it } from 'vitest'
 import { createBindingAction, readBindingValue, resolveFieldBinding } from './field-binding'
 

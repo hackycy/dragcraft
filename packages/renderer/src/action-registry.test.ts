@@ -1,8 +1,8 @@
-import type { Command, DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/core'
+import type { Command, DesignerEngine, DesignerSchema, SchemaNode } from '@dragcraft/legacy-core'
 import type { NodeActionContext } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererWidgetMeta } from './types'
-import { CommandType, createContainerPlan, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveAuthoringCapability, resolveNodeLayout, validateSubtreeCreation, validateSubtreeDeletion } from '@dragcraft/core'
+import { CommandType, createContainerPlan, getLockedIndices, getLockedIndicesFromNodes, isInsertAllowed, isMoveAllowed, isRemoveAllowed, resolveAuthoringCapability, resolveNodeLayout, validateSubtreeCreation, validateSubtreeDeletion } from '@dragcraft/legacy-core'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ActionKey, createDefaultActions, createNodeActionRegistry } from './action-registry'
 
@@ -11,9 +11,9 @@ function mockEvent(): MouseEvent {
   return { stopPropagation: vi.fn(), type: 'click' } as unknown as MouseEvent
 }
 
-// Mock @dragcraft/core
-vi.mock('@dragcraft/core', async () => {
-  const actual = await vi.importActual<typeof import('@dragcraft/core')>('@dragcraft/core')
+// Mock @dragcraft/legacy-core
+vi.mock('@dragcraft/legacy-core', async () => {
+  const actual = await vi.importActual<typeof import('@dragcraft/legacy-core')>('@dragcraft/legacy-core')
   return {
     ...actual,
     getLockedIndices: vi.fn(() => new Set<number>()),

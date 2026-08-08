@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
-import type { ContainerDefinition, DesignerEngine, DesignerSchema, NodeDestination, SchemaNode, WidgetMeta } from '@dragcraft/core'
+import type { ContainerDefinition, DesignerEngine, DesignerSchema, NodeDestination, SchemaNode, WidgetMeta } from '@dragcraft/legacy-core'
 import type { DesignerSession } from '../session/types'
-import { CommandType, createEngine } from '@dragcraft/core'
+import { CommandType, createEngine } from '@dragcraft/legacy-core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'

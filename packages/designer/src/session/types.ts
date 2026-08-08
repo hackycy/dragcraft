@@ -13,7 +13,7 @@ import type {
   ResolvedNodeLayout,
   SchemaDiagnostic,
   SchemaNode,
-} from '@dragcraft/core'
+} from '@dragcraft/legacy-core'
 import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
 

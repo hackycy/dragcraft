@@ -1,4 +1,4 @@
-import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/legacy-core'
 import type { MaybePromise, NodeActionContext, ResolvedNodeAction, SelectHookPayload } from '@dragcraft/renderer'
 import { useI18n } from '@dragcraft/i18n'
 import { ActionKey } from '@dragcraft/renderer'

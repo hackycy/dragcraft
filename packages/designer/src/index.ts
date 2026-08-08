@@ -59,50 +59,6 @@ export type {
 export { DESIGNER_CONTEXT_KEY } from './types'
 
 export { createDesignerWorkspace } from './workspace'
-// ── Re-exports: @dragcraft/core ─────────
-export {
-  CommandType,
-  createContainerPlan,
-  createEngine,
-  EventName,
-  isSchemaManagedWidget,
-  isWidgetVisibleInMaterialPanel,
-  resolveAuthoringPolicy,
-  resolveBehavior,
-  resolveCreatable,
-  resolveWidgetCreation,
-} from '@dragcraft/core'
-
-export type {
-  AddNodePayload,
-  BehaviorPredicate,
-  Command,
-  CommandHandler,
-  ContainerDefinition,
-  ContainerVariantMigrationContext,
-  ContainerVariantMigrationResult,
-  CreatableBehaviorPredicate,
-  CreatableBehaviorResult,
-  CreatableDecision,
-  CreationBlockReason,
-  DesignerEngine,
-  DesignerSchema,
-  DragTarget,
-  EngineOptions,
-  EngineStore,
-  HistoryEntry,
-  HistoryState,
-  InstanceBehaviorContext,
-  MoveNodePayload,
-  RemoveNodePayload,
-  ResolvedAuthoringPolicy,
-  SchemaNode,
-  SetGlobalConfigPayload,
-  TypeBehaviorContext,
-  UpdatePropsPayload,
-  WidgetActionConfig,
-  WidgetMeta,
-} from '@dragcraft/core'
 // ── Re-exports: @dragcraft/form-generator ─
 export {
   findFieldSchema,
@@ -141,10 +97,54 @@ export type {
   ValidationError,
   ValidationRule,
 } from '@dragcraft/form-generator'
-
 // ── Re-exports: @dragcraft/i18n ─────────
 export { createI18n, I18N_KEY, useI18n } from '@dragcraft/i18n'
+
 export type { FlatMessages, I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/i18n'
+
+// ── Re-exports: @dragcraft/legacy-core ─────────
+export {
+  CommandType,
+  createContainerPlan,
+  createEngine,
+  EventName,
+  isSchemaManagedWidget,
+  isWidgetVisibleInMaterialPanel,
+  resolveAuthoringPolicy,
+  resolveBehavior,
+  resolveCreatable,
+  resolveWidgetCreation,
+} from '@dragcraft/legacy-core'
+export type {
+  AddNodePayload,
+  BehaviorPredicate,
+  Command,
+  CommandHandler,
+  ContainerDefinition,
+  ContainerVariantMigrationContext,
+  ContainerVariantMigrationResult,
+  CreatableBehaviorPredicate,
+  CreatableBehaviorResult,
+  CreatableDecision,
+  CreationBlockReason,
+  DesignerEngine,
+  DesignerSchema,
+  DragTarget,
+  EngineOptions,
+  EngineStore,
+  HistoryEntry,
+  HistoryState,
+  InstanceBehaviorContext,
+  MoveNodePayload,
+  RemoveNodePayload,
+  ResolvedAuthoringPolicy,
+  SchemaNode,
+  SetGlobalConfigPayload,
+  TypeBehaviorContext,
+  UpdatePropsPayload,
+  WidgetActionConfig,
+  WidgetMeta,
+} from '@dragcraft/legacy-core'
 
 // ── Re-exports: @dragcraft/renderer ─────
 export {

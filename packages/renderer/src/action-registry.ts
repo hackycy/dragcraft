@@ -1,10 +1,10 @@
-import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/core'
+import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/legacy-core'
 import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
 import type { AuthoringAction, RendererSessionMaterials, RendererSessionProjection, RendererWidgetMeta } from './types'
-import { isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget } from '@dragcraft/core'
 import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
+import { isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget } from '@dragcraft/legacy-core'
 import { runActionPipeline } from './action-runtime'
 
 function canReorder(ctx: NodeActionContext): boolean {

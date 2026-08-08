@@ -1,4 +1,4 @@
-import type { DesignerSchema } from '@dragcraft/core'
+import type { DesignerSchema } from '@dragcraft/legacy-core'
 import type { DesignerInstance, UseDesignerReturn } from '../types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'

@@ -1,4 +1,4 @@
-import type { Command, CommandExecutionResult, DesignerEngine, DesignerSchema, NodeDestination, NodeOwner, PlacementDecision, SchemaNode } from '@dragcraft/core'
+import type { Command, CommandExecutionResult, DesignerEngine, DesignerSchema, NodeDestination, NodeOwner, PlacementDecision, SchemaNode } from '@dragcraft/legacy-core'
 import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { DesignerSession, DesignerSessionDropRejectionReason } from './types'
 import {
@@ -12,7 +12,7 @@ import {
   resolveNodeLayout,
   validateSubtreeCreation,
   validateSubtreeDeletion,
-} from '@dragcraft/core'
+} from '@dragcraft/legacy-core'
 import { computed, ref } from 'vue'
 
 function evaluateLegacyAction(engine: DesignerEngine, action: AuthoringAction): AuthoringDecision {

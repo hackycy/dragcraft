@@ -1,6 +1,6 @@
-import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
+import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/legacy-core'
 import type { ActionInterceptor, AuthoringAction, AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
