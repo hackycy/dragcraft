@@ -16,7 +16,7 @@ import type {
   SchemaLoadResult,
 } from './types'
 import { applySchemaOperation, cloneJsonValue, resolveSchema } from '@dragcraft/core'
-import { readonly, ref, shallowRef } from 'vue'
+import { computed, readonly, ref, shallowRef } from 'vue'
 import { createSnapshotHistory } from './history'
 import { evaluateAuthoringPolicy } from './policy'
 
@@ -165,6 +165,8 @@ export function createAuthoringEngine(options: CreateAuthoringEngineOptions): Au
         return { type: 'update-global-config', globalConfig: action.globalConfig }
       case 'update-page':
         return { type: 'update-page', page: action.page }
+      case 'insert-bundle':
+        return action
     }
   }
 
@@ -240,6 +242,10 @@ export function createAuthoringEngine(options: CreateAuthoringEngineOptions): Au
     exportSchema,
     history: snapshotHistory.state,
     importSchema,
+    resolvedDocument: computed(() => {
+      void document.value
+      return currentDocument
+    }),
     selection: Object.freeze({
       hoveredNodeId: readonly(hoveredNodeId),
       selectedNodeId: readonly(selectedNodeId),

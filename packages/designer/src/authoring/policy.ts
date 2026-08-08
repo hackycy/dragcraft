@@ -28,6 +28,7 @@ function policyActionFor(action: SchemaAuthoringAction): MaterialAuthoringPolicy
       return 'update'
     case 'update-global-config':
     case 'update-page':
+    case 'insert-bundle':
       return undefined
   }
 }
@@ -44,6 +45,7 @@ function nodeIdFor(action: SchemaAuthoringAction): string | undefined {
     case 'create-node':
     case 'update-global-config':
     case 'update-page':
+    case 'insert-bundle':
       return undefined
   }
 }

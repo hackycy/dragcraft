@@ -3,9 +3,11 @@ import type {
   DiagnosticReport,
   DocumentSchema,
   JsonObject,
+  NodeBundle,
   NodeDefinition,
   NodeType,
   PageDefinition,
+  ResolvedDocument,
   StructuralDestination,
 } from '@dragcraft/core'
 import type { Ref, ShallowRef } from 'vue'
@@ -67,6 +69,13 @@ export interface UpdatePageAction {
   readonly page: PageDefinition
 }
 
+export interface InsertBundleAction {
+  readonly type: 'insert-bundle'
+  readonly bundle: NodeBundle
+  readonly to: StructuralDestination
+  readonly confirmed?: boolean
+}
+
 type UnconfirmedSchemaAuthoringAction
   = | CreateNodeAction
     | DuplicateNodeAction
@@ -76,6 +85,7 @@ type UnconfirmedSchemaAuthoringAction
     | UpdateGlobalConfigAction
     | UpdateNodeAction
     | UpdatePageAction
+    | InsertBundleAction
 
 export type SchemaAuthoringAction = UnconfirmedSchemaAuthoringAction & {
   readonly confirmed?: boolean
@@ -133,6 +143,7 @@ export interface DesignerSelection {
 export interface AuthoringEngine {
   readonly document: ShallowRef<DesignerDocumentState>
   readonly history: Readonly<DesignerHistory>
+  readonly resolvedDocument: Readonly<Ref<ResolvedDocument | null>>
   readonly selection: Readonly<DesignerSelection>
   execute: (action: AuthoringAction) => AuthoringResult
   exportSchema: () => DocumentSchema | null

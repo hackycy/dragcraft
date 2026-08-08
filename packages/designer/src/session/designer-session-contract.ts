@@ -73,5 +73,22 @@ export function describeDesignerSessionContract(
       expect(session.state.drag.forbiddenReason.value).toBeNull()
       expect(session.state.history.value.canUndo).toBe(true)
     })
+
+    it('evaluates and executes selection, update, undo, and redo through the session seam', () => {
+      const { session } = createFixture()
+
+      expect(session.evaluate({ type: 'selection.set', nodeId: 'ordinary' })).toMatchObject({ allowed: true })
+      expect(session.execute({ type: 'selection.set', nodeId: 'ordinary' })).toEqual({ ok: true, changed: true })
+      expect(session.execute({ type: 'node.update', nodeId: 'ordinary', props: { changed: true } })).toEqual({
+        ok: true,
+        changed: true,
+      })
+      expect(session.document.getNode('ordinary')?.props).toMatchObject({ changed: true })
+      expect(session.evaluate({ type: 'history.undo' })).toMatchObject({ allowed: true })
+      expect(session.execute({ type: 'history.undo' })).toEqual({ ok: true, changed: true })
+      expect(session.document.getNode('ordinary')?.props).not.toHaveProperty('changed')
+      expect(session.execute({ type: 'history.redo' })).toEqual({ ok: true, changed: true })
+      expect(session.document.getNode('ordinary')?.props).toMatchObject({ changed: true })
+    })
   })
 }

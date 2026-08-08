@@ -427,8 +427,8 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 | G1 Legacy Read Cutover | passed | Renderer session projection、DesignerSession 读取迁移完成；Legacy Adapter 是生产旧读取唯一 allowlist；directed tests Designer 113/113、Renderer 187/187；完整仓库 gate 和 Chromium 14/14 通过 |
 | G2 Legacy Write Cutover | passed | 所有 Designer/Renderer 写入经 `DesignerSession.execute(action)`；Legacy Adapter 是旧运行时调用唯一 allowlist；directed tests 5/5；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`（Core 346、Renderer 187、Designer 115）和 Chromium 14/14 通过 |
 | G3 Pure Next Foundation | passed | Resolver 27/27、Schema Editor 38/38、Material Catalog 12/12、Authoring Engine 20/20；Core 不依赖 Vue/`structuredClone`；生产 factory 仍只创建 Legacy Adapter；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 14/14）通过 |
-| G4 NextDesignerSession Contract | pending | G3 Exit 已满足 |
-| G5 Next UI Harness | blocked | G4 Exit |
+| G4 NextDesignerSession Contract | passed | Legacy/Next shared DesignerSession contract；Next action translation、recovery、export isolation；Designer directed 155/155；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 14/14）通过 |
+| G5 Next UI Harness | pending | G4 Exit 已满足 |
 | G6 Backend/Public Cutover | blocked | G5 Exit |
 | G7 Presentation Replacement | blocked | G6 Exit |
 | G8 Product/Public Finalization | blocked | G7 Exit |

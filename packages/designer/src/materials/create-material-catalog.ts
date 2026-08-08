@@ -42,6 +42,7 @@ export interface MaterialCatalog {
   readonly schemaDefinitions: SchemaDefinitionSnapshot
   createBundle: (type: NodeType, createNodeId: () => string) => NodeBundle | undefined
   getAuthoring: (type: NodeType) => Readonly<MaterialAuthoringDefinition> | undefined
+  getAllMaterials: () => readonly Readonly<MaterialDefinition>[]
   getMaterial: (type: NodeType) => Readonly<MaterialDefinition> | undefined
   getPresentation: (type: NodeType) => Readonly<DesignerPresentation> | undefined
 }
@@ -135,6 +136,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
   }>()
   const presentationByType = new Map<NodeType, Readonly<DesignerPresentation>>()
   const materialByType = new Map<NodeType, Readonly<MaterialDefinition>>()
+  const allMaterials: Readonly<MaterialDefinition>[] = []
   for (const material of materials) {
     if (typeof material.type !== 'string' || material.type.length === 0)
       throw new DesignerConfigurationError('MATERIAL_TYPE_INVALID', String(material.type))
@@ -226,7 +228,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
     if (material.authoring?.createBundle)
       bundleFactoryByType.set(material.type, material.authoring.createBundle)
     presentationByType.set(material.type, Object.freeze({ ...material.presentation }))
-    materialByType.set(material.type, Object.freeze({
+    const materialSnapshot = Object.freeze({
       type: material.type,
       ...(material.schema
         ? {
@@ -258,13 +260,16 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
         ? { panel: copyConfiguration(material.panel) as MaterialPanelDefinition }
         : {}),
       presentation: Object.freeze({ ...material.presentation }),
-    }))
+    })
+    materialByType.set(material.type, materialSnapshot)
+    allMaterials.push(materialSnapshot)
   }
 
   const schemaDefinitions = Object.freeze({
     revision: 1,
     types: new ImmutableMap(schemaEntries),
   })
+  const materialsSnapshot = Object.freeze([...allMaterials])
 
   return Object.freeze({
     schemaDefinitions,
@@ -304,6 +309,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
       }
     },
     getAuthoring: (type: NodeType) => authoringByType.get(type),
+    getAllMaterials: () => materialsSnapshot,
     getMaterial: (type: NodeType) => materialByType.get(type),
     getPresentation: (type: NodeType) => presentationByType.get(type),
   })
