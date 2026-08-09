@@ -1,5 +1,5 @@
-import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
+import type { MaterialMeta } from './contract'
 import { defineComponent, h } from 'vue'
 import { IconMaterial, IconNavHome, IconNavRecent, IconPlus } from '../icons'
 
@@ -41,7 +41,7 @@ function renderTabIcon(icon: string, active: boolean) {
   return h('span', { class: 'pg-widget-tabbar__text-icon' }, text)
 }
 
-export const navbarWidgetMeta: DesignerWidgetMeta = {
+export const navbarWidgetMeta: MaterialMeta = {
   type: 'navbar',
   title: '导航栏',
   titleKey: 'widget.navbar.title',
@@ -104,7 +104,7 @@ export const NavbarWidget = defineComponent({
   },
 })
 
-export const tabBarWidgetMeta: DesignerWidgetMeta = {
+export const tabBarWidgetMeta: MaterialMeta = {
   type: 'tab-bar',
   title: 'Tab 栏',
   titleKey: 'widget.tab-bar.title',
@@ -126,9 +126,9 @@ export const tabBarWidgetMeta: DesignerWidgetMeta = {
       avoidContent: true,
     },
   },
-  creatable: (ctx) => {
-    const children = ctx.schema.root.children ?? []
-    return children.some(child => child.type === 'tab-bar')
+  creatable: (ctx: any) => {
+    const children = ctx.schema.structure?.root ?? []
+    return children.some((child: any) => child.type === 'tab-bar')
       ? {
           allowed: false,
           code: 'singleton.tab-bar',
@@ -209,7 +209,7 @@ export const TabBarWidget = defineComponent({
   },
 })
 
-export const floatingButtonWidgetMeta: DesignerWidgetMeta = {
+export const floatingButtonWidgetMeta: MaterialMeta = {
   type: 'floating-button',
   title: '浮动按钮',
   titleKey: 'widget.floating-button.title',
@@ -306,7 +306,7 @@ export const FloatingButtonWidget = defineComponent({
   },
 })
 
-export const swiperWidgetMeta: DesignerWidgetMeta = {
+export const swiperWidgetMeta: MaterialMeta = {
   type: 'swiper',
   title: '轮播',
   titleKey: 'widget.swiper.title',

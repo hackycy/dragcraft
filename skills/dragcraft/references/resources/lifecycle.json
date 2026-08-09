@@ -7,7 +7,7 @@
     { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" }
   ],
   "examples": [
-    { "repositoryPath": "examples/guide-project/src/editor/schema-migrations.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/schema-migrations.ts" },
+    { "repositoryPath": "examples/guide-project/src/editor/schema-round-trip.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/editor/schema-round-trip.ts" },
     { "repositoryPath": "examples/guide-project/src/host/page-repository.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/host/page-repository.ts" },
     { "repositoryPath": "examples/guide-project/src/host/page-repository.test.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/host/page-repository.test.ts" },
     { "repositoryPath": "examples/guide-project/src/runtime/registry.ts", "url": "https://github.com/hackycy/dragcraft/blob/main/examples/guide-project/src/runtime/registry.ts" },

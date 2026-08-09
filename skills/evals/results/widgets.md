@@ -3,7 +3,7 @@ id: widgets
 workflows:
   - widgets
 status: passed
-inputDigest: sha256:b51f905a8b5c819e6db2dff1319ca7131b33f4964efd88e238746b5b2c42b1f8
+inputDigest: sha256:026c8cb90248dd2b717edff437ae5fe1dc535c1591a7cf48c77ece252cf509bb
 executedAt: "2026-07-31T08:53:19Z"
 runner:
   agent: Codex

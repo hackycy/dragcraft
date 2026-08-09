@@ -1,20 +1,21 @@
+import type { PropType } from 'vue'
 import type {
   ContainerDefinition,
   ContainerVariantMigrationContext,
   ContainerVariantMigrationResult,
-  DesignerWidgetMeta,
-  ResolveContainerDropIndexContext,
+  MaterialMeta,
+  ResolveDropIndexContext,
   SchemaNode,
-} from '@dragcraft/designer'
-import type { PropType } from 'vue'
-import { ContainerRegionOutlet, defineContainerWidget, useContainerRuntime } from '@dragcraft/designer'
+} from './contract'
+import { ContainerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
+import { defineContainerFixture } from './contract'
 
 type FlexDirection = 'row' | 'column'
 type FlexAlign = 'stretch' | 'flex-start' | 'center' | 'flex-end'
 
 export function resolveLinearDropIndex(
-  ctx: ResolveContainerDropIndexContext,
+  ctx: ResolveDropIndexContext,
   axis: 'x' | 'y',
 ): number {
   const pointer = axis === 'x' ? ctx.event.clientX : ctx.event.clientY
@@ -83,7 +84,7 @@ function makeFlexPropertySection() {
   }
 }
 
-export const flexContainerMeta: DesignerWidgetMeta & { container: ContainerDefinition } = {
+export const flexContainerMeta: MaterialMeta & { container: ContainerDefinition } = {
   type: 'flex-container',
   title: 'Flex 容器',
   titleKey: 'widget.flex-container.title',
@@ -129,7 +130,7 @@ export const FlexContainer = defineComponent({
   setup(props) {
     return () => h(ContainerRegionOutlet, {
       regionId: 'default',
-      resolveDropIndex: (ctx: ResolveContainerDropIndexContext) =>
+      resolveDropIndex: (ctx: any) =>
         resolveLinearDropIndex(ctx, props.direction === 'row' ? 'x' : 'y'),
       class: 'pg-container-flex',
       style: {
@@ -219,7 +220,7 @@ function migrateSplitVariant(
   return { allowed: true, state: { variant: ctx.toVariantId, regions } }
 }
 
-export const splitContainerMeta: DesignerWidgetMeta & { container: ContainerDefinition } = {
+export const splitContainerMeta: MaterialMeta & { container: ContainerDefinition } = {
   type: 'split-container',
   title: '异形容器',
   titleKey: 'widget.split-container.title',
@@ -282,7 +283,7 @@ function region(regionId: string, className: string) {
   return h(ContainerRegionOutlet, {
     regionId,
     class: className,
-    resolveDropIndex: (ctx: ResolveContainerDropIndexContext) => resolveLinearDropIndex(ctx, 'y'),
+    resolveDropIndex: (ctx: any) => resolveLinearDropIndex(ctx, 'y'),
   })
 }
 
@@ -317,6 +318,6 @@ export const SplitContainer = defineComponent({
 })
 
 export const playgroundContainerWidgetDefinitions = [
-  defineContainerWidget({ meta: flexContainerMeta, component: FlexContainer }),
-  defineContainerWidget({ meta: splitContainerMeta, component: SplitContainer }),
+  defineContainerFixture({ meta: flexContainerMeta, component: FlexContainer }),
+  defineContainerFixture({ meta: splitContainerMeta, component: SplitContainer }),
 ]

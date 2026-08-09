@@ -9,7 +9,8 @@ export function renderCanvasViewport(content: VNodeChild[] | undefined): VNode {
 
 export function renderDeviceContainerShell(modifierClass: string, children: VNodeChild[]): VNode {
   return h('div', {
-    class: ['dc-device-frame', modifierClass],
+    'class': ['dc-device-frame', modifierClass],
+    'data-dc-canvas-fit': 'contain',
   }, [
     h('div', { class: 'dc-device-frame__surface' }, children),
   ])

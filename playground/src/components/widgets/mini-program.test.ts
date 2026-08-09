@@ -1,9 +1,9 @@
-// @vitest-environment happy-dom
-import { isWidgetVisibleInMaterialPanel } from '@dragcraft/designer'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h, nextTick } from 'vue'
 import { templateRegistry } from '../../config/templates'
-import { playgroundWidgetDefinitions } from './index'
+// @vitest-environment happy-dom
+import { isMaterialVisible } from './contract'
+import { playgroundWidgetFixtures } from './index'
 import { NavbarWidget } from './mini-program'
 
 describe('schema-managed navbar example', () => {
@@ -12,23 +12,23 @@ describe('schema-managed navbar example', () => {
   })
 
   it('keeps the navbar out of materials with title-only configuration', () => {
-    const navbar = playgroundWidgetDefinitions.find(definition => definition.meta.type === 'navbar')!
-    const tabBar = playgroundWidgetDefinitions.find(definition => definition.meta.type === 'tab-bar')!
+    const navbar = playgroundWidgetFixtures.find(definition => definition.meta.type === 'navbar')!
+    const tabBar = playgroundWidgetFixtures.find(definition => definition.meta.type === 'tab-bar')!
 
     expect(navbar.meta.authoring).toBe('schema-managed')
-    expect(isWidgetVisibleInMaterialPanel(navbar.meta)).toBe(false)
+    expect(isMaterialVisible(navbar.meta)).toBe(false)
     expect(navbar.meta.defaultProps).toEqual({ title: '页面标题' })
     expect(navbar.meta.creatable).toBeUndefined()
     expect(navbar.meta.draggable).toBeUndefined()
     expect(navbar.meta.sortable).toBeUndefined()
     expect(navbar.meta.formSchema.sections).toHaveLength(1)
-    expect(navbar.meta.formSchema.sections[0].fields.map(field => field.key)).toEqual(['title'])
+    expect(navbar.meta.formSchema.sections[0].fields.map((field: any) => field.key)).toEqual(['title'])
     expect(tabBar.meta.formSchema.sections.at(-1)?.titleKey).toBe('field.spacing.sectionTitle')
   })
 
   it('supplies title-only navbar nodes through every built-in template', () => {
     for (const template of templateRegistry) {
-      const navbar = template.schema.root.children?.find(node => node.type === 'navbar')
+      const navbar = template.schema.nodes.find(node => node.type === 'navbar')
 
       expect(navbar, template.id).toBeDefined()
       expect(Object.keys(navbar!.props), template.id).toEqual(['title'])

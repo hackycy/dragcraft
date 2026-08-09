@@ -1,4 +1,4 @@
-import type { DesignerSchema } from '@dragcraft/designer'
+import type { DocumentSchema } from '@dragcraft/designer'
 import { contentDetailSchema } from './content-detail-schema'
 import { ecommerceSchema } from './ecommerce-schema'
 import { productDetailSchema } from './product-detail-schema'
@@ -8,7 +8,7 @@ export interface TemplateOption {
   label: string
 }
 
-export interface TemplateEntry<Schema = DesignerSchema> extends TemplateOption {
+export interface TemplateEntry<Schema = DocumentSchema> extends TemplateOption {
   schema: Schema
 }
 

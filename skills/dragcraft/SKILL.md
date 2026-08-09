@@ -21,7 +21,7 @@ disable-model-invocation: true
 | `flow`、`chrome`、`layer`、排序、可见性或运行时布局投影 | [layout](references/layout.md) |
 | region、放置约束、插入几何或容器变体 | [containers](references/containers.md) |
 | 主题、设备、面板、画布扩展、消息或 Container Shell | [shell](references/shell.md) |
-| 导入诊断、migration、草稿、发布或生产运行时 | [lifecycle](references/lifecycle.md) |
+| 导入诊断、草稿、发布或生产运行时 | [lifecycle](references/lifecycle.md) |
 
 路由完成标准：每项验收行为都归入一个已选择的工作流，没有为无关能力加载 playbook。
 

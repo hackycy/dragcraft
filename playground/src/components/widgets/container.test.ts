@@ -1,9 +1,9 @@
-import type { ContainerDefinition, SchemaNode } from '@dragcraft/designer'
+import type { ContainerDefinition, SchemaNode } from './contract'
 import { readFileSync } from 'node:fs'
-import { CommandType, createEngine } from '@dragcraft/designer'
 import { expect, it } from 'vitest'
+import { CommandType, createEngine } from '../../../../packages/legacy-core/src'
 import { resolveLinearDropIndex, splitContainerMeta } from './container'
-import { playgroundWidgetDefinitions } from './index'
+import { playgroundWidgetFixtures } from './index'
 
 function itemRect(left: number, top: number, width = 20, height = 20): HTMLElement {
   return {
@@ -25,7 +25,7 @@ function fullRegions(variant: ContainerDefinition['variants'][string]): Record<s
 }
 
 it('keeps all flex and irregular geometry outside framework metadata', () => {
-  const metas = playgroundWidgetDefinitions.map(item => item.meta)
+  const metas = playgroundWidgetFixtures.map(item => item.meta)
   const flex = metas.find(meta => meta.type === 'flex-container')!
   const split = metas.find(meta => meta.type === 'split-container')!
   expect(flex.container!.variants.single.regions.map(region => region.id)).toEqual(['default'])
@@ -34,11 +34,11 @@ it('keeps all flex and irregular geometry outside framework metadata', () => {
 })
 
 it('registers playground container definitions and split variants in declaration order', () => {
-  expect(playgroundWidgetDefinitions.slice(-2).map(item => item.meta.type)).toEqual([
+  expect(playgroundWidgetFixtures.slice(-2).map(item => item.meta.type)).toEqual([
     'flex-container',
     'split-container',
   ])
-  expect(playgroundWidgetDefinitions.slice(-2).map(item => item.meta.material?.icon)).toEqual([
+  expect(playgroundWidgetFixtures.slice(-2).map(item => item.meta.material?.icon)).toEqual([
     '容',
     '分',
   ])
@@ -108,7 +108,7 @@ it.each([
     container: { variant: fromVariantId, regions: sourceRegions },
   }
   const engine = createEngine()
-  engine.registerWidget(splitContainerMeta)
+  engine.registerWidget(splitContainerMeta as never)
   const imported = engine.importSchema({
     version: '1.0.0',
     globalConfig: {},

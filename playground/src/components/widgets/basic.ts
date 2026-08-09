@@ -1,8 +1,8 @@
-import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
+import type { MaterialMeta } from './contract'
 import { defineComponent, h } from 'vue'
 
-export const textWidgetMeta: DesignerWidgetMeta = {
+export const textWidgetMeta: MaterialMeta = {
   type: 'text',
   title: '文本',
   titleKey: 'widget.text.title',
@@ -106,7 +106,7 @@ export const TextWidget = defineComponent({
   },
 })
 
-export const buttonWidgetMeta: DesignerWidgetMeta = {
+export const buttonWidgetMeta: MaterialMeta = {
   type: 'button',
   title: '按钮',
   titleKey: 'widget.button.title',
@@ -176,7 +176,7 @@ export const ButtonWidget = defineComponent({
   },
 })
 
-export const imageWidgetMeta: DesignerWidgetMeta = {
+export const imageWidgetMeta: MaterialMeta = {
   type: 'image',
   title: '图片',
   titleKey: 'widget.image.title',
@@ -246,7 +246,7 @@ export const ImageWidget = defineComponent({
   },
 })
 
-export const linkWidgetMeta: DesignerWidgetMeta = {
+export const linkWidgetMeta: MaterialMeta = {
   type: 'link',
   title: '链接',
   titleKey: 'widget.link.title',
@@ -309,7 +309,7 @@ export const LinkWidget = defineComponent({
   },
 })
 
-export const dividerWidgetMeta: DesignerWidgetMeta = {
+export const dividerWidgetMeta: MaterialMeta = {
   type: 'divider',
   title: '分割线',
   titleKey: 'widget.divider.title',

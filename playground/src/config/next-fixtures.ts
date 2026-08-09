@@ -43,7 +43,7 @@ import {
 export const playgroundNextMaterials: readonly MaterialDefinition[] = [
   {
     type: 'text',
-    panel: { title: '文本', group: 'basic', icon: '文' },
+    panel: { title: '文本', group: 'basic', groupTitle: '基础展示', groupTitleKey: 'group.basic', icon: '文' },
     schema: {
       defaultProps: { content: '文本内容', fontSize: 14, fontWeight: 'normal', color: '#333333', textAlign: 'left' },
       defaultStyle: { content: { display: 'block' } },
@@ -87,7 +87,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
   },
   {
     type: 'form-input',
-    panel: { title: '输入框', group: 'form', icon: '入' },
+    panel: { title: '输入框', group: 'form', groupTitle: '表单交互', groupTitleKey: 'group.form', icon: '入' },
     schema: {
       defaultProps: { label: '标签', placeholder: '请输入', value: '', required: false, disabled: false },
       defaultStyle: { content: { width: '100%' } },
@@ -134,7 +134,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
   },
   {
     type: 'navbar',
-    panel: { title: '导航栏', group: 'navigation', icon: '导' },
+    panel: { title: '导航栏', group: 'navigation', groupTitle: '导航容器', groupTitleKey: 'group.navigation', icon: '导' },
     schema: { defaultProps: { title: '页面标题' } },
     authoring: { policy: { duplicate: 'denied' } },
     inspector: { formSchema: navbarWidgetMeta.formSchema },
@@ -178,7 +178,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
   },
   {
     type: 'floating-button',
-    panel: { title: '浮动按钮', group: 'action', icon: '浮' },
+    panel: { title: '浮动按钮', group: 'action', groupTitle: '操作组件', groupTitleKey: 'group.action', icon: '浮' },
     schema: { defaultProps: { label: '+', side: 'right', bottom: 16, sideOffset: 16, size: 52, backgroundColor: '#07C160', textColor: '#ffffff' } },
     inspector: { formSchema: floatingButtonWidgetMeta.formSchema },
     presentation: {
@@ -206,7 +206,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
   },
   {
     type: 'flex-container',
-    panel: { title: 'Flex 容器', group: 'layout', icon: '容' },
+    panel: { title: 'Flex 容器', group: 'layout', groupTitle: '布局容器', groupTitleKey: 'group.layout', icon: '容' },
     schema: {
       defaultProps: { direction: 'column', wrap: false, gap: 12, align: 'stretch' },
       container: { regions: [{ id: 'default', cardinality: { max: 12 } }] },
@@ -229,6 +229,35 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
     },
     inspector: { formSchema: splitContainerMeta.formSchema },
     presentation: { kind: 'visual', preview: SplitContainer },
+  },
+  {
+    type: 'seo-meta',
+    panel: { title: '页面 SEO', group: 'page', groupTitle: '页面设置', icon: 'SEO', description: '设置页面标题和搜索描述' },
+    schema: {
+      defaultProps: { title: '', description: '' },
+    },
+    authoring: {
+      policy: {
+        create: ({ schema }) => schema.nodes.some(node => node.type === 'seo-meta') ? 'denied' : 'allowed',
+        duplicate: 'denied',
+        move: 'denied',
+      },
+    },
+    inspector: {
+      formSchema: {
+        sections: [{
+          title: '搜索引擎信息',
+          fields: [
+            { key: 'title', label: '页面标题', component: 'Input' },
+            { key: 'description', label: '页面描述', component: 'Textarea', componentProps: { rows: 3 } },
+          ],
+        }],
+      },
+    },
+    presentation: {
+      kind: 'headless',
+      layout: { visible: false },
+    },
   },
 ]
 
@@ -307,8 +336,9 @@ export const productDetailNextSchema: DocumentSchema = {
     { id: 'divider-3', type: 'divider', props: { direction: 'horizontal', color: '#f0f0f0', thickness: 8 }, style: { content: { width: '100%' } } },
     { id: 'cart-btn', type: 'button', props: { text: '加入购物车', type: 'button', disabled: false, size: 'large' }, style: { content: { width: '100%' } } },
     { id: 'buy-btn', type: 'button', props: { text: '立即购买', type: 'button', disabled: false, size: 'large' }, style: { content: { width: '100%' } } },
+    { id: 'product-seo', type: 'seo-meta', props: { title: '商品详情', description: '轻奢简约真皮手提包' } },
   ],
-  structure: { root: ['nav-product', 'product-hero', 'price-current', 'price-original', 'product-name', 'product-desc', 'divider-1', 'spec-color', 'spec-size', 'divider-2', 'quantity-note', 'divider-3', 'cart-btn', 'buy-btn'], containers: {} },
+  structure: { root: ['nav-product', 'product-hero', 'price-current', 'price-original', 'product-name', 'product-desc', 'divider-1', 'spec-color', 'spec-size', 'divider-2', 'quantity-note', 'divider-3', 'cart-btn', 'buy-btn', 'product-seo'], containers: {} },
 }
 
 export const playgroundNextTemplates = [

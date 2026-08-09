@@ -9,9 +9,16 @@ export default defineConfig({
     trace: 'retain-on-failure',
     viewport: { width: 1440, height: 1200 },
   },
-  webServer: {
-    command: 'pnpm --dir playground dev --host 127.0.0.1 --port 4173',
-    reuseExistingServer: !process.env.CI,
-    url: 'http://127.0.0.1:4173',
-  },
+  webServer: [
+    {
+      command: 'pnpm --dir playground dev --host 127.0.0.1 --port 4173',
+      reuseExistingServer: !process.env.CI,
+      url: 'http://127.0.0.1:4173',
+    },
+    {
+      command: 'pnpm --dir examples/guide-project dev --host 127.0.0.1 --port 4174',
+      reuseExistingServer: !process.env.CI,
+      url: 'http://127.0.0.1:4174',
+    },
+  ],
 })

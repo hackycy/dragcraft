@@ -44,7 +44,11 @@ test('keeps chrome and layer materials out of root sorting controls', async ({ p
 
   const toolbar = page.locator('[data-dc-component="node-toolbar"]')
   const assertSortingDisabled = async (nodeId: string) => {
-    await page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`).click()
+    const node = page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`)
+    const target = nodeId === 'floating-cart'
+      ? node.locator('[data-dc-node-surface]')
+      : node
+    await target.click()
     await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('aria-disabled', 'true')
     await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('draggable', 'false')
     await expect(toolbar.getByTitle('上移')).toBeDisabled()
@@ -94,6 +98,70 @@ test('switches templates using final Next fixtures', async ({ page }) => {
 
   await expect(page.locator('[data-dc-component="node"][data-node-id="article-title"]')).toBeVisible()
   await expect(page.locator('[data-dc-component="node"][data-node-id="shop-title"]')).toHaveCount(0)
+})
+
+test('keeps invisible Headless material out of the business preview', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('.playground-header__select').selectOption('product-detail')
+
+  await expect(page.locator('[data-dc-component="node"][data-node-id="product-seo"]')).toHaveCount(0)
+  await expect(page.getByText('Unknown widget: seo-meta', { exact: true })).toHaveCount(0)
+})
+
+test('creates one page SEO material without a persistent Designer notice', async ({ page }) => {
+  await page.goto('/')
+
+  const source = page.locator('[data-dc-component="material-item"][title^="页面 SEO"]')
+  const boundary = page.locator('[data-dc-interaction-boundary]')
+  const propertyPanel = page.locator('[data-dc-component="property-panel"]')
+
+  await expect(source).toBeVisible()
+  await expect(source).toHaveAttribute('data-dc-state', /headless/)
+  await expect(source.locator('[data-dc-part="headless-feedback"]')).toHaveText('无画布预览')
+  await source.dragTo(boundary)
+  await expect(propertyPanel.locator('[data-dc-component="headless-material-notice"]')).toHaveCount(0)
+  await expect(page.locator('[data-dc-component="headless-drop-overlay"]')).toHaveCount(0)
+  await expect(propertyPanel.locator('[data-dc-component="form-field"]').filter({ hasText: '页面标题' })).toBeVisible()
+  await expect(propertyPanel.locator('[data-dc-component="form-field"]').filter({ hasText: '页面描述' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  const firstExport = JSON.parse(await page.locator('.playground-modal__textarea').inputValue())
+  expect(firstExport.nodes.filter((node: { type: string }) => node.type === 'seo-meta')).toHaveLength(1)
+  await page.getByRole('button', { name: 'Close', exact: true }).click()
+
+  await source.dragTo(boundary)
+  await page.getByRole('button', { name: 'Export', exact: true }).click()
+  const secondExport = JSON.parse(await page.locator('.playground-modal__textarea').inputValue())
+  expect(secondExport.nodes.filter((node: { type: string }) => node.type === 'seo-meta')).toHaveLength(1)
+})
+
+test('clips Headless drop feedback inside the Device Frame', async ({ page }) => {
+  await page.goto('/')
+
+  const source = page.locator('[data-dc-component="material-item"][title^="页面 SEO"]')
+  const boundary = page.locator('[data-dc-interaction-boundary]')
+  const frame = page.locator('.dc-device-frame')
+  const transfer = await page.evaluateHandle(() => new DataTransfer())
+
+  await source.dispatchEvent('dragstart', { dataTransfer: transfer })
+  await boundary.dispatchEvent('dragover', { dataTransfer: transfer })
+
+  const overlay = page.locator('[data-dc-component="headless-drop-overlay"]')
+  await expect(overlay).toBeVisible()
+  await expect(frame.locator('[data-dc-component="headless-drop-overlay"]')).toHaveCount(1)
+  await expect(page.locator('[data-dc-component="drop-indicator"]')).toHaveCount(0)
+
+  const [overlayBounds, frameBounds] = await Promise.all([
+    overlay.boundingBox(),
+    frame.boundingBox(),
+  ])
+  if (!overlayBounds || !frameBounds)
+    throw new Error('Expected Headless overlay and Device Frame bounds')
+
+  expect(overlayBounds.x).toBeGreaterThanOrEqual(frameBounds.x)
+  expect(overlayBounds.y).toBeGreaterThanOrEqual(frameBounds.y)
+  expect(overlayBounds.x + overlayBounds.width).toBeLessThanOrEqual(frameBounds.x + frameBounds.width)
+  expect(overlayBounds.y + overlayBounds.height).toBeLessThanOrEqual(frameBounds.y + frameBounds.height)
 })
 
 test('exports and imports final DocumentSchema through the public Designer', async ({ page }) => {

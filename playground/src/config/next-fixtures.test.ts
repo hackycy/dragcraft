@@ -54,4 +54,18 @@ describe('next Playground fixtures', () => {
       bottomRight: ['favorite-link'],
     })
   })
+
+  it('includes a real headless material in the product fixture', () => {
+    const headless = playgroundNextMaterials.find(material => material.type === 'seo-meta')
+    const product = playgroundNextTemplates[2].schema
+    const node = product.nodes.find(item => item.type === 'seo-meta')
+
+    expect(headless?.panel).toMatchObject({ title: '页面 SEO', group: 'page' })
+    expect(headless?.inspector?.formSchema?.sections[0]?.fields.map(field => field.key)).toEqual(['title', 'description'])
+    expect(headless?.authoring?.policy?.duplicate).toBe('denied')
+    expect(headless?.authoring?.policy?.move).toBe('denied')
+    expect(headless?.presentation).toEqual({ kind: 'headless', layout: { visible: false } })
+    expect(node?.id).toBe('product-seo')
+    expect(product.structure.root).toContain('product-seo')
+  })
 })

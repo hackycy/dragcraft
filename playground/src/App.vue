@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { createConfirmActionInterceptor, createDesigner, DcDesigner, resolveCreatable } from '@dragcraft/designer'
-import type { DesignerExtensions, MaterialItemIcon, NodeActionContext } from '@dragcraft/designer'
+import { createConfirmActionInterceptor, createDesigner, createI18n, DcDesigner, designerMessages } from '@dragcraft/designer'
+import type { DesignerExtensions, MaterialItemIcon } from '@dragcraft/designer'
 import {
   BUILT_IN_DEVICE_FRAMES,
   DevicePicker,
@@ -10,11 +10,8 @@ import { Modal } from 'ant-design-vue'
 import { computed, defineComponent, h, ref } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
 import { buildPlaygroundFieldComponentMap } from './components/fields'
-import { IconArrowDown, IconCopy, IconPhone } from './components/icons'
-import {
-  playgroundWidgetGroups,
-  playgroundWidgetMessages,
-} from './components/widgets'
+import { IconArrowDown, IconPhone } from './components/icons'
+import { playgroundWidgetMessages } from './components/widgets/messages'
 import { globalConfigSchema } from './config/global-config-schema'
 import { playgroundNextMaterials, playgroundNextTemplates } from './config/next-fixtures'
 import { useTemplateSwitch } from './composables/useTemplateSwitch'
@@ -25,6 +22,7 @@ import { useSchemaIO } from './shared/use-schema-io'
 // ── Host-owned Active Device Frame ──────────
 
 const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
+const hostI18n = createI18n('zh-CN', designerMessages)
 const activeDeviceFrame = computed(() =>
   BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
   ?? IPHONE_DEVICE_FRAME,
@@ -128,30 +126,6 @@ const actionInterceptors = [
   }),
 ]
 
-const customActions = [
-  {
-    key: 'duplicate',
-    label: '复制',
-    icon: IconCopy,
-    type: 'button' as const,
-    order: 350,
-    available: (ctx: NodeActionContext) => {
-      if (!ctx.meta)
-        return true
-      return resolveCreatable(ctx.meta.creatable, {
-        widgetType: ctx.node.type,
-        schema: ctx.schema,
-      }, true).allowed
-    },
-    action: (ctx: NodeActionContext) => {
-      return {
-        type: 'node.duplicate' as const,
-        nodeId: ctx.node.id,
-      }
-    },
-  },
-]
-
 const extensions: DesignerExtensions = {
   materialItemRenderer,
   rendererExtensions: {
@@ -164,13 +138,11 @@ const designer = createDesigner({
   schema: playgroundNextTemplates[0].schema,
   materials: playgroundNextMaterials,
   fieldComponentMap: buildPlaygroundFieldComponentMap(),
-  widgetGroups: playgroundWidgetGroups,
   globalConfigSchema,
   messages: playgroundWidgetMessages,
   actionInterceptors,
-  customActions,
   extensions,
-  engineOptions: { maxHistorySize: 50 },
+  maxHistoryEntries: 50,
 })
 
 const confirmTemplateSwitch = () => confirmWithModal({
@@ -179,22 +151,23 @@ const confirmTemplateSwitch = () => confirmWithModal({
     okText: '切换',
   })
 const templateSwitch = useTemplateSwitch({
-  importSchema: designer.importSchema!,
-  exportSchema: designer.exportSchema!,
+  importSchema: designer.importSchema,
+  exportSchema: designer.exportSchema,
   templates: playgroundNextTemplates,
   confirmSwitch: confirmTemplateSwitch,
 })
 
 const io = useSchemaIO({
-  exportSchema: designer.exportSchema!,
-  importSchema: designer.importSchema!,
+  exportSchema: designer.exportSchema,
+  importSchema: designer.importSchema,
   invalidSchemaMessage: '无效的 Schema 格式：缺少 version、globalConfig、page、nodes 或 structure 字段',
   isValidSchema: isFinalDocumentSchema,
 })
 
 function toggleLocale() {
-  const next = designer.i18n.locale.value === 'zh-CN' ? 'en' : 'zh-CN'
-  designer.i18n.setLocale(next)
+  const next = hostI18n.locale.value === 'zh-CN' ? 'en' : 'zh-CN'
+  hostI18n.setLocale(next)
+  designer.setLocale(next)
 }
 
 async function handleTemplateSwitch(id: string, target: HTMLSelectElement) {
@@ -209,7 +182,7 @@ async function handleTemplateSwitch(id: string, target: HTMLSelectElement) {
     <PlaygroundHeader
       :active-template-id="templateSwitch.activeTemplateId.value"
       :templates="templateSwitch.templates"
-      :locale="designer.i18n.locale.value"
+      :locale="hostI18n.locale.value"
       @template-switch="handleTemplateSwitch"
       @import-open="io.handleImportOpen()"
       @export-open="io.handleExport()"
@@ -219,7 +192,7 @@ async function handleTemplateSwitch(id: string, target: HTMLSelectElement) {
         <DevicePicker
           :definitions="BUILT_IN_DEVICE_FRAMES"
           :model-value="activeDeviceFrameId"
-          :translate="designer.i18n.t"
+          :translate="hostI18n.t"
           @update:model-value="selectDeviceFrame"
         />
       </template>

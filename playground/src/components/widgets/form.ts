@@ -1,5 +1,5 @@
-import type { DesignerWidgetMeta } from '@dragcraft/designer'
 import type { PropType } from 'vue'
+import type { MaterialMeta } from './contract'
 import { defineComponent, h } from 'vue'
 
 interface OptionItem {
@@ -16,7 +16,7 @@ function renderRequired(required: boolean) {
   return required ? h('span', { class: 'pg-widget-form__required' }, '*') : null
 }
 
-export const formInputWidgetMeta: DesignerWidgetMeta = {
+export const formInputWidgetMeta: MaterialMeta = {
   type: 'form-input',
   title: '输入框',
   titleKey: 'widget.form-input.title',
@@ -79,7 +79,7 @@ export const FormInputWidget = defineComponent({
   },
 })
 
-export const formTextareaWidgetMeta: DesignerWidgetMeta = {
+export const formTextareaWidgetMeta: MaterialMeta = {
   type: 'form-textarea',
   title: '多行文本',
   titleKey: 'widget.form-textarea.title',
@@ -145,7 +145,7 @@ export const FormTextareaWidget = defineComponent({
   },
 })
 
-export const formSelectWidgetMeta: DesignerWidgetMeta = {
+export const formSelectWidgetMeta: MaterialMeta = {
   type: 'form-select',
   title: '下拉选择',
   titleKey: 'widget.form-select.title',
@@ -213,7 +213,7 @@ export const FormSelectWidget = defineComponent({
   },
 })
 
-export const formCheckboxWidgetMeta: DesignerWidgetMeta = {
+export const formCheckboxWidgetMeta: MaterialMeta = {
   type: 'form-checkbox',
   title: '复选框',
   titleKey: 'widget.form-checkbox.title',
@@ -264,7 +264,7 @@ export const FormCheckboxWidget = defineComponent({
   },
 })
 
-export const formRadioWidgetMeta: DesignerWidgetMeta = {
+export const formRadioWidgetMeta: MaterialMeta = {
   type: 'form-radio-group',
   title: '单选组',
   titleKey: 'widget.form-radio-group.title',
