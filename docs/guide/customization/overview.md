@@ -8,9 +8,9 @@ description: "根据要改变的产品行为选择 DragCraft 的公开扩展点�
 
 | 你要改变的结果 | 使用入口 | 宿主仍需实现 |
 | --- | --- | --- |
-| 添加可拖入的业务组件 | `WidgetDefinition`、`componentMap` | Vue 组件、props、资源和内容主题 |
-| 固定由模板提供的组件 | `authoring: 'schema-managed'` | 初始 Schema、migration、服务端白名单 |
-| 增加属性编辑字段 | `FormSchema`、`FieldComponentMap`、`bindTo` | UI 控件、异步数据和业务校验 |
+| 添加可拖入的业务组件 | `MaterialDefinition` | Vue preview、props、资源和内容主题 |
+| 固定由模板提供的组件 | `authoring.policy.create: 'denied'` | 初始 Schema、服务端白名单 |
+| 增加属性编辑字段 | `FormSchema`、`fieldComponentMap`、`bindTo` | UI 控件、异步数据和业务校验 |
 | 让组件承载子节点 | `ContainerDefinition`、`ContainerRegionOutlet` | DOM、CSS、插入几何和迁移策略 |
 | 增加确认、权限或审计 | `customActions`、`actionInterceptors`、`eventHooks` | 授权判断、确认 UI、审计服务 |
 | 替换工作台部件 | `DesignerExtensions`、`RendererExtensions` | 产品面板、搜索和自定义视觉 |
@@ -19,8 +19,8 @@ description: "根据要改变的产品行为选择 DragCraft 的公开扩展点�
 
 ## 五条边界
 
-- Schema 的所有写入都经过 Core command；`engine.store.schema` 只能读取。
-- Designer Renderer 只服务设计态，生产页面使用宿主运行时。
+- Schema 的所有写入都经过 `designer.execute(action)`；`designer.document` 只能读取。
+- Designer Presentation 只服务设计态，生产页面使用宿主运行时。
 - 主题使用公开 token 与 `data-dc-*` hook，不依赖私有 `.dc-*` class。
 - 容器直接位于 root，region 拥有普通子节点；当前协议不支持容器嵌套。
 - 公开应用只导入 Designer 聚合入口和支持的字段/设备包。

@@ -1,8 +1,5 @@
-import type { DesignerSchema } from '@dragcraft/legacy-core'
 import type { DesignerInstance, UseDesignerReturn } from '../types'
-import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
-import { getDesignerSession } from '../session/get-designer-session'
 
 /**
  * Composable that provides reactive access to designer state and operations.
@@ -15,23 +12,18 @@ import { getDesignerSession } from '../session/get-designer-session'
  * ```
  */
 export function useDesigner(instance: DesignerInstance): UseDesignerReturn {
-  const session = getDesignerSession(instance)
-  const schema = session.document.schema ?? computed(() => ({
-    version: session.document.version.value,
-    globalConfig: session.document.globalConfig.value,
-    root: session.document.root.value,
-  }))
+  const schema = computed(() => instance.exportSchema())
 
   return {
-    schema: schema as UseDesignerReturn['schema'],
-    selectedNodeId: session.state.selectedNodeId,
-    hoveredNodeId: session.state.hoveredNodeId,
-    execute: action => session.execute(action),
-    undo: () => session.execute({ type: 'history.undo' }),
-    redo: () => session.execute({ type: 'history.redo' }),
-    canUndo: () => session.state.history.value.canUndo,
-    canRedo: () => session.state.history.value.canRedo,
-    importSchema: schema => session.execute({ type: 'schema.import', schema }),
-    exportSchema: () => cloneDeep(schema.value) as unknown as DesignerSchema,
+    schema,
+    selectedNodeId: instance.selection.selectedNodeId,
+    hoveredNodeId: instance.selection.hoveredNodeId,
+    execute: instance.execute,
+    undo: () => { instance.execute({ type: 'undo' }) },
+    redo: () => { instance.execute({ type: 'redo' }) },
+    canUndo: () => instance.history.canUndo.value,
+    canRedo: () => instance.history.canRedo.value,
+    importSchema: instance.importSchema,
+    exportSchema: instance.exportSchema,
   }
 }

@@ -27,6 +27,7 @@
 .dc-material-item__thumbnail,
 .dc-material-item__content,
 .dc-material-item__title,
+.dc-material-item__headless-feedback,
 .dc-structure-panel,
 .dc-structure-panel__header,
 .dc-structure-panel__list,
@@ -458,6 +459,13 @@
   text-align: center;
 }
 
+.dc-material-item__headless-feedback {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dc-structure-panel__list {
   flex: 1;
   min-height: 0;
@@ -644,7 +652,8 @@
   transform:
     translate3d(-50%, -50%, 0)
     translate3d(var(--dc-internal-canvas-pan-x, 0px), var(--dc-internal-canvas-pan-y, 0px), 0)
-    translate3d(var(--dc-internal-canvas-snap-x, 0px), var(--dc-internal-canvas-snap-y, 0px), 0);
+    translate3d(var(--dc-internal-canvas-snap-x, 0px), var(--dc-internal-canvas-snap-y, 0px), 0)
+    scale(var(--dc-internal-canvas-view-scale, 1));
   transform-origin: center;
   will-change: transform;
 }

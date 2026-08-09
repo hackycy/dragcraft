@@ -42,6 +42,8 @@ function createRendererLayoutProjection(options: RendererOptions): RendererLayou
       arrayIndex,
       layout: options.session.materials.resolveLayout(node),
     }
+    if (!entry.layout.visible)
+      return
     entries.push(entry)
     if (entry.layout.placement.kind === 'flow') {
       pushEntry(regions, entry.layout.placement.region, entry)
@@ -163,6 +165,7 @@ export function createRendererContext(options: RendererOptions): RendererContext
     onContainerDragLeave: options.onContainerDragLeave,
     onContainerDrop: options.onContainerDrop,
     interactionBoundary: options.interactionBoundary,
+    viewScale: options.viewScale ?? ref(1),
   }
 }
 

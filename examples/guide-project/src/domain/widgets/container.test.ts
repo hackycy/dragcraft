@@ -1,4 +1,4 @@
-import type { ContainerVariantMigrationContext } from '@dragcraft/designer'
+import type { ContainerVariantMigrationContext } from './contract'
 import { expect, it } from 'vitest'
 import { columnContainerMeta, migrateColumnVariant, node } from './container'
 

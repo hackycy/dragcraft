@@ -163,6 +163,7 @@ export default defineComponent({
       kind: interactionPresentation.selectionKind,
       plane: projectionPlane,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
+      viewScale: ctx.viewScale,
     })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
       interactionBoundary: ctx.interactionBoundary,

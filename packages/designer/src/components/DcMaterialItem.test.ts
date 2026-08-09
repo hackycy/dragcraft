@@ -1,9 +1,11 @@
+import type { LegacyDesignerInstanceForTest } from '../factory'
 // @vitest-environment happy-dom
-import type { DesignerContext, DesignerInstance, DesignerWidgetMeta } from '..'
+import type { DesignerContext, DesignerWidgetMeta } from '../types'
 import { I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
-import { createDesigner, DESIGNER_CONTEXT_KEY } from '..'
+import { createLegacyDesignerForTest } from '../factory'
+import { DESIGNER_CONTEXT_KEY } from '../types'
 import DcMaterialItem from './DcMaterialItem'
 
 function makeMeta(): DesignerWidgetMeta {
@@ -23,10 +25,10 @@ function makeMeta(): DesignerWidgetMeta {
   }
 }
 
-function makeContext(instance: DesignerInstance): DesignerContext {
+function makeContext(instance: LegacyDesignerInstanceForTest): DesignerContext {
   return {
     componentMap: instance.componentMap,
-    widgetGroups: instance.widgetGroups,
+    materialGroups: instance.materialGroups,
     extensions: instance.extensions,
     fieldComponentMap: instance.fieldComponentMap,
     globalConfigSchema: instance.globalConfigSchema,
@@ -54,7 +56,7 @@ function makeContext(instance: DesignerInstance): DesignerContext {
   }
 }
 
-function mountItem(instance: DesignerInstance, meta: DesignerWidgetMeta) {
+function mountItem(instance: LegacyDesignerInstanceForTest, meta: DesignerWidgetMeta) {
   const host = document.createElement('div')
   document.body.appendChild(host)
   const ctx = makeContext(instance)
@@ -76,7 +78,7 @@ describe('dcMaterialItem', () => {
 
   it('renders compact material display metadata in the default card', async () => {
     const meta = makeMeta()
-    const designer = createDesigner({ widgetMetas: [meta] })
+    const designer = createLegacyDesignerForTest({ widgetMetas: [meta] })
     const { app, host } = mountItem(designer, meta)
 
     try {
@@ -94,9 +96,28 @@ describe('dcMaterialItem', () => {
     }
   })
 
+  it('labels Headless materials without disabling their drag interaction', async () => {
+    const meta = { ...makeMeta(), headless: true }
+    const designer = createLegacyDesignerForTest({ widgetMetas: [meta] })
+    const { app, host } = mountItem(designer, meta)
+
+    try {
+      await nextTick()
+
+      const item = host.querySelector('[data-dc-component="material-item"]')
+      expect(item?.getAttribute('data-dc-state')).toBe('headless')
+      expect(item?.getAttribute('aria-disabled')).toBe('false')
+      expect(host.querySelector('[data-dc-part="headless-feedback"]')?.textContent).toBe('无画布预览')
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+    }
+  })
+
   it('renders custom content inside the designer-owned draggable shell', async () => {
     const meta = makeMeta()
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       widgetMetas: [meta],
       extensions: {
         materialItemRenderer: props =>

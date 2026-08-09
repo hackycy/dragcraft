@@ -1,12 +1,15 @@
 // @vitest-environment happy-dom
-import type { DesignerContext, DesignerInstance, DesignerSchema, WidgetMeta } from '..'
+import type { DesignerSchema, WidgetMeta } from '@dragcraft/legacy-core'
+import type { LegacyDesignerInstanceForTest } from '../factory'
 import type { DesignerSession } from '../session/types'
+import type { DesignerContext } from '../types'
 import { I18N_KEY } from '@dragcraft/i18n'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
-import { createDesigner, DESIGNER_CONTEXT_KEY } from '..'
+import { createLegacyDesignerForTest } from '../factory'
 import { DESIGNER_SESSION_KEY } from '../session/context'
 import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
+import { DESIGNER_CONTEXT_KEY } from '../types'
 import DcLeftSidebar from './DcLeftSidebar'
 
 function makeMeta(): WidgetMeta {
@@ -34,10 +37,10 @@ function makeSchema(): DesignerSchema {
   }
 }
 
-function makeContext(instance: DesignerInstance): DesignerContext {
+function makeContext(instance: LegacyDesignerInstanceForTest): DesignerContext {
   return {
     componentMap: instance.componentMap,
-    widgetGroups: instance.widgetGroups,
+    materialGroups: instance.materialGroups,
     extensions: instance.extensions,
     fieldComponentMap: instance.fieldComponentMap,
     globalConfigSchema: instance.globalConfigSchema,
@@ -65,7 +68,7 @@ function makeContext(instance: DesignerInstance): DesignerContext {
   }
 }
 
-function mountSidebar(instance: DesignerInstance, session = createLegacyDesignerSessionAdapter(instance.engine)) {
+function mountSidebar(instance: LegacyDesignerInstanceForTest, session = createLegacyDesignerSessionAdapter(instance.engine)) {
   const host = document.createElement('div')
   document.body.appendChild(host)
   const ctx = makeContext(instance)
@@ -91,7 +94,7 @@ describe('dcLeftSidebar', () => {
   })
 
   it('shows the material panel by default', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
@@ -115,7 +118,7 @@ describe('dcLeftSidebar', () => {
       title: 'Managed',
       authoring: 'schema-managed' as const,
     }
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta(), managed],
     })
@@ -135,7 +138,7 @@ describe('dcLeftSidebar', () => {
   })
 
   it('reads material metadata from the DesignerSession projection', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
@@ -165,7 +168,7 @@ describe('dcLeftSidebar', () => {
   })
 
   it('switches to the structure panel from the icon tab', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
@@ -192,7 +195,7 @@ describe('dcLeftSidebar', () => {
         return () => h('div', { class: 'custom-material-panel' }, 'custom')
       },
     })
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
       extensions: {

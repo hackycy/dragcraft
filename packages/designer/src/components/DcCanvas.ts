@@ -41,6 +41,7 @@ export default defineComponent({
     let mutationObserver: MutationObserver | null = null
     let observedTarget: HTMLElement | null = null
     let observedContainerShell: Element | null = null
+    let observedFitTarget: HTMLElement | null = null
 
     const rendererExtensions = computed(() => ({
       ...(extensions.rendererExtensions ?? {}),
@@ -61,6 +62,7 @@ export default defineComponent({
         ?? content?.querySelector<HTMLElement>('.dc-root-renderer')
         ?? null
       const nextContainerShell = nextTarget?.firstElementChild ?? null
+      const nextFitTarget = content?.querySelector<HTMLElement>('[data-dc-canvas-fit="contain"]') ?? null
       hasToolbarBoundary.value = nextTarget?.hasAttribute('data-dc-toolbar-boundary') ?? false
 
       if (!nextTarget)
@@ -73,6 +75,10 @@ export default defineComponent({
       }
       observedTarget = nextTarget
       observedContainerShell = nextContainerShell
+      if (nextFitTarget !== observedFitTarget) {
+        observedFitTarget = nextFitTarget
+        canvasPan.setFitTarget(nextFitTarget)
+      }
     }
 
     onMounted(() => {
@@ -141,6 +147,7 @@ export default defineComponent({
               '--dc-internal-canvas-pan-y': `${canvasPan.offset.value.y}px`,
               '--dc-internal-canvas-snap-x': `${canvasPan.pixelSnap.value.x}px`,
               '--dc-internal-canvas-snap-y': `${canvasPan.pixelSnap.value.y}px`,
+              '--dc-internal-canvas-view-scale': String(canvasPan.scale.value),
               '--dc-internal-designer-default-container-block-size': canvasPan.defaultContainerBlockSize.value === null
                 ? undefined
                 : `${canvasPan.defaultContainerBlockSize.value}px`,
@@ -168,6 +175,7 @@ export default defineComponent({
                 dragOverNodeId,
                 dragOverIndex,
                 interactionBoundary: viewportRef,
+                viewScale: canvasPan.scale,
               }),
             ]),
           ]),

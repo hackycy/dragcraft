@@ -11,11 +11,13 @@ export interface CanvasPanOffset {
 export interface UseCanvasPanReturn {
   mode: Ref<CanvasInteractionMode>
   offset: Ref<CanvasPanOffset>
+  scale: Ref<number>
   pixelSnap: Ref<CanvasPanOffset>
   defaultContainerBlockSize: Ref<number | null>
   panEnabled: ComputedRef<boolean>
   isPanning: Ref<boolean>
   setMode: (mode: CanvasInteractionMode) => void
+  setFitTarget: (target: HTMLElement | null) => void
   reset: () => void
   handlePointerEnter: () => void
   handlePointerLeave: () => void
@@ -39,9 +41,21 @@ export interface CanvasStagePixelGeometry {
   offset: CanvasPanOffset
 }
 
+export interface CanvasFitGeometry {
+  viewport: {
+    width: number
+    height: number
+  }
+  frame: {
+    width: number
+    height: number
+  }
+}
+
 const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable="true"], [contenteditable=""]'
 const DEFAULT_CONTAINER_MIN_BLOCK_SIZE = 480
 const DEFAULT_CONTAINER_VERTICAL_GUTTER = 88
+const CANVAS_FRAME_FIT_GUTTER = 8
 
 function isEditableTarget(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest(EDITABLE_SELECTOR))
@@ -71,12 +85,32 @@ export function resolveCanvasStagePixelSnap(
   }
 }
 
+export function resolveCanvasFitScale(geometry: CanvasFitGeometry): number | null {
+  const availableWidth = geometry.viewport.width - CANVAS_FRAME_FIT_GUTTER * 2
+  const availableHeight = geometry.viewport.height - CANVAS_FRAME_FIT_GUTTER * 2
+  if (
+    geometry.frame.width <= 0
+    || geometry.frame.height <= 0
+    || availableWidth <= 0
+    || availableHeight <= 0
+  ) {
+    return null
+  }
+
+  return Math.min(
+    1,
+    availableWidth / geometry.frame.width,
+    availableHeight / geometry.frame.height,
+  )
+}
+
 export function useCanvasPan(
   viewportRef: Ref<HTMLElement | null>,
   stageRef: Ref<HTMLElement | null>,
 ): UseCanvasPanReturn {
   const mode = ref<CanvasInteractionMode>('pointer')
   const offset = ref<CanvasPanOffset>({ x: 0, y: 0 })
+  const scale = ref(1)
   const pixelSnap = ref<CanvasPanOffset>({ x: 0, y: 0 })
   const defaultContainerBlockSize = ref<number | null>(null)
   const spacePressed = ref(false)
@@ -84,6 +118,7 @@ export function useCanvasPan(
   const pointerInside = ref(false)
   const panEnabled = computed(() => mode.value === 'hand' || spacePressed.value)
 
+  let fitTarget: HTMLElement | null = null
   let pointerId: number | null = null
   let startX = 0
   let startY = 0
@@ -107,6 +142,15 @@ export function useCanvasPan(
     )
     if (nextDefaultContainerBlockSize !== defaultContainerBlockSize.value)
       defaultContainerBlockSize.value = nextDefaultContainerBlockSize
+
+    const nextScale = fitTarget
+      ? resolveCanvasFitScale({
+          viewport: { width: viewportRect.width, height: viewportRect.height },
+          frame: { width: fitTarget.offsetWidth, height: fitTarget.offsetHeight },
+        })
+      : 1
+    if (nextScale !== null && nextScale !== scale.value)
+      scale.value = nextScale
 
     const next = resolveCanvasStagePixelSnap({
       viewport: {
@@ -141,11 +185,20 @@ export function useCanvasPan(
       resizeObserver?.observe(viewport)
     if (stage)
       resizeObserver?.observe(stage)
+    if (fitTarget)
+      resizeObserver?.observe(fitTarget)
     schedulePixelSnap()
   }
 
   function setMode(nextMode: CanvasInteractionMode): void {
     mode.value = nextMode
+  }
+
+  function setFitTarget(target: HTMLElement | null): void {
+    if (fitTarget === target)
+      return
+    fitTarget = target
+    observePixelGeometry(viewportRef.value, stageRef.value)
   }
 
   function reset(): void {
@@ -255,16 +308,18 @@ export function useCanvasPan(
   watch([viewportRef, stageRef], ([viewport, stage]) => {
     observePixelGeometry(viewport, stage)
   }, { flush: 'post' })
-  watch(offset, schedulePixelSnap, { flush: 'sync' })
+  watch([offset, scale], schedulePixelSnap, { flush: 'sync' })
 
   return {
     mode,
     offset,
+    scale,
     pixelSnap,
     defaultContainerBlockSize,
     panEnabled,
     isPanning,
     setMode,
+    setFitTarget,
     reset,
     handlePointerEnter,
     handlePointerLeave,

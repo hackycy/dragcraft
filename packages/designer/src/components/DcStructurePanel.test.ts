@@ -1,13 +1,16 @@
 // @vitest-environment happy-dom
-import type { DesignerInstance, DesignerSchema, WidgetMeta } from '..'
+import type { DesignerSchema, WidgetMeta } from '@dragcraft/legacy-core'
+import type { LegacyDesignerInstanceForTest } from '../factory'
 import type { DesignerSession } from '../session/types'
 import type { DesignerContext } from '../types'
 import { I18N_KEY } from '@dragcraft/i18n'
+import { CommandType } from '@dragcraft/legacy-core'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { computed, createApp, defineComponent, h, nextTick, provide, ref } from 'vue'
-import { CommandType, createDesigner, DESIGNER_CONTEXT_KEY } from '..'
+import { createLegacyDesignerForTest } from '../factory'
 import { DESIGNER_SESSION_KEY } from '../session/context'
 import { createLegacyDesignerSessionAdapter } from '../session/legacy-designer-session-adapter'
+import { DESIGNER_CONTEXT_KEY } from '../types'
 import DcStructurePanel from './DcStructurePanel'
 
 function makeMeta(overrides?: Partial<WidgetMeta>): WidgetMeta {
@@ -87,10 +90,10 @@ function makeStructureMetas(): WidgetMeta[] {
   ]
 }
 
-function makeContext(instance: DesignerInstance): DesignerContext {
+function makeContext(instance: LegacyDesignerInstanceForTest): DesignerContext {
   return {
     componentMap: instance.componentMap,
-    widgetGroups: instance.widgetGroups,
+    materialGroups: instance.materialGroups,
     extensions: instance.extensions,
     fieldComponentMap: instance.fieldComponentMap,
     globalConfigSchema: instance.globalConfigSchema,
@@ -118,7 +121,7 @@ function makeContext(instance: DesignerInstance): DesignerContext {
   }
 }
 
-function mountPanel(instance: DesignerInstance, session = createLegacyDesignerSessionAdapter(instance.engine)) {
+function mountPanel(instance: LegacyDesignerInstanceForTest, session = createLegacyDesignerSessionAdapter(instance.engine)) {
   const host = document.createElement('div')
   document.body.appendChild(host)
   const ctx = makeContext(instance)
@@ -144,7 +147,7 @@ describe('dcStructurePanel', () => {
   })
 
   it('renders node titles and ids', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [
         makeMeta({ type: 'button', title: '按钮' }),
@@ -167,7 +170,7 @@ describe('dcStructurePanel', () => {
   })
 
   it('reads tree node metadata and position from the DesignerSession projection', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta({ type: 'button', title: 'Legacy Button' })],
     })
@@ -210,7 +213,7 @@ describe('dcStructurePanel', () => {
   })
 
   it('renders translated virtual regions with counts and nested widgets in registration order', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeStructureSchema() },
       widgetMetas: makeStructureMetas(),
       locale: 'en',
@@ -239,7 +242,7 @@ describe('dcStructurePanel', () => {
 
   it('keeps region rows unselectable while nested widgets use selection hooks', async () => {
     const onAfterSelect = vi.fn()
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeStructureSchema() },
       widgetMetas: makeStructureMetas(),
       eventHooks: { onAfterSelect },
@@ -268,7 +271,7 @@ describe('dcStructurePanel', () => {
   })
 
   it('uses container ownership and local indices for nested actions', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeStructureSchema() },
       widgetMetas: makeStructureMetas(),
     })
@@ -313,7 +316,7 @@ describe('dcStructurePanel', () => {
 
   it('selects the matching canvas node and fires after-select hook', async () => {
     const onAfterSelect = vi.fn()
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
       eventHooks: { onAfterSelect },
@@ -336,7 +339,7 @@ describe('dcStructurePanel', () => {
 
   it('does not select when before-select returns false', async () => {
     const onAfterSelect = vi.fn()
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
       eventHooks: {
@@ -361,7 +364,7 @@ describe('dcStructurePanel', () => {
   })
 
   it('uses the resolved delete action to remove nodes', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
@@ -384,7 +387,7 @@ describe('dcStructurePanel', () => {
   })
 
   it('keeps the delete button outside a nested row button', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
@@ -405,7 +408,7 @@ describe('dcStructurePanel', () => {
   })
 
   it('disables delete when the widget is not deletable', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta({ deletable: false })],
     })
@@ -433,7 +436,7 @@ describe('dcStructurePanel', () => {
       type: 'button',
       props: {},
     }))
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: schema },
       widgetMetas: [makeMeta({ sortable })],
       customActions: [{

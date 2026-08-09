@@ -1,10 +1,19 @@
+export type {
+  AuthoringAction,
+  AuthoringResult,
+  DesignerDocumentState,
+  DesignerHistory,
+  DesignerSelection,
+  SchemaLoadResult,
+} from './authoring/types'
+
 export {
   createBindingAction,
   readBindingValue,
   resolveFieldBinding,
 } from './bindings/field-binding'
-
 export type { FieldBinding, ResolvedFieldBinding } from './bindings/field-binding'
+
 // ── Components ──────────────────────────
 export {
   DcCanvas,
@@ -21,18 +30,16 @@ export {
 
 // ── Composables ─────────────────────────
 export { useDesigner, useDragDrop, usePropertyBinding } from './composables'
-
 export type { UseDragDropReturn, UsePropertyBindingReturn } from './composables'
 // ── Context ─────────────────────────────
-export { useDesignerContext } from './context'
 // ── Factory ─────────────────────────────
 export { createDesigner, DOCUMENT_SCHEMA_VERSION } from './factory'
+
 // ── Material protocol helpers ────────────
 export {
   materialItemMatchesQuery,
   resolveMaterialItem,
 } from './material'
-
 export { DesignerConfigurationError } from './materials/create-material-catalog'
 // ── Material protocol ───────────────────
 export { defineMaterial } from './materials/define-material'
@@ -86,29 +93,14 @@ export { default as DefaultNodeToolbar } from './presentation/default-node-toolb
 
 export type { RendererEventHooks } from './presentation/event-hooks'
 export type {
-  NodeInteractionGeometryMode,
-  NodeInteractionPresentation,
-  NodeToolbarOrientation,
-  NodeToolbarPlacement,
-} from './presentation/node-interaction'
-export { default as RootRenderer } from './presentation/root-surface'
-export type {
-  ComponentMap,
   ContainerShell,
   ContainerShellSource,
-  DeepReadonly,
   EmptyStateProps,
   NodeHandleProps,
   NodeMaskProps,
   NodeToolbarProps,
-  NodeWrapperProps,
   RendererExtensions,
-  RendererOptions,
-  WidgetActionConfig as RendererWidgetActionConfig,
-  RendererWidgetActionExtra,
-  RendererWidgetMeta,
   ResolveContainerDropIndexContext,
-  WidgetFallbackProps,
 } from './presentation/types'
 export { useNodeActions } from './presentation/use-node-actions'
 export { useNodeDrag } from './presentation/use-node-drag'
@@ -124,13 +116,10 @@ export { useWidgetRuntime } from './presentation/widget-runtime'
 export type { WidgetRuntimeContext } from './presentation/widget-runtime'
 // ── Types ───────────────────────────────
 export type {
-  DesignerContext,
-  DesignerEngineOptions,
   DesignerExtensions,
   DesignerInstance,
   DesignerOptions,
   DesignerRailSlotAPI,
-  DesignerWidgetMeta,
   DesignerWorkspaceController,
   DesignerWorkspaceMode,
   DesignerWorkspaceOptions,
@@ -142,7 +131,6 @@ export type {
   ResolvedMaterialItem,
   UseDesignerReturn,
 } from './types'
-export { DESIGNER_CONTEXT_KEY } from './types'
 export { createDesignerWorkspace } from './workspace'
 export type { DocumentSchema, JsonObject, JsonValue, NodeDefinition, NodeId, NodeType, PageDefinition, RegionId } from '@dragcraft/core'
 // ── Re-exports: @dragcraft/form-generator ─
@@ -185,63 +173,5 @@ export type {
 // ── Re-exports: @dragcraft/i18n ─────────
 export { createI18n, I18N_KEY, useI18n } from '@dragcraft/i18n'
 export type { FlatMessages, I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/i18n'
-// ── Re-exports: @dragcraft/legacy-core ─────────
-export {
-  CommandType,
-  createContainerPlan,
-  createEngine,
-  EventName,
-  isSchemaManagedWidget,
-  isWidgetVisibleInMaterialPanel,
-  resolveAuthoringPolicy,
-  resolveBehavior,
-  resolveCreatable,
-  resolveWidgetCreation,
-} from '@dragcraft/legacy-core'
-export type {
-  AddNodePayload,
-  BehaviorPredicate,
-  Command,
-  CommandHandler,
-  ContainerDefinition,
-  ContainerVariantMigrationContext,
-  ContainerVariantMigrationResult,
-  CreatableBehaviorPredicate,
-  CreatableBehaviorResult,
-  CreatableDecision,
-  CreationBlockReason,
-  DesignerEngine,
-  DesignerSchema,
-  DragTarget,
-  EngineOptions,
-  EngineStore,
-  HistoryEntry,
-  HistoryState,
-  InstanceBehaviorContext,
-  MoveNodePayload,
-  RemoveNodePayload,
-  ResolvedAuthoringPolicy,
-  SchemaNode,
-  SetGlobalConfigPayload,
-  TypeBehaviorContext,
-  UpdatePropsPayload,
-  WidgetActionConfig,
-  WidgetMeta,
-} from '@dragcraft/legacy-core'
-
 export { DcScrollArea } from '@dragcraft/ui'
 export type { ScrollAreaProps, ScrollAreaType } from '@dragcraft/ui'
-
-// ── Re-exports: @dragcraft/widgets ───────
-export {
-  buildComponentMap,
-  defineContainerWidget,
-  filterByGroup,
-  getWidgetMetas,
-  registerWidgets,
-} from '@dragcraft/widgets'
-export type {
-  WidgetDefinition,
-  WidgetGroup,
-  WidgetGroupConfig,
-} from '@dragcraft/widgets'

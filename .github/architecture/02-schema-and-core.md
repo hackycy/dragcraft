@@ -1,465 +1,53 @@
-# Schema 与 Core Engine
+# Schema 与 Authoring Engine
 
-`@dragcraft/core` 是 dragcraft 的领域内核，提供与 UI 无关的状态、命令、历史、注册、事件和布局投影能力。
+`DocumentSchema` 是编辑器、持久化服务和生产运行时之间的纯数据契约。它不保存 Vue 实例、选中状态、拖拽状态或 history。
 
-## 设计边界
-
-- 不包含 DOM 或 UI 代码。
-- 不关心视觉渲染与样式。
-- 不直接依赖具体 widget 组件，只依赖协议。
-- 使用 Vue 的响应式 API 与上层包共享同一 reactivity 实例。
-- 所有 schema 写操作统一进入 `CommandBus`。
-
-## Schema 模型
-
-Schema 使用 root 页面列表加一层容器区域所有权。`root.children` 包含页面节点；容器区域拥有自己的普通子节点，当前协议拒绝容器嵌套：
+## 文档模型
 
 ```ts
-interface SchemaNode {
-  id: string
-  type: string
-  props: Record<string, unknown>
-  style?: NodeStyle
-  container?: {
-    variant: string
-    regions: Record<string, SchemaNode[]>
-  }
-  layout?: {
-    placement?:
-      | { kind: 'flow', region?: string, sortScope?: string | false }
-      | {
-          kind: 'chrome'
-          edge: 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
-          position?: 'fixed' | 'sticky' | 'flow'
-          reserve?: { mode?: 'measure' | 'size' | 'none', size?: string | number }
-          avoidContent?: boolean
-        }
-      | {
-          kind: 'layer'
-          layer?: string
-          mode?: 'framework' | 'self'
-          anchor?: { block?: 'start' | 'center' | 'end', inline?: 'start' | 'center' | 'end' }
-        }
-    order?: number
-    visible?: boolean | ((ctx: { node: SchemaNode, schema: DesignerSchema }) => boolean)
-  }
-  children?: SchemaNode[]
-}
-
-interface DesignerSchema {
+interface DocumentSchema {
   version: string
-  globalConfig: Record<string, unknown>
-  root: SchemaNode
-}
-
-interface NodeStyle {
-  container?: Record<string, unknown>
-  content?: Record<string, unknown>
-  surface?: Record<string, unknown>
-}
-```
-
-核心规则：
-
-- `root.children` 包含页面节点，是 `flow/chrome/layer` placement 的唯一入口。
-- 容器节点必须直接属于 root；其 `container.regions` 拥有普通子节点，区域子节点不再声明页面 placement。
-- `root` 是页面承载节点，`root.style.surface` 描述页面 surface 的开放样式 DSL。
-- 不存在 `nodeType`，不区分容器和 widget。
-- `children` 仅 root 保留；普通子节点只存在于一个容器 region 中，容器嵌套在当前协议中被拒绝。
-- `style.container` 描述节点外层布局盒子，`style.content` 描述 widget 内容样式，`style.surface` 描述该节点拥有的承载面样式。
-- `layout.placement` 声明节点进入内容流、固定 chrome 还是浮层。
-- `flow/chrome/layer` 保持 root-only，不递归投影容器区域。
-- `flow.sortScope` 是开放排序域，`false` 表示节点不参与画布拖拽排序。
-
-## 样式 DSL
-
-Schema 的样式字段只表达跨端 DSL，不绑定 Web、小程序、RN 或任意具体运行时。设计器预览层可以把这些样式解释为 DOM inline style，其他消费端可以映射到自己的样式系统。
-
-样式按作用域显式拆分：
-
-| 字段 | 语义 | 典型使用 |
-| --- | --- | --- |
-| `style.container` | 节点在当前 surface 中的外层布局盒子 | `marginTop: -12`、`padding`、`width` |
-| `style.content` | 传给 widget 组件内容的样式 | `color`、`fontSize` |
-| `style.surface` | 页面或容器节点拥有的承载面样式 | `backgroundColor`、`backgroundImage` |
-
-示例：
-
-```ts
-const schema: DesignerSchema = {
-  version: '1.0.0',
-  globalConfig: {},
-  root: {
-    id: 'root',
-    type: 'root',
-    props: {},
-    style: {
-      surface: {
-        backgroundColor: '#f7f7f7',
-        backgroundImage: 'url(https://example.com/bg.png)',
-      },
-    },
-    children: [{
-      id: 'hero',
-      type: 'banner',
-      props: {},
-      style: {
-        container: { marginTop: -12 },
-      },
-    }],
-  },
+  globalConfig: JsonObject
+  page: PageDefinition
+  nodes: NodeDefinition[]
+  structure: {
+    root: NodeId[]
+    containers: Record<NodeId, ContainerStructure>
+  }
 }
 ```
 
-`globalConfig` 保持业务开放配置，不作为页面背景、间距等可视 DSL 的固定入口。需要由全局表单编辑页面视觉时，应通过表单字段绑定写入 `root.style.surface.*`。
+节点由 `nodes` 保存；页面节点顺序由 `structure.root` 保存。容器的 region 顺序由 `structure.containers[containerId]` 保存。节点 `type` 是唯一稳定语义键，`id` 只标识该次实例。
 
-## LayoutPlan 投影
+## 解析结果
 
-Core 基于 `root.children` 和物料默认布局生成 `LayoutPlan`：
+Designer 对初始输入和 `importSchema(input)` 使用同一解析管线。结果是：
 
-- `entries`：所有布局节点，保证每个节点只渲染一次。
-- `regions`：按 `flow.region` 分组，供 renderer 渲染内容区域。
-- `chrome`：固定或结构 chrome 节点，例如顶部导航栏、底部标签栏。
-- `layers`：浮层节点，例如 FAB、气泡、助手。
-- `sortScopes`：按 `flow.sortScope` 分组，供拖拽、上移、下移等排序命令使用。
-- `insets`：由 chrome 节点贡献的内容避让信息，供设备框架写入 CSS variables。
-
-默认规则：
-
-- 未声明 layout 的节点进入 `content` region，并参与 `content` sort scope。
-- 非 `content` flow region 默认不参与排序，除非显式声明自己的 `sortScope`。
-- `chrome` 和 `layer` 默认退出拖拽排序。
-- `WidgetMeta.defaultLayout` 为物料提供默认布局，节点实例上的 `layout` 可覆盖它。
-- `chrome.reserve` 声明内容区如何避让固定 chrome，支持测量尺寸或显式尺寸。
-- `layer.mode: 'self'` 允许物料在框架提供的 layer 坐标系中自行定位。
-- `visible` 支持静态布尔值或运行时谓词，不可见节点在设计模式下显示为半透明轮廓。
-
-详细的布局机制参见 [布局系统](./08-layout-system.md)。
-
-Renderer 负责把 root `LayoutPlan` 投影为 `regionVNodes`、`chromeVNodes` 和 `layerVNodes`，并由内部 Canvas Surface 统一执行 content scrollport、chrome layer、floating layer、inset 与选择平面布局。Container Shell 只包围完整 Canvas Surface 的 default slot，不接收 plan 或业务 VNode。容器内部由 `createContainerPlan()` 单独投影。
-
-## Container Schema 与 Core Module Interface
-
-框架 schema 不保存 flex/grid 几何，schema version 也保持不变。外部容器 meta 通过 `ContainerDefinition` 注册变体、区域、静态约束、动态 `canPlace` 和物料自有的 `migrateVariant`。Core 在注册、导入和每条结构命令中重新校验这些声明。
-
-主要模块入口；业务应用从 Designer 聚合接口使用所需能力：
-
-- `validateContainerDefinition()`、`createContainerState()`、`createContainerPlan()`。
-- `resolvePlacementDecision()`、`buildSchemaIndex()`、`validateSchema()`。
-- `NodeDestination` 显式区分 root 与 `{ kind: 'container', containerId, regionId }`。
-- `CHANGE_CONTAINER_VARIANT` 是修改 `container.variant` 的唯一命令入口。
-
-结构命令返回 `CommandExecutionResult`。拒绝结果包含稳定 `code`，命令 draft 会被丢弃，不会触及已提交快照、history 或成功事件。跨 owner 的 add/move/remove/duplicate 与 undo 都以一个命令边界提交；未解析容器保留完整区域数据，只禁止结构修改。
-
-## Core 文件结构
-
-```plaintext
-src/
-├── types.ts
-├── constants.ts
-├── helpers.ts
-├── authoring-policy.ts
-├── layout.ts
-├── sortable.ts
-├── style.ts
-├── schema-store.ts
-├── event-hub.ts
-├── registry.ts
-├── history-manager.ts
-├── command-bus.ts
-├── engine.ts
-├── commands/
-│   ├── add-node.ts
-│   ├── change-container-variant.ts
-│   ├── duplicate-node.ts
-│   ├── move-node.ts
-│   ├── remove-node.ts
-│   ├── update-props.ts
-│   └── set-global-config.ts
-└── index.ts
-```
-
-## 核心模块
-
-### SchemaStore
-
-`SchemaStore` 是 Core 内部可写模块，基于 `shallowRef` 和 `ref` 管理响应式状态。Schema 以递归冻结的已提交快照保存，`SchemaStoreInstance` 与 `createSchemaStore()` 不从包根导出。
-
-主要能力：
-
-- `schema`：响应式的深冻结 schema 快照引用。
-- `selectedNodeId`：当前选中节点。
-- `hoveredNodeId`：当前 hover 节点。
-- `dragTarget`：拖拽目标信息。
-- `getSchema()`：返回 schema 深拷贝，仅用于创建可编辑导出值。
-- `getSnapshot()`：返回当前已提交的冻结快照，引用在下次提交前稳定。
-- `setSchema(schema)`：导入时深拷贝并冻结，再替换整个 schema。
-- `commitSchema(draft)`：冻结命令 draft 并原子提交。
-- `restoreSnapshot(snapshot)`：undo/redo 和事务回滚时直接恢复已拥有的冻结快照。
-- `selectNode(id | null)`、`hoverNode(id | null)`、`setDragTarget(target | null)`。
-- `getNodeById(id)`：通过 schema index 查找 root 或容器区域中的节点。
-
-### EngineStore
-
-`engine.store` 是公开的运行时交互 facade，不是内部 `SchemaStore`：
-
-- `schema`、`selectedNodeId`、`hoveredNodeId` 和 `dragTarget` 都是运行时只读 refs；schema 与 drag target 的嵌套字段同样不可写。
-- 只提供 `selectNode()`、`hoverNode()` 和 `setDragTarget()` 三个非 schema 交互方法。
-- 不暴露 `setSchema()`、`commitSchema()` 或任何 transient patch。所有 schema 写入仍必须进入 `engine.execute()`。
-
-### EngineState
-
-`engine.state` 是公开读取 facade：
-
-- `getSchema()`：返回当前已提交的深冻结快照；类型为 `DeepReadonly<DesignerSchema>`，下一次有效变更前引用稳定。
-- `getNodeById(id)`：通过随快照缓存的 schema index 返回冻结节点引用。
-- `getSelectedNodeId()`、`getHoveredNodeId()`、`getDragTarget()`：返回运行时交互状态快照。
-
-UI 层读取 schema 时优先使用 `engine.state`。需要可编辑或可传输的数据时使用 `engine.exportSchema()` 创建深拷贝。
-
-### CommandBus
-
-`CommandBus` 是所有写操作入口。
-
-内置命令：
-
-- `ADD_NODE`：添加 widget 到目标排序域，`index` 表示插入点。
-- `MOVE_NODE`：在节点所属 `sortScope` 中重排序。
-- `REMOVE_NODE`：删除节点。
-- `DUPLICATE_NODE`：深复制普通节点或完整容器子树并重建 ID。
-- `CHANGE_CONTAINER_VARIANT`：调用物料迁移器并原子替换完整容器状态。
-- `UPDATE_PROPS`：更新节点 props/style，嵌套对象按路径递归合并。
-- `SET_GLOBAL_CONFIG`：更新全局配置，嵌套对象按路径递归合并。
-
-命令执行流程：
-
-```plaintext
-engine.execute({ type, payload })
-  -> CommandBus
-  -> capture frozen command-start snapshot
-  -> clone one command-owned mutable draft
-  -> handler(ctx, payload) reads ctx.schema and mutates ctx.draft
-  -> reject or changed:false: discard draft without history/events
-  -> changed:true: freeze and commit draft
-  -> retain prior snapshot reference in history
-  -> emit command event and schema:changed
-```
-
-`CommandExecutionResult` 的成功分支始终包含 `changed: boolean`。相同值的 props/global config 更新和同位置移动返回 `changed: false`，因此不会增加 revision、history 或变更事件。传给用户 predicate 的 `ctx.schema` 是命令开始时的冻结快照；即使回调泄漏这个引用，也无法越过命令边界修改状态。
-
-### HistoryManager
-
-历史管理基于已拥有的冻结快照引用，支持 undo、redo 和事务批处理；普通命令不再为 history 重复深拷贝整棵 schema。
-
-主要能力：
-
-- 响应式只读 `state`，包含 `canUndo`、`canRedo`、`undoCount` 和 `redoCount`。
-- `undo()`、`redo()`。
-- `canUndo()`、`canRedo()`。
-- `beginTransaction(label?)`、`commitTransaction()`、`discardTransaction()`。
-- `isInTransaction()`、`clear()`。
-
-undo/redo 直接交换快照引用，不经过 `CommandBus`，避免历史回放再次写入历史。事务只有在已提交快照引用实际变化时才生成一条历史记录。
-
-### Style normalization
-
-`normalizeStyleValueMap()` 是 Core 的跨运行时样式 DSL helper。它只为已声明的长度属性把非零数字转换为 `px`，由 Renderer-owned Canvas Surface 消费。Device Frames 不解释业务 style DSL。
-
-### Registry
-
-注册中心管理物料和全局配置 schema：
-
-- `registerWidget(meta)`。
-- `registerGlobalConfigSchema(schema)`。
-- `getWidget(type)`。
-- `getGlobalConfigSchema()`。
-- `getAllWidgets()`。
-
-### EventHub
-
-事件总线封装 `@dragcraft/utils` 的 `EventEmitter`。
-
-内置事件：
-
-| 事件名 | 触发时机 |
+| 状态 | 含义 |
 | --- | --- |
-| `schema:changed` | schema 变更后 |
-| `selection:changed` | 选中节点变化 |
-| `history:changed` | 历史栈变化 |
-| `node:added` | `ADD_NODE` 后 |
-| `node:removed` | `REMOVE_NODE` 后 |
-| `node:moved` | `MOVE_NODE` 后 |
-| `node:updated` | `UPDATE_PROPS` 后 |
-| `global-config:changed` | `SET_GLOBAL_CONFIG` 后 |
-| `drag:enter` / `drag:over` / `drag:leave` / `drag:drop` | 拖拽生命周期 |
+| `ready` | 输入完整符合当前物料声明。 |
+| `degraded` | 保留未知 type，设计态使用只读 fallback。 |
+| `conflicted` | 保留数据，但受影响结构不能写入。 |
+| `rejected` | 输入不能安装，当前文档保持不变。 |
 
-## Engine 主入口
+diagnostics 是有界、稳定排序的纯数据；宿主应按 code 本地化文案，而不是依赖实现细节。
 
-`createEngine(options?)` 组装所有子系统：
+## 写入与历史
 
-Core engine 始终从默认空 schema 启动，`EngineOptions` 只包含运行参数。加载已有页面时先注册 widget metadata 与容器定义，再调用 `importSchema()`，使初始数据经过与后续导入相同的结构和注册表校验。Designer 的 `engineOptions.initialSchema` 是上层便捷入口，由 `createDesigner()` 按这个顺序完成注册和导入。
+`DesignerInstance.execute(action)` 是公开写入口。action 返回 `committed`、`unchanged`、`rejected` 或 `confirmation-required`。无变化和拒绝结果不进入 history。
 
 ```ts
-interface DesignerEngine {
-  store: EngineStore
-  state: EngineState
-  commandBus: CommandBusInstance
-  history: HistoryManagerInstance
-  registry: RegistryInstance
-  eventHub: EventHub
-
-  execute(command): void
-  registerHandler(type, handler): void
-  registerWidget(meta): void
-  exportSchema(): DesignerSchema
-  importSchema(schema): void
-  dispose(): void
-}
+designer.execute({
+  type: 'move-node',
+  nodeId: 'notice-1',
+  to: { kind: 'root', index: 0 },
+})
 ```
 
-## Widget 行为控制
+`batch` 将一组 schema action 原子化为一个 history 条目。undo/redo 恢复已提交文档，不会重新运行 authoring policy。
 
-`CoreWidgetMeta` 描述物料注册信息与 core 可见的画布行为协议：
+## Material 投影
 
-```ts
-interface CoreWidgetMeta {
-  type: string
-  title: string
-  titleKey?: string
-  group: string
-  icon?: string
-  defaultProps: Record<string, unknown>
-  defaultStyle?: NodeStyle
-  formSchema: FormSchemaShape
-  container?: ContainerDefinition
+`MaterialDefinition[]` 只在 Designer 创建时注册。内部会将其投影为解析、authoring 和 Presentation 所需的数据，但这些投影不是公开 API，也不交付给生产运行时。
 
-  authoring?: 'schema-managed'
-
-  mask?: BehaviorPredicate<InstanceBehaviorContext>
-  selectable?: BehaviorPredicate<InstanceBehaviorContext>
-  draggable?: BehaviorPredicate<InstanceBehaviorContext>
-  sortable?: BehaviorPredicate<InstanceBehaviorContext>
-  deletable?: BehaviorPredicate<InstanceBehaviorContext>
-  configurable?: BehaviorPredicate<InstanceBehaviorContext>
-  variantChangeable?: BehaviorPredicate<InstanceBehaviorContext>
-  defaultLayout?: NodeLayout
-
-  creatable?: CreatableBehaviorPredicate
-  actions?: CoreWidgetActionConfig
-}
-```
-
-Vue 组件引用、`wrapper`、renderer 侧 action extra 配置和物料栏展示数据不属于 core 协议；这些 UI 元数据由 renderer 的 `RendererWidgetMeta` 与 designer 的 `DesignerWidgetMeta.material` 扩展承载。
-
-行为字段支持静态布尔值或运行时谓词函数：
-
-| 字段 | 默认值 | 说明 |
-| --- | --- | --- |
-| `mask` | `true` | 为 `false` 时不渲染透明遮罩，允许直接交互 |
-| `selectable` | `true` | 为 `false` 时节点无法点击选中 |
-| `draggable` | `true` | 为 `false` 时拒绝直接移动；内置拖拽、上移和下移动作保留为 disabled，除非 action 显隐配置将其排除 |
-| `sortable` | `true` | 为 `false` 时锁定当前数组索引，并使直接移动不可用 |
-| `deletable` | `true` | 为 `false` 时拒绝删除；内置删除动作保留为 disabled，除非 action 显隐配置将其排除 |
-| `configurable` | `true` | 为 `false` 时拒绝 `props` / `style` 修改并禁用属性字段 |
-| `variantChangeable` | `true` | 为 `false` 时拒绝容器 variant 修改并禁用对应字段 |
-| `creatable` | `true` | 为 `false` 或返回禁止决策时，禁止创建该类型的新实例；拖入、复制等 `ADD_NODE` 入口都会被 core 拦截 |
-| `actions` | 无 | 控制节点工具栏动作 |
-
-当行为字段为函数时，renderer 在 `computed` 中求值，schema 变更会触发重新计算。
-
-`creatable` 是类型级创建能力，不是物料面板专属开关。凡是会新增 schema node 的交互都必须进入 `ADD_NODE`，由 core 基于当前 schema 统一校验该字段；UI 层可以提前读取同一决策来展示禁用态与原因，但不能把 UI 判断作为唯一约束。
-
-### Schema 托管物料与 Authoring Policy
-
-`authoring: 'schema-managed'` 声明 Schema 托管物料。策略只存在于注册 metadata，不写入节点 Schema；`authoring-policy.ts` 统一解析能力，再由 Core command、Designer 和 Renderer 消费同一个裁决。
-
-Schema 托管默认值：
-
-| 能力 | 默认值 | 可覆盖字段 |
-| --- | --- | --- |
-| 标准物料面板展示 | 禁止 | 不可覆盖 |
-| `ADD_NODE` / duplicate | 禁止 | 不可覆盖 |
-| 选择与高亮 | 允许 | `selectable` |
-| `props` / `style` 配置 | 允许 | `configurable` |
-| 容器 variant 修改 | 禁止 | `variantChangeable` |
-| 直接移动 | 禁止 | `draggable` |
-| 绝对 sibling 下标锁 | 不启用 | `sortable: false` 启用 |
-| 删除 | 禁止 | `deletable` |
-| 节点内置 action | 保留并禁用 | 相应能力字段显式启用；`actions` 控制显隐与扩展 |
-
-结构命令按 transition 而不是只看命令根节点：
-
-- `ADD_NODE` 和 duplicate 检查完整候选子树；容器初始化器生成的后代也受创建策略约束。
-- `REMOVE_NODE` 检查完整被删子树；任一后代不可删除都会拒绝整个命令。
-- `CHANGE_CONTAINER_VARIANT` 比较 before/after 节点集合，新出现节点检查创建策略，消失节点检查删除策略。
-- `MOVE_NODE` 只检查直接 source；普通父容器带着托管后代移动、父容器重排和 sibling 被动位移不会被后代的 `draggable` 拦截。
-
-行为谓词抛错或返回非法值时 fail closed。Schema 托管 metadata 中的 `creatable: true` 或 duplicate 授权会产生 warning，但不阻止注册，且不能覆盖创建不变量。
-
-Authoring Policy 约束标准设计态交互和内置命令，不是宿主代码沙箱。`importSchema()`、Schema migration 和 custom command 是可信宿主入口；undo/redo 直接恢复已经提交的快照，不重新执行策略。
-
-创建规则可以返回布尔值，也可以返回带原因的决策：
-
-```ts
-creatable: ({ schema }) => {
-  const exists = schema.root.children?.some(child => child.type === 'navbar')
-  return exists
-    ? {
-        allowed: false,
-        code: 'singleton.navbar',
-        messageKey: 'forbidden.navbarExists',
-        message: '页面只能配置一个导航栏',
-      }
-    : true
-}
-```
-
-## 位置锁定
-
-`sortable: false` 表示 widget 锁定在当前数组索引位置：
-
-- 该 widget 不可被拖拽。
-- 上移/下移动作 disabled；只有 action 显隐配置会将其隐藏。
-- 其他 widget 不可插入到会导致该 widget 索引变化的位置。
-- 删除其他 widget 时也不能导致锁定 widget 索引变化。
-
-Core 提供位置锁定工具函数：
-
-- `getLockedIndices(children, registry, schema)`。
-- `isInsertAllowed(insertIndex, lockedIndices)`。
-- `isMoveAllowed(srcIdx, targetIdx, lockedIndices)`。
-- `isRemoveAllowed(removeIndex, lockedIndices)`。
-- `getValidDropIndices(children, lockedIndices, sourceNodeId)`。
-- `findNearestValidIndex(rawIndex, validIndices)`。
-
-## CoreWidgetActionConfig
-
-Per-widget 动作配置用于控制节点工具栏：
-
-```ts
-interface CoreWidgetActionConfig {
-  only?: string[]
-  exclude?: string[]
-}
-```
-
-Renderer 侧 `wrapper` 与 action `extra` 扩展见 [`.github/architecture/03-designer-and-renderer.md`](./03-designer-and-renderer.md)。
-
-## Core 工具函数
-
-Schema 与容器工具：
-
-- `findNodeById(root, id)`。
-- `findParentNode(root, targetId)`。
-- `removeNodeFromTree(root, nodeId)`。
-- `insertNodeIntoTree(parent, node, index?)`。
-- `walkFlatChildren(root, visitor)`。
-- `buildSchemaIndex(schema)`：索引 root 节点与一层 region 子节点，并报告多重归属、重复 ID 或嵌套容器。
-- `createContainerPlan(node, registry)`：按照当前注册变体投影区域与普通子节点。
-
-## 与其他包协作
-
-- `@dragcraft/designer` 调用 engine API，驱动 UI 和配置变更。
-- `@dragcraft/renderer` 消费 schema、选中态、hover 态，并执行节点级命令。
-- `@dragcraft/form-generator` 不直接依赖 core，由 designer 桥接字段变更和命令。
-- `@dragcraft/widgets` 提供物料定义工具，业务应用向 registry 提供物料元信息。
+重复 type、缺少 `presentation`、visual 物料缺少 preview、或非法容器/region 声明均为宿主配置错误。未知 type 是 Schema 数据状态，和显式 `headless` 物料不同。

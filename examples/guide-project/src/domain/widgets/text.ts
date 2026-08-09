@@ -1,4 +1,4 @@
-import type { DesignerWidgetMeta, WidgetDefinition } from '@dragcraft/designer'
+import type { WidgetFixtureDefinition } from './contract'
 import { defineComponent, h } from 'vue'
 
 export const GuideTextWidget = defineComponent({
@@ -11,7 +11,7 @@ export const GuideTextWidget = defineComponent({
   },
 })
 
-export const textWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
+export const textWidgetDefinition: WidgetFixtureDefinition = {
   meta: {
     type: 'guide-text',
     title: '文本',

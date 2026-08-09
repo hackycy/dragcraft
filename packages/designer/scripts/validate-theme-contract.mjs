@@ -201,7 +201,7 @@ function validateRenderedHooks() {
 }
 
 function validatePackageStyleExports() {
-  for (const packageName of ['ui', 'renderer', 'form-generator']) {
+  for (const packageName of ['ui', 'form-generator']) {
     const currentPackageRoot = path.join(repoRoot, 'packages', packageName)
     const packageJson = JSON.parse(fs.readFileSync(path.join(currentPackageRoot, 'package.json'), 'utf8'))
     if (packageJson.exports?.['./structure.css'] !== './dist/structure.css')
@@ -229,6 +229,12 @@ function validatePackageStyleExports() {
     errors.push('packages/designer: styles/structure.css does not exist')
 }
 
+function validateDesignerStructureOwnership() {
+  const source = fs.readFileSync(path.join(packageRoot, 'theme/structure.css'), 'utf8')
+  if (source.includes('@dragcraft/renderer/structure.css'))
+    errors.push('packages/designer/theme/structure.css must own structure CSS without Renderer imports')
+}
+
 function validateGeneratedCustomData() {
   const expected = `${JSON.stringify(createCssCustomData(contract), null, 2)}\n`
   const actual = fs.existsSync(customDataPath) ? fs.readFileSync(customDataPath, 'utf8') : ''
@@ -247,6 +253,7 @@ validateEntry('theme/structure.css', structureEntries)
 validateRenderedHooks()
 validateGeneratedCustomData()
 validatePackageStyleExports()
+validateDesignerStructureOwnership()
 
 if (errors.length > 0) {
   process.stderr.write(`${errors.join('\n')}\n`)

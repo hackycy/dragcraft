@@ -68,6 +68,10 @@ export interface MaterialPanelDefinition {
   readonly description?: string
   readonly descriptionKey?: string
   readonly group?: string
+  /** Localized label for the material group. */
+  readonly groupTitle?: string
+  /** i18n key for the material group label. */
+  readonly groupTitleKey?: string
   readonly icon?: Component | string
   readonly keywords?: readonly string[]
   readonly tags?: readonly string[]

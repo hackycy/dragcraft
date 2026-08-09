@@ -1,79 +1,36 @@
 # 项目总览
 
-dragcraft 是面向小程序装修场景的可视化页面搭建引擎。它采用 `Core Engine + Vue Visual Builder Workbench + Standard Workbench Theme` 的分层架构，用拖拽式物料编排和 Schema 驱动渲染帮助业务方快速搭建页面。
+DragCraft 是面向页面搭建场景的 Vue 设计器。业务应用通过一个 `@dragcraft/designer` 入口定义物料、编辑 `DocumentSchema`，并在自己的运行时解释同一份纯数据。
 
-## 产品目标
+## 公开边界
 
-- 开箱即用：业务方引入 `@dragcraft/designer` 和内置字段包，并显式传入自己的物料与配置 schema，即可完成设计器接入。
-- 完全可定制：业务方可以自行实现物料、字段 adapter、内容主题和工作台主题差异。
-- 可主题化设计工作台：组件包拥有 DOM、结构行为与必要结构 CSS，工作台主题只通过稳定 token 与精选 component/part/state 钩子定制视觉。
-- 单一入口：标准业务接入以 `@dragcraft/designer` 为统一入口，designer 负责组合 core、renderer 与 form-generator。
-- 强内核：`@dragcraft/core` 不包含 UI，负责状态、命令、历史、注册和事件语义。
+业务应用只直接使用：
 
-公开支持面只有 `@dragcraft/designer`、`@dragcraft/device-frames` 和 `@dragcraft/fields-*` 字段 adapter 包；当前字段 adapter 只有 `@dragcraft/fields-ant-design-vue`。其他 workspace package 是内部 implementation module；它们可以作为传递依赖发布，但 README、公开文档、examples 和 playground 不得直接导入。
+- `@dragcraft/designer`：Designer、物料协议、Schema 类型和设计态 Presentation 扩展。
+- `@dragcraft/device-frames`：可选的 Device Frame Container Shell。
+- `@dragcraft/fields-*`：可选的字段 adapter。
 
-## Monorepo 结构
+其他 workspace package 是实现细节。业务应用、公开文档、examples 和 playground 不直接依赖它们。
 
-```plaintext
-root
-├── package.json
-├── pnpm-workspace.yaml
-├── packages
-│   ├── core             # 核心引擎，纯逻辑
-│   ├── designer         # 对外入口，Vue 3 可视化搭建工作台
-│   ├── renderer         # Schema 到 Vue 组件的渲染层
-│   ├── form-generator   # Schema 表单引擎
-│   ├── fields           # UI 库字段 adapter 包
-│   ├── widgets          # 物料协议与工具函数
-│   ├── device-frames    # 设备容器框架
-│   ├── icons            # SVG 图标组件库
-│   ├── i18n             # Vue 国际化上下文
-│   └── utils            # 通用纯函数工具
-├── playground           # 本地演示与联调
-└── .github/architecture # 架构文档统一入口
+## 运行链路
+
+```text
+MaterialDefinition[] + DocumentSchema
+              |
+       createDesigner()
+              |
+DesignerInstance
+  |       |        |
+document selection history
+              |
+  Designer Presentation
+              |
+       host production runtime
 ```
 
-## 分层架构
+`MaterialDefinition` 是一个 type 的唯一注册面。它把 Schema 声明、authoring 能力、属性面板和设计态 Presentation 放在一起。生产运行时不复用 Designer，而是根据稳定 `type` 解释导出的 `DocumentSchema`。
 
-### Core Engine
-
-`@dragcraft/core` 是无 UI 的领域内核，负责：
-
-- Schema 状态管理。
-- 命令系统：新增、移动、删除、更新、全局配置更新。
-- 历史记录：undo、redo 与批处理事务。
-- 注册中心：widget meta 与全局配置 schema。
-- 事件总线：拖拽生命周期、选中变化、schema 变更通知。
-
-所有 schema 写操作必须通过 core 的命令系统进入，UI 层不能直接修改 schema。
-`engine.state` 是对外读取 schema 与运行时状态的安全入口，返回当前已提交的深冻结快照；快照引用在下一条有效变更命令前保持稳定。`engine.store` 只公开只读 refs 与 selection/hover/drag 交互方法。Core 内部只允许命令拥有可写 draft，业务侧无法绕过命令系统写 schema。
-
-### Vue 可视化搭建工作台
-
-`@dragcraft/designer` 组合设计器三栏布局：
-
-- 左栏：物料面板，支持分组、搜索、拖拽和自定义物料项渲染。
-- 中栏：画布区域，集成 renderer，支持拖入高亮、DropIndicator、mask、选中态与节点浮动工具栏。
-- 右栏：配置面板，集成 form-generator，固定提供 Global 与 Widget 两个配置 Tab。
-
-### Renderer
-
-`@dragcraft/renderer` 负责把 core schema 渲染为 Vue 组件树。它消费 engine、componentMap、renderer extensions 与 event hooks，但不承担业务状态管理，也不直接修改 schema。
-
-### Form Generator
-
-`@dragcraft/form-generator` 根据 FormSchema 渲染配置表单。它不依赖 core，不执行命令，只通过 `change` 事件向 designer 报告字段变更，由 designer 转发为 core 命令。
-
-### Standard Workbench Theme
-
-`@dragcraft/designer/standard.css` 提供与组件结构行为分层的 Standard 工作台主题：
-
-- designer、renderer 与 form-generator 分别发布自身必要的结构 CSS。
-- Designer 聚合完整默认 token、共享基线视觉配方和机器可读主题契约。
-- 外部主题通过公开 token 和精选 hook 增量覆盖；内部 BEM 不属于公共契约。
-- 工作台主题不样式化画布内业务物料，内容主题由宿主独立拥有。
-
-## 标准接入模式
+## 标准接入
 
 ```ts
 import '@dragcraft/designer/standard.css'
@@ -81,26 +38,18 @@ import { createDesigner, DcDesigner } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 
 const designer = createDesigner({
-  widgetMetas: myWidgetMetas,
-  componentMap: myComponentMap,
+  schema,
+  materials,
   fieldComponentMap: createAntDesignVueFields(),
 })
 ```
 
-标准流程：
+`materials` 必填且可以为空。配置错误会在创建时抛出；Schema 数据错误通过 `designer.document` 和 `importSchema()` 的状态返回，rejected 输入不会覆盖当前文档。
 
-1. 导入 `@dragcraft/designer` 和 Standard 主题样式。
-2. 显式传入 `widgetMetas` 与 `componentMap`。
-3. 传入字段 adapter map，可直接使用内置字段包，也可合并业务自定义字段。
-4. 在 Vue3 中挂载 `<DcDesigner />`。
-5. 通过 `useDesigner()` 调用导入导出、历史、事件订阅和命令执行能力。
+## 约束
 
-## 跨包设计约束
-
-- Runtime 一致性：schema 写操作必须通过 core command；无效或被拒绝的命令不写入 history，也不触发 `schema:changed`。
-- 主题一致性：内部 UI 模块拥有结构样式，Designer 聚合 Standard 视觉配方；公共主题契约不暴露内部 BEM。
-- 公开入口一致性：业务应用、公开文档与示例只能直接引用 Designer、Device Frames 和 `@dragcraft/fields-*` 字段 adapter package；内部 package 依赖只存在于 workspace implementation 中。
-- 可扩展性：左栏物料、画布容器、节点渲染、节点工具栏、空状态、右栏表单都通过显式扩展点替换。
-- 可测试性：core 可独立单元测试，UI 层通过集成测试覆盖交互。
-- Schema 版本化：schema 必须携带版本号，后续结构演进应显式识别语义。
-- Workspace 依赖：包之间通过 pnpm workspace 依赖引用。
+- 所有持久化修改都进入 `designer.execute(action)`。
+- `designer.document`、`selection` 和 `history` 都是只读状态。
+- 一个实例只有一份 DocumentSchema、一个 history 和一个 active backend。
+- Designer 拥有设计态 Presentation 与结构 CSS；`standard.css` 是完整默认工作台主题，`structure.css` 只用于完全自定义主题。
+- 设备外壳只能包围业务预览。Designer 的工具栏、选中态和拖拽反馈属于工作台 Presentation。

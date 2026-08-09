@@ -177,6 +177,10 @@ export default defineComponent({
       type: Object as PropType<VNode | null>,
       default: null,
     },
+    headlessOverlay: {
+      type: Object as PropType<VNode | null>,
+      default: null,
+    },
   },
 
   setup(props) {
@@ -351,6 +355,7 @@ export default defineComponent({
           'aria-hidden': 'true',
         }),
         props.forbiddenOverlay,
+        props.headlessOverlay,
       ])
     }
   },

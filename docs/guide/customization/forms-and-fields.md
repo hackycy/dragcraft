@@ -4,7 +4,7 @@ description: "使用 FormSchema、字段 adapter、绑定范围、联动、转�
 
 # 表单与字段
 
-FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提交值，Designer 再把 change 翻译成 Core command。三层各自有边界，业务字段不需要直接依赖 Core。
+FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提交值，Designer 再把 change 转为 `AuthoringAction`。三层各自有边界，业务字段不需要依赖内部实现。
 
 ## 先声明字段
 
@@ -20,7 +20,7 @@ FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提
 | --- | --- | --- |
 | 当前节点 props | widget 字段默认值 | `UPDATE_PROPS` |
 | 当前节点 style | `{ scope: 'node', path: 'style.container.*' }` | `UPDATE_PROPS` |
-| 页面 surface | `{ scope: 'schema', path: 'root.style.surface.*' }` | 语义化 `UPDATE_PROPS(root)` |
+| 页面 surface | `{ scope: 'page', path: 'style.surface.*' }` | 语义化页面 action |
 | 页面业务配置 | 全局字段默认值 | `SET_GLOBAL_CONFIG` |
 | 容器 variant | `{ scope: 'container', path: 'variant' }` | `CHANGE_CONTAINER_VARIANT` |
 
@@ -40,7 +40,7 @@ FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提
 }
 ```
 
-Authoring Policy 对 `configurable` 和 `variantChangeable` 的拒绝优先于 dependency handler。即使联动函数返回 `disabled: false`，Core 仍会拒绝未授权的写入。
+Authoring policy 对物料能力的拒绝优先于 dependency handler。即使联动函数返回 `disabled: false`，Designer 仍会拒绝未授权的写入。
 
 ## 转换和验证
 

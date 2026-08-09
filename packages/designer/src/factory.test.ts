@@ -1,7 +1,11 @@
+import type { DocumentSchema } from '@dragcraft/core'
 // @vitest-environment happy-dom
-import type { DesignerSchema, DocumentSchema, MaterialDefinition, RendererWidgetActionExtra, RendererWidgetMeta } from './index'
+import type { DesignerSchema } from '@dragcraft/legacy-core'
+import type { MaterialDefinition } from './materials/types'
+import type { RendererWidgetActionExtra, RendererWidgetMeta } from './presentation/types'
 import { describe, expect, it } from 'vitest'
 import { defineComponent } from 'vue'
+import { createLegacyDesignerForTest } from './factory'
 import { createDesigner } from './index'
 
 describe('createDesigner', () => {
@@ -23,8 +27,8 @@ describe('createDesigner', () => {
 
     expect('engine' in designer).toBe(false)
     expect(designer.exportSchema?.()).toEqual(schema)
-    expect(designer.componentMap.text).toBe(Preview)
-    expect(designer.execute?.({ type: 'selection.set', nodeId: 'text-1' })).toEqual({ ok: true, changed: true })
+    expect(designer.execute({ type: 'select-node', nodeId: 'text-1' })).toEqual({ status: 'committed' })
+    expect(designer.selection.selectedNodeId.value).toBe('text-1')
     designer.dispose()
   })
 
@@ -44,7 +48,7 @@ describe('createDesigner', () => {
         }],
       },
     }
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema },
       widgetMetas: [{
         type: 'single-layout',
@@ -92,7 +96,7 @@ describe('createDesigner', () => {
       },
     }
 
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       widgetMetas: [meta],
     })
 
@@ -108,5 +112,9 @@ describe('createDesigner', () => {
     finally {
       designer.dispose()
     }
+  })
+
+  it('rejects the legacy public option shape', () => {
+    expect(() => createDesigner({} as never)).toThrowError('MATERIALS_INVALID: materials')
   })
 })

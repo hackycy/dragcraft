@@ -31,11 +31,11 @@ adapter 明确组件从哪个 prop 读取值，以及通过哪个事件提交新
 
 ## 收集物料定义
 
-贯穿项目从同一组 definitions 生成 metadata 和组件映射：
+贯穿项目从同一组 `MaterialDefinition` 生成 Designer 的全部物料能力：
 
 <<< ../../../examples/guide-project/src/domain/widgets/index.ts
 
-这种组织避免 `widgetMetas` 与 `componentMap` 分别维护后发生 `type` 漂移。Schema 托管页头也在注册表中，但不会出现在标准物料面板；它由初始 Schema、导入或 migration 提供。
+这种组织避免分别维护注册表后发生 `type` 漂移。Schema 托管页头也在 `materials` 中，但不会出现在标准物料面板；它由初始 Schema 或导入数据提供。
 
 ## 绑定页面级配置
 
@@ -51,9 +51,9 @@ adapter 明确组件从哪个 prop 读取值，以及通过哪个事件提交新
 字段组件发出 adapter update event
   -> FormGenerator 更新和验证字段值
   -> Designer 解析默认绑定或 bindTo
-  -> engine.execute(UPDATE_PROPS | SET_GLOBAL_CONFIG)
-  -> Core 提交 Schema、历史和事件
-  -> 画布读取新快照
+  -> designer.execute(update-node | update-global-config)
+  -> Authoring engine 提交 DocumentSchema 和 history
+  -> Designer Presentation 读取新文档
 ```
 
 ## 验证结果

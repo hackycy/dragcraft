@@ -1,223 +1,43 @@
-# 物料、字段与工具包
+# 物料、字段与工具
 
-本章覆盖 `@dragcraft/widgets`、字段 adapter、内置字段包、`@dragcraft/icons`、`@dragcraft/i18n` 和 `@dragcraft/utils`。
+业务物料由应用维护，并通过 `MaterialDefinition[]` 传入 `createDesigner()`。Designer 不提供默认业务物料包，也不要求维护平行的 Schema、组件和面板注册表。
 
-## 物料协议包
-
-`@dragcraft/widgets` 是提供物料协议定义与通用工具函数的内部 implementation module；其业务扩展接口由 `@dragcraft/designer` 聚合导出。
-
-目标：
-
-- 定义 `WidgetDefinition`、`WidgetGroupConfig` 等物料协议类型。
-- 提供批量注册、构建 ComponentMap、按分组过滤等工具。
-- 不包含任何具体物料实现。
-
-设计边界：
-
-- 不依赖 `@dragcraft/form-generator`，`formSchema` 运行时遵循 FormSchema 结构。
-- 不依赖 `@dragcraft/renderer`，ComponentMap 由消费方桥接。
-- 仅依赖 `@dragcraft/core` 的 `WidgetMeta` 类型和 Vue 的 `Component` 类型。
-- 纯协议包，不包含 Vue 组件实现。
-
-Widget 定义由元信息和 Vue 组件组成：
+## MaterialDefinition
 
 ```ts
-interface WidgetDefinition<Meta extends WidgetMeta = WidgetMeta> {
-  meta: Meta
-  component: Component
-}
-```
-
-`WidgetMeta.defaultStyle` 使用 core 的 scoped style DSL：
-
-```ts
-const meta: WidgetMeta = {
-  type: 'banner',
-  title: 'Banner',
-  group: 'basic',
-  defaultProps: {},
-  defaultStyle: {
-    container: { marginTop: 0 },
-    content: { color: '#1f1f1f' },
-  },
-  formSchema: { sections: [] },
-}
-```
-
-仅由 Schema 生产方引入、不允许设计者从标准物料面板拖入的物料使用注册态 authoring 标记：
-
-```ts
-const navbarMeta: WidgetMeta = {
-  type: 'navbar',
-  title: 'Navbar',
-  group: 'chrome',
-  authoring: 'schema-managed',
-  defaultProps: {},
-  formSchema: { sections: [] },
-  defaultLayout: {
-    placement: { kind: 'chrome', edge: 'block-start', position: 'fixed' },
-  },
-}
-```
-
-`authoring` 只描述设计态操作来源，`defaultLayout` 仍独立决定物料位于 flow、固定 chrome 或 layer。Schema 托管物料默认可选中、可配置，但不可创建、复制、移动、删除或切换容器 variant；开发者可以用实例行为字段开放除创建和复制之外的能力。
-
-物料希望暴露外层盒子样式时，表单字段应通过 `bindTo: { scope: 'node', path: 'style.container.*' }` 写入 schema，而不是把这些值塞进业务 props 后再由组件自行模拟。
-
-工具函数：
-
-| 函数 | 说明 |
-| --- | --- |
-| `registerWidgets(engine, definitions)` | 批量注册 widget meta 到 engine registry |
-| `buildComponentMap(definitions)` | 从 definitions 构建组件映射 |
-| `getWidgetMetas(definitions)` | 提取所有 WidgetMeta |
-| `filterByGroup(definitions, group)` | 按分组过滤 WidgetDefinition |
-| `defineContainerWidget(definition)` | 保留带 `ContainerDefinition` 的外部容器 meta 类型推断 |
-
-## 外部容器物料
-
-容器不是框架内置 flex/grid 协议。外部物料使用 `defineContainerWidget()` 注册 variants、regions、constraints、`canPlace`、`migrateVariant` 和 renderer drop adapter，并在自己的组件与 CSS 中实现 DOM 和几何。框架 package 不定义 flex/grid geometry。
-
-变体表单字段使用容器作用域绑定：
-
-```ts
-{
-  key: 'variant',
-  label: '布局变体',
-  component: 'Select',
-  bindTo: { scope: 'container', path: 'variant' },
-}
-```
-
-当前 playground 的 `container.ts` 同时展示单区域 flex 和三 region/双 variant 异形容器；迁移函数由物料负责重新分配普通子节点，插入索引函数由物料根据自己的轴和 DOM 几何计算。
-
-## 物料实现位置
-
-仓库不再提供可发布的默认物料实现包。业务应用直接维护自己的 `WidgetDefinition[]`，并通过 `@dragcraft/designer` 聚合的工具函数生成注册数据。
-
-```ts
-import { buildComponentMap, createDesigner, getWidgetMetas } from '@dragcraft/designer'
-
-const designer = createDesigner({
-  widgetMetas: getWidgetMetas(myWidgetDefinitions),
-  componentMap: buildComponentMap(myWidgetDefinitions),
+const noticeMaterial = defineMaterial({
+  type: 'notice',
+  panel: { title: '公告', group: 'marketing', groupTitle: '营销' },
+  schema: { defaultProps: { text: '新公告' } },
+  authoring: { policy: { create: 'allowed' } },
+  inspector: { formSchema: noticeFormSchema },
+  presentation: { kind: 'visual', preview: NoticePreview },
 })
 ```
 
-接入设计器时，业务物料可以把 meta 声明为 `DesignerWidgetMeta`，通过 `material` 字段描述物料栏展示形态与搜索语义；该字段不会进入 core schema：
-
-```ts
-const meta: DesignerWidgetMeta = {
-  type: 'banner',
-  title: 'Banner',
-  group: 'basic',
-  material: {
-    icon: BannerIcon,
-    description: '活动、商品或内容横幅',
-    tags: ['营销'],
-    keywords: ['campaign', 'hero'],
-  },
-  defaultProps: {},
-  formSchema: { sections: [] },
-}
-```
-
-playground 作为本仓库的产品级示例，在 `playground/src/components/widgets` 中维护面向小程序装修场景的本地物料：
-
-- 布局容器：外部单区域 flex、三分区双变体异形容器。
-- 基础展示：文本、按钮、图片、链接、分割线、轮播。
-- 表单交互：输入框、多行文本、下拉选择、复选框、单选组。
-- 小程序框架：导航栏、Tab 栏、浮动按钮。
-
-实现约束：
-
-- 内部 package 层只定义协议与工具，不承载具体物料；业务侧只从 designer seam 使用这些能力。
-- 物料 `formSchema` 遵循 form-generator 的运行时结构。
-- 业务应用负责维护物料组件、样式和多语言文案。
-
-## 字段 Adapter 与内置字段包
-
-`@dragcraft/form-generator` 不直接依赖具体 UI 库。业务应用传入 `FieldComponentMap`，其中每一项是一个 `FieldComponentDefinition`，用于声明真实 UI 组件和值绑定方式：
-
-| 字段 | 说明 |
+| 部分 | 职责 |
 | --- | --- |
-| `component` | 真实 Vue UI 组件 |
-| `modelPropName` | UI 组件接收当前值的 prop，默认 `modelValue` |
-| `updateEventName` | UI 组件更新值的事件 prop，默认 `onUpdate:modelValue` |
-| `defaultProps` | adapter 默认 props |
-| `formatValue` | model 到 UI 组件值的转换 |
-| `normalizeValue` | UI 组件值到 model 的转换 |
+| `type` | Schema 和生产运行时共享的稳定语义键。 |
+| `schema` | 默认 props、样式和容器声明。 |
+| `authoring` | 创建 bundle 与 create/move/remove/update 等策略。 |
+| `inspector` | 设计器属性面板的 FormSchema。 |
+| `panel` | 物料栏的标题、分组、搜索和辅助展示。 |
+| `presentation` | visual preview 或显式 headless 行为。 |
 
-字段 schema 使用 `componentProps` 传递 UI 库原始 props：
+同一 type 只能出现一次。visual 物料必须提供 preview；headless 物料不得伪造空 preview。重复或不完整声明在 Designer 初始化时失败。
 
-```ts
-{
-  key: 'title',
-  label: '标题',
-  component: 'Input',
-  componentProps: {
-    placeholder: '请输入标题',
-    allowClear: true,
-  },
-}
-```
+## 容器物料
 
-### @dragcraft/fields-ant-design-vue
+容器物料在 `schema.container` 中声明 region 与容量约束。Designer 根据 `schema.structure.containers` 保持 children 的 owner 和顺序；业务 preview 通过 `ContainerRegionOutlet` 呈现它们。
 
-`@dragcraft/fields-ant-design-vue` 提供 Ant Design Vue 字段 adapter：
+业务组件拥有 DOM、CSS 与插入几何，Designer 拥有 selection、drop decision、action 和 history。当前结构只允许一层容器，容器不应嵌套。
 
-- 导出 `createAntDesignVueFields()` 与 `antDesignVueFieldComponents`。
-- 内置 `Input`、`InputNumber`、`Textarea`、`Select`、`Switch`、`Slider`、`Radio`、`RadioGroup`、`Checkbox`、`CheckboxGroup`、`Cascader`、`DatePicker`、`RangePicker`、`TimePicker`、`TreeSelect`、`Rate`、`AutoComplete`、`Mentions`。
-- 导出 `AntDesignVueFieldComponentPropsMap`，可与 `TypedFormSchema<PropsMap>` 联动获得 `componentProps` 类型提示。
+## 字段 Adapter
 
-playground 在 `playground/src/components/fields` 中组合 `createAntDesignVueFields()` 与本地业务字段，业务字段包括 `Color`、`Spacing`、`Array`、`NavbarTitle`。`Spacing` 通过 `bindTo` 直接编辑节点容器的四边 margin 或 padding，并支持四边值联动。
+字段 adapter 来自公开的 `@dragcraft/fields-*` 包，或由宿主合并进 `fieldComponentMap`。它们对齐 `componentProps` 与真实 UI 库的 props，并把值变化交给 Designer。
 
-字段多语言辅助仍由 form-generator 处理：
+`@dragcraft/fields-ant-design-vue` 提供 Ant Design Vue 的常用输入控件。业务特化控件如资源选择器仍由业务应用实现。
 
-- `field.placeholderKey`：覆盖 `componentProps.placeholder` 的多语言 key。
-- `field.optionKeyPrefix`：覆盖 `componentProps.options[].label` 的多语言 key 前缀。
+## 工具与国际化
 
-## Icons 包
-
-`@dragcraft/icons` 提供 Vue render function 形式的 SVG 图标组件，供 designer 和 device-frames 等包消费。
-
-设计约束：
-
-- 组件通过 render function 输出 SVG。
-- 支持 size、color、class 等通用属性。
-- 不承载业务状态。
-
-## I18n 包
-
-`@dragcraft/i18n` 提供 Vue UI 包共享的响应式国际化上下文。
-
-当前能力：
-
-- `createI18n()`：创建 locale、翻译查询与运行时消息合并能力。
-- `I18N_KEY`：供宿主和 UI 包共享同一实例的 injection key。
-- `useI18n()`：读取上下文，并在未注入时提供 fallback 行为。
-- `I18nInstance`、`LocaleMessages`、`MessageTree` 等公共类型。
-
-它被 designer、renderer 和 form-generator 内部消费；业务应用通过 designer 聚合的国际化接口使用，因为依赖 Vue 响应式与注入接口，不属于纯函数 utils。
-
-## Utils 包
-
-`@dragcraft/utils` 提供跨包复用的纯函数工具。
-
-设计原则：
-
-- 纯函数优先、无副作用。
-- 与 UI 框架无关。
-- 小而稳定，避免引入领域耦合。
-
-当前能力：
-
-- `clone`：深拷贝工具。
-- `event-emitter`：轻量事件分发器。
-- `uuid`：节点 ID 生成。
-
-使用约束：
-
-- 可被 core、designer、renderer 等内部模块共同复用，不向业务应用提供直接导入接口。
-- 不承载业务语义逻辑，业务逻辑应留在上层包。
-- 不包含 Vue、DOM 或具体 UI 包依赖。
+物料可以使用 Designer 导出的字段类型、JSON 类型和 `defineMaterial()` 获得类型推断。消息、资源、权限和业务文案由宿主维护；Designer 只消费传入的 locale 与 messages。

@@ -4,13 +4,14 @@ import type { LocaleMessages, MessageTree } from '@dragcraft/i18n'
 import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { MaterialDefinition } from '../materials/types'
 import type { NodeActionDefinition } from '../presentation/action-registry'
+import type { ActionInterceptor } from '../presentation/action-runtime'
 import type { RendererEventHooks } from '../presentation/event-hooks'
 import type { ComponentMap } from '../presentation/types'
-import type { DesignerSession } from '../session/types'
 import type { DesignerExtensions, DesignerInstance, DesignerWorkspaceOptions } from '../types'
 import { createI18n } from '@dragcraft/i18n'
 import { generateShortId } from '@dragcraft/utils'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
+import { registerDesignerRuntimeConfiguration } from '../instance-config'
 import { createMaterialCatalog } from '../materials/create-material-catalog'
 import { designerMessages } from '../messages'
 import { createDefaultActions, createNodeActionRegistry } from '../presentation/action-registry'
@@ -23,7 +24,7 @@ export type { MaterialDefinition } from '../materials/types'
 export type { DocumentSchema } from '@dragcraft/core'
 
 export interface NextDesignerHarnessOptions {
-  readonly actionInterceptors?: DesignerInstance['actionInterceptors']
+  readonly actionInterceptors?: ActionInterceptor[]
   readonly componentMap: ComponentMap
   readonly createNodeId?: () => string
   readonly customActions?: NodeActionDefinition[]
@@ -40,12 +41,7 @@ export interface NextDesignerHarnessOptions {
   readonly workspace?: DesignerWorkspaceOptions
 }
 
-export interface NextDesignerHarnessInstance extends DesignerInstance {
-  /** Imports a final DocumentSchema through the active Next session. */
-  importSchema: (input: unknown) => ReturnType<DesignerSession['execute']>
-  /** Exports the active Next document without its legacy session projection. */
-  exportSchema: () => DocumentSchema | null
-}
+export type NextDesignerHarnessInstance = DesignerInstance
 
 function mergeDefaultMessages(): Record<string, MessageTree> {
   const merged: Record<string, MessageTree> = {}
@@ -89,9 +85,24 @@ export function createNextDesignerHarness(options: NextDesignerHarnessOptions): 
     actionRegistry.register(action)
 
   const session = createNextDesignerSessionAdapter({ catalog, engine })
-  const instance = {
+  const instance: NextDesignerHarnessInstance = {
+    document: engine.document,
+    selection: engine.selection,
+    history: engine.history,
+    execute: engine.execute,
+    importSchema: engine.importSchema,
+    exportSchema: engine.exportSchema,
+    setLocale: i18n.setLocale,
+    dispose: () => {},
+  }
+
+  registerDesignerRuntimeConfiguration(instance, {
     componentMap: options.componentMap,
-    widgetGroups: options.widgetGroups,
+    materialGroups: options.widgetGroups?.map(group => ({
+      name: group.name,
+      title: group.title,
+      ...(group.titleKey ? { titleKey: group.titleKey } : {}),
+    })) ?? [],
     extensions: options.extensions ?? {},
     fieldComponentMap: options.fieldComponentMap,
     globalConfigSchema: options.globalConfigSchema ?? null,
@@ -100,14 +111,7 @@ export function createNextDesignerHarness(options: NextDesignerHarnessOptions): 
     actionRegistry,
     i18n,
     workspace,
-    importSchema: (input: unknown) => session.execute({
-      type: 'schema.import',
-      schema: input as Extract<Parameters<DesignerSession['execute']>[0], { type: 'schema.import' }>['schema'],
-    }),
-    exportSchema: () => session.exportSchema(),
-    dispose: () => {},
-  } as unknown as NextDesignerHarnessInstance
-
+  })
   registerDesignerSession(instance, session)
   return instance
 }

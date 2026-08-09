@@ -1,15 +1,14 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
-import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/legacy-core'
-import type { WidgetGroupConfig } from '@dragcraft/widgets'
+import type { CreationBlockReason, DesignerSchema, EngineOptions, NodeDestination, PlacementDecision } from '@dragcraft/legacy-core'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
-import type { AuthoringEngine } from './authoring/types'
+import type { AuthoringEngine, DesignerHistory, DesignerSelection, AuthoringAction as EngineAuthoringAction, AuthoringResult as EngineAuthoringResult, SchemaLoadResult } from './authoring/types'
 import type { MaterialDefinition } from './materials/types'
 import type { NodeActionDefinition, NodeActionRegistry } from './presentation/action-registry'
 import type { ActionInterceptor } from './presentation/action-runtime'
 import type { RendererEventHooks } from './presentation/event-hooks'
-import type { AuthoringAction, AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions, RendererWidgetMeta } from './presentation/types'
+import type { AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions, RendererWidgetMeta } from './presentation/types'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
 
@@ -98,6 +97,12 @@ export interface ResolvedMaterialItem {
   keywords: string[]
 }
 
+export interface MaterialPanelGroup {
+  readonly name: string
+  readonly title: string
+  readonly titleKey?: string
+}
+
 export interface MaterialItemRenderProps {
   meta: DesignerWidgetMeta
   material: ResolvedMaterialItem
@@ -113,21 +118,15 @@ export interface MaterialItemRenderProps {
 /**
  * Options accepted by createDesigner.
  *
- * Users must explicitly provide widget metas, component maps, and field maps.
+ * A material definition is the only registration input for a node type.
  */
 export interface DesignerOptions {
   /** Final document snapshot used by the Next backend. */
   schema?: DocumentSchema
   /** Single material registration surface used by the Next backend. */
-  materials?: readonly MaterialDefinition[]
-  /** Core engine options (initialSchema, maxHistorySize) */
-  engineOptions?: DesignerEngineOptions
-  /** Widget metas to register with the engine */
-  widgetMetas?: DesignerWidgetMeta[]
-  /** Widget type → Vue component map for canvas rendering */
-  componentMap?: ComponentMap
-  /** Widget group configurations for material panel. If not provided, groups are derived from registered widgets. */
-  widgetGroups?: WidgetGroupConfig[]
+  materials: readonly MaterialDefinition[]
+  /** Maximum number of undoable document revisions. */
+  maxHistoryEntries?: number
   /** Field type → Vue component map for form-generator */
   fieldComponentMap?: FieldComponentMap
   /** Global config form schema for the right panel Global tab */
@@ -184,44 +183,16 @@ export interface DesignerExtensions {
 // ──────────────────────────────────────────
 
 /**
- * The object returned by createDesigner().
- * Holds the core engine and resolved configuration.
+ * The host control interface returned by createDesigner().
  */
 export interface DesignerInstance {
-  /** The underlying core engine */
-  engine: DesignerEngine
-  /** Merged component map (default + extra) */
-  componentMap: ComponentMap
-  /** Widget group configurations for material panel */
-  widgetGroups: WidgetGroupConfig[] | undefined
-  /** Resolved designer extensions */
-  extensions: DesignerExtensions
-  /** Override field component map for form-generator */
-  fieldComponentMap: FieldComponentMap | undefined
-  /** Global config form schema, if provided */
-  globalConfigSchema: FormSchema | null
-  /** Renderer event hooks */
-  eventHooks: RendererEventHooks
-  /** Node action interceptors */
-  actionInterceptors: ActionInterceptor[]
-  /** Node action registry */
-  actionRegistry: NodeActionRegistry
-  /** i18n instance for locale management */
-  i18n: I18nInstance
-  workspace: DesignerWorkspaceController
-  /** Next backend document state. Legacy instances leave this undefined. */
-  document?: AuthoringEngine['document']
-  /** Next backend selection state. Legacy instances leave this undefined. */
-  selection?: AuthoringEngine['selection']
-  /** Next backend history state. Legacy instances leave this undefined. */
-  history?: AuthoringEngine['history']
-  /** Public authoring entry for Next-backed instances. */
-  execute?: (action: AuthoringAction) => AuthoringResult
-  /** Public schema import entry for Next-backed instances. */
-  importSchema?: (input: unknown) => unknown
-  /** Public schema export entry for Next-backed instances. */
-  exportSchema?: () => DocumentSchema | DesignerSchema | null
-  /** Dispose all resources */
+  readonly document: AuthoringEngine['document']
+  readonly selection: Readonly<DesignerSelection>
+  readonly history: Readonly<DesignerHistory>
+  execute: (action: EngineAuthoringAction) => EngineAuthoringResult
+  importSchema: (input: unknown) => SchemaLoadResult
+  exportSchema: () => DocumentSchema | null
+  setLocale: (locale: string) => void
   dispose: () => void
 }
 
@@ -234,7 +205,7 @@ export interface DesignerInstance {
  */
 export interface DesignerContext {
   componentMap: ComponentMap
-  widgetGroups: WidgetGroupConfig[] | undefined
+  materialGroups: readonly MaterialPanelGroup[]
   extensions: DesignerExtensions
   fieldComponentMap: FieldComponentMap | undefined
   globalConfigSchema: FormSchema | null
@@ -288,14 +259,14 @@ export type LeftPanelTabKey = 'materials' | 'structure'
  * Return type of useDesigner composable.
  */
 export interface UseDesignerReturn {
-  /** Reactive schema from the active session document */
-  schema: EngineStore['schema']
-  /** Currently selected node ID (reactive) */
-  selectedNodeId: EngineStore['selectedNodeId']
-  /** Currently hovered node ID (reactive) */
-  hoveredNodeId: EngineStore['hoveredNodeId']
+  /** Reactive final document schema, or null after a rejected import. */
+  schema: import('vue').ComputedRef<DocumentSchema | null>
+  /** Currently selected node ID (reactive). */
+  selectedNodeId: DesignerSelection['selectedNodeId']
+  /** Currently hovered node ID (reactive). */
+  hoveredNodeId: DesignerSelection['hoveredNodeId']
   /** Execute an authoring action through the active session */
-  execute: (action: AuthoringAction) => AuthoringResult
+  execute: DesignerInstance['execute']
   /** Undo last change */
   undo: () => void
   /** Redo last undone change */
@@ -305,7 +276,7 @@ export interface UseDesignerReturn {
   /** Whether redo is available */
   canRedo: () => boolean
   /** Import a full schema (replaces current) */
-  importSchema: (schema: DesignerSchema) => AuthoringResult
+  importSchema: DesignerInstance['importSchema']
   /** Export current schema (deep clone) */
-  exportSchema: () => DesignerSchema
+  exportSchema: DesignerInstance['exportSchema']
 }

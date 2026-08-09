@@ -211,9 +211,32 @@
   opacity: 0.5;
 }
 
+[data-dc-component="material-item"][data-dc-state~="headless"] {
+  background: var(--dc-color-surface-subtle);
+  border-color: var(--dc-color-accent-border);
+}
+
 [data-dc-component="material-item"] > [data-dc-part="icon"] {
   color: var(--dc-color-on-accent-subtle);
   background: var(--dc-color-accent-subtle);
+  border-radius: var(--dc-radius-md);
+}
+
+[data-dc-component="material-item"] > [data-dc-part="headless-feedback"] {
+  color: var(--dc-color-on-accent-subtle);
+  font-size: var(--dc-font-size-xs);
+}
+
+[data-dc-component="headless-drop-overlay"] {
+  background: color-mix(in srgb, var(--dc-color-surface-subtle), transparent 8%);
+}
+
+[data-dc-component="headless-drop-overlay"] > [data-dc-part="text"] {
+  color: var(--dc-color-text-muted);
+  font-size: var(--dc-font-size-sm);
+  line-height: 1.5;
+  background: var(--dc-color-surface-raised);
+  border: 1px solid var(--dc-color-border-subtle);
   border-radius: var(--dc-radius-md);
 }
 

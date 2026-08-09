@@ -1,17 +1,17 @@
 ---
-description: "@dragcraft/designer 的实例创建、工作台控制、动作和界面扩展公开 API。"
+description: "@dragcraft/designer 的实例创建、物料注册、工作台和公开操作 API。"
 ---
 
 # @dragcraft/designer
 
-这是业务应用的唯一主入口。它聚合 Schema Engine、设计态渲染、配置表单、物料注册、国际化和 Standard 工作台主题，并要求宿主显式提供业务物料和字段 adapter。
+业务应用只需要从 `@dragcraft/designer` 创建一个实例，并提供最终 `MaterialDefinition[]`。Schema、物料校验、编辑历史和 Presentation 都由 Designer 统一管理。
 
 ```ts
-import { createDesigner, DcDesigner, useDesigner } from '@dragcraft/designer'
+import { createDesigner, DcDesigner } from '@dragcraft/designer'
 
 const designer = createDesigner({
-  widgetMetas,
-  componentMap,
+  schema,
+  materials: [textMaterial, noticeMaterial],
   fieldComponentMap,
 })
 ```
@@ -20,20 +20,34 @@ const designer = createDesigner({
 
 | 入口 | 用途 |
 | --- | --- |
-| `createDesigner(options)` | 创建编辑器实例。 |
-| `DcDesigner` | 挂载标准三栏工作台。 |
-| `useDesigner(instance)` | 读取 Schema、执行命令、导入导出和订阅事件。 |
-| `DesignerWorkspaceController` | 打开、关闭或切换左右面板。 |
-| `customActions`、`actionInterceptors` | 扩展节点动作与业务流程。 |
-| `DesignerExtensions` | 替换面板、物料项或追加 rail 内容。 |
-| `WidgetDefinition` 与物料 helpers | 从一份定义生成 metadata 和组件映射。 |
-| `FormSchema` 与字段扩展接口 | 声明属性面板并接入自定义字段。 |
+| `createDesigner({ schema?, materials, ... })` | 创建 Next Designer 实例；`materials` 必须提供且可以为空。 |
+| `DcDesigner` | 挂载标准工作台。 |
+| `useDesigner(instance)` | 读取文档、选择、历史以及导入导出操作。 |
+| `MaterialDefinition` | 聚合一个稳定 `type` 的 Schema、authoring、inspector 与 Presentation。 |
+| `DesignerExtensions` | 扩展面板、物料项、Container Shell 和 rail。 |
+| `AuthoringAction` | 执行节点、页面、历史和 Schema 操作。 |
 | `@dragcraft/designer/standard.css` | 加载完整 Standard 工作台主题。 |
 
-`DesignerOptions` 中的 `widgetMetas`、`componentMap` 和 `fieldComponentMap` 是三份不同的输入：物料协议、页面组件和字段 UI 不应相互替代。
+`MaterialDefinition.presentation.kind` 必须是 `visual` 或 `headless`。Headless 物料没有画布预览，但仍可以拥有 Schema 默认值和 inspector；拖拽释放后只创建配置节点。
 
-扩展对象在 Renderer 挂载时读取。要在运行中切换一组 Renderer 扩展，应重新挂载承载 `DcDesigner` 的组件。
+## 实例控制
 
-创建已有页面时，先注册物料和 Schema migrations，再调用 `engine.importSchema()`。完整组装顺序见 [框架如何协作](/guide/fundamentals/architecture)。
+```ts
+designer.execute({ type: 'select-node', nodeId: 'notice-1' })
+designer.execute({
+  type: 'update-node',
+  nodeId: 'notice-1',
+  node: { type: 'notice', props: { text: '新的公告' } },
+})
 
-继续查阅 [Schema 与命令](/reference/designer-schema)、[渲染与容器](/reference/designer-rendering)、[表单与字段](/reference/designer-forms) 或 [样式与国际化](/reference/designer-styles)。
+const snapshot = designer.exportSchema()
+const load = designer.importSchema(input)
+designer.setLocale('en')
+designer.dispose()
+```
+
+`document`、`selection` 和 `history` 是只读响应式状态。配置错误在创建时抛出 `DesignerConfigurationError`；外部 Schema 错误由 `importSchema()` 返回 `rejected`、`degraded` 或 `conflicted` 状态，并且 rejected 输入不会覆盖当前文档。
+
+## 样式与设备
+
+Designer 拥有工作台 Presentation 的结构 CSS。设备外壳来自 `@dragcraft/device-frames` 的 `ContainerShell` 扩展，宿主只负责选择当前设备和提供 slot 外壳；设备外壳不会读取或写入 Schema。

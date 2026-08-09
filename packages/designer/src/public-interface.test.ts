@@ -1,56 +1,31 @@
-import type {
-  FieldComponentDefinition,
-  FieldRenderFactory,
-  FormContext,
-  FormGeneratorContext,
-  FormValidation,
-  TypedFormSchema,
-  WidgetDefinition,
-  WidgetGroup,
-  WidgetGroupConfig,
-  WidgetRuntimeContext,
-} from './index'
+import type { DocumentSchema } from '@dragcraft/core'
+import type { FieldComponentDefinition, FieldRenderFactory, FormContext, FormGeneratorContext, FormValidation, TypedFormSchema } from '@dragcraft/form-generator'
+import type { DesignerPresentation, MaterialDefinition } from './materials/types'
+import type { DesignerInstance } from './types'
 import { describe, expect, expectTypeOf, it } from 'vitest'
-import {
-  buildComponentMap,
-  createContainerPlan,
-  defineContainerWidget,
-  getWidgetMetas,
-  registerWidgets,
-  resolveAuthoringPolicy,
-  resolveFieldComponentProps,
-  useFormGeneratorContext,
-  useFormValidation,
-  useWidgetRuntime,
-} from './index'
+import * as publicApi from './index'
 
 describe('designer public interface', () => {
-  it('aggregates widget registration helpers', () => {
-    expect(typeof buildComponentMap).toBe('function')
-    expect(typeof defineContainerWidget).toBe('function')
-    expect(typeof getWidgetMetas).toBe('function')
-    expect(typeof registerWidgets).toBe('function')
-    expect(typeof createContainerPlan).toBe('function')
-    expect(typeof resolveAuthoringPolicy).toBe('function')
-  })
-
-  it('aggregates custom field helpers', () => {
-    expect(typeof resolveFieldComponentProps).toBe('function')
-    expect(typeof useFormGeneratorContext).toBe('function')
-    expect(typeof useFormValidation).toBe('function')
-    expect(typeof useWidgetRuntime).toBe('function')
+  it('exposes the final designer contract and omits legacy runtime protocols', () => {
+    expect(typeof publicApi.createDesigner).toBe('function')
+    expect(typeof publicApi.defineMaterial).toBe('function')
+    expect(typeof publicApi.DcDesigner).toBe('object')
+    expect(publicApi).not.toHaveProperty('createEngine')
+    expect(publicApi).not.toHaveProperty('CommandType')
+    expect(publicApi).not.toHaveProperty('buildComponentMap')
+    expect(publicApi).not.toHaveProperty('RootRenderer')
   })
 
   it('exposes the extension types through one package', () => {
-    expectTypeOf<WidgetDefinition>().toBeObject()
-    expectTypeOf<WidgetGroup>().toBeString()
-    expectTypeOf<WidgetGroupConfig>().toBeObject()
+    expectTypeOf<MaterialDefinition>().toBeObject()
+    expectTypeOf<DesignerPresentation>().toMatchTypeOf<{ kind: 'visual' | 'headless' }>()
+    expectTypeOf<DocumentSchema>().toBeObject()
+    expectTypeOf<DesignerInstance>().toHaveProperty('execute')
     expectTypeOf<FieldComponentDefinition>().toBeObject()
     expectTypeOf<FieldRenderFactory>().toBeFunction()
     expectTypeOf<FormContext>().toBeObject()
     expectTypeOf<FormGeneratorContext>().toBeObject()
     expectTypeOf<FormValidation>().toBeObject()
     expectTypeOf<TypedFormSchema<{ Input: { allowClear?: boolean } }>>().toBeObject()
-    expectTypeOf<WidgetRuntimeContext>().toBeObject()
   })
 })

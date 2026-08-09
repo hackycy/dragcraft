@@ -1,4 +1,4 @@
-import type { DesignerWidgetMeta, WidgetDefinition } from '@dragcraft/designer'
+import type { WidgetFixtureDefinition } from './contract'
 import { defineComponent, h } from 'vue'
 
 export const GuidePageHeaderWidget = defineComponent({
@@ -11,7 +11,7 @@ export const GuidePageHeaderWidget = defineComponent({
   },
 })
 
-export const pageHeaderWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
+export const pageHeaderWidgetDefinition: WidgetFixtureDefinition = {
   meta: {
     type: 'page-header',
     title: '活动页头',

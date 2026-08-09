@@ -58,6 +58,12 @@ function createFixture() {
 describeDesignerSessionContract('Next adapter', createFixture)
 
 describe('next adapter backend contract', () => {
+  it('projects headless material presentation as a Designer feedback fact', () => {
+    const { session } = createFixture()
+
+    expect(session.materials.get('text')?.headless).toBe(true)
+  })
+
   it('projects root and Region drop destinations for the shared drag seam', () => {
     const { session } = createFixture()
     expect(session.document.resolveDestination?.({ kind: 'root', index: 1 })).toMatchObject({

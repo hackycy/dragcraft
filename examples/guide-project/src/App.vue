@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DcDesigner } from '@dragcraft/designer'
+import { createI18n, DcDesigner, designerMessages } from '@dragcraft/designer'
 import {
   BUILT_IN_DEVICE_FRAMES,
   DevicePicker,
@@ -12,6 +12,7 @@ import { guideRuntimeRegistry, RuntimePage } from './runtime'
 
 const pageId = 'summer-campaign'
 const activeDeviceFrameId = ref(IPHONE_DEVICE_FRAME.id)
+const hostI18n = createI18n('zh-CN', designerMessages)
 const activeDeviceFrame = computed(() =>
   BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
   ?? IPHONE_DEVICE_FRAME,
@@ -27,14 +28,14 @@ const repository = createMemoryPageRepository()
 const revision = ref(0)
 const status = ref('尚未保存')
 const showPreview = ref(false)
-const runtimeSchema = computed(() => designer.exportSchema!())
+const runtimeSchema = computed(() => designer.exportSchema())
 
 async function saveDraft() {
   try {
     const page = await repository.save({
       id: pageId,
       revision: revision.value,
-      schema: designer.exportSchema!()!,
+      schema: designer.exportSchema()!,
     })
     revision.value = page.revision
     status.value = `草稿修订号 ${page.revision} 已保存`
@@ -53,9 +54,9 @@ async function reloadDraft() {
     return
   }
 
-  const result = designer.importSchema!(page.schema) as { readonly ok: boolean, readonly code?: string }
-  if (!result.ok) {
-    status.value = `草稿校验失败：${result.code ?? 'SCHEMA_IMPORT_REJECTED'}`
+  const result = designer.importSchema(page.schema)
+  if (result.status === 'rejected') {
+    status.value = '草稿校验失败：SCHEMA_IMPORT_REJECTED'
     return
   }
 
@@ -67,7 +68,7 @@ function markDraftChanged() {
   status.value = '有未保存的更改'
 }
 
-const stopWatchingDraft = watch(designer.document!, markDraftChanged, { flush: 'sync' })
+const stopWatchingDraft = watch(designer.document, markDraftChanged, { flush: 'sync' })
 onBeforeUnmount(() => {
   stopWatchingDraft()
   designer.dispose()
@@ -85,13 +86,13 @@ onBeforeUnmount(() => {
         <DevicePicker
           :definitions="BUILT_IN_DEVICE_FRAMES"
           :model-value="activeDeviceFrameId"
-          :translate="designer.i18n.t"
+          :translate="hostI18n.t"
           @update:model-value="selectDeviceFrame"
         />
         <button type="button" @click="saveDraft">保存草稿</button>
         <button type="button" @click="reloadDraft">加载草稿</button>
-        <button type="button" :disabled="!designer.history!.canUndo.value" @click="designer.execute!({ type: 'history.undo' })">撤销</button>
-        <button type="button" :disabled="!designer.history!.canRedo.value" @click="designer.execute!({ type: 'history.redo' })">重做</button>
+        <button type="button" :disabled="!designer.history.canUndo.value" @click="designer.execute({ type: 'undo' })">撤销</button>
+        <button type="button" :disabled="!designer.history.canRedo.value" @click="designer.execute({ type: 'redo' })">重做</button>
         <button type="button" @click="showPreview = !showPreview">
           {{ showPreview ? '返回编辑' : '查看运行时' }}
         </button>

@@ -1,7 +1,6 @@
 import type { ContainerShellSource, DocumentSchema } from '@dragcraft/designer'
 import { createDesigner } from '@dragcraft/designer'
 import { guideMaterials } from '../domain/materials'
-import { guideWidgetGroups } from '../domain/widgets'
 import { createGuideFieldComponentMap } from '../forms'
 import { createGuideActionInterceptors, guideCustomActions } from './actions'
 import { createGuideExtensions } from './extensions'
@@ -19,9 +18,8 @@ export function createPageDesigner(options: CreatePageDesignerOptions = {}) {
   return createDesigner({
     schema: initialSchema,
     materials: guideMaterials,
-    engineOptions: { maxHistorySize: 50 },
+    maxHistoryEntries: 50,
     fieldComponentMap: createGuideFieldComponentMap(),
-    widgetGroups: guideWidgetGroups,
     globalConfigSchema: guideGlobalConfigSchema,
     workspace: {
       compactBreakpoint: 1080,

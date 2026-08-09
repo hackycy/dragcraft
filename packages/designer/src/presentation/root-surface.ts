@@ -4,6 +4,7 @@ import type { NodeActionRegistry } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererEventHooks } from './event-hooks'
 import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererContext, RendererExtensions } from './types'
+import { useI18n } from '@dragcraft/i18n'
 import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, normalizeStyleValueMap } from '@dragcraft/legacy-core'
 import { computed, defineComponent, h, isRef, provide } from 'vue'
 import CanvasSurface from './canvas-surface'
@@ -143,9 +144,14 @@ export default defineComponent({
       type: Object as PropType<Ref<HTMLElement | null>>,
       default: undefined,
     },
+    viewScale: {
+      type: Object as PropType<Ref<number>>,
+      default: undefined,
+    },
   },
 
   setup(props) {
+    const { t } = useI18n()
     // Create and provide context (stable for the renderer's lifetime)
     const ctx = createRendererContext({
       session: props.session,
@@ -163,6 +169,7 @@ export default defineComponent({
       onContainerDragLeave: props.onContainerDragLeave,
       onContainerDrop: props.onContainerDrop,
       interactionBoundary: props.interactionBoundary,
+      viewScale: props.viewScale,
     })
     provide(RENDERER_CONTEXT_KEY, ctx)
     const selectionPresentation = createNodeSelectionPresentation()
@@ -226,6 +233,21 @@ export default defineComponent({
 
       // Show forbidden overlay or drop indicator at the computed insertion index
       const isForbidden = ctx.session.state.drag.isForbidden.value
+      const dragTarget = ctx.session.state.dragTarget.value
+      const isHeadlessMaterialDrag = dragTarget?.sourceNodeId === null
+        && dragTarget.widgetType !== null
+        && ctx.session.materials.get(dragTarget.widgetType)?.headless === true
+      const headlessOverlayVNode = isHeadlessMaterialDrag
+        && ctx.activeDestination.value !== null
+        && !isForbidden
+        ? h('div', {
+            'class': 'dc-headless-drop-overlay',
+            'data-dc-component': 'headless-drop-overlay',
+            'role': 'status',
+          }, [
+            h('span', { 'data-dc-part': 'text' }, t('material.headless.drop', '松开即可添加页面配置，不会显示在画布中')),
+          ])
+        : null
       const createForbiddenOverlayVNode = () =>
         h(ForbiddenOverlay.value, {
           key: '__forbidden__',
@@ -236,7 +258,7 @@ export default defineComponent({
         ? createForbiddenOverlayVNode()
         : null
 
-      if (isDragOver && !isForbidden) {
+      if (isDragOver && !isForbidden && !isHeadlessMaterialDrag) {
         insertDropIndicator(
           regionVNodes,
           plan,
@@ -282,6 +304,7 @@ export default defineComponent({
                     surfaceStyle: normalizeStyleValueMap(root.style?.surface),
                     selectionPresentation,
                     forbiddenOverlay: forbiddenOverlayVNode,
+                    headlessOverlay: headlessOverlayVNode,
                   }),
                 ],
               }),

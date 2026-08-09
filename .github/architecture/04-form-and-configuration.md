@@ -1,328 +1,36 @@
-# Form 与配置系统
+# 表单与配置
 
-`@dragcraft/form-generator` 是配置面板的内部表单引擎，基于 schema 渲染属性编辑 UI。它服务于 Designer 右栏，业务应用通过 Designer 聚合接口使用其 schema、字段和验证能力。
+属性面板用 `FormSchema` 描述字段，并用 `fieldComponentMap` 将稳定字段键映射为实际 Vue 控件。字段 adapter 只负责值协议和控件交互；Designer 负责将变更转换成 `AuthoringAction`。
 
-## 设计目标
+## 配置位置
 
-- 将配置协议抽象为 `FormSchema`，不与具体业务字段耦合。
-- 支持全局配置和 widget 配置两类模型。
-- 为 `@dragcraft/designer` 提供可替换的右侧面板实现。
-- 字段组件通过 adapter 描述值绑定方式，UI 库 props 通过 `componentProps` 原样透传。
-
-## 设计边界
-
-- 不持久化业务状态。
-- 不依赖具体 widget。
-- 不依赖 `@dragcraft/core`，不调用 `engine.execute()`。
-- 值变更通过 `change` 事件向上传递，由 designer 负责 dispatch core command。
-- 不内置 CSS 样式，只应用 class。
-
-## 文件结构
-
-```plaintext
-src/
-├── types.ts
-├── context.ts
-├── composables/
-│   ├── useFieldState.ts
-│   └── useFormValidation.ts
-├── components/
-│   ├── FormGenerator.ts
-│   ├── FormSection.ts
-│   └── FormField.ts
-└── index.ts
-```
-
-## FormSchema 协议
-
-```ts
-interface FieldSchema {
-  key: string
-  label: string
-  labelKey?: string
-  placeholderKey?: string
-  optionKeyPrefix?: string
-  component: string
-  bindTo?: string | { scope?: 'node' | 'schema' | 'globalConfig', path: string }
-  componentProps?: Record<string, unknown> | ((ctx: FormContext) => Record<string, unknown>)
-  dependencies?: {
-    fields: string[]
-    handler: (form: Record<string, unknown>, fieldValue: unknown) => Partial<FieldSchema>
-  }
-  show?: boolean | ((ctx: FormContext) => boolean)
-  ifShow?: boolean | ((ctx: FormContext) => boolean)
-  parseValue?: (value: unknown, ctx: FormContext) => unknown
-  valueFormat?: (value: unknown, ctx: FormContext) => unknown
-  defaultValue?: unknown
-  visible?: (ctx: FormContext) => boolean
-  disabled?: (ctx: FormContext) => boolean
-  rules?: ValidationRule[]
-  tooltip?: string
-  span?: number
-}
-
-interface SectionSchema {
-  title: string
-  collapsed?: boolean
-  fields: FieldSchema[]
-}
-
-interface FormSchema {
-  sections: SectionSchema[]
-}
-```
-
-字段组件名通过 `fieldComponentMap` 解析，schema 本身只声明使用哪个 adapter 和传给 UI 组件的 `componentProps`。
-
-`visible` 和 `ifShow` 控制字段是否渲染；`ifShow` 优先，`visible` 保留为语义化别名。`show` 控制 CSS 隐藏并保留 DOM 状态。`parseValue` 处理 input -> model，`valueFormat` 处理 model -> input。`dependencies` 可根据其他字段值返回字段 schema 覆盖，但不能改变 `key`、`component` 或 `dependencies` 本身。
-
-### 字段绑定到 Schema DSL
-
-`FormGenerator` 本身不理解 `bindTo`，它只维护字段值并 emit `{ key, value }`。`@dragcraft/designer` 在右侧属性面板中解释 `bindTo`，把字段变更翻译成 core command。
-
-属性面板同时把 Core Authoring Policy 投影到字段 disabled 状态：props/style 绑定由 `configurable` 控制，`{ scope: 'container', path: 'variant' }` 由 `variantChangeable` 独立控制。字段保持可见并保留当前值；即使 dependency handler 尝试重新启用，策略拒绝仍优先。Core command 会再次执行相同策略，UI disabled 不是唯一约束。
-
-默认绑定：
-
-- Widget 表单字段默认写入当前节点 `props.{field.key}`。
-- Global 表单字段默认写入 `globalConfig.{field.key}`。
-
-显式绑定：
-
-```ts
-const widgetForm: FormSchema = {
-  sections: [{
-    title: '容器',
-    fields: [{
-      key: 'marginTop',
-      label: '上外边距',
-      component: 'Number',
-      bindTo: { scope: 'node', path: 'style.container.marginTop' },
-    }],
-  }],
-}
-
-const globalForm: FormSchema = {
-  sections: [{
-    title: '页面',
-    fields: [{
-      key: 'pageBg',
-      label: '页面背景色',
-      component: 'Color',
-      bindTo: { scope: 'schema', path: 'root.style.surface.backgroundColor' },
-    }],
-  }],
-}
-```
-
-`scope` 说明：
-
-| Scope | Path 基准 | 写入命令 |
+| 目标 | 默认写入位置 | 显式绑定 |
 | --- | --- | --- |
-| `node` | 当前选中节点 | `UPDATE_PROPS` |
-| `schema` | 整个 `DesignerSchema` | 根据路径翻译为语义命令，例如 `root.style.*` 进入 `UPDATE_PROPS(root)` |
-| `globalConfig` | `schema.globalConfig` | `SET_GLOBAL_CONFIG` |
+| 物料属性 | `node.props.{key}` | `bindTo` 可覆盖。 |
+| 页面业务配置 | `globalConfig.{key}` | `bindTo` 可覆盖。 |
+| 节点样式 | 无 | 使用节点样式 binding。 |
+| 页面样式 | 无 | 使用页面 binding。 |
+| 容器状态 | 无 | 使用容器 binding。 |
 
-这使配置面板可以编辑开放 DSL，例如页面 surface 样式或物料容器样式，而不需要把背景、间距等业务场景硬编码成固定全局字段。
+字段未指定 `bindTo` 时，节点 inspector 写入当前节点 props，Global 面板写入 globalConfig。跨节点数据不应被伪装为局部 props。
 
-带类型提示的业务 schema 可以使用 `TypedFormSchema<PropsMap>`：
-
-```ts
-import type { TypedFormSchema } from '@dragcraft/designer'
-import type { AntDesignVueFieldComponentPropsMap } from '@dragcraft/fields-ant-design-vue'
-
-const schema: TypedFormSchema<AntDesignVueFieldComponentPropsMap> = {
-  sections: [{
-    title: '基础设置',
-    fields: [{
-      key: 'title',
-      label: '标题',
-      component: 'Input',
-      componentProps: { allowClear: true },
-    }],
-  }],
-}
-```
-
-## 渲染管线
-
-```plaintext
-FormGenerator
-  -> provide FormGeneratorContext
-  -> FormSection[]
-      -> FormField[]
-          -> resolve field component
-          -> render label, control, tooltip and error
-```
-
-### FormGenerator
-
-Props：
-
-| Prop | 说明 |
-| --- | --- |
-| `schema` | 表单结构描述 |
-| `values` | 当前字段值 |
-| `disabled` | 是否全局禁用 |
-| `fieldComponentMap` | 字段组件映射 |
-
-事件：
-
-| 事件 | Payload | 说明 |
-| --- | --- | --- |
-| `change` | `{ key: string, value: unknown }` | 任意字段值变化 |
-
-Expose：
-
-- `validate()`：验证全部字段，返回 `ValidationError[]`。
-- `clearErrors()`：清除验证错误。
-
-### FormSection
-
-Section 是可折叠字段分组，负责渲染标题栏和字段列表，并管理本地折叠状态。
-
-### FormField
-
-Field 负责：
-
-- 注入 `FormGeneratorContext`。
-- 使用 `useFieldState` 计算 visible 与 disabled。
-- 从 `fieldComponentMap` 解析组件。
-- 渲染 label、字段组件、tooltip 与 error message。
-- 触发字段级验证和值变更。
-
-## 字段 Adapter 协议
-
-字段组件不再要求实现固定的 `modelValue + field` 协议。`FieldComponentMap` 注册的是 adapter definition：
+## Field Adapter
 
 ```ts
-interface FieldComponentDefinition {
-  component: Component
-  modelPropName?: string
-  updateEventName?: string
-  defaultProps?: Record<string, unknown>
-  formatValue?: (value: unknown, ctx: FieldComponentTransformContext) => unknown
-  normalizeValue?: (value: unknown, ctx: FieldComponentTransformContext) => unknown
-}
-```
-
-示例：
-
-```ts
-h(FormGenerator, {
-  fieldComponentMap: {
-    Input: {
-      component: AInput,
-      modelPropName: 'value',
-      updateEventName: 'onUpdate:value',
-    },
-    Switch: {
-      component: ASwitch,
-      modelPropName: 'checked',
-      updateEventName: 'onUpdate:checked',
-    },
+const fieldComponentMap = {
+  ...createAntDesignVueFields(),
+  Asset: {
+    component: AssetField,
+    modelPropName: 'modelValue',
+    updateEventName: 'onUpdate:modelValue',
   },
-})
-```
-
-`@dragcraft/form-generator` 负责把 `defaultProps`、`componentProps`、禁用态和 model 绑定合并后传给真实 UI 组件。禁用态由表单层最终写入 `disabled`，覆盖 `componentProps.disabled`。
-
-## 字段联动
-
-`visible` 与 `disabled` 谓词函数用于声明字段间依赖：
-
-```ts
-{
-  key: 'linkUrl',
-  label: '链接地址',
-  component: 'Input',
-  visible: (ctx) => ctx.values.hasLink === true,
-  disabled: (ctx) => ctx.values.isLocked === true,
 }
 ```
 
-`FormContext.values` 包含当前表单所有字段的最新值，响应式系统会自动触发重新计算。
+可复用控件用字符串键从 `fieldComponentMap` 解析。函数形式的 `FieldSchema.component` 是当前表单专用 render factory，适合说明、分隔和轻量操作区。
 
-## 表单验证
+`visible`、`show`、`disabled`、`dependencies`、`parseValue`、`valueFormat` 和 `rules` 都属于编辑体验。字段验证不能代替保存或发布服务的业务校验。
 
-验证规则通过 `FieldSchema.rules` 定义：
+## 写入保证
 
-```ts
-{
-  key: 'name',
-  label: '名称',
-  component: 'Input',
-  rules: [
-    { required: true, message: '名称不能为空' },
-    {
-      validator: (value) => {
-        if (typeof value === 'string' && value.length > 50) return '最多 50 个字符'
-        return true
-      },
-    },
-  ],
-}
-```
-
-验证策略：
-
-- 字段值变化时自动触发即时验证。
-- 可通过 `formRef.validate()` 手动触发全局验证。
-- 顺序为 required 到自定义 validator。
-- 首个错误短路返回。
-
-`useFormValidation(schema, getValues)` 提供：
-
-- `fieldErrors`。
-- `validateField(key)`。
-- `validateAll()`。
-- `clearErrors()`。
-
-## 值变更数据流
-
-```plaintext
-字段组件 emit adapter.updateEventName
-  -> FormField 调用 ctx.onFieldChange(key, value)
-  -> FormGenerator 更新本地 values 并触发验证
-  -> FormGenerator emit change
-  -> designer 接收 change
-  -> designer 根据 bindTo/default binding dispatch UPDATE_PROPS 或 SET_GLOBAL_CONFIG
-```
-
-## 字段包关系
-
-`@dragcraft/form-generator` 只提供 adapter 协议和表单运行时，不直接依赖具体 UI 库。UI 库字段由独立字段包提供，例如 `@dragcraft/fields-ant-design-vue`：
-
-```ts
-import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
-
-h(FormGenerator, {
-  fieldComponentMap: {
-    ...createAntDesignVueFields(),
-    Color: { component: ColorField },
-  },
-})
-```
-
-业务特化字段仍由业务侧注册到同一个 `fieldComponentMap`。如果业务希望获得 schema 侧的 `componentProps` 类型提示，应为字段包导出 `ComponentPropsMap`，并配合 `TypedFormSchema<PropsMap>` 使用。
-
-## 主题契约层级
-
-```plaintext
-[data-dc-component="form-generator"]
-  [data-dc-component="form-section"]
-    [data-dc-part="header"]
-      [data-dc-part="title"]
-      [data-dc-part="toggle"]
-    [data-dc-part="body"]
-      [data-dc-component="form-field"]
-        [data-dc-part="label"]
-        [data-dc-part="control"]
-        [data-dc-part="tooltip"]
-        [data-dc-part="error"]
-        [data-dc-part="unknown"]
-```
-
-form-generator 通过 `@dragcraft/form-generator/structure.css` 提供 section/field 外壳的必要结构样式；Designer Standard 主题会自动聚合该入口。字段 adapter 渲染的具体控件由对应 UI 库负责视觉，Designer 不维护不存在于 form-generator DOM 的字段 class。
-
-`form-section` 与 Designer 的 `material-group` 共享 `header`、`title`、`toggle` 基线视觉配方和折叠反馈：相同高度、内边距、hover/focus 表面与 chevron transition。两个组件仍分别拥有结构 CSS 和状态逻辑；共享发生在 Designer Standard 主题的公开 hook recipe，不建立 Form Generator 到 Designer 的代码依赖。
+表单不会直接修改 DocumentSchema。字段 change 经 Designer 生成 action，受到 material authoring policy、解析约束和 history 规则约束。拒绝和 unchanged 结果不产生 history；一次用户意图可通过 batch 保持为一次撤销。

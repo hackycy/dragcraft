@@ -386,7 +386,7 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 
 ### Work
 
-1. 完成三个 Playground 模板：电商首页、内容详情、商品详情，以及一个真实 Headless material。
+1. 完成三个 Playground 模板：电商首页、内容详情、商品详情，以及一个真实 Headless material；Headless 物料栏标注无画布预览，拖入画布时以中性全屏提示说明松开后只添加配置，不展示摆放位置，也不在属性面板重复提示。
 2. 完成 Guide Project 的最小/完整 Designer、Schema round-trip 和自主生产 Runtime 示例。
 3. 合并 Renderer 必需结构 CSS 到 Designer，验证 `standard.css`、`structure.css`、theme contract 和 CSS custom data。
 4. 更新 `.github/architecture`、公开 docs、README、examples 和 skills，只描述新 Schema、Material、Session 和 Presentation。
@@ -394,7 +394,7 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 
 ### Exit
 
-- 产品模板、恢复状态、CSS、package exports、public consumer fixture 和 docs 全部通过。
+- 产品模板、恢复状态、CSS、package exports、public consumer fixture 和 docs 全部通过；真实 Headless material 保留物料栏标识，拖入时显示中性全屏说明而非位置反馈，配置可编辑并写入 Schema。
 - source/docs 搜索除 `.scratch` 历史外不再出现旧公共协议。
 - Legacy Adapter、Renderer 和 Widgets 没有运行时调用方。
 - G9 的六组删除证据全部可提供。
@@ -431,8 +431,8 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 | G5 Next UI Harness | passed | dev-only Next selector 与三个最终 Playground fixture；Next/Legacy 分别通过 14 个交互基线、Next harness 3/3（Chromium 31/31）；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test` 通过；三个模板人工验收通过 |
 | G6 Backend/Public Cutover | passed | Next backend 已作为唯一生产实例；容器完整 NodeBundle 创建与非 flow Region 拒绝回归已关闭；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 25/25）通过；Playground 与 Guide Project 人工验收通过 |
 | G7 Presentation Replacement | passed | Node Interaction、Container Region、Root Surface 与 Frame/Geometry clusters 已完成；Device Frame root selection plane 外扩及四边等宽（3px）浏览器回归已覆盖；Designer 无生产 Renderer interface 或 stylesheet import，旧 Renderer 无 active runtime caller；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 26/26）通过；三个 Playground 模板人工验收通过 |
-| G8 Product/Public Finalization | pending | G7 Exit 已满足 |
-| G9 Deletion Gate | blocked | G8 Exit and six deletion evidence groups |
+| G8 Product/Public Finalization | passed | Headless 物料的中性拖入说明位于 Device Frame 业务预览裁剪区，保留物料栏标识、Schema 创建与 inspector 编辑，不显示位置反馈或属性面板提示；用户已人工确认。三个 Playground 模板、Guide Project 最小/完整 Designer、Schema round-trip 与独立 Runtime 通过。公开 docs、Architecture Map、examples 和 skills 已收敛到 `DocumentSchema`、`MaterialDefinition`、Designer 与 Presentation；obsolete protocol denylist、public package boundary、theme contract、package exports 与 CSS 入口通过。directed：docs build、Designer 6/6、Guide 14/14、Playground 3/3；完整：`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`（Designer 168、Playground 20、Guide 14）和 `pnpm test:browser`（Chromium 31/31）通过。Legacy factory/adapter 仅保留内部测试 seam，无生产调用方；G9 的调用方、交互、产品、恢复、CSS/发布与独立清理提交边界证据已具备。 |
+| G9 Deletion Gate | pending | G8 Exit 与六组删除证据已满足；尚未开始物理删除或清理提交 |
 
 状态只能按 `blocked -> pending -> in progress -> passed` 前进。若已通过 gate 的基线因后续改动回归，当前 gate 立即重新变为 blocked，直到回归关闭。
 

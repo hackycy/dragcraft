@@ -2,15 +2,15 @@ import type {
   ContainerDefinition,
   ContainerVariantMigrationContext,
   ContainerVariantMigrationResult,
-  DesignerWidgetMeta,
-  ResolveContainerDropIndexContext,
+  MaterialMeta,
   SchemaNode,
-  WidgetDefinition,
-} from '@dragcraft/designer'
-import { ContainerRegionOutlet, defineContainerWidget, useContainerRuntime } from '@dragcraft/designer'
+  WidgetFixtureDefinition,
+} from './contract'
+import { ContainerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
+import { defineContainerFixture } from './contract'
 
-export function resolveVerticalDropIndex(ctx: ResolveContainerDropIndexContext): number {
+export function resolveVerticalDropIndex(ctx: any): number {
   for (const [index, element] of ctx.itemElements.entries()) {
     const rect = element.getBoundingClientRect()
     if (ctx.event.clientY < rect.top + rect.height / 2)
@@ -19,7 +19,7 @@ export function resolveVerticalDropIndex(ctx: ResolveContainerDropIndexContext):
   return ctx.itemElements.length
 }
 
-export const columnContainerMeta: DesignerWidgetMeta & { container: ContainerDefinition } = {
+export const columnContainerMeta: MaterialMeta & { container: ContainerDefinition } = {
   type: 'column-container',
   title: '分栏容器',
   group: 'layout',
@@ -137,8 +137,8 @@ export const ColumnContainerWidget = defineComponent({
   },
 })
 
-export const columnContainerDefinition: WidgetDefinition<DesignerWidgetMeta & { container: ContainerDefinition }>
-  = defineContainerWidget({
+export const columnContainerDefinition: WidgetFixtureDefinition
+  = defineContainerFixture({
     meta: columnContainerMeta,
     component: ColumnContainerWidget,
   })

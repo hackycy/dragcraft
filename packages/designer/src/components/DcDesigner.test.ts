@@ -1,9 +1,10 @@
+import type { DesignerSchema, WidgetMeta } from '@dragcraft/legacy-core'
 // @vitest-environment happy-dom
 import type { Component } from 'vue'
-import type { DesignerSchema, DesignerWidgetMeta, WidgetMeta } from '..'
+import type { DesignerWidgetMeta } from '../types'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, readonly, shallowRef } from 'vue'
-import { createDesigner } from '..'
+import { createLegacyDesignerForTest } from '../factory'
 import ContainerRegionOutlet from '../presentation/container-region-outlet'
 import { getDesignerSession } from '../session/get-designer-session'
 import DcDesigner from './DcDesigner'
@@ -56,7 +57,7 @@ describe('dcDesigner', () => {
   })
 
   it('renders canvas-scoped interaction and floating history controls without a top toolbar', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
@@ -108,6 +109,40 @@ describe('dcDesigner', () => {
     }
   })
 
+  it('uses a canvas-wide notice instead of placement feedback for Headless material drops', async () => {
+    const headlessMeta: DesignerWidgetMeta = { ...makeMeta(), headless: true }
+    const designer = createLegacyDesignerForTest({
+      engineOptions: { initialSchema: makeSchema() },
+      widgetMetas: [headlessMeta],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+
+    try {
+      app.mount(host)
+      await nextTick()
+
+      const material = host.querySelector<HTMLElement>('[data-dc-component="material-item"]')!
+      const viewport = host.querySelector<HTMLElement>('[data-dc-interaction-boundary]')!
+      dispatchDragEvent(material, 'dragstart')
+      dispatchDragEvent(viewport, 'dragover')
+      await nextTick()
+
+      const overlay = host.querySelector<HTMLElement>('[data-dc-component="headless-drop-overlay"]')
+      expect(overlay?.textContent)
+        .toContain('松开即可添加页面配置，不会显示在画布中')
+      expect(overlay?.closest('[data-dc-component="canvas-surface"]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-component="drop-indicator"]')).toBeNull()
+      expect(host.querySelector('[data-dc-component="headless-material-notice"]')).toBeNull()
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
   it('wires container outlet destinations through the designer canvas', async () => {
     const splitMeta: DesignerWidgetMeta = {
       type: 'split-layout',
@@ -143,7 +178,7 @@ describe('dcDesigner', () => {
       'split-layout': SplitComponent,
       'image': defineComponent({ setup: () => () => h('img') }),
     }
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: {
         initialSchema: {
           version: '1.0.0',
@@ -191,7 +226,7 @@ describe('dcDesigner', () => {
   })
 
   it('pans the canvas stage freely and resets it to the center origin', async () => {
-    const designer = createDesigner({ engineOptions: { initialSchema: makeSchema() } })
+    const designer = createLegacyDesignerForTest({ engineOptions: { initialSchema: makeSchema() } })
     const host = document.createElement('div')
     document.body.appendChild(host)
     const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
@@ -253,7 +288,7 @@ describe('dcDesigner', () => {
       },
     })
     const activeShell = shallowRef<Component>(FirstShell)
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       extensions: {
         rendererExtensions: {
@@ -318,7 +353,7 @@ describe('dcDesigner', () => {
   })
 
   it('renders optional host controls only in sidebar rails', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       extensions: {
         leftRailRenderer: () => h('button', { class: 'host-left-rail-control' }, 'Left'),
@@ -345,7 +380,7 @@ describe('dcDesigner', () => {
   })
 
   it('handles scoped history shortcuts without intercepting form inputs', async () => {
-    const designer = createDesigner({
+    const designer = createLegacyDesignerForTest({
       engineOptions: { initialSchema: makeSchema() },
       widgetMetas: [makeMeta()],
     })
@@ -374,7 +409,7 @@ describe('dcDesigner', () => {
   })
 
   it('reactively enables the built-in undo control', async () => {
-    const designer = createDesigner({ engineOptions: { initialSchema: makeSchema() } })
+    const designer = createLegacyDesignerForTest({ engineOptions: { initialSchema: makeSchema() } })
     const host = document.createElement('div')
     document.body.appendChild(host)
     const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
@@ -398,7 +433,7 @@ describe('dcDesigner', () => {
   })
 
   it('moves focus into compact drawers and restores it after Escape', async () => {
-    const designer = createDesigner({ engineOptions: { initialSchema: makeSchema() } })
+    const designer = createLegacyDesignerForTest({ engineOptions: { initialSchema: makeSchema() } })
     designer.workspace.setMode('compact')
     const host = document.createElement('div')
     document.body.appendChild(host)

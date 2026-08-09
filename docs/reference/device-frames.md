@@ -22,6 +22,8 @@ const activeDefinition = computed(() =>
 )
 
 const designer = createDesigner({
+  schema,
+  materials,
   extensions: {
     rendererExtensions: {
       containerShell: computed(() => activeDefinition.value.containerShell),
@@ -70,7 +72,7 @@ interface DeviceFrameDefinition {
 <DevicePicker
   :definitions="definitions"
   :model-value="activeId"
-  :translate="designer.i18n.t"
+  :translate="hostI18n.t"
   @update:model-value="selectDeviceFrame"
 />
 ```
@@ -79,7 +81,7 @@ Picker 不保存或修改选择状态。它按 definition group metadata 分组�
 
 ## 自定义外壳
 
-Container Shell 不接收 Renderer props，并且必须恰好渲染一次 default slot：
+Container Shell 不接收 Designer Presentation props，并且必须恰好渲染一次 default slot：
 
 ```ts
 const WidePreviewShell = defineComponent({
@@ -96,7 +98,7 @@ const widePreview: DeviceFrameDefinition = Object.freeze({
 })
 ```
 
-slot 已包含完整 Canvas Surface：flow regions、Schema chrome、layers、scroll、insets、empty state 与 content/viewport selection planes。外壳不能读取 Schema、解释 `LayoutPlan` 或处理 forbidden overlay。设备 system chrome 可以放在 slot 前后，并可通过 `--dc-safe-area-*` 变量向 Canvas Surface 声明安全区。
+slot 已包含完整 Canvas Surface 业务预览：flow、chrome、layer、scroll、insets 与 empty state。外壳不能读取 Schema、重建业务节点或处理 Designer 的交互层。设备 system chrome 可以放在 slot 前后，并可通过 `--dc-safe-area-*` 变量向 Canvas Surface 声明安全区。
 
 设备 Frame 只用于设计态预览，不负责业务页面运行时。继续阅读 [主题、设备与国际化](/guide/customization/theme-device-and-i18n)。
 

@@ -47,7 +47,7 @@ describe('createNextDesignerHarness', () => {
       structure: { root: ['text-2'], containers: {} },
     }
 
-    expect(instance.importSchema(replacement)).toEqual({ ok: true, changed: true })
+    expect(instance.importSchema(replacement)).toMatchObject({ status: 'ready' })
     expect(instance.exportSchema()).toEqual(replacement)
     expect(instance.exportSchema()).not.toHaveProperty('root')
 

@@ -4,17 +4,11 @@ description: "@dragcraft/fields-ant-design-vue 的 Ant Design Vue 字段 adapter
 
 # @dragcraft/fields-ant-design-vue
 
-该包把 Ant Design Vue 控件映射为 Designer 的字段 adapter。物料定义和组件映射仍从 Designer 创建。
+该包把 Ant Design Vue 控件映射为 Designer 的字段 adapter。物料定义统一通过 `materials` 提供。
 
 ```ts
-import {
-  buildComponentMap,
-  getWidgetMetas,
-} from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
 
-const widgetMetas = getWidgetMetas(definitions)
-const componentMap = buildComponentMap(definitions)
 const fieldComponentMap = createAntDesignVueFields()
 ```
 
@@ -25,4 +19,4 @@ const fieldComponentMap = createAntDesignVueFields()
 | `AntDesignVueFieldComponentType` | 获取受支持的稳定字段键。 |
 | `AntDesignVueFieldComponentPropsMap` | 为字段 `componentProps` 提供类型提示。 |
 
-业务特化字段仍由宿主注册到同一份 `fieldComponentMap`。
+业务特化字段仍由宿主合并到同一份 `fieldComponentMap`。

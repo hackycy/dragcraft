@@ -252,6 +252,7 @@ function projectMaterial(
   const hasCreatePolicy = document !== null && catalog.getAuthoring(type)?.policy?.create !== undefined
   return {
     type: material.type,
+    headless: material.presentation.kind === 'headless',
     title: material.panel?.title ?? material.type,
     ...(material.panel?.titleKey ? { titleKey: material.panel.titleKey } : {}),
     group: material.panel?.group ?? 'default',

@@ -144,6 +144,8 @@ export interface RendererWidgetMeta extends CoreWidgetMeta {
   actions?: WidgetActionConfig
   wrapper?: Component
   containerAdapter?: RendererContainerAdapter
+  /** Whether the material has no business preview in the Designer canvas. */
+  headless?: boolean
 }
 
 /**
@@ -463,6 +465,8 @@ export interface RendererOptions extends ContainerDropRendererOptions {
   dragOverIndex?: Ref<number | null>
   /** Optional canvas viewport used as the collision boundary for floating controls. */
   interactionBoundary?: Ref<HTMLElement | null>
+  /** Reactive Canvas stage scale used to restore interaction-plane coordinates. */
+  viewScale?: Ref<number>
   /**
    * Optional reactive ref indicating the current drag-over is forbidden.
    * When true and dragOverNodeId is 'root', the forbidden overlay is shown
@@ -507,6 +511,8 @@ export interface RendererContext extends ContainerDropRendererOptions {
   containerDropDecision: Ref<PlacementDecision | null>
   /** Optional canvas viewport used as the collision boundary for floating controls. */
   interactionBoundary?: Ref<HTMLElement | null>
+  /** Canvas stage scale shared by geometry that renders inside the scaled stage. */
+  viewScale: Ref<number>
 }
 
 /**

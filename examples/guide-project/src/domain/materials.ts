@@ -8,7 +8,7 @@ import { GuideTextWidget } from './widgets/text'
 export const guideMaterials: readonly MaterialDefinition[] = [
   {
     type: 'page-header',
-    panel: { title: '活动页头', group: 'chrome' },
+    panel: { title: '活动页头', group: 'chrome', groupTitle: '页面框架' },
     schema: { defaultProps: { title: '夏日活动页' } },
     authoring: { policy: { create: 'denied' } },
     inspector: {
@@ -23,7 +23,7 @@ export const guideMaterials: readonly MaterialDefinition[] = [
   },
   {
     type: 'guide-text',
-    panel: { title: '文本', group: 'basic', description: '展示一段可编辑文字', tags: ['基础'] },
+    panel: { title: '文本', group: 'basic', groupTitle: '基础', description: '展示一段可编辑文字', tags: ['基础'] },
     schema: {
       defaultProps: { content: '新文本' },
       defaultStyle: { container: { padding: 12 }, content: { color: '#172033' } },
@@ -43,6 +43,7 @@ export const guideMaterials: readonly MaterialDefinition[] = [
     panel: {
       title: '公告',
       group: 'marketing',
+      groupTitle: '营销',
       description: '在页面中展示活动信息',
       tags: ['营销'],
       keywords: ['notice', 'announcement'],
@@ -92,6 +93,7 @@ export const guideMaterials: readonly MaterialDefinition[] = [
     panel: {
       title: '分栏容器',
       group: 'layout',
+      groupTitle: '布局',
       description: '由业务组件决定列布局和插入方向',
       tags: ['布局'],
     },
@@ -126,6 +128,18 @@ export const guideMaterials: readonly MaterialDefinition[] = [
         }],
       },
     },
-    presentation: { kind: 'visual', preview: FloatingActionWidget },
+    presentation: {
+      kind: 'visual',
+      preview: FloatingActionWidget,
+      layout: {
+        placement: {
+          kind: 'layer',
+          layer: 'float',
+          mode: 'framework',
+          anchor: { block: 'end', inline: 'end' },
+          offset: { blockEnd: 16, inlineEnd: 16 },
+        },
+      },
+    },
   },
 ]

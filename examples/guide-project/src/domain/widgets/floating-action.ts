@@ -1,4 +1,4 @@
-import type { DesignerWidgetMeta, WidgetDefinition } from '@dragcraft/designer'
+import type { WidgetFixtureDefinition } from './contract'
 import { defineComponent, h } from 'vue'
 
 export const FloatingActionWidget = defineComponent({
@@ -14,7 +14,7 @@ export const FloatingActionWidget = defineComponent({
   },
 })
 
-export const floatingActionWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
+export const floatingActionWidgetDefinition: WidgetFixtureDefinition = {
   meta: {
     type: 'floating-action',
     title: '浮动操作',

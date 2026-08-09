@@ -12,6 +12,7 @@ export interface UseNodeSelectionProjectionOptions {
   kind: NodeSelectionProjectionKind
   plane: Ref<NodeSelectionPlane>
   selfTargetSelector?: string
+  viewScale?: Ref<number>
 }
 
 export interface UseNodeSelectionProjectionReturn {
@@ -30,6 +31,11 @@ function resolveTargetElement(host: HTMLElement, selfTargetSelector: string | un
 
   const rect = candidate.getBoundingClientRect()
   return rect.width > 0 && rect.height > 0 ? candidate : host
+}
+
+function resolveViewScale(viewScale: Ref<number> | undefined): number {
+  const value = viewScale?.value ?? 1
+  return Number.isFinite(value) && value > 0 ? value : 1
 }
 
 export function useNodeSelectionProjection(
@@ -58,17 +64,18 @@ export function useNodeSelectionProjection(
       return
     }
 
+    const viewScale = resolveViewScale(options.viewScale)
     const materialBounds = {
-      top: targetRect.top - planeRect.top,
-      left: targetRect.left - planeRect.left,
-      width: targetRect.width,
-      height: targetRect.height,
+      top: (targetRect.top - planeRect.top) / viewScale,
+      left: (targetRect.left - planeRect.left) / viewScale,
+      width: targetRect.width / viewScale,
+      height: targetRect.height / viewScale,
     }
     const bounds = options.kind === 'root-segment'
       ? {
           top: materialBounds.top,
           left: 0,
-          width: planeRect.width,
+          width: planeRect.width / viewScale,
           height: materialBounds.height,
         }
       : { ...materialBounds }
@@ -112,6 +119,11 @@ export function useNodeSelectionProjection(
     }
     void nextTick(startAutoUpdate)
   }, { immediate: true, flush: 'post' })
+
+  watch(() => options.viewScale?.value, () => {
+    if (isSelected.value)
+      void nextTick(update)
+  }, { flush: 'post' })
 
   onBeforeUnmount(stopAutoUpdate)
 

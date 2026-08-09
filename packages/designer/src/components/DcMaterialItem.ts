@@ -48,6 +48,7 @@ export default defineComponent({
       const material = resolveMaterialItem(meta, t)
       const draggable = true
       const disabled = false
+      const headless = meta.headless === true
       const customContent = extensions.materialItemRenderer?.({
         meta,
         material,
@@ -70,6 +71,17 @@ export default defineComponent({
         ]),
       ]
 
+      const headlessFeedback = headless
+        ? h('span', {
+            'class': 'dc-material-item__headless-feedback',
+            'data-dc-part': 'headless-feedback',
+            'title': t('material.headless.description', '仅用于页面配置，不会显示在画布中。'),
+          }, t('material.headless.badge', '无画布预览'))
+        : null
+      const children = customContent
+        ? [customContent, headlessFeedback]
+        : [...defaultContent, headlessFeedback]
+
       return h(
         'div',
         {
@@ -82,14 +94,17 @@ export default defineComponent({
             },
           ],
           'data-dc-component': 'material-item',
-          'data-dc-state': isDragging.value ? 'dragging' : undefined,
+          'data-dc-state': [
+            isDragging.value ? 'dragging' : null,
+            headless ? 'headless' : null,
+          ].filter(Boolean).join(' ') || undefined,
           'draggable': draggable,
           'aria-disabled': disabled,
           'title': material.description ? `${material.title}: ${material.description}` : material.title,
           'onDragstart': handleDragStart,
           'onDragend': handleDragEnd,
         },
-        customContent ?? defaultContent,
+        children,
       )
     }
   },

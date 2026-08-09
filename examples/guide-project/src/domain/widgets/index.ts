@@ -1,12 +1,12 @@
-import type { DesignerWidgetMeta, WidgetDefinition, WidgetGroupConfig } from '@dragcraft/designer'
-import { buildComponentMap, getWidgetMetas } from '@dragcraft/designer'
+import type { MaterialGroupDefinition, WidgetFixtureDefinition } from './contract'
 import { columnContainerDefinition } from './container'
+import { createFixtureComponentMap, readFixtureMetas } from './contract'
 import { floatingActionWidgetDefinition } from './floating-action'
 import { noticeWidgetDefinition } from './notice'
 import { pageHeaderWidgetDefinition } from './page-header'
 import { textWidgetDefinition } from './text'
 
-export const guideWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[] = [
+export const guideWidgetFixtures: WidgetFixtureDefinition[] = [
   pageHeaderWidgetDefinition,
   textWidgetDefinition,
   noticeWidgetDefinition,
@@ -14,9 +14,9 @@ export const guideWidgetDefinitions: WidgetDefinition<DesignerWidgetMeta>[] = [
   floatingActionWidgetDefinition,
 ]
 
-export const guideWidgetMetas = getWidgetMetas(guideWidgetDefinitions)
-export const guideComponentMap = buildComponentMap(guideWidgetDefinitions)
-export const guideWidgetGroups: WidgetGroupConfig[] = [
+export const guideFixtureMetas = readFixtureMetas(guideWidgetFixtures)
+export const guideFixtureComponentMap = createFixtureComponentMap(guideWidgetFixtures)
+export const guideMaterialGroups: MaterialGroupDefinition[] = [
   { name: 'chrome', title: '页面框架' },
   { name: 'basic', title: '基础' },
   { name: 'marketing', title: '营销' },

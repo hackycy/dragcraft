@@ -54,6 +54,11 @@
   border: 1px solid transparent;
 }
 
+.dc-headless-drop-overlay,
+.dc-headless-drop-overlay > [data-dc-part="text"] {
+  box-sizing: border-box;
+}
+
 .dc-root-renderer {
   position: relative;
   min-height: 100%;
@@ -124,6 +129,22 @@
 
 .dc-canvas-surface--empty {
   min-height: 200px;
+}
+
+.dc-headless-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.dc-headless-drop-overlay > [data-dc-part="text"] {
+  max-width: min(320px, 100%);
+  padding: 10px 14px;
+  text-align: center;
 }
 
 .dc-canvas-surface__scrollport {

@@ -4,6 +4,13 @@ export const designerMessages: Record<string, MessageTree> = {
   'zh-CN': {
     panel: {
       materials: { title: '物料' },
+      material: {
+        headless: {
+          badge: '无画布预览',
+          description: '仅用于页面配置，不会显示在画布中。',
+          drop: '松开即可添加页面配置，不会显示在画布中',
+        },
+      },
       left: {
         materials: '物料',
         structure: '结构树',
@@ -48,6 +55,13 @@ export const designerMessages: Record<string, MessageTree> = {
   'en': {
     panel: {
       materials: { title: 'Materials' },
+      material: {
+        headless: {
+          badge: 'No canvas preview',
+          description: 'Used only for page configuration and not shown on the canvas.',
+          drop: 'Release to add page configuration. It will not appear on the canvas.',
+        },
+      },
       left: {
         materials: 'Materials',
         structure: 'Structure',

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, ref } from 'vue'
-import { resolveCanvasStagePixelSnap, useCanvasPan } from './useCanvasPan'
+import { resolveCanvasFitScale, resolveCanvasStagePixelSnap, useCanvasPan } from './useCanvasPan'
 
 function mountPan() {
   const host = document.createElement('div')
@@ -56,6 +56,17 @@ describe('useCanvasPan', () => {
     expect(resolveCanvasStagePixelSnap(geometry, 2)).toEqual({ x: 0, y: 0 })
   })
 
+  it('fits a Device Frame with room for its visible outer border', () => {
+    expect(resolveCanvasFitScale({
+      viewport: { width: 680, height: 844 },
+      frame: { width: 393, height: 937 },
+    })).toBeCloseTo(828 / 937)
+    expect(resolveCanvasFitScale({
+      viewport: { width: 1280, height: 1200 },
+      frame: { width: 393, height: 937 },
+    })).toBe(1)
+  })
+
   it('applies pan and pixel snap as independent stage translations', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'styles/structure.css'), 'utf8')
     const stageRule = css.match(/\.dc-canvas__stage\s*\{[^}]*\}/)?.[0]
@@ -67,6 +78,7 @@ describe('useCanvasPan', () => {
     expect(stageRule).toContain('translate3d(-50%, -50%, 0)')
     expect(stageRule).toContain('translate3d(var(--dc-internal-canvas-pan-x, 0px), var(--dc-internal-canvas-pan-y, 0px), 0)')
     expect(stageRule).toContain('translate3d(var(--dc-internal-canvas-snap-x, 0px), var(--dc-internal-canvas-snap-y, 0px), 0)')
+    expect(stageRule).toContain('scale(var(--dc-internal-canvas-view-scale, 1))')
     expect(boundaryRule).toContain('margin-block: 0')
     expect(boundaryRule).toContain('margin-inline: auto')
     expect(boundedContentRule).toContain('min-width: 0')

@@ -16,7 +16,7 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const session = useDesignerSession()
     const { t } = useI18n()
-    const { searchQuery, widgetGroups } = ctx
+    const { searchQuery, materialGroups } = ctx
 
     // Filter widgets by search query, grouped by widget group
     const filteredGroups = computed(() => {
@@ -24,9 +24,9 @@ export default defineComponent({
         .filter(isWidgetVisibleInMaterialPanel)
       const query = searchQuery.value.toLowerCase().trim()
 
-      // Use provided widget groups, or derive from registered widgets
-      const groups = widgetGroups
-        ?? [...new Set(allWidgets.map(w => w.group))].map(name => ({ name, title: name, titleKey: undefined }))
+      const groups = materialGroups.length > 0
+        ? materialGroups
+        : [...new Set(allWidgets.map(w => w.group))].map(name => ({ name, title: name, titleKey: undefined }))
 
       const widgetsByGroup = new Map<string, typeof allWidgets>()
       for (const widget of allWidgets) {

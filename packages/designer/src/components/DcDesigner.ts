@@ -3,6 +3,7 @@ import type { DesignerContext, DesignerInstance } from '../types'
 import { I18N_KEY } from '@dragcraft/i18n'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useDragDrop } from '../composables/useDragDrop'
+import { getDesignerRuntimeConfiguration } from '../instance-config'
 import { DESIGNER_SESSION_KEY } from '../session/context'
 import { getDesignerSession } from '../session/get-designer-session'
 import { DESIGNER_CONTEXT_KEY } from '../types'
@@ -29,9 +30,10 @@ export default defineComponent({
 
   setup(props) {
     const session = getDesignerSession(props.instance)
+    const configuration = getDesignerRuntimeConfiguration(props.instance)
     const {
       componentMap,
-      widgetGroups,
+      materialGroups,
       extensions,
       fieldComponentMap,
       globalConfigSchema,
@@ -40,7 +42,7 @@ export default defineComponent({
       actionRegistry,
       i18n,
       workspace,
-    } = props.instance
+    } = configuration
     const rootRef = ref<HTMLElement | null>(null)
     const leftPanelRef = ref<HTMLElement | null>(null)
     const rightPanelRef = ref<HTMLElement | null>(null)
@@ -51,7 +53,7 @@ export default defineComponent({
 
     const ctx: DesignerContext = {
       componentMap,
-      widgetGroups,
+      materialGroups,
       extensions,
       fieldComponentMap,
       globalConfigSchema,

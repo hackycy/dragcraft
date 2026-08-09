@@ -1,4 +1,5 @@
-import type { DesignerWidgetMeta, FormContext, WidgetDefinition } from '@dragcraft/designer'
+import type { FormContext } from '@dragcraft/designer'
+import type { WidgetFixtureDefinition } from './contract'
 import { computed, defineComponent, h } from 'vue'
 
 export const NoticeWidget = defineComponent({
@@ -28,7 +29,7 @@ export const NoticeWidget = defineComponent({
   },
 })
 
-export const noticeWidgetDefinition: WidgetDefinition<DesignerWidgetMeta> = {
+export const noticeWidgetDefinition: WidgetFixtureDefinition = {
   meta: {
     type: 'notice',
     title: '公告',

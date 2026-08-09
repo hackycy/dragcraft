@@ -48,6 +48,15 @@ export default defineComponent({
     const isForbidden = computed(() =>
       isActive.value && ctx.containerDropDecision.value?.allowed === false,
     )
+    const isHeadlessMaterialDrag = computed(() => {
+      const target = ctx.session.state.dragTarget.value
+      return target?.sourceNodeId === null
+        && target.widgetType !== null
+        && ctx.session.materials.get(target.widgetType)?.headless === true
+    })
+    const showPlacementFeedback = computed(() =>
+      isActive.value && !isHeadlessMaterialDrag.value,
+    )
 
     function handleDragOver(event: DragEvent): void {
       const regionElement = event.currentTarget as HTMLElement
@@ -144,9 +153,9 @@ export default defineComponent({
       const ForbiddenOverlay = ctx.extensions.forbiddenOverlay ?? DefaultForbiddenOverlay
 
       if (isEmpty.value)
-        children.push(h(EmptyState, { isDragOver: isActive.value }))
+        children.push(h(EmptyState, { isDragOver: showPlacementFeedback.value }))
 
-      if (isActive.value && !isForbidden.value) {
+      if (showPlacementFeedback.value && !isForbidden.value) {
         const index = ctx.activeDestination.value?.index
         if (Number.isInteger(index) && index != null && index >= 0 && index <= regionNodes.value.length)
           children.splice(index, 0, h(DropIndicator, { key: '__container-drop-indicator__' }))
@@ -161,7 +170,7 @@ export default defineComponent({
 
       const themeStates = [
         isEmpty.value ? 'empty' : null,
-        isActive.value ? 'active' : null,
+        showPlacementFeedback.value ? 'active' : null,
         isForbidden.value ? 'forbidden' : null,
       ].filter(Boolean).join(' ') || undefined
 
@@ -170,7 +179,7 @@ export default defineComponent({
           'dc-container-region',
           {
             'dc-container-region--empty': isEmpty.value,
-            'dc-container-region--active': isActive.value,
+            'dc-container-region--active': showPlacementFeedback.value,
             'dc-container-region--forbidden': isForbidden.value,
           },
         ],

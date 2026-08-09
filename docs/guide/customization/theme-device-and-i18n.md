@@ -44,7 +44,7 @@ const activeDeviceFrame = computed(() =>
 const activeContainerShell = computed(() => activeDeviceFrame.value.containerShell)
 ```
 
-Picker 只发出请求的 ID，宿主决定是否接受并更新状态。当前 definition 的 readonly Container Shell ref 传给 Designer 后，可以在现有实例上切换设备；Engine、Schema 和 history 不会重建。
+Picker 只发出请求的 ID，宿主决定是否接受并更新状态。当前 definition 的 readonly Container Shell ref 传给 Designer 后，可以在现有实例上切换设备；document 和 history 不会重建。
 
 Device Frame 只模拟设计态 viewport 和系统 chrome。生产运行时根据目标平台决定真实安全区、导航和窗口尺寸。
 
