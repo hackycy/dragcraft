@@ -1,4 +1,4 @@
 @import '@dragcraft/ui/structure.css';
 @import '../styles/structure.css';
-@import '@dragcraft/renderer/structure.css';
+@import '../src/presentation/structure.css';
 @import '@dragcraft/form-generator/structure.css';

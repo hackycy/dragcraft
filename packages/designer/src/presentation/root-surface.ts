@@ -1,20 +1,24 @@
 import type { NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, PropType, Ref, VNode } from 'vue'
-import type { NodeActionRegistry } from '../action-registry'
-import type { ActionInterceptor } from '../action-runtime'
-import type { RendererEventHooks } from '../event-hooks'
-import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions, RendererLayoutEntry, RendererLayoutProjection, RendererSessionProjection } from '../types'
+import type { NodeActionRegistry } from './action-registry'
+import type { ActionInterceptor } from './action-runtime'
+import type { RendererEventHooks } from './event-hooks'
+import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererContext, RendererExtensions } from './types'
 import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, normalizeStyleValueMap } from '@dragcraft/legacy-core'
 import { computed, defineComponent, h, isRef, provide } from 'vue'
-import { createRendererContext } from '../context'
-import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from '../selection-presentation'
-import { RENDERER_CONTEXT_KEY } from '../types'
-import CanvasSurface from './CanvasSurface'
-import DefaultContainerShell from './DefaultContainerShell'
-import DefaultDropIndicator from './DefaultDropIndicator'
-import DefaultEmptyState from './DefaultEmptyState'
-import DefaultForbiddenOverlay from './DefaultForbiddenOverlay'
-import WidgetRenderer from './WidgetRenderer'
+import CanvasSurface from './canvas-surface'
+import { createRendererContext } from './context'
+import DefaultContainerShell from './default-container-shell'
+import DefaultDropIndicator from './default-drop-indicator'
+import DefaultEmptyState from './default-empty-state'
+import DefaultForbiddenOverlay from './default-forbidden-overlay'
+import NodeHost from './node-host'
+import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from './selection-presentation'
+import { RENDERER_CONTEXT_KEY } from './types'
+
+type RendererLayoutProjection = RendererContext['layout']['value']
+type RendererLayoutEntry = RendererLayoutProjection['entries'][number]
+type RendererSessionProjection = RendererContext['session']
 
 function regionEntryIndex(plan: RendererLayoutProjection, entry: RendererLayoutEntry): number {
   return (plan.regions.get(entry.layout.region ?? DEFAULT_LAYOUT_REGION) ?? [])
@@ -72,7 +76,7 @@ function insertDropIndicator(
 }
 
 export default defineComponent({
-  name: 'DcRootRenderer',
+  name: 'DcRootSurface',
 
   props: {
     session: {
@@ -184,7 +188,7 @@ export default defineComponent({
       const EmptyState = props.extensions?.emptyState ?? DefaultEmptyState
 
       const regionVNodes: Record<string, VNode[]> = {}
-      const NodeRenderer = ctx.nodeRenderer ?? WidgetRenderer
+      const NodeRenderer = ctx.nodeRenderer ?? NodeHost
       for (const [region, entries] of plan.regions) {
         regionVNodes[region] = entries.map(entry =>
           h(NodeRenderer, {

@@ -51,10 +51,10 @@
     "@dragcraft/i18n": "workspace:*",
     "@dragcraft/icons": "workspace:*",
     "@dragcraft/legacy-core": "workspace:*",
-    "@dragcraft/renderer": "workspace:*",
     "@dragcraft/ui": "workspace:*",
     "@dragcraft/utils": "workspace:*",
-    "@dragcraft/widgets": "workspace:*"
+    "@dragcraft/widgets": "workspace:*",
+    "@floating-ui/dom": "catalog:vue"
   },
   "devDependencies": {
     "happy-dom": "catalog:testing",

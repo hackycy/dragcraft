@@ -14,8 +14,8 @@ import type {
   SchemaDiagnostic,
   SchemaNode,
 } from '@dragcraft/legacy-core'
-import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { ComputedRef, Ref } from 'vue'
+import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '../presentation/types'
 
 export type DesignerMaterialCapability
   = | 'selectable'
@@ -95,4 +95,4 @@ export interface DesignerSession {
   execute: (action: AuthoringAction) => AuthoringResult
 }
 
-export type { AuthoringAction, AuthoringDecision, AuthoringResult } from '@dragcraft/renderer'
+export type { AuthoringAction, AuthoringDecision, AuthoringResult } from '../presentation/types'

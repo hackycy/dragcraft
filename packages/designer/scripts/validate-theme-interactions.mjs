@@ -9,7 +9,7 @@ const recipes = parse('theme/baseline/recipes.css')
 const uiRecipe = parse('../ui/styles/recipe.css')
 const designerStructure = parse('styles/structure.css')
 const formStructure = parse(import.meta.resolve('@dragcraft/form-generator/structure.css'))
-const rendererStructure = parse(import.meta.resolve('@dragcraft/renderer/structure.css'))
+const presentationStructure = parse('src/presentation/structure.css')
 const errors = []
 
 function parse(relativePath) {
@@ -73,7 +73,7 @@ expectNoDeclarations('node drag over', recipes, '[data-dc-component="node"][data
   'border-color',
   'border-style',
 ])
-expectNoDeclarations('node wrapper geometry', rendererStructure, '.dc-node', ['border'])
+expectNoDeclarations('node wrapper geometry', presentationStructure, '.dc-node', ['border'])
 
 expectDeclarations('container material selection', recipes, '[data-dc-component="node-selection"]', {
   border: 'var(--dc-node-selection-stroke-width) solid var(--dc-color-accent)',

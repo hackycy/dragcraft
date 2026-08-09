@@ -1,8 +1,8 @@
 import type { NodeOwner, SchemaNode } from '@dragcraft/legacy-core'
 import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
-import { useRendererContext } from '../context'
-import WidgetRenderer from './WidgetRenderer'
+import { useRendererContext } from './context'
+import NodeHost from './node-host'
 
 export default defineComponent({
   name: 'DcDefaultContainerFallback',
@@ -33,7 +33,7 @@ export default defineComponent({
         'data-dc-container-region': regionId,
         'role': 'group',
         'aria-label': regionId,
-      }, nodes.map(node => h(ctx.nodeRenderer ?? WidgetRenderer, {
+      }, nodes.map(node => h(ctx.nodeRenderer ?? NodeHost, {
         key: node.id,
         node,
         owner,

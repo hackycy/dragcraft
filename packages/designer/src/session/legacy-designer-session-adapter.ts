@@ -1,5 +1,5 @@
 import type { Command, CommandExecutionResult, DesignerEngine, DesignerSchema, NodeDestination, NodeOwner, PlacementDecision, SchemaNode } from '@dragcraft/legacy-core'
-import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '@dragcraft/renderer'
+import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '../presentation/types'
 import type { DesignerSession, DesignerSessionDropRejectionReason } from './types'
 import {
   buildSchemaIndex,

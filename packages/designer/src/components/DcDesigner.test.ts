@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 import type { Component } from 'vue'
 import type { DesignerSchema, DesignerWidgetMeta, WidgetMeta } from '..'
-import { ContainerRegionOutlet } from '@dragcraft/renderer'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, readonly, shallowRef } from 'vue'
 import { createDesigner } from '..'
+import ContainerRegionOutlet from '../presentation/container-region-outlet'
 import { getDesignerSession } from '../session/get-designer-session'
 import DcDesigner from './DcDesigner'
 

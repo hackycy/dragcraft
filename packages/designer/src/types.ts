@@ -2,11 +2,14 @@ import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
 import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/legacy-core'
-import type { ActionInterceptor, AuthoringAction, AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 import type { AuthoringEngine } from './authoring/types'
 import type { MaterialDefinition } from './materials/types'
+import type { NodeActionDefinition, NodeActionRegistry } from './presentation/action-registry'
+import type { ActionInterceptor } from './presentation/action-runtime'
+import type { RendererEventHooks } from './presentation/event-hooks'
+import type { AuthoringAction, AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions, RendererWidgetMeta } from './presentation/types'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
 
@@ -168,7 +171,7 @@ export interface DesignerExtensions {
   propertyPanelRenderer?: Component
   /** Custom content renderer for a single material item. Designer owns the outer shell and drag behavior. */
   materialItemRenderer?: (props: MaterialItemRenderProps) => VNodeChild
-  /** Renderer extensions (dropIndicator) forwarded to @dragcraft/renderer */
+  /** Presentation extensions forwarded to the Designer canvas. */
   rendererExtensions?: RendererExtensions
   /** Optional controls appended to the left sidebar rail. */
   leftRailRenderer?: (api: DesignerRailSlotAPI) => VNodeChild

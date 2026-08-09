@@ -430,8 +430,8 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 | G4 NextDesignerSession Contract | passed | Legacy/Next shared DesignerSession contract；Next action translation、recovery、export isolation；Designer directed 155/155；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 14/14）通过 |
 | G5 Next UI Harness | passed | dev-only Next selector 与三个最终 Playground fixture；Next/Legacy 分别通过 14 个交互基线、Next harness 3/3（Chromium 31/31）；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test` 通过；三个模板人工验收通过 |
 | G6 Backend/Public Cutover | passed | Next backend 已作为唯一生产实例；容器完整 NodeBundle 创建与非 flow Region 拒绝回归已关闭；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 25/25）通过；Playground 与 Guide Project 人工验收通过 |
-| G7 Presentation Replacement | pending | G6 Exit 已满足 |
-| G8 Product/Public Finalization | blocked | G7 Exit |
+| G7 Presentation Replacement | passed | Node Interaction、Container Region、Root Surface 与 Frame/Geometry clusters 已完成；Device Frame root selection plane 外扩及四边等宽（3px）浏览器回归已覆盖；Designer 无生产 Renderer interface 或 stylesheet import，旧 Renderer 无 active runtime caller；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 26/26）通过；三个 Playground 模板人工验收通过 |
+| G8 Product/Public Finalization | pending | G7 Exit 已满足 |
 | G9 Deletion Gate | blocked | G8 Exit and six deletion evidence groups |
 
 状态只能按 `blocked -> pending -> in progress -> passed` 前进。若已通过 gate 的基线因后续改动回归，当前 gate 立即重新变为 blocked，直到回归关闭。

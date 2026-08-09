@@ -1,7 +1,9 @@
-import { RootRenderer } from '@dragcraft/renderer'
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useCanvasPan } from '../composables/useCanvasPan'
 import { useDesignerContext } from '../context'
+import ContainerRegionOutlet from '../presentation/container-region-outlet'
+import NodeHost from '../presentation/node-host'
+import RootRenderer from '../presentation/root-surface'
 import { useDesignerSession } from '../session/context'
 import DcCanvasControls from './DcCanvasControls'
 
@@ -139,7 +141,7 @@ export default defineComponent({
               '--dc-internal-canvas-pan-y': `${canvasPan.offset.value.y}px`,
               '--dc-internal-canvas-snap-x': `${canvasPan.pixelSnap.value.x}px`,
               '--dc-internal-canvas-snap-y': `${canvasPan.pixelSnap.value.y}px`,
-              '--dc-internal-renderer-default-container-block-size': canvasPan.defaultContainerBlockSize.value === null
+              '--dc-internal-designer-default-container-block-size': canvasPan.defaultContainerBlockSize.value === null
                 ? undefined
                 : `${canvasPan.defaultContainerBlockSize.value}px`,
             },
@@ -152,6 +154,8 @@ export default defineComponent({
               h(RootRenderer, {
                 session,
                 componentMap,
+                nodeRenderer: NodeHost,
+                regionRenderer: ContainerRegionOutlet,
                 extensions: rendererExtensions.value,
                 eventHooks,
                 actionInterceptors,

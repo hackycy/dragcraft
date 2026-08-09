@@ -1,6 +1,6 @@
 import type { FieldBindingScope, FieldBindingTarget } from '@dragcraft/form-generator'
 import type { DeepReadonly, DesignerSchema, SchemaNode } from '@dragcraft/legacy-core'
-import type { AuthoringAction } from '@dragcraft/renderer'
+import type { AuthoringAction } from '../presentation/types'
 
 export type FieldBinding = string | FieldBindingTarget | undefined
 

@@ -84,8 +84,10 @@ describe('built-in Container Shells', () => {
   it('does not contain Renderer layout or selection implementation selectors', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'src/styles/device-frame.css'), 'utf8')
     const boundaryRule = css.match(/\[data-dc-component="renderer-frame-boundary"\]:has\(> \.dc-device-frame\)\s*\{[^}]*\}/)?.[0]
-    expect(boundaryRule).toContain('--dc-internal-renderer-root-selection-plane-outset: var(--dc-device-frame-border-width)')
-    expect(boundaryRule).toContain('--dc-internal-renderer-root-selection-plane-radius: var(--dc-device-frame-radius)')
+    expect(boundaryRule).toContain('--dc-internal-designer-root-selection-plane-outset: var(--dc-device-frame-border-width)')
+    expect(boundaryRule).toContain('--dc-internal-designer-root-selection-plane-radius: var(--dc-device-frame-radius)')
+    expect(boundaryRule).toContain('--dc-node-selection-root-block-overlap: var(--dc-device-frame-border-width)')
+    expect(boundaryRule).toContain('--dc-node-selection-root-inline-overlap: var(--dc-device-frame-border-width)')
     expect(css).not.toContain('dc-device-frame__content-layout')
     expect(css).not.toContain('dc-device-frame__chrome')
     expect(css).not.toContain('dc-device-frame__layer')

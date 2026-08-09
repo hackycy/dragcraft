@@ -15,7 +15,7 @@ const errors = []
 const structureEntries = [
   '@dragcraft/ui/structure.css',
   '../styles/structure.css',
-  '@dragcraft/renderer/structure.css',
+  '../src/presentation/structure.css',
   '@dragcraft/form-generator/structure.css',
 ]
 
@@ -164,7 +164,7 @@ function validateRenderedHooks() {
   const roots = [
     'packages/ui/src/components',
     'packages/designer/src/components',
-    'packages/renderer/src/components',
+    'packages/designer/src/presentation',
     'packages/form-generator/src/components',
   ]
   const renderedComponents = new Set()

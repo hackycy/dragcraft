@@ -1,13 +1,13 @@
 import type { SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, PropType, VNode } from 'vue'
-import type { ResolveContainerDropIndex } from '../types'
+import type { ResolveContainerDropIndex } from './types'
 import { computed, defineComponent, h, mergeProps } from 'vue'
-import { useContainerRuntime } from '../container-runtime'
-import { useRendererContext } from '../context'
-import DefaultDropIndicator from './DefaultDropIndicator'
-import DefaultEmptyState from './DefaultEmptyState'
-import DefaultForbiddenOverlay from './DefaultForbiddenOverlay'
-import WidgetRenderer from './WidgetRenderer'
+import { useContainerRuntime } from './container-runtime'
+import { useRendererContext } from './context'
+import DefaultDropIndicator from './default-drop-indicator'
+import DefaultEmptyState from './default-empty-state'
+import DefaultForbiddenOverlay from './default-forbidden-overlay'
+import NodeHost from './node-host'
 
 function isNestedRegionEvent(event: DragEvent, regionElement: HTMLElement): boolean {
   return event.target instanceof Element
@@ -27,13 +27,6 @@ export default defineComponent({
   },
   setup(props, { attrs }) {
     const ctx = useRendererContext()
-    if (ctx.regionRenderer) {
-      return () => h(ctx.regionRenderer!, mergeProps(attrs, {
-        regionId: props.regionId,
-        as: props.as,
-        resolveDropIndex: props.resolveDropIndex,
-      }))
-    }
     const runtime = useContainerRuntime()
     const definition = computed(() =>
       runtime.regionDefinitions.value.find(item => item.id === props.regionId),
@@ -136,7 +129,7 @@ export default defineComponent({
     }
 
     return () => {
-      const NodeRenderer = ctx.nodeRenderer ?? WidgetRenderer
+      const NodeRenderer = ctx.nodeRenderer ?? NodeHost
       const children: VNode[] = regionNodes.value.map(node => h(NodeRenderer, {
         key: node.id,
         node: node as unknown as SchemaNode,

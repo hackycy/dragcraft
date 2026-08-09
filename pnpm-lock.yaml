@@ -234,9 +234,6 @@ importers:
       '@dragcraft/legacy-core':
         specifier: workspace:*
         version: link:../legacy-core
-      '@dragcraft/renderer':
-        specifier: workspace:*
-        version: link:../renderer
       '@dragcraft/ui':
         specifier: workspace:*
         version: link:../ui
@@ -246,6 +243,9 @@ importers:
       '@dragcraft/widgets':
         specifier: workspace:*
         version: link:../widgets
+      '@floating-ui/dom':
+        specifier: catalog:vue
+        version: 1.7.6
     devDependencies:
       happy-dom:
         specifier: catalog:testing

@@ -21,6 +21,7 @@ interface MountOptions {
   onContainerDragLeave?: (...args: any[]) => void
   onContainerDrop?: (...args: any[]) => void
   extensions?: Record<string, Component>
+  regionRenderer?: Component
 }
 
 function makeNode(id: string): SchemaNode {
@@ -116,6 +117,7 @@ function mountExternalSplit(options: MountOptions = {}) {
         engine,
         session: createRendererTestSession(engine),
         componentMap,
+        regionRenderer: options.regionRenderer,
         extensions: options.extensions,
         activeDestination: options.activeDestination,
         containerDropDecision: options.containerDropDecision,
@@ -156,6 +158,27 @@ describe('containerRegionOutlet', () => {
       expect(host.querySelector('[data-dc-container-region="left"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-container-region="right"]')?.tagName).toBe('ASIDE')
       expect(host.querySelector('[data-dc-container-region="left"]')?.getAttribute('data-dc-component')).toBe('container-region')
+    }
+    finally {
+      app.unmount()
+    }
+  })
+
+  it('delegates Region presentation to the host-owned implementation', async () => {
+    const Region = defineComponent({
+      props: { regionId: { type: String, required: true } },
+      setup(props) {
+        return () => h('div', {
+          'class': 'host-region-renderer',
+          'data-region-id': props.regionId,
+        })
+      },
+    })
+    const { app, host } = mountExternalSplit({ regionRenderer: Region })
+    try {
+      await nextTick()
+      expect(host.querySelector('.host-region-renderer')?.getAttribute('data-region-id')).toBe('left')
+      expect(host.querySelector('[data-dc-component="container-region"]')).toBeNull()
     }
     finally {
       app.unmount()

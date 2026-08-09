@@ -46,6 +46,43 @@ test.describe(backend.name, () => {
     await expect(page.locator('[data-dc-component="node-toolbar"]')).toHaveAttribute('data-dc-state', /vertical/)
   })
 
+  test('keeps the root selection plane outside the Device Frame boundary', async ({ page }) => {
+    await page.goto(backend.url)
+
+    await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()
+
+    const boundary = page.locator('[data-dc-component="renderer-frame-boundary"]')
+    const rootPlane = boundary.locator(':scope > .dc-node-selection-plane--root')
+    const [boundaryBox, rootPlaneBox] = await Promise.all([
+      boundary.boundingBox(),
+      rootPlane.boundingBox(),
+    ])
+    if (!boundaryBox || !rootPlaneBox)
+      throw new Error('Expected Device Frame boundary and root selection plane bounds')
+
+    expect(rootPlaneBox.x).toBeLessThan(boundaryBox.x)
+    expect(rootPlaneBox.width).toBeGreaterThan(boundaryBox.width)
+
+    const edgeThickness = await rootPlane.locator('.dc-node__selection-edge').evaluateAll((edges) => {
+      return edges.reduce<Record<string, number>>((thickness, edge) => {
+        const rect = edge.getBoundingClientRect()
+        const direction = edge.classList.contains('dc-node__selection-edge--block-start')
+          ? 'blockStart'
+          : edge.classList.contains('dc-node__selection-edge--inline-end')
+            ? 'inlineEnd'
+            : edge.classList.contains('dc-node__selection-edge--block-end')
+              ? 'blockEnd'
+              : 'inlineStart'
+        thickness[direction] = direction.startsWith('block') ? rect.height : rect.width
+        return thickness
+      }, {})
+    })
+
+    expect(edgeThickness.blockStart).toBe(edgeThickness.inlineEnd)
+    expect(edgeThickness.blockEnd).toBe(edgeThickness.inlineEnd)
+    expect(edgeThickness.inlineStart).toBe(edgeThickness.inlineEnd)
+  })
+
   test('selects a container owner from its external handle and a Region child from its bounds', async ({ page }) => {
     await page.goto(backend.url)
     await page.getByRole('combobox').first().selectOption('content-detail')

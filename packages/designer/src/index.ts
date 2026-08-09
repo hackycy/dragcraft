@@ -51,6 +51,77 @@ export type {
 // ── Messages ────────────────────────────
 export { designerMessages } from './messages'
 
+// ── Re-exports: Presentation ────────────
+export {
+  ActionKey,
+  createDefaultActions,
+  createNodeActionRegistry,
+} from './presentation/action-registry'
+
+export type {
+  NodeActionContext,
+  NodeActionDefinition,
+  NodeActionRegistry,
+  ResolvedNodeAction,
+} from './presentation/action-registry'
+export { createConfirmActionInterceptor } from './presentation/action-runtime'
+
+export type {
+  ActionConfirmRequest,
+  ActionDecision,
+  ActionInterceptor,
+  ActionInvocation,
+  ActionRisk,
+  ConfirmActionInterceptorOptions,
+} from './presentation/action-runtime'
+export { default as ContainerRegionOutlet } from './presentation/container-region-outlet'
+
+export { useContainerRuntime } from './presentation/container-runtime'
+export { default as DefaultEmptyState } from './presentation/default-empty-state'
+
+export { default as DefaultNodeHandle } from './presentation/default-node-handle'
+
+export { default as DefaultNodeMask } from './presentation/default-node-mask'
+export { default as DefaultNodeToolbar } from './presentation/default-node-toolbar'
+
+export type { RendererEventHooks } from './presentation/event-hooks'
+export type {
+  NodeInteractionGeometryMode,
+  NodeInteractionPresentation,
+  NodeToolbarOrientation,
+  NodeToolbarPlacement,
+} from './presentation/node-interaction'
+export { default as RootRenderer } from './presentation/root-surface'
+export type {
+  ComponentMap,
+  ContainerShell,
+  ContainerShellSource,
+  DeepReadonly,
+  EmptyStateProps,
+  NodeHandleProps,
+  NodeMaskProps,
+  NodeToolbarProps,
+  NodeWrapperProps,
+  RendererExtensions,
+  RendererOptions,
+  WidgetActionConfig as RendererWidgetActionConfig,
+  RendererWidgetActionExtra,
+  RendererWidgetMeta,
+  ResolveContainerDropIndexContext,
+  WidgetFallbackProps,
+} from './presentation/types'
+export { useNodeActions } from './presentation/use-node-actions'
+export { useNodeDrag } from './presentation/use-node-drag'
+export { useNodeInteractionGeometry } from './presentation/use-node-interaction-geometry'
+export type {
+  NodeInteractionGeometry,
+  NodeInteractionRect,
+  UseNodeInteractionGeometryOptions,
+  UseNodeInteractionGeometryReturn,
+} from './presentation/use-node-interaction-geometry'
+export { useWidgetNode } from './presentation/use-widget-node'
+export { useWidgetRuntime } from './presentation/widget-runtime'
+export type { WidgetRuntimeContext } from './presentation/widget-runtime'
 // ── Types ───────────────────────────────
 export type {
   DesignerContext,
@@ -71,10 +142,8 @@ export type {
   ResolvedMaterialItem,
   UseDesignerReturn,
 } from './types'
-
 export { DESIGNER_CONTEXT_KEY } from './types'
 export { createDesignerWorkspace } from './workspace'
-
 export type { DocumentSchema, JsonObject, JsonValue, NodeDefinition, NodeId, NodeType, PageDefinition, RegionId } from '@dragcraft/core'
 // ── Re-exports: @dragcraft/form-generator ─
 export {
@@ -86,7 +155,6 @@ export {
   useFormGeneratorContext,
   useFormValidation,
 } from '@dragcraft/form-generator'
-
 export type {
   FieldBindingScope,
   FieldBindingTarget,
@@ -116,9 +184,7 @@ export type {
 } from '@dragcraft/form-generator'
 // ── Re-exports: @dragcraft/i18n ─────────
 export { createI18n, I18N_KEY, useI18n } from '@dragcraft/i18n'
-
 export type { FlatMessages, I18nInstance, LocaleMessages, MessageTree } from '@dragcraft/i18n'
-
 // ── Re-exports: @dragcraft/legacy-core ─────────
 export {
   CommandType,
@@ -162,64 +228,6 @@ export type {
   WidgetActionConfig,
   WidgetMeta,
 } from '@dragcraft/legacy-core'
-
-// ── Re-exports: @dragcraft/renderer ─────
-export {
-  ActionKey,
-  ContainerRegionOutlet,
-  createConfirmActionInterceptor,
-  createDefaultActions,
-  createNodeActionRegistry,
-  DefaultEmptyState,
-  DefaultNodeHandle,
-  DefaultNodeMask,
-  DefaultNodeToolbar,
-  RootRenderer,
-  useContainerRuntime,
-  useNodeActions,
-  useNodeDrag,
-  useNodeInteractionGeometry,
-  useWidgetNode,
-  useWidgetRuntime,
-} from '@dragcraft/renderer'
-export type {
-  ActionConfirmRequest,
-  ActionDecision,
-  ActionInterceptor,
-  ActionInvocation,
-  ActionRisk,
-  ComponentMap,
-  ConfirmActionInterceptorOptions,
-  ContainerShell,
-  ContainerShellSource,
-  DeepReadonly,
-  EmptyStateProps,
-  NodeActionContext,
-  NodeActionDefinition,
-  NodeActionRegistry,
-  NodeHandleProps,
-  NodeInteractionGeometry,
-  NodeInteractionGeometryMode,
-  NodeInteractionPresentation,
-  NodeInteractionRect,
-  NodeMaskProps,
-  NodeToolbarOrientation,
-  NodeToolbarPlacement,
-  NodeToolbarProps,
-  NodeWrapperProps,
-  RendererEventHooks,
-  RendererExtensions,
-  RendererOptions,
-  WidgetActionConfig as RendererWidgetActionConfig,
-  RendererWidgetActionExtra,
-  RendererWidgetMeta,
-  ResolveContainerDropIndexContext,
-  ResolvedNodeAction,
-  UseNodeInteractionGeometryOptions,
-  UseNodeInteractionGeometryReturn,
-  WidgetFallbackProps,
-  WidgetRuntimeContext,
-} from '@dragcraft/renderer'
 
 export { DcScrollArea } from '@dragcraft/ui'
 export type { ScrollAreaProps, ScrollAreaType } from '@dragcraft/ui'

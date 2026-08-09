@@ -1,10 +1,11 @@
 import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '@dragcraft/legacy-core'
-import type { MaybePromise, NodeActionContext, ResolvedNodeAction, SelectHookPayload } from '@dragcraft/renderer'
+import type { NodeActionContext, ResolvedNodeAction } from '../presentation/action-registry'
+import type { MaybePromise, SelectHookPayload } from '../presentation/event-hooks'
 import { useI18n } from '@dragcraft/i18n'
-import { ActionKey } from '@dragcraft/renderer'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
+import { ActionKey } from '../presentation/action-registry'
 import { useDesignerSession } from '../session/context'
 
 interface StructureItem {
