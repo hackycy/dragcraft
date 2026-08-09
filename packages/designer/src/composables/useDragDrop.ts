@@ -451,6 +451,8 @@ export function useDragDrop(
         })()
     if (!child)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
+    if (session.materials.resolveLayout(child).placement.kind !== 'flow')
+      return { allowed: false, code: 'CONTAINER_NON_FLOW_MATERIAL' }
     const targetResult = session.document.resolveDestination?.(destination)
     if (!targetResult)
       return { allowed: false, code: 'CONTAINER_UNRESOLVED' }
@@ -542,6 +544,16 @@ export function useDragDrop(
         setForbidden(result)
       }
       return result
+    }
+    const decision = containerDropDecision.value
+    if (decision && !decision.allowed) {
+      return {
+        ok: false,
+        code: decision.code ?? 'CONTAINER_PLACEMENT_REJECTED',
+        messageKey: decision.messageKey,
+        message: decision.message,
+        details: decision.details,
+      }
     }
     return commitDrop()
   }

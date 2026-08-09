@@ -1,4 +1,4 @@
-import type { DocumentSchema } from '@dragcraft/designer/dev-harness'
+import type { DocumentSchema } from '@dragcraft/designer'
 import { describe, expect, it } from 'vitest'
 import {
   playgroundNextMaterials,
@@ -13,6 +13,14 @@ function allStructureNodeIds(schema: DocumentSchema): string[] {
 }
 
 describe('next Playground fixtures', () => {
+  it('provides an inspector schema for every visual material', () => {
+    for (const material of playgroundNextMaterials) {
+      if (material.presentation.kind !== 'visual')
+        continue
+      expect(material.inspector?.formSchema?.sections.length).toBeGreaterThan(0)
+    }
+  })
+
   it('keeps three static Documents structurally complete against the final materials', () => {
     const materialTypes = new Set(playgroundNextMaterials.map(material => material.type))
     expect(materialTypes.size).toBe(playgroundNextMaterials.length)

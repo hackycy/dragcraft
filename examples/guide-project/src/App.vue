@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import type { DesignerSchema } from '@dragcraft/designer'
-import {
-  DcDesigner,
-  useDesigner,
-} from '@dragcraft/designer'
+import { DcDesigner } from '@dragcraft/designer'
 import {
   BUILT_IN_DEVICE_FRAMES,
   DevicePicker,
@@ -27,19 +23,18 @@ function selectDeviceFrame(id: string) {
     activeDeviceFrameId.value = id
 }
 const designer = createPageDesigner({ containerShell: activeContainerShell })
-const { canRedo, canUndo, exportSchema, importSchema, redo, schema, undo } = useDesigner(designer)
 const repository = createMemoryPageRepository()
 const revision = ref(0)
 const status = ref('尚未保存')
 const showPreview = ref(false)
-const runtimeSchema = computed(() => schema.value as unknown as DesignerSchema)
+const runtimeSchema = computed(() => designer.exportSchema!())
 
 async function saveDraft() {
   try {
     const page = await repository.save({
       id: pageId,
       revision: revision.value,
-      schema: exportSchema(),
+      schema: designer.exportSchema!()!,
     })
     revision.value = page.revision
     status.value = `草稿修订号 ${page.revision} 已保存`
@@ -58,16 +53,9 @@ async function reloadDraft() {
     return
   }
 
-  const result = importSchema(page.schema)
+  const result = designer.importSchema!(page.schema) as { readonly ok: boolean, readonly code?: string }
   if (!result.ok) {
-    const diagnostics = result.details?.diagnostics
-    const codes = Array.isArray(diagnostics)
-      ? diagnostics
-          .filter((item): item is { code?: string } => typeof item === 'object' && item !== null)
-          .map(item => item.code)
-          .filter((code): code is string => typeof code === 'string')
-      : []
-    status.value = `草稿校验失败：${codes.length > 0 ? codes.join(', ') : result.code}`
+    status.value = `草稿校验失败：${result.code ?? 'SCHEMA_IMPORT_REJECTED'}`
     return
   }
 
@@ -79,7 +67,7 @@ function markDraftChanged() {
   status.value = '有未保存的更改'
 }
 
-const stopWatchingDraft = watch(schema, markDraftChanged, { flush: 'sync' })
+const stopWatchingDraft = watch(designer.document!, markDraftChanged, { flush: 'sync' })
 onBeforeUnmount(() => {
   stopWatchingDraft()
   designer.dispose()
@@ -102,8 +90,8 @@ onBeforeUnmount(() => {
         />
         <button type="button" @click="saveDraft">保存草稿</button>
         <button type="button" @click="reloadDraft">加载草稿</button>
-        <button type="button" :disabled="!canUndo()" @click="undo">撤销</button>
-        <button type="button" :disabled="!canRedo()" @click="redo">重做</button>
+        <button type="button" :disabled="!designer.history!.canUndo.value" @click="designer.execute!({ type: 'history.undo' })">撤销</button>
+        <button type="button" :disabled="!designer.history!.canRedo.value" @click="designer.execute!({ type: 'history.redo' })">重做</button>
         <button type="button" @click="showPreview = !showPreview">
           {{ showPreview ? '返回编辑' : '查看运行时' }}
         </button>
@@ -111,7 +99,7 @@ onBeforeUnmount(() => {
     </header>
 
     <DcDesigner v-if="!showPreview" :instance="designer" />
-    <section v-else class="guide-project__preview">
+    <section v-else-if="runtimeSchema" class="guide-project__preview">
       <RuntimePage
         :schema="runtimeSchema"
         :registry="guideRuntimeRegistry"

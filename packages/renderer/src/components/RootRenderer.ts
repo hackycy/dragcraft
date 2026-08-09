@@ -257,15 +257,18 @@ export default defineComponent({
             },
             [
               h(ContainerShellComponent, null, {
-                default: () => h(CanvasSurface, {
-                  isEmpty,
-                  regionVNodes,
-                  chromeVNodes,
-                  layerVNodes,
-                  layoutPlan: plan,
-                  surfaceStyle: normalizeStyleValueMap(root.style?.surface),
-                  selectionPresentation,
-                }),
+                default: () => [
+                  h(CanvasSurface, {
+                    isEmpty,
+                    regionVNodes,
+                    chromeVNodes,
+                    layerVNodes,
+                    layoutPlan: plan,
+                    surfaceStyle: normalizeStyleValueMap(root.style?.surface),
+                    selectionPresentation,
+                    forbiddenOverlay: forbiddenOverlayVNode,
+                  }),
+                ],
               }),
               h('div', {
                 'ref': (element: unknown) => {
@@ -275,7 +278,6 @@ export default defineComponent({
                 'data-dc-selection-plane': 'root',
                 'aria-hidden': 'true',
               }),
-              forbiddenOverlayVNode,
             ],
           ),
           h('div', {

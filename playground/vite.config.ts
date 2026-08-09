@@ -8,9 +8,6 @@ export default defineConfig(({ command }) => ({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@dragcraft/designer/dev-harness': fileURLToPath(
-        new URL('../packages/designer/src/dev/next-designer-harness.ts', import.meta.url),
-      ),
       '@dragcraft/designer/standard.css': fileURLToPath(
         new URL('../packages/designer/theme/standard.css', import.meta.url),
       ),

@@ -13,6 +13,7 @@ import type {
   MaterialBundleFactory,
   MaterialDefinition,
   MaterialPanelDefinition,
+  MaterialPresentationLayout,
 } from './types'
 import { cloneJsonValue, collectInvalidJsonPaths } from '@dragcraft/core'
 
@@ -124,6 +125,15 @@ function copyConfiguration<Value>(value: Value): Value {
   )) as Value
 }
 
+function copyPresentation(presentation: DesignerPresentation): DesignerPresentation {
+  return Object.freeze({
+    ...presentation,
+    ...(presentation.layout
+      ? { layout: copyConfiguration(presentation.layout) as MaterialPresentationLayout }
+      : {}),
+  }) as DesignerPresentation
+}
+
 export function createMaterialCatalog(materials: readonly MaterialDefinition[]): MaterialCatalog {
   const seenTypes = new Set<string>()
   const schemaEntries: [NodeType, SchemaTypeDeclaration][] = []
@@ -227,7 +237,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
     }
     if (material.authoring?.createBundle)
       bundleFactoryByType.set(material.type, material.authoring.createBundle)
-    presentationByType.set(material.type, Object.freeze({ ...material.presentation }))
+    presentationByType.set(material.type, copyPresentation(material.presentation))
     const materialSnapshot = Object.freeze({
       type: material.type,
       ...(material.schema
@@ -259,7 +269,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
       ...(material.panel
         ? { panel: copyConfiguration(material.panel) as MaterialPanelDefinition }
         : {}),
-      presentation: Object.freeze({ ...material.presentation }),
+      presentation: copyPresentation(material.presentation),
     })
     materialByType.set(material.type, materialSnapshot)
     allMaterials.push(materialSnapshot)

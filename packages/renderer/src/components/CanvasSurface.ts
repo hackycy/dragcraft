@@ -171,6 +171,10 @@ export default defineComponent({
       type: Object as PropType<NodeSelectionPresentationHost>,
       required: true,
     },
+    forbiddenOverlay: {
+      type: Object as PropType<VNode | null>,
+      default: null,
+    },
   },
 
   setup(props) {
@@ -344,6 +348,7 @@ export default defineComponent({
           'data-dc-selection-plane': 'viewport',
           'aria-hidden': 'true',
         }),
+        props.forbiddenOverlay,
       ])
     }
   },

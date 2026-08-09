@@ -1,40 +1,44 @@
-import type { DocumentSchema, MaterialDefinition } from '@dragcraft/designer/dev-harness'
+import type { DocumentSchema, MaterialDefinition } from '@dragcraft/designer'
 import {
   ButtonWidget,
+  buttonWidgetMeta,
   DividerWidget,
+  dividerWidgetMeta,
   ImageWidget,
+  imageWidgetMeta,
   LinkWidget,
+  linkWidgetMeta,
   TextWidget,
+  textWidgetMeta,
 } from '../components/widgets/basic'
-import { FlexContainer, SplitContainer } from '../components/widgets/container'
+import {
+  FlexContainer,
+  flexContainerMeta,
+  SplitContainer,
+  splitContainerMeta,
+} from '../components/widgets/container'
 import {
   FormCheckboxWidget,
+  formCheckboxWidgetMeta,
   FormInputWidget,
+  formInputWidgetMeta,
   FormRadioWidget,
+  formRadioWidgetMeta,
   FormSelectWidget,
+  formSelectWidgetMeta,
   FormTextareaWidget,
+  formTextareaWidgetMeta,
 } from '../components/widgets/form'
 import {
   FloatingButtonWidget,
+  floatingButtonWidgetMeta,
   NavbarWidget,
+  navbarWidgetMeta,
   SwiperWidget,
+  swiperWidgetMeta,
   TabBarWidget,
+  tabBarWidgetMeta,
 } from '../components/widgets/mini-program'
-
-const textInspector = {
-  formSchema: {
-    sections: [{
-      title: '内容',
-      fields: [{
-        key: 'content',
-        label: '文本内容',
-        component: 'Textarea',
-        defaultValue: '文本内容',
-        componentProps: { rows: 3, placeholder: '请输入文本' },
-      }],
-    }],
-  },
-}
 
 export const playgroundNextMaterials: readonly MaterialDefinition[] = [
   {
@@ -44,13 +48,14 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { content: '文本内容', fontSize: 14, fontWeight: 'normal', color: '#333333', textAlign: 'left' },
       defaultStyle: { content: { display: 'block' } },
     },
-    inspector: textInspector,
+    inspector: { formSchema: textWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: TextWidget },
   },
   {
     type: 'button',
     panel: { title: '按钮', group: 'basic', icon: '钮' },
     schema: { defaultProps: { text: '按钮', type: 'button', disabled: false, size: 'medium' } },
+    inspector: { formSchema: buttonWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: ButtonWidget },
   },
   {
@@ -60,12 +65,14 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { src: '', alt: '', objectFit: 'contain' },
       defaultStyle: { content: { width: '200px', height: '150px' } },
     },
+    inspector: { formSchema: imageWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: ImageWidget },
   },
   {
     type: 'link',
     panel: { title: '链接', group: 'basic', icon: '链' },
     schema: { defaultProps: { text: '链接', href: '#', target: '_self', color: '#1890ff' } },
+    inspector: { formSchema: linkWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: LinkWidget },
   },
   {
@@ -75,6 +82,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { direction: 'horizontal', color: '#e8e8e8', thickness: 1 },
       defaultStyle: { content: { width: '100%' } },
     },
+    inspector: { formSchema: dividerWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: DividerWidget },
   },
   {
@@ -84,6 +92,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { label: '标签', placeholder: '请输入', value: '', required: false, disabled: false },
       defaultStyle: { content: { width: '100%' } },
     },
+    inspector: { formSchema: formInputWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: FormInputWidget },
   },
   {
@@ -93,6 +102,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { label: '标签', placeholder: '请输入', value: '', rows: 3, required: false, disabled: false },
       defaultStyle: { content: { width: '100%' } },
     },
+    inspector: { formSchema: formTextareaWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: FormTextareaWidget },
   },
   {
@@ -102,12 +112,14 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { label: '标签', placeholder: '请选择', value: '', options: [], required: false, disabled: false },
       defaultStyle: { content: { width: '100%' } },
     },
+    inspector: { formSchema: formSelectWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: FormSelectWidget },
   },
   {
     type: 'form-checkbox',
     panel: { title: '复选框', group: 'form', icon: '勾' },
     schema: { defaultProps: { label: '标签', checked: false, disabled: false } },
+    inspector: { formSchema: formCheckboxWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: FormCheckboxWidget },
   },
   {
@@ -117,13 +129,28 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { label: '标签', value: '', options: [], disabled: false },
       defaultStyle: { content: { width: '100%' } },
     },
+    inspector: { formSchema: formRadioWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: FormRadioWidget },
   },
   {
     type: 'navbar',
     panel: { title: '导航栏', group: 'navigation', icon: '导' },
     schema: { defaultProps: { title: '页面标题' } },
-    presentation: { kind: 'visual', preview: NavbarWidget },
+    authoring: { policy: { duplicate: 'denied' } },
+    inspector: { formSchema: navbarWidgetMeta.formSchema },
+    presentation: {
+      kind: 'visual',
+      preview: NavbarWidget,
+      layout: {
+        placement: {
+          kind: 'chrome',
+          edge: 'block-start',
+          position: 'fixed',
+          reserve: { mode: 'measure', size: 44 },
+          avoidContent: true,
+        },
+      },
+    },
   },
   {
     type: 'tab-bar',
@@ -134,13 +161,38 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
         create: ({ schema }) => schema.nodes.some(node => node.type === 'tab-bar') ? 'denied' : 'allowed',
       },
     },
-    presentation: { kind: 'visual', preview: TabBarWidget },
+    inspector: { formSchema: tabBarWidgetMeta.formSchema },
+    presentation: {
+      kind: 'visual',
+      preview: TabBarWidget,
+      layout: {
+        placement: {
+          kind: 'chrome',
+          edge: 'block-end',
+          position: 'fixed',
+          reserve: { mode: 'measure', size: 50 },
+          avoidContent: true,
+        },
+      },
+    },
   },
   {
     type: 'floating-button',
     panel: { title: '浮动按钮', group: 'action', icon: '浮' },
     schema: { defaultProps: { label: '+', side: 'right', bottom: 16, sideOffset: 16, size: 52, backgroundColor: '#07C160', textColor: '#ffffff' } },
-    presentation: { kind: 'visual', preview: FloatingButtonWidget },
+    inspector: { formSchema: floatingButtonWidgetMeta.formSchema },
+    presentation: {
+      kind: 'visual',
+      preview: FloatingButtonWidget,
+      layout: {
+        placement: {
+          kind: 'layer',
+          layer: 'float',
+          mode: 'self',
+          avoid: ['safe-area', 'chrome'],
+        },
+      },
+    },
   },
   {
     type: 'swiper',
@@ -149,6 +201,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { images: [], showIndicator: true, height: 180 },
       defaultStyle: { content: { width: '100%' } },
     },
+    inspector: { formSchema: swiperWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: SwiperWidget },
   },
   {
@@ -158,6 +211,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
       defaultProps: { direction: 'column', wrap: false, gap: 12, align: 'stretch' },
       container: { regions: [{ id: 'default', cardinality: { max: 12 } }] },
     },
+    inspector: { formSchema: flexContainerMeta.formSchema },
     presentation: { kind: 'visual', preview: FlexContainer },
   },
   {
@@ -173,6 +227,7 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
         ],
       },
     },
+    inspector: { formSchema: splitContainerMeta.formSchema },
     presentation: { kind: 'visual', preview: SplitContainer },
   },
 ]

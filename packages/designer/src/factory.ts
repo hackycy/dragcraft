@@ -1,13 +1,29 @@
+import type { DocumentSchema } from '@dragcraft/core'
 import type { MessageTree } from '@dragcraft/i18n'
 import type { FormSchemaShape } from '@dragcraft/legacy-core'
+import type { ComponentMap } from '@dragcraft/renderer'
 import type { DesignerInstance, DesignerOptions } from './types'
 import { createI18n } from '@dragcraft/i18n'
 import { createEngine } from '@dragcraft/legacy-core'
 import { createDefaultActions, createNodeActionRegistry, rendererMessages } from '@dragcraft/renderer'
+import { generateShortId } from '@dragcraft/utils'
+import { createAuthoringEngine } from './authoring/create-authoring-engine'
+import { createMaterialCatalog } from './materials/create-material-catalog'
 import { designerMessages } from './messages'
 import { registerDesignerSession } from './session/get-designer-session'
 import { createLegacyDesignerSessionAdapter } from './session/legacy-designer-session-adapter'
+import { createNextDesignerSessionAdapter } from './session/next-designer-session-adapter'
 import { createDesignerWorkspace } from './workspace'
+
+export const DOCUMENT_SCHEMA_VERSION = '1'
+
+const EMPTY_DOCUMENT_SCHEMA: DocumentSchema = {
+  version: DOCUMENT_SCHEMA_VERSION,
+  globalConfig: {},
+  page: { props: {} },
+  nodes: [],
+  structure: { root: [], containers: {} },
+}
 
 function mergeDefaultMessages(): Record<string, MessageTree> {
   const merged: Record<string, MessageTree> = {}
@@ -42,7 +58,7 @@ function mergeDefaultMessages(): Record<string, MessageTree> {
  * })
  * ```
  */
-export function createDesigner(options: DesignerOptions = {}): DesignerInstance {
+function createLegacyDesigner(options: DesignerOptions): DesignerInstance {
   // 1. Create core engine
   const { initialSchema, ...engineOptions } = options.engineOptions ?? {}
   const engine = createEngine(engineOptions)
@@ -128,4 +144,74 @@ export function createDesigner(options: DesignerOptions = {}): DesignerInstance 
   }
   registerDesignerSession(instance, createLegacyDesignerSessionAdapter(engine))
   return instance
+}
+
+function componentMapFromMaterials(options: DesignerOptions): ComponentMap {
+  const map: ComponentMap = { ...(options.componentMap ?? {}) }
+  for (const material of options.materials ?? []) {
+    if (material.presentation.kind === 'visual' && map[material.type] === undefined)
+      map[material.type] = material.presentation.preview
+  }
+  return map
+}
+
+function createNextDesigner(options: DesignerOptions): DesignerInstance {
+  const materials = options.materials ?? []
+  const catalog = createMaterialCatalog(materials)
+  const engine = createAuthoringEngine({
+    catalog,
+    createNodeId: generateShortId,
+    maxHistoryEntries: options.engineOptions?.maxHistorySize,
+    schema: options.schema ?? EMPTY_DOCUMENT_SCHEMA,
+  })
+  const i18n = createI18n(options.locale ?? 'zh-CN', mergeDefaultMessages())
+  const workspace = createDesignerWorkspace(options.workspace)
+
+  if (options.messages) {
+    for (const [locale, messages] of Object.entries(options.messages))
+      i18n.mergeMessages(locale, messages)
+  }
+
+  const actionRegistry = createNodeActionRegistry(createDefaultActions(i18n.t))
+  for (const action of options.customActions ?? [])
+    actionRegistry.register(action)
+
+  const session = createNextDesignerSessionAdapter({ catalog, engine })
+  const importSchema = (input: unknown) => session.execute({
+    type: 'schema.import',
+    schema: input as never,
+  })
+  const instance = {
+    componentMap: componentMapFromMaterials(options),
+    widgetGroups: options.widgetGroups,
+    extensions: options.extensions ?? {},
+    fieldComponentMap: options.fieldComponentMap,
+    globalConfigSchema: options.globalConfigSchema ?? null,
+    eventHooks: options.eventHooks ?? {},
+    actionInterceptors: options.actionInterceptors ?? [],
+    actionRegistry,
+    i18n,
+    workspace,
+    document: engine.document,
+    selection: engine.selection,
+    history: engine.history,
+    execute: session.execute,
+    importSchema,
+    exportSchema: session.exportSchema,
+    dispose: () => {},
+  } as unknown as DesignerInstance
+
+  registerDesignerSession(instance, session)
+  return instance
+}
+
+/**
+ * Creates a designer using the final Next backend when `materials` is supplied.
+ * The legacy option shape remains an internal rollback seam for existing tests
+ * and is intentionally not used by production consumers.
+ */
+export function createDesigner(options: DesignerOptions = {}): DesignerInstance {
+  return options.materials !== undefined
+    ? createNextDesigner(options)
+    : createLegacyDesigner(options)
 }

@@ -7,9 +7,11 @@ import type {
   ResolvedDocument,
   StructuralDestination,
 } from '@dragcraft/core'
+import type { ResolvedNodeLayout } from '@dragcraft/legacy-core'
 import type { Ref } from 'vue'
 import type { AuthoringEngine, SchemaAuthoringAction } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
+import type { MaterialPresentationLayout } from '../materials/types'
 import type {
   DesignerMaterialCapability,
   DesignerSession,
@@ -63,20 +65,37 @@ function mergeJsonObjects(base: DeepReadonly<JsonObject>, patch: Record<string, 
 
 function destinationForIndex(
   document: ResolvedDocument,
-  destination: { readonly kind: 'root' | 'container', readonly containerId?: string, readonly regionId?: string, readonly index?: number },
+  catalog: MaterialCatalog,
+  destination: (
+    | { readonly kind: 'root', readonly sortScope?: string, readonly index?: number }
+    | { readonly kind: 'container', readonly containerId: string, readonly regionId: string, readonly index?: number }
+  ),
 ): StructuralDestination | undefined {
   const owner = destination.kind === 'root'
     ? { kind: 'page-root' as const }
-    : destination.containerId && destination.regionId
-      ? { kind: 'container-region' as const, containerId: destination.containerId, regionId: destination.regionId }
-      : undefined
-  if (!owner)
-    return undefined
+    : { kind: 'container-region' as const, containerId: destination.containerId, regionId: destination.regionId }
   const ids = owner.kind === 'page-root'
     ? document.schema.structure.root
     : document.schema.structure.containers[owner.containerId]?.regions[owner.regionId]
   if (!ids)
     return undefined
+
+  if (destination.kind === 'root' && destination.sortScope) {
+    const scopedIds = ids.filter((nodeId) => {
+      const node = document.nodesById.get(nodeId)?.node
+      return node !== undefined
+        && resolveMaterialLayout(catalog.getMaterial(node.type)?.presentation.layout).sortScope === destination.sortScope
+    })
+    const index = destination.index ?? scopedIds.length
+    if (scopedIds.length === 0)
+      return { owner, position: { kind: 'end' } }
+    if (index <= 0)
+      return { owner, position: { kind: 'before', nodeId: scopedIds[0]! } }
+    if (index >= scopedIds.length)
+      return { owner, position: { kind: 'after', nodeId: scopedIds.at(-1)! } }
+    return { owner, position: { kind: 'before', nodeId: scopedIds[index]! } }
+  }
+
   const index = destination.index
   if (index === undefined || index >= ids.length)
     return { owner, position: { kind: 'end' } }
@@ -125,6 +144,38 @@ function bundleFromLegacyNode(node: unknown): NodeBundle | undefined {
   }
   const entryId = collect(node)
   return entryId ? { entryId, nodes, containers } : undefined
+}
+
+function bundleForNodeAdd(node: unknown, catalog: MaterialCatalog): NodeBundle | undefined {
+  const legacyBundle = bundleFromLegacyNode(node)
+  if (!legacyBundle)
+    return undefined
+  const entry = legacyBundle.nodes.find(item => item.id === legacyBundle.entryId)
+  if (!entry)
+    return undefined
+  const bundle = catalog.createBundle(entry.type, () => entry.id)
+  if (!bundle)
+    return undefined
+  return {
+    ...bundle,
+    nodes: bundle.nodes.map(item => item.id === bundle.entryId
+      ? {
+          id: item.id,
+          type: entry.type,
+          props: entry.props,
+          ...(entry.style ? { style: entry.style } : {}),
+        }
+      : item),
+  }
+}
+
+function requiresRootDestination(
+  catalog: MaterialCatalog,
+  type: string,
+  destination: { readonly kind: 'root' | 'container' },
+): boolean {
+  return destination.kind === 'container'
+    && resolveMaterialLayout(catalog.getMaterial(type)?.presentation.layout).placement.kind !== 'flow'
 }
 
 export interface CreateNextDesignerSessionAdapterOptions {
@@ -275,6 +326,55 @@ function projectDiagnostics(engine: AuthoringEngine): readonly ProjectedDiagnost
   })) as ProjectedDiagnostic[]
 }
 
+function resolveMaterialLayout(layout: MaterialPresentationLayout | undefined): ResolvedNodeLayout {
+  const placement = layout?.placement
+  if (!placement || placement.kind === 'flow') {
+    const region = placement?.region ?? 'content'
+    const sortScope = placement?.sortScope === undefined
+      ? region === 'content' ? 'content' : false
+      : placement.sortScope
+    return {
+      placement: { kind: 'flow' as const, region, sortScope },
+      region,
+      sortScope,
+      ...(layout?.order === undefined ? {} : { order: layout.order }),
+      visible: layout?.visible ?? true,
+    }
+  }
+  if (placement.kind === 'chrome') {
+    return {
+      placement: {
+        kind: 'chrome' as const,
+        edge: placement.edge,
+        position: placement.position ?? 'fixed',
+        reserve: {
+          mode: placement.reserve?.mode ?? 'measure',
+          ...(placement.reserve?.size === undefined ? {} : { size: placement.reserve.size }),
+        },
+        avoidContent: placement.avoidContent ?? true,
+      },
+      sortScope: false as const,
+      ...(layout?.order === undefined ? {} : { order: layout.order }),
+      visible: layout?.visible ?? true,
+    }
+  }
+  return {
+    placement: {
+      kind: 'layer' as const,
+      layer: placement.layer ?? 'float',
+      mode: placement.mode ?? (placement.anchor ? 'framework' : 'self'),
+      anchor: placement.anchor ?? { block: 'end', inline: 'end' },
+      ...(placement.offset ? { offset: placement.offset } : {}),
+      avoid: placement.avoid
+        ? [...placement.avoid] as Array<'safe-area' | 'chrome' | 'viewport'>
+        : ['safe-area', 'chrome'] as Array<'safe-area' | 'chrome' | 'viewport'>,
+    },
+    sortScope: false as const,
+    ...(layout?.order === undefined ? {} : { order: layout.order }),
+    visible: layout?.visible ?? true,
+  }
+}
+
 interface NextActionFailure { readonly status: 'rejected', readonly code: string }
 type CompiledSchemaAction = SchemaAuthoringAction | NextActionFailure
 
@@ -285,22 +385,27 @@ function compileSchemaAction(
 ): CompiledSchemaAction {
   switch (action.type) {
     case 'node.add': {
-      const bundle = bundleFromLegacyNode(action.node)
-      const to = destinationForIndex(document, action.destination ?? { kind: 'root' })
+      const bundle = bundleForNodeAdd(action.node, catalog)
+      const to = destinationForIndex(document, catalog, action.destination ?? { kind: 'root' })
       if (!bundle)
         return { status: 'rejected', code: 'NODE_INVALID' }
       if (!catalog.getMaterial(bundle.nodes[0]?.type ?? ''))
         return { status: 'rejected', code: 'MATERIAL_NOT_FOUND' }
       if (!to)
         return { status: 'rejected', code: 'DESTINATION_INVALID' }
+      if (requiresRootDestination(catalog, bundle.nodes[0]!.type, action.destination ?? { kind: 'root' }))
+        return { status: 'rejected', code: 'CONTAINER_NON_FLOW_MATERIAL' }
       return { type: 'insert-bundle', bundle, to }
     }
     case 'node.move': {
-      if (!document.nodesById.has(action.nodeId))
+      const node = document.nodesById.get(action.nodeId)?.node
+      if (!node)
         return { status: 'rejected', code: 'NODE_NOT_FOUND' }
-      const to = destinationForIndex(document, action.destination)
+      const to = destinationForIndex(document, catalog, action.destination)
       if (!to)
         return { status: 'rejected', code: 'DESTINATION_INVALID' }
+      if (requiresRootDestination(catalog, node.type, action.destination))
+        return { status: 'rejected', code: 'CONTAINER_NON_FLOW_MATERIAL' }
       return { type: 'move-node', nodeId: action.nodeId, to }
     }
     case 'node.remove':
@@ -309,18 +414,25 @@ function compileSchemaAction(
       return { type: 'remove-node', nodeId: action.nodeId }
     case 'node.duplicate': {
       const location = document.locationsById.get(action.nodeId)
-      if (!location)
+      const node = document.nodesById.get(action.nodeId)?.node
+      if (!location || !node)
         return { status: 'rejected', code: 'NODE_NOT_FOUND' }
-      const to = destinationForIndex(document, location.kind === 'page-root'
+      const destination: (
+        | { readonly kind: 'root', readonly index: number }
+        | { readonly kind: 'container', readonly containerId: string, readonly regionId: string, readonly index: number }
+      ) = location.kind === 'page-root'
         ? { kind: 'root', index: location.index + 1 }
         : {
             kind: 'container',
             containerId: location.containerId,
             regionId: location.regionId,
             index: location.index + 1,
-          })
+          }
+      const to = destinationForIndex(document, catalog, destination)
       if (!to)
         return { status: 'rejected', code: 'DESTINATION_INVALID' }
+      if (requiresRootDestination(catalog, node.type, destination))
+        return { status: 'rejected', code: 'CONTAINER_NON_FLOW_MATERIAL' }
       return { type: 'duplicate-node', nodeId: action.nodeId, to }
     }
     case 'node.update': {
@@ -410,6 +522,10 @@ export function createNextDesignerSessionAdapter(
     return current ? projectRoot(current) : { id: 'root', type: 'root', props: {}, children: [] }
   })
   const rootNodes = computed(() => root.value.children ?? [])
+  const resolveNodeLayout = (current: ResolvedDocument, nodeId: string): ResolvedNodeLayout => {
+    const node = current.nodesById.get(nodeId)?.node
+    return resolveMaterialLayout(options.catalog.getMaterial(node?.type ?? '')?.presentation.layout)
+  }
 
   const session: NextDesignerSessionAdapter = {
     document: {
@@ -436,12 +552,17 @@ export function createNextDesignerSessionAdapter(
         return current ? projectNode(current, nodeId) ?? null : null
       },
       getOwner: (nodeId) => {
-        const location = document.value?.locationsById.get(nodeId)
-        if (!location)
+        const current = document.value
+        const location = current?.locationsById.get(nodeId)
+        if (!current || !location)
           return null
-        return location.kind === 'page-root'
-          ? { kind: 'root', sortScope: 'content' }
-          : { kind: 'container', containerId: location.containerId, regionId: location.regionId }
+        if (location.kind !== 'page-root')
+          return { kind: 'container', containerId: location.containerId, regionId: location.regionId }
+        const sortScope = resolveNodeLayout(current, nodeId).sortScope
+        return {
+          kind: 'root',
+          ...(sortScope === false ? {} : { sortScope }),
+        }
       },
       getStructurePosition: (nodeId) => {
         const current = document.value
@@ -453,13 +574,31 @@ export function createNextDesignerSessionAdapter(
           : current.containersById.get(location.containerId)?.regions.get(location.regionId)?.children
         if (!siblings)
           return null
+        if (location.kind === 'page-root') {
+          const sortScope = resolveNodeLayout(current, nodeId).sortScope
+          if (sortScope === false) {
+            return {
+              owner: { kind: 'root' as const },
+              index: location.index,
+              siblingCount: siblings.length,
+              sortScope,
+              lockedIndices: new Set<number>(),
+            }
+          }
+          const scopedSiblings = siblings.filter(sibling => resolveNodeLayout(current, sibling.node.id).sortScope === sortScope)
+          return {
+            owner: { kind: 'root' as const, sortScope },
+            index: scopedSiblings.findIndex(sibling => sibling.node.id === nodeId),
+            siblingCount: scopedSiblings.length,
+            sortScope,
+            lockedIndices: new Set<number>(),
+          }
+        }
         return {
-          owner: location.kind === 'page-root'
-            ? { kind: 'root', sortScope: 'content' }
-            : { kind: 'container', containerId: location.containerId, regionId: location.regionId },
+          owner: { kind: 'container', containerId: location.containerId, regionId: location.regionId },
           index: location.index,
           siblingCount: siblings.length,
-          sortScope: location.kind === 'page-root' ? 'content' : false,
+          sortScope: false,
           lockedIndices: new Set<number>(),
         }
       },
@@ -526,11 +665,7 @@ export function createNextDesignerSessionAdapter(
         node,
         capability,
       ),
-      resolveLayout: () => ({
-        placement: { kind: 'flow', region: 'content', sortScope: 'content' },
-        sortScope: 'content',
-        visible: true,
-      }),
+      resolveLayout: node => resolveMaterialLayout(options.catalog.getMaterial(node.type)?.presentation.layout),
       resolveContainer: (node): ProjectedContainerPlan => {
         const current = document.value
         const container = current?.containersById.get(node.id)
@@ -567,7 +702,11 @@ export function createNextDesignerSessionAdapter(
       getLockedIndices: nodes => new Set(nodes.flatMap((node, index) => {
         return resolveCapability(document.value, options.catalog, node, 'sortable') ? [] : [index]
       })),
-      canCreateSubtree: node => options.catalog.getMaterial(node.type) !== undefined,
+      canCreateSubtree: node => actionDecision(
+        { type: 'node.duplicate', nodeId: node.id },
+        options.engine,
+        options.catalog,
+      ).allowed,
       canDeleteSubtree: node => resolveCapability(document.value, options.catalog, node, 'deletable'),
     },
     state: {

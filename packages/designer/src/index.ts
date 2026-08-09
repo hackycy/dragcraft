@@ -26,13 +26,28 @@ export type { UseDragDropReturn, UsePropertyBindingReturn } from './composables'
 // ── Context ─────────────────────────────
 export { useDesignerContext } from './context'
 // ── Factory ─────────────────────────────
-export { createDesigner } from './factory'
+export { createDesigner, DOCUMENT_SCHEMA_VERSION } from './factory'
 // ── Material protocol helpers ────────────
 export {
   materialItemMatchesQuery,
   resolveMaterialItem,
 } from './material'
 
+export { DesignerConfigurationError } from './materials/create-material-catalog'
+// ── Material protocol ───────────────────
+export { defineMaterial } from './materials/define-material'
+export type {
+  DesignerPresentation,
+  InspectorDefinition,
+  MaterialAuthoringDefinition,
+  MaterialDefinition,
+  MaterialPanelDefinition,
+  MaterialPresentationAnchor,
+  MaterialPresentationEdge,
+  MaterialPresentationLayout,
+  MaterialPresentationPlacement,
+  MaterialSchemaDeclaration,
+} from './materials/types'
 // ── Messages ────────────────────────────
 export { designerMessages } from './messages'
 
@@ -56,9 +71,11 @@ export type {
   ResolvedMaterialItem,
   UseDesignerReturn,
 } from './types'
-export { DESIGNER_CONTEXT_KEY } from './types'
 
+export { DESIGNER_CONTEXT_KEY } from './types'
 export { createDesignerWorkspace } from './workspace'
+
+export type { DocumentSchema, JsonObject, JsonValue, NodeDefinition, NodeId, NodeType, PageDefinition, RegionId } from '@dragcraft/core'
 // ── Re-exports: @dragcraft/form-generator ─
 export {
   findFieldSchema,

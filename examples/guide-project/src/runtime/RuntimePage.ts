@@ -1,4 +1,4 @@
-import type { DesignerSchema, SchemaNode } from '@dragcraft/designer'
+import type { DocumentSchema, NodeDefinition } from '@dragcraft/designer'
 import type { Component, PropType, VNodeChild } from 'vue'
 import type { RuntimeLayoutEdge, RuntimeLayoutEntry } from './layout'
 import type { RuntimeRegions, RuntimeRegistry } from './registry'
@@ -8,7 +8,7 @@ import { createFrameworkLayerStyle, createRuntimeLayoutPlan } from './layout'
 export const DefaultRuntimeFallback = defineComponent({
   name: 'GuideRuntimeFallback',
   props: {
-    node: { type: Object as PropType<SchemaNode>, required: true },
+    node: { type: Object as PropType<NodeDefinition>, required: true },
   },
   setup(props) {
     return () => h('p', {
@@ -20,30 +20,35 @@ export const DefaultRuntimeFallback = defineComponent({
 
 export function createRuntimeNodeRenderer(
   registry: RuntimeRegistry,
+  schema: DocumentSchema,
   fallback: Component = DefaultRuntimeFallback,
-): (node: SchemaNode) => VNodeChild {
-  const renderNode = (node: SchemaNode): VNodeChild => {
+): (node: NodeDefinition) => VNodeChild {
+  const nodesById = new Map(schema.nodes.map(node => [node.id, node]))
+  const renderNode = (node: NodeDefinition): VNodeChild => {
     const definition = registry[node.type]
+    const container = schema.structure.containers[node.id]
     let content: VNodeChild
 
-    if (!definition || (node.container && definition.kind !== 'container')) {
+    if (!definition || (container && definition.kind !== 'container')) {
       content = h(fallback, { node })
     }
     else if (definition.kind === 'container') {
-      if (!node.container) {
+      if (!container) {
         content = h(fallback, { node })
       }
       else {
         const regions = Object.fromEntries(
-          Object.entries(node.container.regions).map(([regionId, children]) => [
+          Object.entries(container.regions).map(([regionId, childIds]) => [
             regionId,
-            children.map(renderNode),
+            childIds.flatMap((childId) => {
+              const child = nodesById.get(childId)
+              return child ? [renderNode(child)] : []
+            }),
           ]),
         ) as RuntimeRegions
 
         content = h(definition.component, {
           node,
-          variant: node.container.variant,
           regions,
         })
       }
@@ -68,7 +73,7 @@ export function createRuntimeNodeRenderer(
 
 function renderEntries(
   entries: RuntimeLayoutEntry[],
-  renderNode: (node: SchemaNode) => VNodeChild,
+  renderNode: (node: NodeDefinition) => VNodeChild,
 ): VNodeChild[] {
   return entries.map(entry => renderNode(entry.node))
 }
@@ -86,14 +91,14 @@ function chromeEntries(
 export const RuntimePage = defineComponent({
   name: 'GuideRuntimePage',
   props: {
-    schema: { type: Object as PropType<DesignerSchema>, required: true },
+    schema: { type: Object as PropType<DocumentSchema>, required: true },
     registry: { type: Object as PropType<RuntimeRegistry>, required: true },
     fallback: { type: Object as PropType<Component>, default: () => DefaultRuntimeFallback },
   },
   setup(props) {
     return () => {
       const plan = createRuntimeLayoutPlan(props.schema, props.registry)
-      const renderNode = createRuntimeNodeRenderer(props.registry, props.fallback)
+      const renderNode = createRuntimeNodeRenderer(props.registry, props.schema, props.fallback)
       const flowRegions = [...plan.flow.entries()].map(([regionId, entries]) => h('section', {
         'class': 'guide-runtime-region',
         'data-runtime-region': regionId,
@@ -133,7 +138,7 @@ export const RuntimePage = defineComponent({
         h('div', { class: 'guide-runtime-scrollport' }, [
           h('div', {
             class: 'guide-runtime-surface',
-            style: props.schema.root.style?.surface,
+            style: props.schema.page.style?.surface,
           }, [
             renderChrome('block-start', false),
             h('div', { class: 'guide-runtime-inline-layout' }, [

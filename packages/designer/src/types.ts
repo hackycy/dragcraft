@@ -1,9 +1,12 @@
+import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
 import type { CreationBlockReason, DesignerEngine, DesignerSchema, EngineOptions, EngineStore, NodeDestination, PlacementDecision } from '@dragcraft/legacy-core'
 import type { ActionInterceptor, AuthoringAction, AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, NodeActionDefinition, NodeActionRegistry, RendererEventHooks, RendererExtensions, RendererWidgetMeta } from '@dragcraft/renderer'
 import type { WidgetGroupConfig } from '@dragcraft/widgets'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
+import type { AuthoringEngine } from './authoring/types'
+import type { MaterialDefinition } from './materials/types'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
 
@@ -110,6 +113,10 @@ export interface MaterialItemRenderProps {
  * Users must explicitly provide widget metas, component maps, and field maps.
  */
 export interface DesignerOptions {
+  /** Final document snapshot used by the Next backend. */
+  schema?: DocumentSchema
+  /** Single material registration surface used by the Next backend. */
+  materials?: readonly MaterialDefinition[]
   /** Core engine options (initialSchema, maxHistorySize) */
   engineOptions?: DesignerEngineOptions
   /** Widget metas to register with the engine */
@@ -199,6 +206,18 @@ export interface DesignerInstance {
   /** i18n instance for locale management */
   i18n: I18nInstance
   workspace: DesignerWorkspaceController
+  /** Next backend document state. Legacy instances leave this undefined. */
+  document?: AuthoringEngine['document']
+  /** Next backend selection state. Legacy instances leave this undefined. */
+  selection?: AuthoringEngine['selection']
+  /** Next backend history state. Legacy instances leave this undefined. */
+  history?: AuthoringEngine['history']
+  /** Public authoring entry for Next-backed instances. */
+  execute?: (action: AuthoringAction) => AuthoringResult
+  /** Public schema import entry for Next-backed instances. */
+  importSchema?: (input: unknown) => unknown
+  /** Public schema export entry for Next-backed instances. */
+  exportSchema?: () => DocumentSchema | DesignerSchema | null
   /** Dispose all resources */
   dispose: () => void
 }

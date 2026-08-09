@@ -1,4 +1,4 @@
-import type { DocumentSchema } from '@dragcraft/designer/dev-harness'
+import type { DocumentSchema } from '@dragcraft/designer'
 import { describe, expect, it } from 'vitest'
 import { isFinalDocumentSchema } from './schema-validation'
 import { useSchemaIO } from './use-schema-io'

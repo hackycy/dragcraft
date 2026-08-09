@@ -429,8 +429,8 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 | G3 Pure Next Foundation | passed | Resolver 27/27、Schema Editor 38/38、Material Catalog 12/12、Authoring Engine 20/20；Core 不依赖 Vue/`structuredClone`；生产 factory 仍只创建 Legacy Adapter；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 14/14）通过 |
 | G4 NextDesignerSession Contract | passed | Legacy/Next shared DesignerSession contract；Next action translation、recovery、export isolation；Designer directed 155/155；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 14/14）通过 |
 | G5 Next UI Harness | passed | dev-only Next selector 与三个最终 Playground fixture；Next/Legacy 分别通过 14 个交互基线、Next harness 3/3（Chromium 31/31）；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test` 通过；三个模板人工验收通过 |
-| G6 Backend/Public Cutover | pending | G5 Exit 已满足 |
-| G7 Presentation Replacement | blocked | G6 Exit |
+| G6 Backend/Public Cutover | passed | Next backend 已作为唯一生产实例；容器完整 NodeBundle 创建与非 flow Region 拒绝回归已关闭；`pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser`（Chromium 25/25）通过；Playground 与 Guide Project 人工验收通过 |
+| G7 Presentation Replacement | pending | G6 Exit 已满足 |
 | G8 Product/Public Finalization | blocked | G7 Exit |
 | G9 Deletion Gate | blocked | G8 Exit and six deletion evidence groups |
 

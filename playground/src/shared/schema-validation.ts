@@ -1,5 +1,4 @@
-import type { DesignerSchema } from '@dragcraft/designer'
-import type { DocumentSchema } from '@dragcraft/designer/dev-harness'
+import type { DocumentSchema } from '@dragcraft/designer'
 
 type UnknownRecord = Record<string, unknown>
 
@@ -9,13 +8,6 @@ function isRecord(value: unknown): value is UnknownRecord {
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every(item => typeof item === 'string')
-}
-
-export function isLegacyDesignerSchema(input: unknown): input is DesignerSchema {
-  return isRecord(input)
-    && typeof input.version === 'string'
-    && input.version.length > 0
-    && isRecord(input.root)
 }
 
 export function isFinalDocumentSchema(input: unknown): input is DocumentSchema {

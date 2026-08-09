@@ -8,15 +8,87 @@ const importedNextSchema = JSON.stringify({
   structure: { root: ['imported-next-title'], containers: {} },
 })
 
-test('mounts the existing workbench with the Next backend selector', async ({ page }) => {
-  await page.goto('/?backend=next')
+test('mounts the existing workbench with the public Next backend', async ({ page }) => {
+  await page.goto('/')
 
   await expect(page.locator('[data-dc-component="node"][data-node-id="shop-title"]')).toBeVisible()
   await expect(page.locator('[data-dc-component="material-item"][title="文本"]')).toBeVisible()
 })
 
+test('keeps type-defined chrome and layer materials out of the content flow', async ({ page }) => {
+  await page.goto('/')
+
+  const navbar = page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]')
+  const tabbar = page.locator('[data-dc-component="node"][data-node-id="tabbar-main"]')
+  const floatingAction = page.locator('[data-dc-component="node"][data-node-id="floating-cart"]')
+  const content = page.locator('.dc-canvas-surface__content')
+  const surface = page.locator('[data-dc-component="canvas-surface"]')
+
+  await expect(navbar).toHaveAttribute('data-dc-layout-placement', 'chrome')
+  await expect(tabbar).toHaveAttribute('data-dc-layout-placement', 'chrome')
+  await expect(floatingAction).toHaveAttribute('data-dc-layout-placement', 'layer')
+  await expect(content.locator('[data-node-id="nav-ecommerce"], [data-node-id="tabbar-main"], [data-node-id="floating-cart"]')).toHaveCount(0)
+  await expect(surface).toHaveAttribute('style', /--dc-measured-inset-block-start: (?!0px)/)
+  await expect(surface).toHaveAttribute('style', /--dc-measured-inset-block-end: (?!0px)/)
+
+  const tabbarBounds = await tabbar.boundingBox()
+  const floatingActionBounds = await floatingAction.locator('.pg-widget-floating-button').boundingBox()
+  expect(tabbarBounds).not.toBeNull()
+  expect(floatingActionBounds).not.toBeNull()
+  if (tabbarBounds && floatingActionBounds)
+    expect(floatingActionBounds.y + floatingActionBounds.height).toBeLessThanOrEqual(tabbarBounds.y)
+})
+
+test('keeps chrome and layer materials out of root sorting controls', async ({ page }) => {
+  await page.goto('/')
+
+  const toolbar = page.locator('[data-dc-component="node-toolbar"]')
+  const assertSortingDisabled = async (nodeId: string) => {
+    await page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`).click()
+    await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('aria-disabled', 'true')
+    await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('draggable', 'false')
+    await expect(toolbar.getByTitle('上移')).toBeDisabled()
+    await expect(toolbar.getByTitle('下移')).toBeDisabled()
+  }
+
+  await assertSortingDisabled('nav-ecommerce')
+  await assertSortingDisabled('tabbar-main')
+  await assertSortingDisabled('floating-cart')
+
+  await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()
+  await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('draggable', 'true')
+})
+
+test('disables Navbar duplication through its material authoring policy', async ({ page }) => {
+  await page.goto('/')
+
+  const toolbar = page.locator('[data-dc-component="node-toolbar"]')
+  await page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]').click()
+  await expect(toolbar.getByTitle('复制')).toBeDisabled()
+
+  await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()
+  await expect(toolbar.getByTitle('复制')).toBeEnabled()
+})
+
+test('renders inspector fields for image, chrome, and form materials', async ({ page }) => {
+  await page.goto('/')
+
+  const propertyPanel = page.locator('[data-dc-component="property-panel"]')
+  const cases = [
+    { nodeId: 'product-img', fieldLabel: '图片地址' },
+    { nodeId: 'nav-ecommerce', fieldLabel: '标题' },
+    { nodeId: 'tabbar-main', fieldLabel: 'Tab 列表' },
+    { nodeId: 'form-name', fieldLabel: '标签' },
+  ]
+
+  for (const { nodeId, fieldLabel } of cases) {
+    await page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`).click()
+    await expect(propertyPanel.locator('[data-dc-component="form-field"]').filter({ hasText: fieldLabel })).toBeVisible()
+  }
+})
+
 test('switches templates using final Next fixtures', async ({ page }) => {
-  await page.goto('/?backend=next')
+  await page.goto('/')
 
   await page.locator('.playground-header__select').selectOption('content-detail')
 
@@ -24,8 +96,8 @@ test('switches templates using final Next fixtures', async ({ page }) => {
   await expect(page.locator('[data-dc-component="node"][data-node-id="shop-title"]')).toHaveCount(0)
 })
 
-test('exports and imports final DocumentSchema through the Next host harness', async ({ page }) => {
-  await page.goto('/?backend=next')
+test('exports and imports final DocumentSchema through the public Designer', async ({ page }) => {
+  await page.goto('/')
 
   await page.getByRole('button', { name: 'Export', exact: true }).click()
   const exported = JSON.parse(await page.locator('.playground-modal__textarea').inputValue())

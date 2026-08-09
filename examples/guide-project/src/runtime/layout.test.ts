@@ -1,4 +1,4 @@
-import type { DesignerSchema } from '@dragcraft/designer'
+import type { DocumentSchema } from '@dragcraft/designer'
 import { expect, it } from 'vitest'
 import { guideRuntimeRegistry } from '.'
 import { createGuideSchema } from '../editor/initial-schema'
@@ -17,15 +17,12 @@ it('projects flow, fixed chrome, and layer nodes into separate surfaces', () => 
 })
 
 it('uses registry defaults and skips runtime-invisible nodes', () => {
-  const schema: DesignerSchema = {
-    version: '2.0.0',
+  const schema: DocumentSchema = {
+    version: '1',
     globalConfig: {},
-    root: {
-      id: 'root',
-      type: 'root',
-      props: {},
-      children: [{ id: 'floating-action-2', type: 'floating-action', props: {} }],
-    },
+    page: { props: {} },
+    nodes: [{ id: 'floating-action-2', type: 'floating-action', props: {} }],
+    structure: { root: ['floating-action-2'], containers: {} },
   }
   const registry = {
     ...guideRuntimeRegistry,

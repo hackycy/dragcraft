@@ -1,7 +1,7 @@
-import type { DesignerSchema, SchemaNode } from '@dragcraft/designer'
-import type { RuntimeNodeLayout, RuntimeRegistry } from './registry'
+import type { DocumentSchema, NodeDefinition } from '@dragcraft/designer'
+import type { RuntimeLayout, RuntimeLayoutEdge, RuntimeRegistry } from './registry'
 
-export type RuntimeLayoutEdge = 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
+export type { RuntimeLayoutEdge } from './registry'
 
 export type RuntimePlacement
   = | { kind: 'flow', region: string }
@@ -26,7 +26,7 @@ export type RuntimePlacement
     }
 
 export interface RuntimeLayoutEntry {
-  node: SchemaNode
+  node: NodeDefinition
   arrayIndex: number
   order: number
   visible: boolean
@@ -42,7 +42,7 @@ export interface RuntimeLayoutPlan {
 
 const edges: RuntimeLayoutEdge[] = ['block-start', 'block-end', 'inline-start', 'inline-end']
 
-function resolvePlacement(layout: RuntimeNodeLayout): RuntimePlacement {
+function resolvePlacement(layout: RuntimeLayout): RuntimePlacement {
   const placement = layout.placement
   if (!placement || placement.kind === 'flow') {
     return {
@@ -54,7 +54,7 @@ function resolvePlacement(layout: RuntimeNodeLayout): RuntimePlacement {
   if (placement.kind === 'chrome') {
     return {
       kind: 'chrome',
-      edge: placement.edge,
+      edge: placement.edge ?? 'block-start',
       position: placement.position ?? 'fixed',
       reserve: {
         mode: placement.reserve?.mode ?? 'measure',
@@ -78,25 +78,19 @@ function resolvePlacement(layout: RuntimeNodeLayout): RuntimePlacement {
 }
 
 function resolveEntry(
-  node: SchemaNode,
+  node: NodeDefinition,
   arrayIndex: number,
-  schema: DesignerSchema,
   registry: RuntimeRegistry,
 ): RuntimeLayoutEntry {
-  const layout: RuntimeNodeLayout = {
+  const layout: RuntimeLayout = {
     ...(registry[node.type]?.defaultLayout ?? {}),
-    ...(node.layout ?? {}),
   }
-  const rawVisible = layout.visible ?? true
-  const visible = typeof rawVisible === 'function'
-    ? rawVisible({ node, schema })
-    : rawVisible
 
   return {
     node,
     arrayIndex,
     order: layout.order ?? arrayIndex,
-    visible,
+    visible: layout.visible ?? true,
     placement: resolvePlacement(layout),
   }
 }
@@ -141,15 +135,19 @@ function createInsets(chrome: RuntimeLayoutEntry[]): Record<RuntimeLayoutEdge, s
 }
 
 export function createRuntimeLayoutPlan(
-  schema: DesignerSchema,
+  schema: DocumentSchema,
   registry: RuntimeRegistry,
 ): RuntimeLayoutPlan {
   const flow = new Map<string, RuntimeLayoutEntry[]>()
   const chrome: RuntimeLayoutEntry[] = []
   const layers = new Map<string, RuntimeLayoutEntry[]>()
 
-  for (const [arrayIndex, node] of (schema.root.children ?? []).entries()) {
-    const entry = resolveEntry(node, arrayIndex, schema, registry)
+  const nodesById = new Map(schema.nodes.map(node => [node.id, node]))
+  for (const [arrayIndex, nodeId] of schema.structure.root.entries()) {
+    const node = nodesById.get(nodeId)
+    if (!node)
+      continue
+    const entry = resolveEntry(node, arrayIndex, registry)
     if (!entry.visible)
       continue
 

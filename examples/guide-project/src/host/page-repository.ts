@@ -1,15 +1,15 @@
-import type { DesignerSchema } from '@dragcraft/designer'
+import type { DocumentSchema } from '@dragcraft/designer'
 
 export interface SavedPage {
   id: string
   revision: number
-  schema: DesignerSchema
+  schema: DocumentSchema
 }
 
 export interface SavePageInput {
   id: string
   revision: number
-  schema: DesignerSchema
+  schema: DocumentSchema
 }
 
 export interface PageRepository {

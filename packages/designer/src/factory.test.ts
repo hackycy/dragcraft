@@ -1,10 +1,33 @@
 // @vitest-environment happy-dom
-import type { DesignerSchema, RendererWidgetActionExtra, RendererWidgetMeta } from './index'
+import type { DesignerSchema, DocumentSchema, MaterialDefinition, RendererWidgetActionExtra, RendererWidgetMeta } from './index'
 import { describe, expect, it } from 'vitest'
 import { defineComponent } from 'vue'
 import { createDesigner } from './index'
 
 describe('createDesigner', () => {
+  it('creates the Next backend from the public schema and materials contract', () => {
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [{ id: 'text-1', type: 'text', props: { content: 'Next' } }],
+      structure: { root: ['text-1'], containers: {} },
+    }
+    const Preview = defineComponent({ name: 'TextPreview', setup: () => () => null })
+    const materials: readonly MaterialDefinition[] = [{
+      type: 'text',
+      schema: { defaultProps: { content: '' } },
+      presentation: { kind: 'visual', preview: Preview },
+    }]
+    const designer = createDesigner({ schema, materials })
+
+    expect('engine' in designer).toBe(false)
+    expect(designer.exportSchema?.()).toEqual(schema)
+    expect(designer.componentMap.text).toBe(Preview)
+    expect(designer.execute?.({ type: 'selection.set', nodeId: 'text-1' })).toEqual({ ok: true, changed: true })
+    designer.dispose()
+  })
+
   it('registers container metas before importing the initial schema', () => {
     const initialSchema: DesignerSchema = {
       version: '1.0.0',

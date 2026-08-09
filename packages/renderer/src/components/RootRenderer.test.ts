@@ -539,10 +539,11 @@ describe('rootRenderer forbidden overlay', () => {
     try {
       expect(host.querySelectorAll('[data-dc-component="canvas-surface"]')).toHaveLength(1)
       expect(host.querySelector('.slot-only-shell [data-dc-component="canvas-surface"]')).not.toBeNull()
+      expect(host.querySelectorAll('.slot-only-shell > *')).toHaveLength(1)
       expect(host.querySelector('.slot-only-shell')?.getAttribute('data-test-attrs')).toBe('')
       expect(host.querySelectorAll('.dc-forbidden-overlay')).toHaveLength(1)
-      expect(host.querySelector('.dc-renderer-frame-boundary > .dc-forbidden-overlay')).not.toBeNull()
-      expect(host.querySelector('.slot-only-shell .dc-forbidden-overlay')).toBeNull()
+      expect(host.querySelector('.dc-renderer-frame-boundary > .dc-forbidden-overlay')).toBeNull()
+      expect(host.querySelector('.slot-only-shell [data-dc-component="canvas-surface"] .dc-forbidden-overlay')).not.toBeNull()
       expect(host.querySelector('.dc-renderer-frame-boundary > [data-dc-selection-plane="root"]')).not.toBeNull()
       expect(host.querySelector('.slot-only-shell [data-dc-selection-plane="content"]')).not.toBeNull()
       expect(host.querySelector('.slot-only-shell [data-dc-selection-plane="viewport"]')).not.toBeNull()

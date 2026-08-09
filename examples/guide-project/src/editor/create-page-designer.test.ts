@@ -1,71 +1,76 @@
-import { CommandType, EventName } from '@dragcraft/designer'
+import type { DocumentSchema } from '@dragcraft/designer'
 import { expect, it } from 'vitest'
 import { createPageDesigner } from './create-page-designer'
-import { createGuideSchema, GUIDE_SCHEMA_VERSION } from './initial-schema'
+import { GUIDE_SCHEMA_VERSION } from './initial-schema'
 
-it('registers the tutorial material protocol before importing the initial schema', () => {
+it('creates the tutorial through the final material and DocumentSchema contract', () => {
   const designer = createPageDesigner()
 
-  expect(designer.engine.registry.getWidget('notice')?.title).toBe('公告')
+  expect('engine' in designer).toBe(false)
   expect(designer.componentMap.notice).toBeDefined()
-  expect(designer.engine.state.getNodeById('notice-1')?.type).toBe('notice')
-  expect(designer.engine.registry.getWidget('page-header')?.authoring).toBe('schema-managed')
-  expect(designer.engine.state.getNodeById('page-header-1')?.type).toBe('page-header')
-  expect(designer.engine.state.getNodeById('floating-action-1')?.type).toBe('floating-action')
+  const schema = designer.exportSchema!() as DocumentSchema
+  expect(schema.nodes.map(node => node.id)).toEqual([
+    'page-header-1',
+    'notice-1',
+    'layout-1',
+    'text-1',
+    'floating-action-1',
+  ])
 
   designer.dispose()
 })
 
-it('keeps no-op and rejected commands out of history and change events', () => {
+it('keeps no-op and rejected writes out of history', () => {
   const designer = createPageDesigner()
-  let schemaChanges = 0
-  designer.engine.eventHub.on(EventName.SCHEMA_CHANGED, () => schemaChanges++)
 
-  const noChange = designer.engine.execute({
-    type: CommandType.UPDATE_PROPS,
-    payload: { nodeId: 'notice-1', props: { text: '夏日活动已经开始' } },
+  const noChange = designer.execute!({
+    type: 'node.update',
+    nodeId: 'notice-1',
+    props: { text: '夏日活动已经开始' },
   })
-  const rejected = designer.engine.execute({
-    type: CommandType.UPDATE_PROPS,
-    payload: { nodeId: 'missing', props: { text: '不会写入' } },
+  const rejected = designer.execute!({
+    type: 'node.update',
+    nodeId: 'missing',
+    props: { text: '不会写入' },
   })
 
   expect(noChange).toEqual({ ok: true, changed: false })
-  expect(rejected).toEqual({ ok: false, code: 'COMMAND_REJECTED' })
-  expect(designer.engine.history.state.value.undoCount).toBe(0)
-  expect(schemaChanges).toBe(0)
+  expect(rejected).toEqual({ ok: false, code: 'NODE_NOT_FOUND' })
+  expect(designer.history!.undoCount.value).toBe(0)
 
   designer.dispose()
 })
 
-it('records a changed command once and restores it through undo', () => {
+it('records a changed write once and restores it through undo', () => {
   const designer = createPageDesigner()
-  const result = designer.engine.execute({
-    type: CommandType.UPDATE_PROPS,
-    payload: { nodeId: 'notice-1', props: { text: '修改后的公告' } },
+  const result = designer.execute!({
+    type: 'node.update',
+    nodeId: 'notice-1',
+    props: { text: '修改后的公告' },
   })
 
   expect(result).toEqual({ ok: true, changed: true })
-  expect(designer.engine.history.state.value.undoCount).toBe(1)
-  expect(designer.engine.state.getNodeById('notice-1')?.props.text).toBe('修改后的公告')
+  expect(designer.history!.undoCount.value).toBe(1)
+  expect((designer.exportSchema!() as DocumentSchema).nodes.find(node => node.id === 'notice-1')?.props.text).toBe('修改后的公告')
 
-  designer.engine.history.undo()
-  expect(designer.engine.state.getNodeById('notice-1')?.props.text).toBe('夏日活动已经开始')
+  designer.execute!({ type: 'history.undo' })
+  expect((designer.exportSchema!() as DocumentSchema).nodes.find(node => node.id === 'notice-1')?.props.text).toBe('夏日活动已经开始')
 
   designer.dispose()
 })
 
-it('migrates a legacy schema before validating and importing it', () => {
-  const legacySchema = createGuideSchema()
-  legacySchema.version = '1.0.0'
-  legacySchema.globalConfig = { pageName: '迁移后的活动页' }
+it('rejects a legacy-shaped schema instead of performing a runtime migration', () => {
+  const designer = createPageDesigner()
+  const original = designer.exportSchema!()
+  const result = designer.importSchema!({
+    version: '1.0.0',
+    globalConfig: { pageName: '迁移后的活动页' },
+    root: { id: 'root', type: 'root', props: {}, children: [] },
+  }) as { readonly ok: boolean }
 
-  const designer = createPageDesigner({ initialSchema: legacySchema })
-  const schema = designer.engine.state.getSchema()
-
-  expect(schema.version).toBe(GUIDE_SCHEMA_VERSION)
-  expect(schema.globalConfig.title).toBe('迁移后的活动页')
-  expect(schema.globalConfig.pageName).toBeUndefined()
+  expect(GUIDE_SCHEMA_VERSION).toBe('1')
+  expect(result.ok).toBe(false)
+  expect(designer.exportSchema!()).toEqual(original)
 
   designer.dispose()
 })

@@ -4,9 +4,7 @@
     "jsx": "preserve",
     "jsxImportSource": "vue",
     "baseUrl": "..",
-    "paths": {
-      "@dragcraft/designer/dev-harness": ["packages/designer/src/dev/next-designer-harness.ts"]
-    }
+    "paths": {}
   },
   "include": ["src/**/*.ts", "src/**/*.vue"]
 }

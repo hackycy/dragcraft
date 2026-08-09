@@ -1,29 +1,17 @@
-import { buildComponentMap, createDesigner, getWidgetMetas } from '@dragcraft/designer'
+import { createDesigner } from '@dragcraft/designer'
 import { createAntDesignVueFields } from '@dragcraft/fields-ant-design-vue'
-import { textWidgetDefinition } from '../domain/widgets/text'
+import { guideMaterials } from '../domain/materials'
 
 export function createMinimalDesigner() {
-  const definitions = [textWidgetDefinition]
-
   return createDesigner({
-    engineOptions: {
-      initialSchema: {
-        version: '1.0.0',
-        globalConfig: {},
-        root: {
-          id: 'root',
-          type: 'root',
-          props: {},
-          children: [{
-            id: 'welcome-text',
-            type: 'guide-text',
-            props: { content: '欢迎使用 DragCraft' },
-          }],
-        },
-      },
+    schema: {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [{ id: 'welcome-text', type: 'guide-text', props: { content: '欢迎使用 DragCraft' } }],
+      structure: { root: ['welcome-text'], containers: {} },
     },
-    widgetMetas: getWidgetMetas(definitions),
-    componentMap: buildComponentMap(definitions),
+    materials: guideMaterials.filter(material => material.type === 'guide-text'),
     fieldComponentMap: createAntDesignVueFields(),
   })
 }

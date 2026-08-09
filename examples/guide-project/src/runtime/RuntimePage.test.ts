@@ -1,4 +1,4 @@
-import type { SchemaNode } from '@dragcraft/designer'
+import type { DocumentSchema, NodeDefinition } from '@dragcraft/designer'
 import type { VNode } from 'vue'
 import type { RuntimeRegistry } from './registry'
 import { expect, it } from 'vitest'
@@ -11,32 +11,40 @@ const registry: RuntimeRegistry = {
   'column-container': { kind: 'container', component: RuntimeColumnContainer },
 }
 
+const schema: DocumentSchema = {
+  version: '1',
+  globalConfig: {},
+  page: { props: {} },
+  nodes: [
+    { id: 'layout-1', type: 'column-container', props: { gap: 16 } },
+    { id: 'notice-1', type: 'notice', props: { text: '运行时公告' } },
+  ],
+  structure: {
+    root: ['layout-1'],
+    containers: { 'layout-1': { regions: { content: ['notice-1'] } } },
+  },
+}
+
 function renderedContent(vnode: VNode): VNode {
   return (vnode.children as VNode[])[0]
 }
 
 it('passes recursively rendered region children to a runtime container', () => {
-  const renderNode = createRuntimeNodeRenderer(registry)
+  const renderNode = createRuntimeNodeRenderer(registry, schema)
   const vnode = renderNode({
     id: 'layout-1',
     type: 'column-container',
     props: { gap: 16 },
-    container: {
-      variant: 'single',
-      regions: {
-        content: [{ id: 'notice-1', type: 'notice', props: { text: '运行时公告' } }],
-      },
-    },
   }) as VNode
   const container = renderedContent(vnode)
 
   expect(container.type).toBe(RuntimeColumnContainer)
   expect((container.props?.regions as Record<string, unknown[]>).content).toHaveLength(1)
-  expect((container.props?.node as SchemaNode).props.gap).toBe(16)
+  expect((container.props?.node as NodeDefinition).props.gap).toBe(16)
 })
 
 it('keeps container and content styles in separate runtime scopes', () => {
-  const renderNode = createRuntimeNodeRenderer(registry)
+  const renderNode = createRuntimeNodeRenderer(registry, schema)
   const vnode = renderNode({
     id: 'notice-1',
     type: 'notice',
@@ -53,8 +61,8 @@ it('keeps container and content styles in separate runtime scopes', () => {
 })
 
 it('renders an observable fallback for an unknown widget', () => {
-  const renderNode = createRuntimeNodeRenderer(registry)
-  const node: SchemaNode = { id: 'unknown-1', type: 'unknown', props: {} }
+  const renderNode = createRuntimeNodeRenderer(registry, schema)
+  const node: NodeDefinition = { id: 'unknown-1', type: 'unknown', props: {} }
   const vnode = renderNode(node) as VNode
   const fallback = renderedContent(vnode)
 
