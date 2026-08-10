@@ -1,10 +1,10 @@
-import type { LayoutEdge, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from '@dragcraft/legacy-core'
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPresentationHost } from './selection-presentation'
+import type { LayoutEdge, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from './semantic'
 import type { RendererContext } from './types'
-import { DEFAULT_LAYOUT_REGION } from '@dragcraft/legacy-core'
 import { DcScrollArea } from '@dragcraft/ui'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
+import { DEFAULT_LAYOUT_REGION } from './semantic'
 
 type RendererLayoutProjection = RendererContext['layout']['value']
 

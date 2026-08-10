@@ -1,11 +1,11 @@
 import type { DesignerWidgetMeta } from '../types'
 import { useI18n } from '@dragcraft/i18n'
 import { IconClose, IconSearch } from '@dragcraft/icons'
-import { isWidgetVisibleInMaterialPanel } from '@dragcraft/legacy-core'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import { materialItemMatchesQuery, resolveMaterialItem } from '../material'
+import { isWidgetVisibleInMaterialPanel } from '../presentation/semantic'
 import { useDesignerSession } from '../session/context'
 import DcMaterialGroup from './DcMaterialGroup'
 

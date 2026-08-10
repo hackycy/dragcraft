@@ -1,5 +1,5 @@
-import type { NodeStyle, StyleValueMap } from '@dragcraft/legacy-core'
 import type { InjectionKey, Ref } from 'vue'
+import type { NodeStyle, StyleValueMap } from './semantic'
 import { computed, inject } from 'vue'
 import { useRendererContext } from './context'
 

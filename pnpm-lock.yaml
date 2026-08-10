@@ -231,18 +231,12 @@ importers:
       '@dragcraft/icons':
         specifier: workspace:*
         version: link:../icons
-      '@dragcraft/legacy-core':
-        specifier: workspace:*
-        version: link:../legacy-core
       '@dragcraft/ui':
         specifier: workspace:*
         version: link:../ui
       '@dragcraft/utils':
         specifier: workspace:*
         version: link:../utils
-      '@dragcraft/widgets':
-        specifier: workspace:*
-        version: link:../widgets
       '@floating-ui/dom':
         specifier: catalog:vue
         version: 1.7.6
@@ -335,53 +329,6 @@ importers:
         specifier: catalog:vue
         version: 3.5.39(typescript@5.9.3)
 
-  packages/legacy-core:
-    dependencies:
-      '@dragcraft/utils':
-        specifier: workspace:*
-        version: link:../utils
-    devDependencies:
-      vitest:
-        specifier: catalog:testing
-        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.22.4)(yaml@2.9.0))
-      vue:
-        specifier: catalog:vue
-        version: 3.5.39(typescript@5.9.3)
-
-  packages/renderer:
-    dependencies:
-      '@dragcraft/i18n':
-        specifier: workspace:*
-        version: link:../i18n
-      '@dragcraft/icons':
-        specifier: workspace:*
-        version: link:../icons
-      '@dragcraft/legacy-core':
-        specifier: workspace:*
-        version: link:../legacy-core
-      '@dragcraft/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@dragcraft/utils':
-        specifier: workspace:*
-        version: link:../utils
-      '@floating-ui/dom':
-        specifier: catalog:vue
-        version: 1.7.6
-    devDependencies:
-      happy-dom:
-        specifier: catalog:testing
-        version: 20.10.6
-      postcss:
-        specifier: catalog:cli
-        version: 8.5.15
-      vitest:
-        specifier: catalog:testing
-        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.22.4)(yaml@2.9.0))
-      vue:
-        specifier: catalog:vue
-        version: 3.5.39(typescript@5.9.3)
-
   packages/ui:
     devDependencies:
       '@vue/test-utils':
@@ -409,19 +356,6 @@ importers:
       vitest:
         specifier: catalog:testing
         version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.22.4)(yaml@2.9.0))
-
-  packages/widgets:
-    dependencies:
-      '@dragcraft/legacy-core':
-        specifier: workspace:*
-        version: link:../legacy-core
-    devDependencies:
-      vitest:
-        specifier: catalog:testing
-        version: 4.1.9(@types/node@24.13.2)(happy-dom@20.10.6)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.22.4)(yaml@2.9.0))
-      vue:
-        specifier: catalog:vue
-        version: 3.5.39(typescript@5.9.3)
 
   playground:
     dependencies:

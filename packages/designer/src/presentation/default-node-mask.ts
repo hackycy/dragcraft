@@ -1,5 +1,5 @@
-import type { NodeOwner } from '@dragcraft/legacy-core'
 import type { PropType } from 'vue'
+import type { NodeOwner } from './semantic'
 import { defineComponent, h } from 'vue'
 
 /**

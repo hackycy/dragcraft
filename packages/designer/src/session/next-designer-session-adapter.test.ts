@@ -1,5 +1,5 @@
 import type { DocumentSchema } from '@dragcraft/core'
-import type { DesignerSchema } from '@dragcraft/legacy-core'
+import type { DesignerSchema } from '../presentation/semantic'
 import { describe, expect, it } from 'vitest'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import { createMaterialCatalog } from '../materials/create-material-catalog'
@@ -379,7 +379,7 @@ describe('next adapter backend contract', () => {
     expect(JSON.parse(JSON.stringify(session.exportSchema()))).toEqual(session.exportSchema())
   })
 
-  it('imports final Documents without converting Legacy schemas', () => {
+  it('rejects the obsolete projected schema import action', () => {
     const { session } = createFixture()
     const replacement: DocumentSchema = {
       version: '1',
@@ -391,15 +391,20 @@ describe('next adapter backend contract', () => {
 
     const action = {
       type: 'schema.import' as const,
-      schema: replacement as unknown as DesignerSchema,
+      schema: {
+        version: replacement.version,
+        globalConfig: replacement.globalConfig,
+        root: {
+          id: 'root',
+          type: 'root',
+          props: replacement.page.props,
+          children: replacement.nodes.map(node => ({ id: node.id, type: node.type, props: node.props })),
+        },
+      } as DesignerSchema,
     }
-    expect(session.evaluate(action)).toEqual({ allowed: true })
-    expect(session.execute(action)).toEqual({ ok: true, changed: true })
-    expect(session.document.rootNodes.value.map(node => node.id)).toEqual(['replacement'])
+    expect(session.evaluate(action)).toEqual({ allowed: false, code: 'SCHEMA_IMPORT_REJECTED' })
+    expect(session.execute(action)).toEqual({ ok: false, code: 'SCHEMA_IMPORT_REJECTED' })
+    expect(session.document.rootNodes.value.map(node => node.id)).toEqual(['ordinary', 'layout'])
     expect(session.state.history.value).toMatchObject({ canRedo: false, canUndo: false })
-    expect(session.evaluate({
-      type: 'schema.import',
-      schema: { version: '1', globalConfig: {}, root: { id: 'root', type: 'root', props: {} } },
-    })).toEqual({ allowed: false, code: 'SCHEMA_IMPORT_REJECTED' })
   })
 })

@@ -1,7 +1,10 @@
-import type { DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '@dragcraft/legacy-core'
 import type { ComputedRef, Ref } from 'vue'
+import type { DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '../presentation/semantic'
 import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '../presentation/types'
 import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
+import { generateShortId } from '@dragcraft/utils'
+import { computed, watch } from 'vue'
+import { hideNativeDragImage } from '../presentation/drag-image'
 import {
   clampInsertIndex,
   DEFAULT_LAYOUT_REGION,
@@ -10,10 +13,7 @@ import {
   getValidDropIndices,
   resolvePlacementDecision,
   resolveWidgetCreation,
-} from '@dragcraft/legacy-core'
-import { generateShortId } from '@dragcraft/utils'
-import { computed, watch } from 'vue'
-import { hideNativeDragImage } from '../presentation/drag-image'
+} from '../presentation/semantic'
 
 // ──────────────────────────────────────────
 // Return type
@@ -161,10 +161,7 @@ export function useDragDrop(
     const meta = session.materials.get(target.widgetType)
     if (!meta)
       return { allowed: true }
-    return resolveWidgetCreation(meta, {
-      widgetType: target.widgetType,
-      schema: schemaSnapshot.value,
-    })
+    return resolveWidgetCreation(meta, target.widgetType, schemaSnapshot.value)
   })
 
   // ── Visual drop index computation ──

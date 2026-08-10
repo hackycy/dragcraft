@@ -1,7 +1,7 @@
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
-import type { DeepReadonly, SchemaNode, WidgetMeta } from '@dragcraft/legacy-core'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
+import type { DeepReadonly, SchemaNode, WidgetMeta } from '../presentation/semantic'
 import type { DesignerSession } from '../session/types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'

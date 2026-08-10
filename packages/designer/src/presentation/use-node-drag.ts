@@ -1,4 +1,4 @@
-import type { SchemaNode } from '@dragcraft/legacy-core'
+import type { SchemaNode } from './semantic'
 import type { RendererContext } from './types'
 import { hideNativeDragImage } from './drag-image'
 import { fireAfterHook } from './event-hooks'

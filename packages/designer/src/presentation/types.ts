@@ -1,10 +1,10 @@
-import type { ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CoreWidgetMeta, CreationBlockReason, DesignerSchema, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise, RendererEventHooks } from './event-hooks'
 import type { NodeToolbarOrientation } from './node-interaction'
 import type { NodeSelectionPlane, NodeSelectionProjection } from './selection-presentation'
+import type { ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CreationBlockReason, DesignerSchema, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode, WidgetMeta } from './semantic'
 
 export type DeepReadonly<T>
   = T extends (...args: infer Args) => infer Result
@@ -140,7 +140,7 @@ export interface RendererContainerAdapter {
   resolveDropIndex?: ResolveContainerDropIndex
 }
 
-export interface RendererWidgetMeta extends CoreWidgetMeta {
+export interface RendererWidgetMeta extends WidgetMeta {
   actions?: WidgetActionConfig
   wrapper?: Component
   containerAdapter?: RendererContainerAdapter

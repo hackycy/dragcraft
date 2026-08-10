@@ -7,11 +7,11 @@ import type {
   ResolvedDocument,
   StructuralDestination,
 } from '@dragcraft/core'
-import type { ResolvedNodeLayout } from '@dragcraft/legacy-core'
 import type { Ref } from 'vue'
 import type { AuthoringEngine, SchemaAuthoringAction } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { MaterialPresentationLayout } from '../materials/types'
+import type { ResolvedNodeLayout } from '../presentation/semantic'
 import type {
   DesignerMaterialCapability,
   DesignerSession,
@@ -104,7 +104,7 @@ function destinationForIndex(
   return { owner, position: { kind: 'before', nodeId: ids[index] } }
 }
 
-function bundleFromLegacyNode(node: unknown): NodeBundle | undefined {
+function bundleFromPresentationNode(node: unknown): NodeBundle | undefined {
   if (!node || typeof node !== 'object')
     return undefined
   const nodes: Array<NodeBundle['nodes'][number]> = []
@@ -147,10 +147,10 @@ function bundleFromLegacyNode(node: unknown): NodeBundle | undefined {
 }
 
 function bundleForNodeAdd(node: unknown, catalog: MaterialCatalog): NodeBundle | undefined {
-  const legacyBundle = bundleFromLegacyNode(node)
-  if (!legacyBundle)
+  const presentationBundle = bundleFromPresentationNode(node)
+  if (!presentationBundle)
     return undefined
-  const entry = legacyBundle.nodes.find(item => item.id === legacyBundle.entryId)
+  const entry = presentationBundle.nodes.find(item => item.id === presentationBundle.entryId)
   if (!entry)
     return undefined
   const bundle = catalog.createBundle(entry.type, () => entry.id)

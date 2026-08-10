@@ -1,6 +1,6 @@
-import type { NodeOwner } from '@dragcraft/legacy-core'
 import type { PropType } from 'vue'
 import type { ResolvedNodeAction } from './action-registry'
+import type { NodeOwner } from './semantic'
 import type { NodeInteractionState, ToolbarPositionData } from './types'
 import { defineComponent, h } from 'vue'
 

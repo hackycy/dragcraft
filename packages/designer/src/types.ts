@@ -1,13 +1,13 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
-import type { CreationBlockReason, DesignerSchema, EngineOptions, NodeDestination, PlacementDecision } from '@dragcraft/legacy-core'
 import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
 import type { AuthoringEngine, DesignerHistory, DesignerSelection, AuthoringAction as EngineAuthoringAction, AuthoringResult as EngineAuthoringResult, SchemaLoadResult } from './authoring/types'
 import type { MaterialDefinition } from './materials/types'
 import type { NodeActionDefinition, NodeActionRegistry } from './presentation/action-registry'
 import type { ActionInterceptor } from './presentation/action-runtime'
 import type { RendererEventHooks } from './presentation/event-hooks'
+import type { CreationBlockReason, NodeDestination, PlacementDecision } from './presentation/semantic'
 import type { AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions, RendererWidgetMeta } from './presentation/types'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
@@ -43,10 +43,6 @@ export interface DesignerWorkspaceController {
   closeRight: () => void
   toggleRight: (panel?: PropertyTabKey) => void
   closeDrawers: () => void
-}
-
-export interface DesignerEngineOptions extends EngineOptions {
-  initialSchema?: DesignerSchema
 }
 
 // ──────────────────────────────────────────

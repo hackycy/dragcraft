@@ -1,5 +1,5 @@
-import type { NodeOwner } from '@dragcraft/legacy-core'
 import type { PropType } from 'vue'
+import type { NodeOwner } from './semantic'
 import { useI18n } from '@dragcraft/i18n'
 import { IconComponent } from '@dragcraft/icons'
 import { defineComponent, h } from 'vue'

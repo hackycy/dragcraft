@@ -1,5 +1,5 @@
-import type { NodeOwner } from '@dragcraft/legacy-core'
 import type { NodeSelectionProjectionKind } from './selection-presentation'
+import type { NodeOwner } from './semantic'
 
 export type NodeInteractionGeometryMode = 'root-band' | 'node-box'
 export type NodeToolbarPlacement = 'left-start' | 'top-end'

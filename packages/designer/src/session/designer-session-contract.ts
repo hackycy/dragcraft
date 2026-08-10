@@ -9,7 +9,7 @@ export interface DesignerSessionContractFixture {
   addHistoryEntry: () => void
 }
 
-/** Shared semantic contract reused by the Legacy and Next session adapters. */
+/** Shared semantic contract for the active DesignerSession backend. */
 export function describeDesignerSessionContract(
   name: string,
   createFixture: () => DesignerSessionContractFixture,

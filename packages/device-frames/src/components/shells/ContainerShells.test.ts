@@ -96,8 +96,8 @@ describe('built-in Container Shells', () => {
     expect(css).not.toContain('forbidden-overlay')
   })
 
-  it('lets a narrow device define the Renderer Frame Boundary width', () => {
-    const css = readFileSync(path.resolve(process.cwd(), '../renderer/styles/structure.css'), 'utf8')
+  it('lets a narrow device define the Designer Frame Boundary width', () => {
+    const css = readFileSync(path.resolve(process.cwd(), '../designer/src/presentation/structure.css'), 'utf8')
     const boundaryRule = css.match(/\.dc-renderer-frame-boundary\s*\{[^}]*\}/)?.[0]
     const defaultShellRule = css.match(/\.dc-container-shell\s*\{[^}]*\}/)?.[0]
 

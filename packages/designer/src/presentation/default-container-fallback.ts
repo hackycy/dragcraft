@@ -1,5 +1,5 @@
-import type { NodeOwner, SchemaNode } from '@dragcraft/legacy-core'
 import type { PropType } from 'vue'
+import type { NodeOwner, SchemaNode } from './semantic'
 import { defineComponent, h } from 'vue'
 import { useRendererContext } from './context'
 import NodeHost from './node-host'

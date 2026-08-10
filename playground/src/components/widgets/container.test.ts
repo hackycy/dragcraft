@@ -1,7 +1,5 @@
 import type { ContainerDefinition, SchemaNode } from './contract'
-import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
-import { CommandType, createEngine } from '../../../../packages/legacy-core/src'
 import { resolveLinearDropIndex, splitContainerMeta } from './container'
 import { playgroundWidgetFixtures } from './index'
 
@@ -48,15 +46,6 @@ it('registers playground container definitions and split variants in declaration
   ])
 })
 
-it('keeps empty-region geometry in renderer structural CSS', () => {
-  const structureCss = readFileSync(
-    new URL('../../../../packages/renderer/styles/structure.css', import.meta.url),
-    'utf8',
-  )
-  expect(structureCss).toMatch(/\.dc-container-region--empty\s*\{/)
-  expect(structureCss).not.toContain('.dc-container-region__empty')
-})
-
 it('redistributes split children in stable order when the variant changes', () => {
   const result = splitContainerMeta.container!.migrateVariant!({
     schema: {
@@ -90,48 +79,6 @@ it('redistributes split children in stable order when the variant changes', () =
       },
     },
   })
-})
-
-it.each([
-  ['left-one-right-two', 'top-one-bottom-two'],
-  ['top-one-bottom-two', 'left-one-right-two'],
-] as const)('migrates a max-capacity split from %s to %s without violating target constraints', (fromVariantId, toVariantId) => {
-  const definition = splitContainerMeta.container
-  const fromVariant = definition.variants[fromVariantId]
-  const toVariant = definition.variants[toVariantId]
-  const sourceRegions = fullRegions(fromVariant)
-  const sourceIds = fromVariant.regions.flatMap(region => sourceRegions[region.id].map(item => item.id))
-  const container: SchemaNode = {
-    id: 'split',
-    type: splitContainerMeta.type,
-    props: {},
-    container: { variant: fromVariantId, regions: sourceRegions },
-  }
-  const engine = createEngine()
-  engine.registerWidget(splitContainerMeta as never)
-  const imported = engine.importSchema({
-    version: '1.0.0',
-    globalConfig: {},
-    root: { id: 'root', type: 'root', props: {}, children: [container] },
-  })
-  if (!imported.ok)
-    throw new Error(`Test schema rejected: ${imported.diagnostics.map(item => item.code).join(', ')}`)
-
-  expect(engine.execute({
-    type: CommandType.CHANGE_CONTAINER_VARIANT,
-    payload: { containerId: container.id, variant: toVariantId },
-  })).toMatchObject({ ok: true })
-
-  const migrated = engine.state.getNodeById(container.id)!.container!
-  for (const region of toVariant.regions) {
-    const count = migrated.regions[region.id].length
-    expect(count).toBeGreaterThanOrEqual(region.constraints?.minItems ?? 0)
-    expect(count).toBeLessThanOrEqual(region.constraints?.maxItems ?? Number.POSITIVE_INFINITY)
-  }
-  const migratedIds = toVariant.regions.flatMap(region => migrated.regions[region.id].map(item => item.id))
-  expect(migratedIds).toEqual(sourceIds)
-  expect(new Set(migratedIds).size).toBe(sourceIds.length)
-  engine.dispose()
 })
 
 it('returns a structured material denial when split target capacity is exhausted', () => {

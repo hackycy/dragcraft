@@ -1,5 +1,5 @@
-import type { CreationBlockReason } from '@dragcraft/legacy-core'
 import type { PropType } from 'vue'
+import type { CreationBlockReason } from './semantic'
 import { useI18n } from '@dragcraft/i18n'
 import { defineComponent, h } from 'vue'
 

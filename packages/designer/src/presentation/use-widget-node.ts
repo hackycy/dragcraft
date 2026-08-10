@@ -1,5 +1,5 @@
-import type { BehaviorPredicate, InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from '@dragcraft/legacy-core'
 import type { Component, ComputedRef } from 'vue'
+import type { BehaviorPredicate, BehaviorContext as InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from './semantic'
 import type { NodeInteractionState, RendererContext, RendererWidgetMeta } from './types'
 import { computed } from 'vue'
 import { runBeforeAfterHook } from './event-hooks'

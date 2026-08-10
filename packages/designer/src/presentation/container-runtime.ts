@@ -1,10 +1,10 @@
+import type { ComputedRef, InjectionKey } from 'vue'
 import type {
   ContainerRegionDefinition,
   ContainerRegionId,
   ContainerVariantId,
   SchemaNode,
-} from '@dragcraft/legacy-core'
-import type { ComputedRef, InjectionKey } from 'vue'
+} from './semantic'
 import type { AuthoringResult, DeepReadonly, RendererContext } from './types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed, inject } from 'vue'

@@ -1,3 +1,4 @@
+import type { ComputedRef, Ref } from 'vue'
 import type {
   ContainerPlanResult,
   CreationBlockReason,
@@ -13,8 +14,7 @@ import type {
   ResolvedNodeLayout,
   SchemaDiagnostic,
   SchemaNode,
-} from '@dragcraft/legacy-core'
-import type { ComputedRef, Ref } from 'vue'
+} from '../presentation/semantic'
 import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '../presentation/types'
 
 export type DesignerMaterialCapability
@@ -85,7 +85,7 @@ export interface DesignerSessionState {
 /**
  * The internal read seam shared by the existing Designer UI and Renderer.
  * It deliberately exposes document and material facts, never legacy runtime
- * collaborators such as an Engine, Store, Registry, or LayoutPlan.
+ * collaborators such as a backend store or registry.
  */
 export interface DesignerSession {
   readonly document: DesignerSessionDocument
