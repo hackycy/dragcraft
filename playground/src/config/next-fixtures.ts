@@ -40,7 +40,68 @@ import {
   tabBarWidgetMeta,
 } from '../components/widgets/mini-program'
 
-export const playgroundNextMaterials: readonly MaterialDefinition[] = [
+function addStyleInspector(material: MaterialDefinition): MaterialDefinition {
+  if (material.presentation.kind !== 'visual')
+    return material
+
+  const formSchema = material.inspector?.formSchema ?? { sections: [] }
+  return {
+    ...material,
+    inspector: {
+      ...material.inspector,
+      formSchema: {
+        ...formSchema,
+        sections: [
+          ...formSchema.sections,
+          {
+            title: '容器样式',
+            fields: [
+              {
+                key: 'containerMargin',
+                label: '外边距',
+                component: 'Spacing',
+                bindTo: { scope: 'node', path: 'style.container' },
+                defaultValue: {},
+                componentProps: { type: 'margin', min: -120, max: 120 },
+              },
+              {
+                key: 'containerPadding',
+                label: '内边距',
+                component: 'Spacing',
+                bindTo: { scope: 'node', path: 'style.container' },
+                defaultValue: {},
+                componentProps: { type: 'padding', min: 0, max: 120 },
+              },
+            ],
+          },
+          {
+            title: '内容样式',
+            fields: [
+              {
+                key: 'contentMargin',
+                label: '内容外边距',
+                component: 'Spacing',
+                bindTo: { scope: 'node', path: 'style.content' },
+                defaultValue: {},
+                componentProps: { type: 'margin', min: -120, max: 120 },
+              },
+              {
+                key: 'contentPadding',
+                label: '内容内边距',
+                component: 'Spacing',
+                bindTo: { scope: 'node', path: 'style.content' },
+                defaultValue: {},
+                componentProps: { type: 'padding', min: 0, max: 120 },
+              },
+            ],
+          },
+        ],
+      },
+    },
+  }
+}
+
+const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
   {
     type: 'text',
     panel: { title: '文本', group: 'basic', groupTitle: '基础展示', groupTitleKey: 'group.basic', icon: '文' },
@@ -260,6 +321,8 @@ export const playgroundNextMaterials: readonly MaterialDefinition[] = [
     },
   },
 ]
+
+export const playgroundNextMaterials: readonly MaterialDefinition[] = basePlaygroundNextMaterials.map(addStyleInspector)
 
 export const ecommerceNextSchema: DocumentSchema = {
   version: '1',

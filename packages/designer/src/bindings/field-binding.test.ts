@@ -77,8 +77,7 @@ describe('field-binding', () => {
 
   it('creates schema-root and globalConfig actions', () => {
     expect(createBindingAction({ scope: 'schema', path: 'root.style.surface.backgroundColor' }, '#f5f5f5')).toEqual({
-      type: 'node.update',
-      nodeId: 'root',
+      type: 'page.update',
       props: {},
       style: { surface: { backgroundColor: '#f5f5f5' } },
     })

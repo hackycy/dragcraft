@@ -51,7 +51,7 @@ adapter 明确组件从哪个 prop 读取值，以及通过哪个事件提交新
 字段组件发出 adapter update event
   -> FormGenerator 更新和验证字段值
   -> Designer 解析默认绑定或 bindTo
-  -> designer.execute(update-node | update-global-config)
+  -> designer.execute(update-node | update-page | update-global-config)
   -> Authoring engine 提交 DocumentSchema 和 history
   -> Designer Presentation 读取新文档
 ```

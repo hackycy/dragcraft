@@ -105,6 +105,23 @@ function createNodeBindingAction(nodeId: string, path: string, value: unknown): 
   return null
 }
 
+function createPageBindingAction(path: string, value: unknown): AuthoringAction | null {
+  const [head, rest] = splitHead(path)
+  if (head === 'props') {
+    const props = setPatchPath(rest, value)
+    return props
+      ? { type: 'page.update', props }
+      : null
+  }
+  if (head === 'style') {
+    const style = setPatchPath(rest, value)
+    return style
+      ? { type: 'page.update', props: {}, style }
+      : null
+  }
+  return null
+}
+
 export function createBindingAction(
   binding: ResolvedFieldBinding,
   value: unknown,
@@ -139,7 +156,7 @@ export function createBindingAction(
         : null
     }
     if (head === 'root')
-      return createNodeBindingAction('root', rest, value)
+      return createPageBindingAction(rest, value)
     return null
   }
 

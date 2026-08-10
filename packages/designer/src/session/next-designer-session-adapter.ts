@@ -452,6 +452,18 @@ function compileSchemaAction(
         },
       }
     }
+    case 'page.update':
+      return {
+        type: 'update-page',
+        page: {
+          props: mergeJsonObjects(document.schema.page.props, action.props),
+          ...(action.style
+            ? { style: mergeJsonObjects(document.schema.page.style ?? {}, action.style as Record<string, unknown>) }
+            : document.schema.page.style
+              ? { style: document.schema.page.style as unknown as JsonObject }
+              : {}),
+        },
+      }
     case 'global-config.update':
       return {
         type: 'update-global-config',

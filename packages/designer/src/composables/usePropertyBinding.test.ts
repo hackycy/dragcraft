@@ -60,4 +60,34 @@ describe('usePropertyBinding', () => {
       designer.dispose()
     }
   })
+
+  it('writes page surface style fields bound through the global configuration', () => {
+    const { designer, session } = createFixture()
+    try {
+      const binding = usePropertyBinding(session, {
+        globalConfigSchema: {
+          sections: [{
+            title: 'Page style',
+            fields: [{
+              key: 'backgroundColor',
+              label: 'Background color',
+              component: 'Color',
+              bindTo: { scope: 'schema', path: 'root.style.surface.backgroundColor' },
+            }],
+          }],
+        },
+      })
+
+      expect(binding.handleGlobalConfigChange('backgroundColor', '#123456')).toEqual({
+        ok: true,
+        changed: true,
+      })
+      expect(designer.exportSchema()?.page.style).toEqual({
+        surface: { backgroundColor: '#123456' },
+      })
+    }
+    finally {
+      designer.dispose()
+    }
+  })
 })

@@ -117,6 +117,7 @@ export type AuthoringAction
     | { type: 'node.remove', nodeId: string }
     | { type: 'node.duplicate', nodeId: string }
     | { type: 'node.update', nodeId: string, props: Record<string, unknown>, style?: NodeStyle }
+    | { type: 'page.update', props: Record<string, unknown>, style?: NodeStyle }
     | { type: 'container.change-variant', containerId: string, variant: string }
     | { type: 'global-config.update', config: Record<string, unknown> }
     | { type: 'schema.import', schema: DesignerSchema }

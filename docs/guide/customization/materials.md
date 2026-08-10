@@ -38,6 +38,34 @@ Headless 适合只产生配置、不需要业务预览的物料。它仍出现�
 
 需要 children 的物料在 `schema.container` 中声明 region。业务 preview 通过 `ContainerRegionOutlet` 呈现 child 节点；容器 DOM 与几何属于业务组件。
 
+物料的属性表单可以把布局字段显式绑定到节点样式：
+
+```ts
+const formSchema = {
+  sections: [{
+    title: '布局样式',
+    fields: [
+      {
+        key: 'containerMargin',
+        label: '容器外边距',
+        component: 'Spacing',
+        bindTo: { scope: 'node', path: 'style.container' },
+        componentProps: { type: 'margin', min: -120, max: 120 },
+      },
+      {
+        key: 'contentPadding',
+        label: '内容内边距',
+        component: 'Spacing',
+        bindTo: { scope: 'node', path: 'style.content' },
+        componentProps: { type: 'padding', min: 0, max: 120 },
+      },
+    ],
+  }],
+}
+```
+
+`style.container` 会作用于 Designer 的物料外层容器，`style.content` 会作用于物料内容；数值长度（包括负的 `marginTop`）会在展示时规范化为 CSS 长度。需要由物料自身行为更新样式时，使用 `useWidgetRuntime()` 的 `updateContainerStyle()` 或 `updateContentStyle()`，不要直接修改 DOM。
+
 组件内更新自身可持久化 props 或样式时使用 `useWidgetRuntime()`。它会进入受控 action 和 history；局部 Vue 状态只用于不需要保存的交互。
 
 字段配置见 [表单与字段](/guide/customization/forms-and-fields)，容器见 [容器与 region](/guide/customization/layout-and-containers)。

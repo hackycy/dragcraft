@@ -12,12 +12,29 @@ function allStructureNodeIds(schema: DocumentSchema): string[] {
   ]
 }
 
+function hasBinding(field: { bindTo?: unknown }, scope: string, path: string): boolean {
+  return typeof field.bindTo === 'object'
+    && field.bindTo !== null
+    && (field.bindTo as { scope?: string, path?: string }).scope === scope
+    && (field.bindTo as { scope?: string, path?: string }).path === path
+}
+
 describe('next Playground fixtures', () => {
   it('provides an inspector schema for every visual material', () => {
     for (const material of playgroundNextMaterials) {
       if (material.presentation.kind !== 'visual')
         continue
       expect(material.inspector?.formSchema?.sections.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('exposes container and content style bindings on visual materials', () => {
+    for (const material of playgroundNextMaterials) {
+      if (material.presentation.kind !== 'visual')
+        continue
+      const fields = material.inspector?.formSchema?.sections.flatMap(section => section.fields) ?? []
+      expect(fields.some(field => hasBinding(field, 'node', 'style.container'))).toBe(true)
+      expect(fields.some(field => hasBinding(field, 'node', 'style.content'))).toBe(true)
     }
   })
 
