@@ -3,19 +3,19 @@ id: commands
 workflows:
   - commands
 status: passed
-inputDigest: sha256:66e10fff5dc63bb9ceb03a0adc8d93c430234129a20ab532bec09208b7601b8a
-executedAt: "2026-07-31T08:53:19Z"
+inputDigest: sha256:fcedc032f73b55ebdb0ff32c7b55411f9f5e75e145011f41af31a15d9cceb479
+executedAt: "2026-08-11T06:57:27Z"
 runner:
   agent: Codex
   model: GPT-5
 evidence:
-  - designer 公开命令、事件与 history 声明
-  - 业务动作、命令总线和三态结果测试
+  - "`AuthoringAction`、结果、事件与 history 的 Designer 公开声明"
+  - 业务 action、Authoring Engine 与原子 history 测试
 verification:
-  - 宿主命令结果测试 4 项通过
-  - Core command bus 17 项及 Renderer 动作相关 10 项测试通过
+  - "`committed`、`unchanged`、`rejected` 与 `confirmation-required` 的结果语义均有覆盖"
+  - browser smoke 覆盖原子 history、undo/redo 与拒绝 drop 不写入 history
 ---
 
-# 命令结果与历史原子性
+# AuthoringAction 结果与历史原子性
 
-参考 Agent 只选择 commands。方案用 `execute()` 的判别结果区分 success、no-op 和 rejected，并确认只有 `ok && changed` 写入历史和发出 `schema:changed`；未公开的结果类型没有被当成可命名导入。
+参考 Agent 只选择 commands。方案以 `designer.execute(action)` 的判别结果区分 `committed`、`unchanged`、`rejected` 与 `confirmation-required`；只有实际变更 DocumentSchema 的 action 进入 history 并发出 `schema:changed`。

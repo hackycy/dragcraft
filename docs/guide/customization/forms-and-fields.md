@@ -16,7 +16,7 @@ FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提
 
 ## 选择绑定范围
 
-| 目标 | 默认或显式绑定 | 写入命令 |
+| 目标 | 默认或显式绑定 | 写入 action |
 | --- | --- | --- |
 | 当前节点 props | widget 字段默认值 | `UPDATE_PROPS` |
 | 当前节点 style | `{ scope: 'node', path: 'style.container.*' }` | `UPDATE_PROPS` |

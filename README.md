@@ -22,16 +22,16 @@
 | --- | --- |
 | 先看看设计器实际效果 | [打开 Playground](https://hackycy.github.io/dragcraft/playground) |
 | 从零搭建可保存、可预览的页面编辑器 | [准备开发](https://hackycy.github.io/dragcraft/guide/learn/prerequisites) |
-| 理解 Schema、命令和包的边界 | [Schema 与写入链路](https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path) |
+| 理解 DocumentSchema、AuthoringAction 与公开包的边界 | [Schema 与写入链路](https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path) |
 | 接入业务物料、属性表单或容器组件 | [高级自定义](https://hackycy.github.io/dragcraft/guide/customization/materials) |
 | 查阅包的公开 API | [API 参考](https://hackycy.github.io/dragcraft/reference/overview) |
 
 ## 为什么选择 dragcraft
 
 - **为页面装修而设计**：围绕物料拖拽、属性配置、设备预览和页面结构编排构建，而不只是一个通用拖拽容器。
-- **Schema 驱动**：页面结构与属性保存为稳定、可导入导出的 Schema；业务运行时负责解释并渲染页面。
-- **写入可控**：新增、移动、删除和属性更新统一经由命令系统，天然接入历史记录、事件通知和行为约束。
-- **开箱即用，也能深度扩展**：标准设计器组合了画布与配置表单；物料、字段、容器、设备框架和主题都可按业务替换。
+- **DocumentSchema 驱动**：页面结构与属性保存为稳定、可导入导出的 `DocumentSchema`；业务运行时负责解释并渲染页面。
+- **AuthoringAction 写入**：新增、移动、删除和属性更新统一经过 `AuthoringAction`，并共享 history、事件通知和 authoring policy。
+- **开箱即用，也能深度扩展**：标准设计器组合了画布与配置表单；`MaterialDefinition`、字段、容器、Device Frame 和主题都可按业务替换。
 
 ## 快速开始
 
@@ -48,7 +48,7 @@ import 'ant-design-vue/dist/reset.css'
 import '@dragcraft/designer/standard.css'
 ```
 
-随后创建设计器实例并渲染 `DcDesigner`。完整的最小物料、组件映射和字段 adapter 示例见[挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。
+随后创建设计器实例并渲染 `DcDesigner`。完整的最小 `MaterialDefinition`、Designer Presentation 和字段 adapter 示例见[挂载最小编辑器](https://hackycy.github.io/dragcraft/guide/learn/first-editor)。
 
 ## Packages
 
@@ -63,8 +63,8 @@ import '@dragcraft/designer/standard.css'
 | 能力 | 说明 |
 | --- | --- |
 | 可视化设计器 | 三栏工作台，支持物料面板、画布编辑、节点选择和属性配置。 |
-| 页面结构编排 | 使用 Schema 和布局计划表达内容区、固定区域、浮层与外部容器子区域。 |
-| 业务物料扩展 | 通过物料元数据和组件映射，将业务组件接入画布与配置面板。 |
+| 页面结构编排 | 使用 DocumentSchema 与布局投影表达内容区、固定区域、浮层与外部容器子区域。 |
+| 业务物料扩展 | 通过 MaterialDefinition 和 Designer Presentation，将业务组件接入画布与配置面板。 |
 | 表单与字段扩展 | 通过 Form Schema 配置属性面板，可使用 Ant Design Vue adapter 或自定义字段组件。 |
 | 主题与设备预览 | 提供 Standard 工作台主题和可替换的设备外壳，也支持完整自定义工作台视觉。 |
 | 页面生命周期 | 提供导入、导出与编辑事件；草稿、发布、权限和生产运行时由业务应用掌控。 |
@@ -96,6 +96,10 @@ pnpm dev
 pnpm build
 pnpm lint
 pnpm typecheck
+pnpm test
+pnpm test:browser
+pnpm skills:check
+pnpm skills:test
 ```
 
 ## License

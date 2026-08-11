@@ -22,7 +22,7 @@ import {
 | `RendererEventHooks` | 接收选择、拖拽和 hover 生命周期。 |
 | `ContainerRegionOutlet` | 在业务容器 DOM 中渲染受控 region。 |
 | `useContainerRuntime()` | 读取当前容器 variant、region 和节点。 |
-| `useWidgetRuntime()` | 让业务物料通过受控命令更新当前节点的 props 与样式。 |
+| `useWidgetRuntime()` | 让业务物料通过受控 `AuthoringAction` 更新当前节点的 props 与样式。 |
 | `DcScrollArea` | 为自定义面板提供与工作台一致的滚动区域。 |
 
 ## Container Shell

@@ -3,19 +3,19 @@ id: layout
 workflows:
   - layout
 status: passed
-inputDigest: sha256:242290f46d6aaf0d366414600933df56d73d5db0f92a93fed6da67394cf0f2e1
-executedAt: "2026-07-31T08:53:19Z"
+inputDigest: sha256:2c033285bc24acf1603ecbceb4d5bf11a1e60609fb34180ebb4509be415e03ad
+executedAt: "2026-08-11T06:57:27Z"
 runner:
   agent: Codex
   model: GPT-5
 evidence:
-  - SchemaNode 布局与样式公开声明
-  - 初始 Schema、运行时 layout、RuntimePage 与递归容器示例
+  - MaterialDefinition Presentation 布局与样式公开声明
+  - 初始 DocumentSchema、Runtime 布局投影、RuntimePage 与容器示例
 verification:
-  - 运行时布局与 RuntimePage 5 项测试通过
-  - 额外断言覆盖稳定排序、predicate 可见性与 fixed inset
+  - Runtime 布局测试覆盖 flow、chrome、layer、可见性和固定 inset
+  - browser smoke 覆盖 Device Frame 裁剪、根节点排序与浮层投影
 ---
 
 # 布局投影与参考运行时
 
-参考 Agent 只选择 layout。方案按 flow region、chrome edge 和 layer 分域稳定排序，区分设计态隐藏轮廓与生产运行时跳过，并把 container、content、surface 样式交给各自所有者；宿主运行时没有复用编辑器 Renderer。
+参考 Agent 只选择 layout。Designer Presentation 按 flow region、chrome edge 和 layer 分域稳定排序，并把 container、content、surface 样式交给各自所有者；宿主 Runtime 独立解释 DocumentSchema，不复用设计态 Presentation。

@@ -12,7 +12,7 @@ boundary:
 verification:
   - 标准物料面板不显示该物料
   - 导入可解析，配置可写入，创建和复制被拒绝
-  - 策略在命令与工作台中一致
+  - 策略在 action 与 Designer 工作台中一致
 ---
 
 # Schema 托管业务物料

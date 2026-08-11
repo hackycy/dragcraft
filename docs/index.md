@@ -20,7 +20,7 @@ features:
     link: /guide/learn/prerequisites
     linkText: 阅读指南
   - title: 核心模型
-    details: 理解 Schema、命令、历史与设计器各自的职责。
+    details: 理解 DocumentSchema、AuthoringAction、history 与 Designer 各自的职责。
     link: /guide/fundamentals/architecture
     linkText: 了解架构
   - title: 集成与定制

@@ -37,7 +37,7 @@ pnpm --filter guide-project dev
 
 | DragCraft 负责 | 你的应用负责 |
 | --- | --- |
-| Schema、命令、历史和导入校验 | 页面记录、草稿修订、发布和审核 |
+| DocumentSchema、AuthoringAction、history 和导入校验 | 页面记录、草稿修订、发布和审核 |
 | 物料拖放、选择和属性绑定 | 业务 Vue 组件、资源选择器和内容主题 |
 | 设计态布局投影和交互反馈 | 生产端的组件注册表与布局解释 |
 | 字段 adapter 协议和表单状态 | UI 库、异步选项、权限和服务端校验 |

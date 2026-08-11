@@ -8,7 +8,7 @@ evidence:
   - layout resources、布局指南和运行时布局实现
 boundary:
   - flow、各 chrome 边与各 layer 分别排序
-  - 生产运行时只读消费布局意图，不复用编辑器 Renderer
+  - 生产运行时只读消费布局意图，不复用 Designer Presentation
 verification:
   - 测试覆盖默认 flow、chrome、layer 和 visible false
   - 固定 inset 与 container/content/surface 样式作用域正确

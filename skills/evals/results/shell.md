@@ -3,19 +3,18 @@ id: shell
 workflows:
   - shell
 status: passed
-inputDigest: sha256:1c699ecb89b748dc89a5e2bc1df83268174908173eca55db014b08a679827a07
-executedAt: "2026-07-31T08:53:19Z"
+inputDigest: sha256:b15082b2b2c5e96de22e8f02d7a8e4c4fedd29dbdd8864c9006790e2e757c3fa
+executedAt: "2026-08-11T06:57:27Z"
 runner:
   agent: Codex
   model: GPT-5
 evidence:
-  - Designer extensions、ContainerShellSource 与 device-frames 公开声明
+  - Designer extensions、ContainerShellSource 与 Device Frame 的公开声明
   - 受控 DevicePicker、品牌 token、消息和物料卡片示例
-  - 默认 Container Shell 的稳定几何、内部变量边界和 device-frames 样式入口
+  - 默认 Container Shell 几何、Canvas Surface 边界和 Device Frame 样式入口
 verification:
-  - guide-project 类型检查与构建通过
-  - 公开 package boundary 检查通过
-  - 默认外壳尺寸、Designer 自适应高度和 Canvas Surface 内部滚动契约已覆盖
+  - Guide Project 的两项 Device Frame browser 断言通过
+  - 公开 package boundary 检查与默认 Shell 几何测试已覆盖
 ---
 
 # 设备预览与工作台扩展

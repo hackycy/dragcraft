@@ -6,7 +6,7 @@ task: 接入受控设备预览、品牌 token、消息覆盖和物料卡片扩�
 evidence:
   - extensions、主题契约和 Device Frame 公开类型
   - shell resources 与宿主示例
-  - DefaultContainerShell 的默认几何和 Renderer-owned 内部变量约束
+  - DefaultContainerShell 的默认几何和 Designer Presentation-owned 内部变量约束
 boundary:
   - 局部视觉使用最窄扩展点和公开 token
   - Container Shell 只渲染一次完整 Canvas Surface slot

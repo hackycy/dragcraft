@@ -3,19 +3,19 @@ id: containers
 workflows:
   - containers
 status: passed
-inputDigest: sha256:f4854c5654809ea1453b4a3f5b391f89996541740ddb41fa27b832d3bbb60aec
-executedAt: "2026-07-31T08:53:19Z"
+inputDigest: sha256:3f478db94aeae5ffe02a66379ac00347d49a6df6e0ff305db26bb89cdeee484a
+executedAt: "2026-08-11T06:57:27Z"
 runner:
   agent: Codex
   model: GPT-5
 evidence:
-  - ContainerDefinition、ContainerRegionOutlet 与迁移结果公开声明
-  - 单列双列容器、插入几何和运行时容器示例
+  - ContainerDefinition、ContainerRegionOutlet 与 variant 迁移的公开声明
+  - 单列双列容器、插入几何和 Runtime 容器示例
 verification:
-  - 相关容器、编辑器与运行时 9 项测试通过
-  - 黑盒验收覆盖容量拒绝、双向迁移、抛错及 Schema/history/event 原子性
+  - 容器测试覆盖容量拒绝、跨 region 移动、variant 迁移与失败原子性
+  - browser smoke 覆盖 root/region 双向移动及 Region 内排序
 ---
 
 # 可迁移容器与失败原子性
 
-参考 Agent 只选择 containers。region 是子节点唯一所有者，约束和 resolver 覆盖所有放置入口；迁移返回完整新 state，显式拒绝或抛错都保持 Schema、history 和事件不变。
+参考 Agent 只选择 containers。region 是子节点在 DocumentSchema 中的唯一所有者，约束和 resolver 覆盖所有放置入口；variant 迁移返回完整目标状态，显式拒绝或抛错都保持 DocumentSchema、history 和事件不变。

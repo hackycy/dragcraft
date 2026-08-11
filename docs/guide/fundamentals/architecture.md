@@ -14,7 +14,7 @@ DragCraft 的公开入口是一个可视化工作台，但页面数据始终由�
 业务字段组件
   -> Field adapter 归一化值
   -> FormGenerator 发出 change
-  -> Designer 将 bindTo 翻译为命令
+  -> Designer 将 bindTo 翻译为 AuthoringAction
   -> Designer 校验并原子提交 DocumentSchema
   -> history 保存新快照
   -> Designer Presentation 读取新文档并更新画布
@@ -29,8 +29,8 @@ DragCraft 的公开入口是一个可视化工作台，但页面数据始终由�
 | Authoring Engine | DocumentSchema、action、history、diagnostics | Vue 组件和 DOM |
 | Designer | 三栏工作台、字段绑定、扩展点组装 | 草稿服务和生产发布 |
 | Designer Presentation | 设计态组件树、选择、拖拽、工具栏 | 业务状态和生产页面 |
-| Form Generator | 字段状态、联动、验证、adapter 调用 | Schema 持久化和命令执行 |
-| 宿主应用 | 物料、权限、仓储、发布、生产运行时 | 绕过命令修改编辑状态 |
+| Form Generator | 字段状态、联动、验证、adapter 调用 | Schema 持久化和 action 执行 |
+| 宿主应用 | 物料、权限、仓储、发布、生产运行时 | 绕过 AuthoringAction 修改编辑状态 |
 
 公开应用只从 `@dragcraft/designer` 使用前四类能力的聚合接口。`@dragcraft/device-frames` 和 `@dragcraft/fields-*` 是另外两类公开 adapter；其余 workspace package 属于实现模块。
 
@@ -71,4 +71,4 @@ DragCraft 的公开入口是一个可视化工作台，但页面数据始终由�
 - 依赖私有 `.dc-*` class 修改交互结构。
 - 绕过 `designer.execute()` 直接写入 Schema。
 
-需要继续理解数据时，阅读 [Schema 与样式作用域](/guide/fundamentals/schema)；需要理解写入保证时，阅读 [状态、命令、历史与事件](/guide/fundamentals/state-commands-and-history)。
+需要继续理解数据时，阅读 [Schema 与样式作用域](/guide/fundamentals/schema)；需要理解写入保证时，阅读 [状态、动作、历史与事件](/guide/fundamentals/state-commands-and-history)。

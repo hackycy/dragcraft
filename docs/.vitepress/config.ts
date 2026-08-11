@@ -35,6 +35,7 @@ export default defineConfig({
           items: [
             { text: '了解接入边界', link: '/guide/learn/prerequisites' },
             { text: '创建可运行编辑器', link: '/guide/learn/first-editor' },
+            { text: '理解 Schema 与写入链路', link: '/guide/learn/schema-and-write-path' },
             { text: '接入业务物料与属性配置', link: '/guide/learn/material-and-property-panel' },
             { text: '保存、加载与只读预览', link: '/guide/learn/persistence-and-runtime' },
             { text: '检查集成结果', link: '/guide/learn/completion' },
@@ -45,7 +46,7 @@ export default defineConfig({
           items: [
             { text: '框架如何协作', link: '/guide/fundamentals/architecture' },
             { text: 'Schema 与样式作用域', link: '/guide/fundamentals/schema' },
-            { text: '状态、命令、历史与事件', link: '/guide/fundamentals/state-commands-and-history' },
+            { text: '状态、动作、历史与事件', link: '/guide/fundamentals/state-commands-and-history' },
             { text: '业务物料', link: '/guide/customization/materials' },
             { text: '表单与字段', link: '/guide/customization/forms-and-fields' },
             { text: '布局投影', link: '/guide/fundamentals/layout-system' },

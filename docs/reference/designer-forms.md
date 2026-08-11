@@ -4,7 +4,7 @@ description: "通过 @dragcraft/designer 使用 FormSchema、字段 adapter、�
 
 # 表单与字段
 
-属性面板根据 `FormSchema` 渲染字段，并把 change 翻译成页面命令。
+属性面板根据 `FormSchema` 渲染字段，并把 change 翻译成页面 `AuthoringAction`。
 
 ```ts
 import type {

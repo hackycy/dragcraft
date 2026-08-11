@@ -15,7 +15,7 @@ disable-model-invocation: true
 | 任务意图 | Playbook |
 | --- | --- |
 | 安装、创建实例、注册顺序、Vue 挂载或释放 | [integration](references/integration.md) |
-| 快照、命令结果、历史、事件或撤销 | [commands](references/commands.md) |
+| 快照、action 结果、history、事件或撤销 | [commands](references/commands.md) |
 | 普通物料、Schema 托管物料、动作或 Authoring Policy | [widgets](references/widgets.md) |
 | 字段 adapter、绑定、联动、转换、验证或全局配置 | [forms](references/forms.md) |
 | `flow`、`chrome`、`layer`、排序、可见性或运行时布局投影 | [layout](references/layout.md) |
@@ -33,7 +33,7 @@ disable-model-invocation: true
 
 ## 3. 开发
 
-按 playbook 的扩展边界实施。复用宿主既有模式，让 Schema 写入继续经过公开命令或绑定路径；源码只能解释行为，不能把内部模块变成宿主可调用接口。
+按 playbook 的扩展边界实施。复用宿主既有模式，让 Schema 写入继续经过公开 `AuthoringAction` 或绑定路径；源码只能解释行为，不能把内部模块变成宿主可调用接口。
 
 开发完成标准：每项验收行为都有可观察结果，所有 DragCraft 导入都来自当前安装版本支持的公开 package。
 
@@ -41,4 +41,4 @@ disable-model-invocation: true
 
 先运行覆盖新增行为的最窄测试，再运行宿主已有的类型检查、构建或相关质量门禁。失败时继续修复；缺少必要证据或环境时明确阻塞条件。
 
-验证完成标准：验收行为与相关失败路径已验证，命令均通过或已准确说明无法运行的原因。最终回复按正常开发任务报告改动、关键取舍和实际测试结果；只在版本冲突、API 选择、阻塞或用户询问时说明证据来源。
+验证完成标准：验收行为与相关失败路径已验证，检查均通过或已准确说明无法运行的原因。最终回复按正常开发任务报告改动、关键取舍和实际测试结果；只在版本冲突、API 选择、阻塞或用户询问时说明证据来源。

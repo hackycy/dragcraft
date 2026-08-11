@@ -3,19 +3,19 @@ id: widgets
 workflows:
   - widgets
 status: passed
-inputDigest: sha256:026c8cb90248dd2b717edff437ae5fe1dc535c1591a7cf48c77ece252cf509bb
-executedAt: "2026-07-31T08:53:19Z"
+inputDigest: sha256:337cbff0008a78c9fe94f27605f4a440a91c9830408645b6e5e4352ceac1adfc
+executedAt: "2026-08-11T06:57:27Z"
 runner:
   agent: Codex
   model: GPT-5
 evidence:
-  - WidgetDefinition、DesignerWidgetMeta 与 Authoring Policy 公开声明
-  - Schema 托管页头、同源注册与初始 Schema 示例
+  - MaterialDefinition 与 Authoring Policy 的 Designer 公开声明
+  - Schema 托管页头、单一 material 定义与初始 DocumentSchema 示例
 verification:
-  - 相关物料与策略测试 108 项通过
-  - 黑盒验收覆盖模板导入、创建复制拒绝、配置成功、history 与事件
+  - policy 覆盖创建、复制、移动、删除与更新的可观察结果
+  - browser smoke 覆盖策略拒绝、模板切换和 Headless material 创建
 ---
 
 # Schema 托管业务物料
 
-参考 Agent 只选择 widgets。`authoring: schema-managed` 负责不可解除的创建与复制边界，模板 Schema 提供稳定节点；选择和配置能力显式开放，拒绝路径不写 Schema、history 或事件。
+参考 Agent 只选择 widgets。`MaterialDefinition.authoring` 对 Schema 托管页头固定创建与复制边界，模板 DocumentSchema 提供稳定节点；选择和配置能力显式开放，拒绝路径不写入 DocumentSchema、history 或事件。

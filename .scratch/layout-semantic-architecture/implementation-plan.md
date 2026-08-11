@@ -1,6 +1,6 @@
 # 下一代布局语义架构实施计划
 
-Status: active
+Status: completed
 
 本计划是 [下一代布局语义架构](map.md) 的唯一实施入口。它取代此前“先建设全部新模块，再整体切换 Workbench 和 Renderer”的实施方式；实现必须按本文的 gate 顺序推进，任何 gate 未关闭时不得开始后续 gate。
 
@@ -447,3 +447,23 @@ Exit：Frame 只裁剪 business preview；Designer feedback 不被裁剪；Frame
 - 旧 Engine、Renderer、Widgets、LayoutPlan、Command、Registry、旧 Schema 和所有临时 Adapter 已删除。
 - `pnpm build`、`pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm test:browser` 全部通过。
 - 最终依赖图与 map 决策一致，不存在兼容层、双读、双写或第二套 active implementation。
+
+## Release Closeout Evidence
+
+Verification completed at `2026-08-11T07:00:41Z` on HEAD `b386d1adf64890fb9b64a2513de450716abfbddc` (`refactor-r1`). Chromium was installed with `pnpm exec playwright install chromium`; `pnpm test:browser` exercised all 31 application assertions instead of failing during browser launch.
+
+The final release gate ran in this order and passed:
+
+```text
+pnpm build
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:browser
+pnpm skills:check
+pnpm skills:test
+```
+
+`pnpm build` completed with the VitePress output declared to Turbo and without the `@dragcraft/docs#build` missing-output warning. `pnpm lint` also passed the public-boundary and obsolete-protocol denylist checks. Skills evidence was refreshed by one `Codex` / `GPT-5` reference Agent across all ten manifest scenarios; their current input digests, `skills:check`, and all nine `skills:test` cases passed.
+
+The remaining non-blocking build output is the pre-existing Vite chunk-size warning for the Playground and Guide Project bundles. It is tracked as a later performance task and this closeout does not alter product interaction, Schema, Presentation, or bundle structure.
