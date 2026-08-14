@@ -38,8 +38,8 @@
 | Gate | Status | Depends on | Plan contract | Unlock evidence |
 | --- | --- | --- | --- | --- |
 | G0: Reproducible Convergence Guard | passed | none | `implementation-plan.md` -> `G0: Reproducible Convergence Guard` | 209-finding active-source inventory, strict-mode expected failure, and ordered repository baseline passed at `79322a5be38a5308153b72b59b9f3a8d2da0c02c` |
-| G1: DocumentSchema Session Cutover | active | G0 | `implementation-plan.md` -> `G1: DocumentSchema Session Cutover` | G0 Exit 1-4 recorded below |
-| G2: Public Presentation Boundary | planned | G1 | `implementation-plan.md` -> `G2: Public Presentation Boundary` | G1 pending |
+| G1: DocumentSchema Session Cutover | passed | G0 | `implementation-plan.md` -> `G1: DocumentSchema Session Cutover` | Exit 1-3 recorded below at `543ccda6f0f4392924b17c73a13e71d16ecce5f4` |
+| G2: Public Presentation Boundary | active | G1 | `implementation-plan.md` -> `G2: Public Presentation Boundary` | G1 Exit 1-3 passed; activated, not started |
 | G3: Legacy Protocol Removal | planned | G2 | `implementation-plan.md` -> `G3: Legacy Protocol Removal` | G2 pending |
 | G4: Evidence Closeout | planned | G3 | `implementation-plan.md` -> `G4: Evidence Closeout` | G3 pending |
 
@@ -55,10 +55,13 @@
 
 - 2026-08-14: initialized as `planned`; G0 pending.
 - 2026-08-14: activated after G0 evidence; implementation has not started.
+- 2026-08-14: read-cluster slice changed `packages/designer/src/session/types.ts`, `packages/designer/src/session/next-designer-session-adapter.ts`, `packages/designer/src/presentation/types.ts`, `packages/designer/src/presentation/semantic.ts`, and direct session consumers/tests. `DesignerSession.document.schema` now references the Engine's canonical `DocumentSchema` snapshot (or `null` for rejected state); root and Region nodes are queried from structure IDs, and no session node exposes tree `children`, `layout`, or `container` fields. `node.add` and `schema.import` actions are typed with Core `NodeDefinition`/`DocumentSchema`; the adapter no longer rebuilds a resolved tree projection. Directed verification: session adapter 14 tests, field binding, drag/drop, property binding, structure panel, and canvas tests passed (28 tests). Full Designer Vitest had 82/84 passing; the two failures are pre-existing `useCanvasPan` CSS path reads for missing root `styles/structure.css`, unrelated to this slice. Risk: presentation types still retain internal renderer extension contracts for the later G2 boundary; next action is ordered repository verification and final G1 exit evidence.
+- 2026-08-14: final G1 acceptance evidence at source HEAD `543ccda6f0f4392924b17c73a13e71d16ecce5f4`. Exit 1 passed: the final session-adapter directed run passed 14/14 and asserts direct canonical `DocumentSchema` identity, owner/order, rejected-state stability, and absence of tree projection fields. Exit 2 passed: `rg -n "DesignerSchema|SchemaNode" packages/designer/src` returned no active-source matches; `schema.import` accepts `DocumentSchema`. Exit 3 passed: direct consumer/action coverage passed (28 tests), then ordered repository verification passed: `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (Designer 84/84; all workspace suites green), and `pnpm test:browser` (31/31). `git diff --check` passed. `pnpm check:obsolete-protocol` reports 97 findings; those are intentionally retained for later G2/G3 cleanup and do not restore a session tree projection. Risk: public renderer-extension naming remains G2 scope. Next action: G1 marked `passed`; G2 activated, not started; this Goal ends without G2 work.
 
 ### G2: Public Presentation Boundary
 
 - 2026-08-14: initialized as `planned`; G1 pending.
+- 2026-08-14: 已激活，尚未开始实施。
 
 ### G3: Legacy Protocol Removal
 

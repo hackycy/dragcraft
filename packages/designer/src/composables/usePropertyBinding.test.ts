@@ -72,7 +72,7 @@ describe('usePropertyBinding', () => {
               key: 'backgroundColor',
               label: 'Background color',
               component: 'Color',
-              bindTo: { scope: 'schema', path: 'root.style.surface.backgroundColor' },
+              bindTo: { scope: 'schema', path: 'page.style.surface.backgroundColor' },
             }],
           }],
         },

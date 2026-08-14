@@ -1,5 +1,4 @@
 import type { Component, PropType, VNode } from 'vue'
-import type { SchemaNode } from './semantic'
 import type { ResolveContainerDropIndex } from './types'
 import { computed, defineComponent, h, mergeProps } from 'vue'
 import { useContainerRuntime } from './container-runtime'
@@ -141,7 +140,7 @@ export default defineComponent({
       const NodeRenderer = ctx.nodeRenderer ?? NodeHost
       const children: VNode[] = regionNodes.value.map(node => h(NodeRenderer, {
         key: node.id,
-        node: node as unknown as SchemaNode,
+        node,
         owner: {
           kind: 'container',
           containerId: runtime.nodeId.value,

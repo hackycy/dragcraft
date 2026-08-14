@@ -1,7 +1,7 @@
 import type { ComputedRef } from 'vue'
 import type { NodeActionContext, ResolvedNodeAction } from './action-registry'
-import type { NodeOwner, SchemaNode } from './semantic'
-import type { RendererContext } from './types'
+import type { NodeOwner } from './semantic'
+import type { RendererContext, RendererNode } from './types'
 import { computed } from 'vue'
 
 export interface UseNodeActionsReturn {
@@ -11,7 +11,7 @@ export interface UseNodeActionsReturn {
   actionContext: ComputedRef<NodeActionContext>
 }
 
-function resolveUncachedPosition(node: SchemaNode, owner: NodeOwner, ctx: RendererContext) {
+function resolveUncachedPosition(node: RendererNode, owner: NodeOwner, ctx: RendererContext) {
   const position = ctx.session.document.getStructurePosition(node.id)
   if (position) {
     return {
@@ -61,7 +61,7 @@ function resolveUncachedPosition(node: SchemaNode, owner: NodeOwner, ctx: Render
  * @param ctx - The renderer context
  */
 export function useNodeActions(
-  getNode: () => SchemaNode,
+  getNode: () => RendererNode,
   ctx: RendererContext,
   getOwner: () => NodeOwner = () => ({ kind: 'root' }),
 ): UseNodeActionsReturn {
@@ -76,7 +76,7 @@ export function useNodeActions(
       ?? resolveUncachedPosition(node, owner, ctx)
 
     return {
-      node,
+      node: node as unknown as import('@dragcraft/core').NodeDefinition,
       ...position,
       meta,
       materials: ctx.session.materials,

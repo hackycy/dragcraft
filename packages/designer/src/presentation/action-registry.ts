@@ -1,7 +1,8 @@
+import type { DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { Component } from 'vue'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise } from './event-hooks'
-import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from './semantic'
+import type { DeepReadonly, NodeOwner } from './semantic'
 import type { AuthoringAction, RendererContext, RendererWidgetMeta } from './types'
 import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
@@ -16,13 +17,10 @@ function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
     return ctx.lockedIndices
   if (ctx.owner.kind === 'container') {
     const owner = ctx.owner
-    const nodes = ctx.schema.root.children
-      ?.find(node => node.id === owner.containerId)
-      ?.container
-      ?.regions[owner.regionId] ?? []
+    const nodes = ctx.session.document.getRegionNodes(owner.containerId, owner.regionId)
     return ctx.materials.getLockedIndices(nodes)
   }
-  const nodes = ctx.schema.root.children ?? []
+  const nodes = ctx.session.document.rootNodes.value
   return ctx.materials.getLockedIndices(nodes)
 }
 
@@ -35,7 +33,7 @@ function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
  */
 export interface NodeActionContext {
   /** The schema node this action applies to */
-  node: DeepReadonly<SchemaNode>
+  node: NodeDefinition
   /** Structural owner whose child array defines sibling ordering. */
   owner: NodeOwner
   /** The node's index among siblings */
@@ -51,7 +49,7 @@ export interface NodeActionContext {
   /** The only authoring entry point available to Renderer. */
   session: RendererContext['session']
   /** Safe schema snapshot shared by all action predicates for this resolution. */
-  schema: DeepReadonly<DesignerSchema>
+  schema: DeepReadonly<DocumentSchema> | null
   /** Precomputed lock set for the owning sort scope or container region. */
   lockedIndices?: Set<number>
 }

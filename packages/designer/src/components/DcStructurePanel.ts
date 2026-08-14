@@ -1,6 +1,8 @@
+import type { DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { NodeActionContext, ResolvedNodeAction } from '../presentation/action-registry'
 import type { MaybePromise, SelectHookPayload } from '../presentation/event-hooks'
-import type { DeepReadonly, DesignerSchema, NodeOwner, SchemaNode } from '../presentation/semantic'
+import type { DeepReadonly, NodeOwner } from '../presentation/semantic'
+import type { RendererNode } from '../presentation/types'
 import { useI18n } from '@dragcraft/i18n'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
@@ -9,7 +11,7 @@ import { ActionKey } from '../presentation/action-registry'
 import { useDesignerSession } from '../session/context'
 
 interface StructureItem {
-  node: DeepReadonly<SchemaNode>
+  node: DeepReadonly<NodeDefinition>
   title: string
   actions: ResolvedNodeAction[]
   regions: ContainerStructureRegion[]
@@ -19,7 +21,7 @@ interface ContainerStructureRegion {
   id: string
   title: string
   owner: Extract<NodeOwner, { kind: 'container' }>
-  nodes: readonly DeepReadonly<SchemaNode>[]
+  nodes: readonly DeepReadonly<RendererNode>[]
   lockedIndices: Set<number>
 }
 
@@ -28,7 +30,7 @@ function isPromiseLike(value: unknown): value is Promise<unknown> {
 }
 
 function createContainerStructureRegions(
-  node: DeepReadonly<SchemaNode>,
+  node: DeepReadonly<NodeDefinition>,
   session: ReturnType<typeof useDesignerSession>,
   t: (key: string, fallback?: string) => string,
 ): ContainerStructureRegion[] {
@@ -46,7 +48,7 @@ function createContainerStructureRegions(
       containerId: result.plan.containerId,
       regionId: region.definition.id,
     },
-    nodes: region.nodes,
+    nodes: region.nodes as unknown as readonly DeepReadonly<RendererNode>[],
     lockedIndices: session.materials.getLockedIndices(region.nodes),
   }))
 }
@@ -60,24 +62,20 @@ export default defineComponent({
     const { t } = useI18n()
     const { actionRegistry, actionInterceptors, eventHooks } = ctx
     const selectPending = { value: false }
-    const actionSchema = computed<DesignerSchema>(() => ({
-      version: session.document.version.value,
-      globalConfig: session.document.globalConfig.value as Record<string, unknown>,
-      root: session.document.root.value as SchemaNode,
-    }))
+    const actionSchema = computed<DeepReadonly<DocumentSchema> | null>(() => session.document.schema.value)
 
     const createStructureItem = (
-      node: DeepReadonly<SchemaNode>,
+      node: DeepReadonly<NodeDefinition>,
       owner: NodeOwner,
       index: number,
       siblingCount: number,
       sortScope: string | false,
-      schema: DesignerSchema,
+      schema: DeepReadonly<DocumentSchema> | null,
       lockedIndices: Set<number>,
     ): StructureItem => {
       const meta = session.materials.get(node.type)
       const actionCtx: NodeActionContext = {
-        node,
+        node: node as unknown as NodeDefinition,
         owner,
         index,
         siblingCount,
@@ -165,7 +163,7 @@ export default defineComponent({
         })
     }
 
-    const handleSelect = (node: DeepReadonly<SchemaNode>, e: MouseEvent) => {
+    const handleSelect = (node: DeepReadonly<NodeDefinition>, e: MouseEvent) => {
       if (selectPending.value)
         return
 
@@ -260,7 +258,7 @@ export default defineComponent({
       region.nodes.length > 0
         ? h('div', { 'class': 'dc-structure-panel__children', 'data-dc-part': 'children' }, region.nodes.map((node, index) => {
             const item = createStructureItem(
-              node,
+              node as unknown as NodeDefinition,
               region.owner,
               index,
               region.nodes.length,

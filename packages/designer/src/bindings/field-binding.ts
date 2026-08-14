@@ -1,5 +1,5 @@
+import type { DeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { FieldBindingScope, FieldBindingTarget } from '@dragcraft/form-generator'
-import type { DeepReadonly, DesignerSchema, SchemaNode } from '../presentation/semantic'
 import type { AuthoringAction } from '../presentation/types'
 
 export type FieldBinding = string | FieldBindingTarget | undefined
@@ -76,15 +76,17 @@ export function readPath(source: unknown, path: string): unknown {
 
 export function readBindingValue(
   binding: ResolvedFieldBinding,
-  schema: Pick<DeepReadonly<DesignerSchema>, 'globalConfig' | 'root'>,
-  node: DeepReadonly<SchemaNode> | null,
+  schema: Pick<DeepReadonly<DocumentSchema>, 'globalConfig' | 'page'>,
+  node: DeepReadonly<NodeDefinition> | null,
 ): unknown {
   if (binding.scope === 'container')
-    return node && binding.path === 'variant' ? node.container?.variant : undefined
+    return undefined
   if (binding.scope === 'globalConfig')
     return readPath(schema.globalConfig, binding.path)
-  if (binding.scope === 'schema')
-    return readPath(schema, binding.path)
+  if (binding.scope === 'schema') {
+    const path = binding.path.startsWith('root.') ? `page.${binding.path.slice('root.'.length)}` : binding.path
+    return readPath(schema, path)
+  }
   return node ? readPath(node, binding.path) : undefined
 }
 
@@ -155,7 +157,7 @@ export function createBindingAction(
         ? { type: 'global-config.update', config }
         : null
     }
-    if (head === 'root')
+    if (head === 'page')
       return createPageBindingAction(rest, value)
     return null
   }

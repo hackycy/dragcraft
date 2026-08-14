@@ -1,5 +1,6 @@
+import type { DeepReadonly, DocumentSchema, JsonObject, NodeDefinition } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
-import type { DesignerSchema, NodeDestination, PlacementDecision, SchemaNode } from '../presentation/semantic'
+import type { NodeDestination, PlacementDecision } from '../presentation/semantic'
 import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '../presentation/types'
 import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
 import { generateShortId } from '@dragcraft/utils'
@@ -117,13 +118,15 @@ export function useDragDrop(
     midpoints: number[]
   } | null = null
   let dropGeometryFrame: number | null = null
-  const schemaSnapshot = computed<DesignerSchema>(() => session.document.schema?.value as DesignerSchema ?? {
+  const schemaSnapshot = computed<DeepReadonly<DocumentSchema>>(() => session.document.schema.value ?? {
     version: session.document.version.value,
-    globalConfig: session.document.globalConfig.value as Record<string, unknown>,
-    root: session.document.root.value as DesignerSchema['root'],
+    globalConfig: session.document.globalConfig.value as unknown as JsonObject,
+    page: { props: {} },
+    nodes: [],
+    structure: { root: [], containers: {} },
   })
 
-  function getActiveSortScopeNodes(sortScope: string): SchemaNode[] {
+  function getActiveSortScopeNodes(sortScope: string): NodeDefinition[] {
     return session.document.rootNodes.value
       .filter(node => session.materials.resolveLayout(node).sortScope === sortScope)
       .slice()
@@ -131,7 +134,7 @@ export function useDragDrop(
         const positionA = session.document.getStructurePosition(a.id)?.index ?? 0
         const positionB = session.document.getStructurePosition(b.id)?.index ?? 0
         return positionA - positionB
-      }) as SchemaNode[]
+      }) as NodeDefinition[]
   }
 
   // ── Sortable constraint computeds ──
@@ -161,7 +164,7 @@ export function useDragDrop(
     const meta = session.materials.get(target.widgetType)
     if (!meta)
       return { allowed: true }
-    return resolveWidgetCreation(meta, target.widgetType, schemaSnapshot.value)
+    return resolveWidgetCreation(meta, target.widgetType, schemaSnapshot.value as never)
   })
 
   // ── Visual drop index computation ──
@@ -248,13 +251,12 @@ export function useDragDrop(
       containerDropDecision.value = { allowed: false, ...rejection }
   }
 
-  function createSchemaNode(meta: RendererWidgetMeta): SchemaNode {
+  function createNodeDefinition(meta: RendererWidgetMeta): NodeDefinition {
     return {
       id: generateShortId(),
       type: meta.type,
-      props: { ...meta.defaultProps },
-      style: meta.defaultStyle ? { ...meta.defaultStyle } : undefined,
-      layout: meta.defaultLayout ? { ...meta.defaultLayout } : undefined,
+      props: { ...meta.defaultProps } as JsonObject,
+      ...(meta.defaultStyle ? { style: meta.defaultStyle as unknown as JsonObject } : {}),
     }
   }
 
@@ -391,7 +393,7 @@ export function useDragDrop(
         result = { ok: false, code: 'DROP_TARGET_MISSING' }
       }
       else {
-        const node = createSchemaNode(meta)
+        const node = createNodeDefinition(meta)
         result = session.execute({
           type: 'node.add',
           node,
@@ -436,7 +438,7 @@ export function useDragDrop(
     if (!dragTarget)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
     const source = dragTarget.sourceNodeId
-      ? session.document.getNode(dragTarget.sourceNodeId) as SchemaNode | null
+      ? session.document.getNode(dragTarget.sourceNodeId)
       : undefined
     const child = dragTarget.sourceNodeId
       ? source
@@ -444,7 +446,7 @@ export function useDragDrop(
           const meta = dragTarget.widgetType
             ? session.materials.get(dragTarget.widgetType)
             : undefined
-          return meta ? createSchemaNode(meta) : null
+          return meta ? createNodeDefinition(meta) : null
         })()
     if (!child)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
@@ -467,7 +469,7 @@ export function useDragDrop(
     return resolvePlacementDecision({
       definition: target.definition,
       region: target.region,
-      child,
+      child: child as unknown as NodeDefinition,
       childHasContainerCapability: Boolean(session.materials.get(child.type)?.container),
       targetCount: target.children.length - (sameRegion ? 1 : 0),
       callbackContext: {

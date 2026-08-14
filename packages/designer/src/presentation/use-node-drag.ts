@@ -1,5 +1,4 @@
-import type { SchemaNode } from './semantic'
-import type { RendererContext } from './types'
+import type { RendererContext, RendererNode } from './types'
 import { hideNativeDragImage } from './drag-image'
 import { fireAfterHook } from './event-hooks'
 
@@ -18,7 +17,7 @@ export interface UseNodeDragReturn {
  * @param ctx - The renderer context (from useRendererContext)
  */
 export function useNodeDrag(
-  getNode: () => SchemaNode,
+  getNode: () => RendererNode,
   ctx: RendererContext,
 ): UseNodeDragReturn {
   const { eventHooks } = ctx

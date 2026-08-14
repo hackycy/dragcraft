@@ -1,19 +1,17 @@
+import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
 import type {
   ContainerPlanResult,
   CreationBlockReason,
   DeepReadonly,
-  DesignerSchema,
   DragTarget,
   HistoryState,
   NodeDestination,
   NodeOwner,
   OwnerResolutionResult,
   PlacementDecision,
-  ResolvedNodeDestination,
   ResolvedNodeLayout,
   SchemaDiagnostic,
-  SchemaNode,
 } from '../presentation/semantic'
 import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '../presentation/types'
 
@@ -45,33 +43,73 @@ export interface DesignerSessionDragState {
 }
 
 export interface DesignerSessionDocument {
-  readonly schema?: ComputedRef<DeepReadonly<DesignerSchema>>
+  readonly schema: ComputedRef<CoreDeepReadonly<DocumentSchema> | null>
   readonly version: ComputedRef<string>
-  readonly root: ComputedRef<DeepReadonly<SchemaNode>>
-  readonly rootNodes: ComputedRef<readonly DeepReadonly<SchemaNode>[]>
+  readonly rootNodes: ComputedRef<readonly CoreDeepReadonly<NodeDefinition>[]>
   readonly globalConfig: ComputedRef<DeepReadonly<Record<string, unknown>>>
   readonly diagnostics: ComputedRef<readonly SchemaDiagnostic[]>
-  getNode: (nodeId: string) => DeepReadonly<SchemaNode> | null
+  getNode: (nodeId: string) => CoreDeepReadonly<NodeDefinition> | null
   getOwner: (nodeId: string) => NodeOwner | null
   getStructurePosition: (nodeId: string) => DesignerSessionStructurePosition | null
-  getRegionNodes: (containerId: string, regionId: string) => readonly DeepReadonly<SchemaNode>[]
+  getRegionNodes: (containerId: string, regionId: string) => readonly CoreDeepReadonly<NodeDefinition>[]
   resolveDestination?: (
     destination: NodeDestination,
-  ) => OwnerResolutionResult<ResolvedNodeDestination>
+  ) => OwnerResolutionResult<DesignerSessionDestination>
+}
+
+/** Presentation-facing node shape; it is a read-only view, not a persisted tree node. */
+export interface DesignerSessionNode {
+  readonly id: string
+  readonly type: string
+  readonly props: Record<string, unknown>
+  readonly style?: Record<string, unknown>
+}
+
+export interface DesignerSessionDestination {
+  readonly children: readonly CoreDeepReadonly<NodeDefinition>[]
+  readonly destination: NodeDestination
+  readonly container?: CoreDeepReadonly<NodeDefinition>
+  readonly definition?: DesignerSessionContainerDefinition
+  readonly variant?: DesignerSessionContainerVariant
+  readonly region?: DesignerSessionContainerRegion
+}
+
+export interface DesignerSessionContainerRegion {
+  readonly id: string
+  readonly title: string
+  readonly titleKey?: string
+  readonly constraints?: {
+    readonly includeTypes?: readonly string[]
+    readonly excludeTypes?: readonly string[]
+    readonly minItems?: number
+    readonly maxItems?: number
+  }
+}
+
+export interface DesignerSessionContainerVariant {
+  readonly title: string
+  readonly titleKey?: string
+  readonly regions: readonly DesignerSessionContainerRegion[]
+}
+
+export interface DesignerSessionContainerDefinition {
+  readonly defaultVariant: string
+  readonly variants: Readonly<Record<string, DesignerSessionContainerVariant>>
+  readonly canPlace?: (context: Record<string, unknown>) => PlacementDecision
 }
 
 export interface DesignerSessionMaterials {
   get: (type: string) => RendererWidgetMeta | undefined
   getAll: () => readonly RendererWidgetMeta[]
   resolveCapability: (
-    node: DeepReadonly<SchemaNode>,
+    node: DesignerSessionNode,
     capability: DesignerMaterialCapability,
   ) => boolean
-  resolveLayout: (node: DeepReadonly<SchemaNode>) => ResolvedNodeLayout
-  resolveContainer: (node: DeepReadonly<SchemaNode>) => ContainerPlanResult
-  getLockedIndices: (nodes: readonly DeepReadonly<SchemaNode>[]) => Set<number>
-  canCreateSubtree: (node: DeepReadonly<SchemaNode>) => boolean
-  canDeleteSubtree: (node: DeepReadonly<SchemaNode>) => boolean
+  resolveLayout: (node: DesignerSessionNode) => ResolvedNodeLayout
+  resolveContainer: (node: DesignerSessionNode) => ContainerPlanResult
+  getLockedIndices: (nodes: readonly DesignerSessionNode[]) => Set<number>
+  canCreateSubtree: (node: DesignerSessionNode) => boolean
+  canDeleteSubtree: (node: DesignerSessionNode) => boolean
 }
 
 export interface DesignerSessionState {

@@ -1,7 +1,8 @@
+import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
-import type { DeepReadonly, SchemaNode, WidgetMeta } from '../presentation/semantic'
+import type { WidgetMeta } from '../presentation/semantic'
 import type { DesignerSession } from '../session/types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
@@ -18,7 +19,7 @@ export interface UsePropertyBindingOptions {
 
 export interface UsePropertyBindingReturn {
   /** The selected node, reactively derived */
-  selectedNode: ComputedRef<DeepReadonly<SchemaNode> | null>
+  selectedNode: ComputedRef<CoreDeepReadonly<NodeDefinition> | null>
   /** The form schema for the selected node's widget type */
   selectedFormSchema: ComputedRef<FormSchema | null>
   /** The selected widget meta */
@@ -76,12 +77,14 @@ export function usePropertyBinding(
   options: UsePropertyBindingOptions = {},
 ): UsePropertyBindingReturn {
   const translate = options.t ?? ((key: string, fallback?: string) => fallback ?? key)
-  const bindingDocument = computed(() => ({
-    globalConfig: session.document.globalConfig.value,
-    root: session.document.root.value,
-  }))
+  const bindingDocument = computed<Pick<CoreDeepReadonly<DocumentSchema>, 'globalConfig' | 'page'>>(() => {
+    const schema = session.document.schema.value
+    return schema
+      ? { globalConfig: schema.globalConfig, page: schema.page }
+      : { globalConfig: {}, page: { props: {} } }
+  })
 
-  const selectedNode = computed<DeepReadonly<SchemaNode> | null>(() => {
+  const selectedNode = computed<CoreDeepReadonly<NodeDefinition> | null>(() => {
     const nodeId = session.state.selectedNodeId.value
     if (!nodeId)
       return null
@@ -146,7 +149,7 @@ export function usePropertyBinding(
     const node = selectedNode.value
     if (!node)
       return {}
-    const values = { ...node.props }
+    const values: Record<string, unknown> = { ...node.props }
     for (const section of selectedFormSchema.value?.sections ?? []) {
       for (const field of section.fields) {
         const binding = resolveFieldBinding(
@@ -162,7 +165,7 @@ export function usePropertyBinding(
   })
 
   const globalConfigValues = computed<Record<string, unknown>>(() => {
-    const values = { ...session.document.globalConfig.value }
+    const values: Record<string, unknown> = { ...session.document.globalConfig.value }
     for (const section of options.globalConfigSchema?.sections ?? []) {
       for (const field of section.fields) {
         const binding = resolveFieldBinding(

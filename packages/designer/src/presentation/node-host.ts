@@ -1,6 +1,7 @@
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPlane } from './selection-presentation'
-import type { NodeOwner, NodeStyle, SchemaNode, StyleValueMap } from './semantic'
+import type { NodeOwner, NodeStyle, StyleValueMap } from './semantic'
+import type { RendererNode } from './types'
 import { computed, defineComponent, h, inject, provide, ref, Teleport } from 'vue'
 import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from './container-runtime'
 import { useRendererContext } from './context'
@@ -85,7 +86,7 @@ export default defineComponent({
 
   props: {
     node: {
-      type: Object as PropType<SchemaNode>,
+      type: Object as PropType<RendererNode>,
       required: true,
     },
     owner: {
@@ -116,15 +117,12 @@ export default defineComponent({
     )
     provide(NODE_SELECTION_PLANE_KEY, subtreeSelectionPlane)
 
-    const containerPlan = computed(() => props.node.container
-      ? ctx.session.materials.resolveContainer(props.node)
-      : null)
+    const containerPlan = computed(() => ctx.session.materials.resolveContainer(props.node))
     const isResolvedContainer = computed(() => {
       const plan = containerPlan.value
       if (plan?.ok !== true || !widget.resolvedComponent.value)
         return false
-      const declaredRegionIds = new Set(plan.plan.variant.regions.map(region => region.id))
-      return Object.keys(props.node.container?.regions ?? {}).every(regionId => declaredRegionIds.has(regionId))
+      return true
     })
     const isSelfPositionedLayer = computed(() => {
       if (props.owner.kind === 'container')
@@ -229,8 +227,9 @@ export default defineComponent({
 
       // Render widget content
       const widgetProps = { ...node.props }
-      const wrapperStyle = normalizeStyleValueMap(node.style?.container)
-      let contentStyle = normalizeStyleValueMap(node.style?.content)
+      const nodeStyle = node.style as Record<string, unknown> | undefined
+      const wrapperStyle = normalizeStyleValueMap(nodeStyle?.container as Record<string, unknown> | undefined)
+      let contentStyle = normalizeStyleValueMap(nodeStyle?.content as Record<string, unknown> | undefined)
 
       // When a blocking mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index
@@ -240,7 +239,7 @@ export default defineComponent({
       }
 
       let innerContent: VNode
-      if (node.container && !resolvedContainer) {
+      if (ctx.session.materials.get(node.type)?.container && !resolvedContainer) {
         innerContent = h(DefaultContainerFallback, { node })
       }
       else if (widget.resolvedComponent.value) {

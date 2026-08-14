@@ -2,7 +2,7 @@ import type { Component, PropType, Ref, VNode } from 'vue'
 import type { NodeActionRegistry } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { RendererEventHooks } from './event-hooks'
-import type { NodeDestination, PlacementDecision, SchemaNode } from './semantic'
+import type { NodeDestination, PlacementDecision } from './semantic'
 import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererContext, RendererExtensions } from './types'
 import { useI18n } from '@dragcraft/i18n'
 import { computed, defineComponent, h, isRef, provide } from 'vue'
@@ -54,7 +54,7 @@ function insertDropIndicator(
     ? plan.entries.find(entry => entry.node.id === dragTarget.sourceNodeId)
     : undefined
   const draggedLayout = !draggedEntry && dragTarget?.widgetType
-    ? session.materials.resolveLayout({ id: '__drop-indicator__', type: dragTarget.widgetType, props: {} } as SchemaNode)
+    ? session.materials.resolveLayout({ id: '__drop-indicator__', type: dragTarget.widgetType, props: {} })
     : undefined
   const inferredRegion = draggedEntry?.layout.region
     ?? (draggedLayout?.placement.kind === 'flow' ? draggedLayout.region : undefined)
@@ -188,7 +188,7 @@ export default defineComponent({
     return () => {
       const isDragOver = props.dragOverNodeId?.value === 'root'
       const plan = ctx.layout.value
-      const root = ctx.session.document.root.value as SchemaNode
+      const pageStyle = ctx.schema.value?.page.style as Record<string, unknown> | undefined
 
       // Resolve drop indicator and empty state components
       const DropIndicator = props.extensions?.dropIndicator ?? DefaultDropIndicator
@@ -200,7 +200,7 @@ export default defineComponent({
         regionVNodes[region] = entries.map(entry =>
           h(NodeRenderer, {
             'key': entry.node.id,
-            'node': entry.node as SchemaNode,
+            'node': entry.node,
             'selectionPlane': 'content',
             'data-dc-layout-region': entry.layout.region,
           }),
@@ -210,7 +210,7 @@ export default defineComponent({
       const chromeVNodes = plan.chrome.map(entry =>
         h(NodeRenderer, {
           'key': entry.node.id,
-          'node': entry.node as SchemaNode,
+          'node': entry.node,
           'selectionPlane': entry.layout.placement.kind === 'chrome'
             && entry.layout.placement.position === 'fixed'
             ? 'viewport'
@@ -224,7 +224,7 @@ export default defineComponent({
         layerVNodes[layer] = entries.map(entry =>
           h(NodeRenderer, {
             'key': entry.node.id,
-            'node': entry.node as SchemaNode,
+            'node': entry.node,
             'selectionPlane': 'viewport',
             'data-dc-layout-placement': 'layer',
           }),
@@ -301,7 +301,7 @@ export default defineComponent({
                     chromeVNodes,
                     layerVNodes,
                     layoutPlan: plan,
-                    surfaceStyle: normalizeStyleValueMap(root.style?.surface),
+                    surfaceStyle: normalizeStyleValueMap(pageStyle?.surface as Record<string, unknown> | undefined),
                     selectionPresentation,
                     forbiddenOverlay: forbiddenOverlayVNode,
                     headlessOverlay: headlessOverlayVNode,

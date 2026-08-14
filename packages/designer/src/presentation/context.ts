@@ -1,5 +1,5 @@
-import type { DesignerSchema, LayoutEdge, NodeOwner, ResolvedChromePlacement, SchemaNode } from './semantic'
-import type { RendererContext, RendererLayoutEntry, RendererLayoutProjection, RendererOptions } from './types'
+import type { LayoutEdge, NodeOwner, ResolvedChromePlacement } from './semantic'
+import type { RendererContext, RendererLayoutEntry, RendererLayoutProjection, RendererNode, RendererOptions } from './types'
 import { computed, inject, ref } from 'vue'
 import { createNodeActionRegistry } from './action-registry'
 import { createDefaultEventHooks } from './event-hooks'
@@ -95,14 +95,10 @@ function createRendererLayoutProjection(options: RendererOptions): RendererLayou
  * Called internally by RootRenderer.
  */
 export function createRendererContext(options: RendererOptions): RendererContext {
-  const schema = computed(() => ({
-    version: options.session.document.version.value,
-    globalConfig: options.session.document.globalConfig.value,
-    root: options.session.document.root.value,
-  }) as DesignerSchema)
+  const schema = computed(() => options.session.document.schema.value)
   const layout = computed(() => createRendererLayoutProjection(options))
 
-  function resolveNodeActionPosition(node: SchemaNode, owner: NodeOwner) {
+  function resolveNodeActionPosition(node: RendererNode, owner: NodeOwner) {
     const position = options.session.document.getStructurePosition(node.id)
     if (position) {
       return {

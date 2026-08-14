@@ -15,6 +15,7 @@ import type { ResolvedNodeLayout } from '../presentation/semantic'
 import type {
   DesignerMaterialCapability,
   DesignerSession,
+  DesignerSessionContainerDefinition,
   DesignerSessionDocument,
   DesignerSessionDropRejectionReason,
   DesignerSessionMaterials,
@@ -38,7 +39,6 @@ type ProjectedContainerPlan = ReturnType<DesignerSessionMaterials['resolveContai
 type ProjectedContainerRegion = Extract<ProjectedContainerPlan, { ok: true }>['plan']['regions'][number]
 type ProjectedContainerNodes = ProjectedContainerRegion['nodes']
 type ProjectedDestination = ReturnType<NonNullable<DesignerSessionDocument['resolveDestination']>>
-type ProjectedSchema = NonNullable<DesignerSessionDocument['schema']>['value']
 type DragTargetValue = DesignerSession['state']['dragTarget']['value']
 type ActiveDestinationValue = DesignerSession['state']['drag']['activeDestination']['value']
 type ContainerDropDecisionValue = DesignerSession['state']['drag']['containerDropDecision']['value']
@@ -61,6 +61,13 @@ function mergeJsonObjects(base: DeepReadonly<JsonObject>, patch: Record<string, 
       result[key] = value as JsonValue
   }
   return result
+}
+
+function nodesForIds(document: ResolvedDocument, nodeIds: readonly string[]): readonly ProjectedNode[] {
+  return nodeIds.flatMap((nodeId) => {
+    const node = document.nodesById.get(nodeId)?.node
+    return node ? [node] : []
+  })
 }
 
 function destinationForIndex(
@@ -105,45 +112,26 @@ function destinationForIndex(
 }
 
 function bundleFromPresentationNode(node: unknown): NodeBundle | undefined {
-  if (!node || typeof node !== 'object')
+  if (!node || typeof node !== 'object' || Array.isArray(node))
     return undefined
-  const nodes: Array<NodeBundle['nodes'][number]> = []
-  const containers: Record<string, NodeBundle['containers'][string]> = {}
-  const collect = (entry: unknown): string | undefined => {
-    if (!entry || typeof entry !== 'object')
-      return undefined
-    const value = entry as {
-      readonly id?: unknown
-      readonly type?: unknown
-      readonly props?: unknown
-      readonly style?: unknown
-      readonly container?: { readonly regions?: unknown }
-    }
-    if (typeof value.id !== 'string' || typeof value.type !== 'string' || !isJsonObject(value.props))
-      return undefined
-    nodes.push({
+  const value = node as {
+    readonly id?: unknown
+    readonly type?: unknown
+    readonly props?: unknown
+    readonly style?: unknown
+  }
+  if (typeof value.id !== 'string' || typeof value.type !== 'string' || !isJsonObject(value.props))
+    return undefined
+  return {
+    entryId: value.id,
+    nodes: [{
       id: value.id,
       type: value.type,
       props: value.props,
       ...(isJsonObject(value.style) ? { style: value.style } : {}),
-    })
-    const regions = value.container?.regions
-    if (isJsonObject(regions)) {
-      const regionEntries: Record<string, string[]> = {}
-      for (const [regionId, children] of Object.entries(regions)) {
-        if (!Array.isArray(children))
-          return undefined
-        const childIds = children.map(collect)
-        if (childIds.includes(undefined))
-          return undefined
-        regionEntries[regionId] = childIds as string[]
-      }
-      containers[value.id] = { regions: regionEntries }
-    }
-    return value.id
+    }],
+    containers: {},
   }
-  const entryId = collect(node)
-  return entryId ? { entryId, nodes, containers } : undefined
 }
 
 function bundleForNodeAdd(node: unknown, catalog: MaterialCatalog): NodeBundle | undefined {
@@ -196,48 +184,6 @@ export function createNextDesignerSessionHostState(): NextDesignerSessionHostSta
     forbiddenReason: ref(null),
     isForbidden: ref(false),
   }
-}
-
-function projectNode(document: ResolvedDocument, nodeId: string): ProjectedNode | undefined {
-  const resolved = document.nodesById.get(nodeId)
-  if (!resolved)
-    return undefined
-  const container = document.containersById.get(nodeId)
-  return {
-    id: resolved.node.id,
-    type: resolved.node.type,
-    props: resolved.node.props,
-    ...(resolved.node.style ? { style: resolved.node.style } : {}),
-    ...(container
-      ? {
-          container: {
-            variant: 'default',
-            regions: Object.fromEntries(
-              Array.from(container.regions, ([regionId, region]) => [
-                regionId,
-                region.children.flatMap((child) => {
-                  const projected = projectNode(document, child.node.id)
-                  return projected ? [projected] : []
-                }),
-              ]),
-            ),
-          },
-        }
-      : {}),
-  } as unknown as ProjectedNode
-}
-
-function projectRoot(document: ResolvedDocument): ProjectedNode {
-  return {
-    id: 'root',
-    type: 'root',
-    props: document.schema.page.props,
-    ...(document.schema.page.style ? { style: document.schema.page.style } : {}),
-    children: document.root.flatMap((node) => {
-      const projected = projectNode(document, node.node.id)
-      return projected ? [projected] : []
-    }),
-  } as unknown as ProjectedNode
 }
 
 function projectMaterial(
@@ -530,11 +476,19 @@ export function createNextDesignerSessionAdapter(
 ): NextDesignerSessionAdapter {
   const hostState = options.hostState ?? createNextDesignerSessionHostState()
   const document = computed(() => options.engine.resolvedDocument.value)
-  const root = computed(() => {
-    const current = document.value
-    return current ? projectRoot(current) : { id: 'root', type: 'root', props: {}, children: [] }
+  const schema = computed<DeepReadonly<DocumentSchema> | null>(() => {
+    const state = options.engine.document.value
+    return state.status === 'rejected' ? null : state.schema
   })
-  const rootNodes = computed(() => root.value.children ?? [])
+  const rootNodes = computed(() => {
+    const current = document.value
+    return current
+      ? current.schema.structure.root.flatMap((nodeId) => {
+          const node = current.nodesById.get(nodeId)?.node
+          return node ? [node] : []
+        })
+      : []
+  })
   const resolveNodeLayout = (current: ResolvedDocument, nodeId: string): ResolvedNodeLayout => {
     const node = current.nodesById.get(nodeId)?.node
     return resolveMaterialLayout(options.catalog.getMaterial(node?.type ?? '')?.presentation.layout)
@@ -542,19 +496,10 @@ export function createNextDesignerSessionAdapter(
 
   const session: NextDesignerSessionAdapter = {
     document: {
-      schema: computed(() => ({
-        version: options.engine.document.value.status === 'rejected'
-          ? ''
-          : options.engine.document.value.schema.version,
-        globalConfig: options.engine.document.value.status === 'rejected'
-          ? {}
-          : options.engine.document.value.schema.globalConfig,
-        root: root.value,
-      } as unknown as ProjectedSchema)),
+      schema,
       version: computed(() => options.engine.document.value.status === 'rejected'
         ? ''
         : options.engine.document.value.schema.version),
-      root,
       rootNodes,
       globalConfig: computed(() => options.engine.document.value.status === 'rejected'
         ? {}
@@ -562,7 +507,7 @@ export function createNextDesignerSessionAdapter(
       diagnostics: computed(() => projectDiagnostics(options.engine)),
       getNode: (nodeId): ProjectedNode | null => {
         const current = document.value
-        return current ? projectNode(current, nodeId) ?? null : null
+        return current?.nodesById.get(nodeId)?.node ?? null
       },
       getOwner: (nodeId) => {
         const current = document.value
@@ -582,11 +527,12 @@ export function createNextDesignerSessionAdapter(
         const location = current?.locationsById.get(nodeId)
         if (!current || !location)
           return null
-        const siblings = location.kind === 'page-root'
-          ? current.root
-          : current.containersById.get(location.containerId)?.regions.get(location.regionId)?.children
-        if (!siblings)
+        const siblingIds = location.kind === 'page-root'
+          ? current.schema.structure.root
+          : current.schema.structure.containers[location.containerId]?.regions[location.regionId]
+        if (!siblingIds)
           return null
+        const siblings = nodesForIds(current, siblingIds)
         if (location.kind === 'page-root') {
           const sortScope = resolveNodeLayout(current, nodeId).sortScope
           if (sortScope === false) {
@@ -598,10 +544,10 @@ export function createNextDesignerSessionAdapter(
               lockedIndices: new Set<number>(),
             }
           }
-          const scopedSiblings = siblings.filter(sibling => resolveNodeLayout(current, sibling.node.id).sortScope === sortScope)
+          const scopedSiblings = siblings.filter(sibling => resolveNodeLayout(current, sibling.id).sortScope === sortScope)
           return {
             owner: { kind: 'root' as const, sortScope },
-            index: scopedSiblings.findIndex(sibling => sibling.node.id === nodeId),
+            index: scopedSiblings.findIndex(sibling => sibling.id === nodeId),
             siblingCount: scopedSiblings.length,
             sortScope,
             lockedIndices: new Set<number>(),
@@ -617,13 +563,10 @@ export function createNextDesignerSessionAdapter(
       },
       getRegionNodes: (containerId, regionId) => {
         const current = document.value
-        const region = current?.containersById.get(containerId)?.regions.get(regionId)
-        if (!current || !region)
+        const childIds = current?.schema.structure.containers[containerId]?.regions[regionId]
+        if (!current || !childIds)
           return []
-        return region.children.flatMap((node) => {
-          const projected = projectNode(current, node.node.id)
-          return projected ? [projected] : []
-        })
+        return nodesForIds(current, childIds)
       },
       resolveDestination: (destination) => {
         const current = document.value
@@ -633,7 +576,7 @@ export function createNextDesignerSessionAdapter(
           return {
             ok: true,
             value: {
-              children: root.value.children as unknown as ProjectedContainerNodes,
+              children: rootNodes.value,
               destination,
             },
           } as ProjectedDestination
@@ -643,7 +586,7 @@ export function createNextDesignerSessionAdapter(
         const owner = container?.owner
         const material = owner ? options.catalog.getMaterial(owner.node.type) : undefined
         const projected = owner ? projectMaterial(options.catalog, owner.node.type) : undefined
-        const definition = projected?.container
+        const definition = projected?.container as DesignerSessionContainerDefinition | undefined
         const variant = definition?.variants.default
         const region = variant?.regions.find(item => item.id === destination.regionId)
         const resolvedRegion = container?.regions.get(destination.regionId)
@@ -653,12 +596,9 @@ export function createNextDesignerSessionAdapter(
         return {
           ok: true,
           value: {
-            children: resolvedRegion.children.flatMap((child) => {
-              const projectedChild = projectNode(current, child.node.id)
-              return projectedChild ? [projectedChild] : []
-            }) as unknown as ProjectedContainerNodes,
+            children: nodesForIds(current, current.schema.structure.containers[destination.containerId]!.regions[destination.regionId]!),
             destination,
-            container: projectNode(current, owner.node.id) as unknown as ProjectedNode,
+            container: owner.node,
             definition,
             variant,
             region,
@@ -686,9 +626,6 @@ export function createNextDesignerSessionAdapter(
         const resolved = current?.nodesById.get(node.id)
         if (!current || !container || !material?.schema?.container || resolved?.readOnly)
           return { ok: false, code: 'CONTAINER_UNRESOLVED', containerId: node.id }
-        const projectedNode = projectNode(current, node.id)
-        if (!projectedNode)
-          return { ok: false, code: 'CONTAINER_UNRESOLVED', containerId: node.id }
         const projected = projectMaterial(options.catalog, node.type, current)
         const variant = projected?.container?.variants.default
         if (!variant)
@@ -698,16 +635,13 @@ export function createNextDesignerSessionAdapter(
           plan: {
             containerId: node.id,
             variant,
-            regions: Array.from(container.regions, ([regionId, region]) => ({
+            regions: Array.from(container.regions, ([regionId]) => ({
               definition: variant.regions.find(item => item.id === regionId) ?? {
                 id: regionId,
                 title: regionId,
               },
-              nodes: region.children.flatMap((child) => {
-                const childNode = projectNode(current, child.node.id)
-                return childNode ? [childNode] : []
-              }) as unknown as ProjectedContainerNodes,
-              isEmpty: region.children.length === 0,
+              nodes: nodesForIds(current, current.schema.structure.containers[node.id]!.regions[regionId]!) as unknown as ProjectedContainerNodes,
+              isEmpty: current.schema.structure.containers[node.id]!.regions[regionId]!.length === 0,
             })),
           },
         }

@@ -1,6 +1,6 @@
 import type { Component, ComputedRef } from 'vue'
-import type { BehaviorPredicate, BehaviorContext as InstanceBehaviorContext, ResolvedNodeLayout, SchemaNode } from './semantic'
-import type { NodeInteractionState, RendererContext, RendererWidgetMeta } from './types'
+import type { BehaviorPredicate, BehaviorContext as InstanceBehaviorContext, ResolvedNodeLayout } from './semantic'
+import type { NodeInteractionState, RendererContext, RendererNode, RendererWidgetMeta } from './types'
 import { computed } from 'vue'
 import { runBeforeAfterHook } from './event-hooks'
 import { useNodeState } from './use-node-state'
@@ -46,7 +46,7 @@ export interface UseWidgetNodeReturn {
  * @param ctx - The renderer context (from useRendererContext)
  */
 export function useWidgetNode(
-  getNode: () => SchemaNode,
+  getNode: () => RendererNode,
   ctx: RendererContext,
 ): UseWidgetNodeReturn {
   const { componentMap, eventHooks, session } = ctx
@@ -62,7 +62,7 @@ export function useWidgetNode(
   const isDragging = computed(() => session.state.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
   function readInstanceCtx(): InstanceBehaviorContext {
-    return { node: getNode(), schema: ctx.schema.value }
+    return { node: getNode() as never, schema: ctx.schema.value as never }
   }
 
   function resolveMetaBehavior(

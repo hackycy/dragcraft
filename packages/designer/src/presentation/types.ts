@@ -1,10 +1,18 @@
+import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor, ActionRisk } from './action-runtime'
 import type { MaybePromise, RendererEventHooks } from './event-hooks'
 import type { NodeToolbarOrientation } from './node-interaction'
 import type { NodeSelectionPlane, NodeSelectionProjection } from './selection-presentation'
-import type { ContainerPlanResult, ContainerRegionId, DeepReadonly as CoreDeepReadonly, CreationBlockReason, DesignerSchema, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, SchemaNode, WidgetMeta } from './semantic'
+import type { ContainerPlanResult, ContainerRegionId, CreationBlockReason, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, WidgetMeta } from './semantic'
+
+export interface RendererNode {
+  readonly id: string
+  readonly type: string
+  readonly props: Record<string, unknown>
+  readonly style?: Record<string, unknown>
+}
 
 export type DeepReadonly<T>
   = T extends (...args: infer Args) => infer Result
@@ -27,7 +35,7 @@ export type DeepReadonly<T>
 export type ComponentMap = Record<string, Component>
 
 export interface WidgetRendererProps {
-  node: SchemaNode
+  node: NodeDefinition
   owner?: NodeOwner
   /** Internal coordinate plane inherited by nested container nodes. */
   selectionPlane?: NodeSelectionPlane
@@ -42,7 +50,7 @@ export interface ResolveContainerDropIndexContext {
   event: DragEvent
   regionElement: HTMLElement
   itemElements: readonly HTMLElement[]
-  nodes: DeepReadonly<SchemaNode[]>
+  nodes: DeepReadonly<RendererNode[]>
 }
 
 export type ResolveContainerDropIndex = (ctx: ResolveContainerDropIndexContext) => number | null
@@ -112,7 +120,7 @@ export type AuthoringAction
     | { type: 'selection.set', nodeId: string | null }
     | { type: 'hover.set', nodeId: string | null }
     | { type: 'drag.set', target: DragTarget | null }
-    | { type: 'node.add', node: SchemaNode, destination?: NodeDestination }
+    | { type: 'node.add', node: NodeDefinition, destination?: NodeDestination }
     | { type: 'node.move', nodeId: string, destination: NodeDestination }
     | { type: 'node.remove', nodeId: string }
     | { type: 'node.duplicate', nodeId: string }
@@ -120,7 +128,7 @@ export type AuthoringAction
     | { type: 'page.update', props: Record<string, unknown>, style?: NodeStyle }
     | { type: 'container.change-variant', containerId: string, variant: string }
     | { type: 'global-config.update', config: Record<string, unknown> }
-    | { type: 'schema.import', schema: DesignerSchema }
+    | { type: 'schema.import', schema: DocumentSchema }
 
 export interface AuthoringDecision extends CreationBlockReason {
   allowed: boolean
@@ -157,24 +165,24 @@ export interface RendererSessionMaterials {
   get: (type: string) => RendererWidgetMeta | undefined
   getAll: () => readonly RendererWidgetMeta[]
   resolveCapability: (
-    node: CoreDeepReadonly<SchemaNode>,
+    node: RendererNode,
     capability: 'selectable' | 'configurable' | 'draggable' | 'sortable' | 'deletable' | 'variantChangeable',
   ) => boolean
-  resolveLayout: (node: CoreDeepReadonly<SchemaNode>) => ResolvedNodeLayout
-  resolveContainer: (node: CoreDeepReadonly<SchemaNode>) => ContainerPlanResult
-  getLockedIndices: (nodes: readonly CoreDeepReadonly<SchemaNode>[]) => Set<number>
-  canCreateSubtree: (node: CoreDeepReadonly<SchemaNode>) => boolean
-  canDeleteSubtree: (node: CoreDeepReadonly<SchemaNode>) => boolean
+  resolveLayout: (node: RendererNode) => ResolvedNodeLayout
+  resolveContainer: (node: RendererNode) => ContainerPlanResult
+  getLockedIndices: (nodes: readonly RendererNode[]) => Set<number>
+  canCreateSubtree: (node: RendererNode) => boolean
+  canDeleteSubtree: (node: RendererNode) => boolean
 }
 
 export interface RendererSessionProjection {
   readonly document: {
+    readonly schema: Readonly<Ref<CoreDeepReadonly<DocumentSchema> | null>>
     readonly version: Readonly<Ref<string>>
-    readonly root: Readonly<Ref<CoreDeepReadonly<SchemaNode>>>
-    readonly rootNodes: Readonly<Ref<readonly CoreDeepReadonly<SchemaNode>[]>>
-    readonly globalConfig: Readonly<Ref<CoreDeepReadonly<Record<string, unknown>>>>
+    readonly rootNodes: Readonly<Ref<readonly CoreDeepReadonly<NodeDefinition>[]>>
+    readonly globalConfig: Readonly<Ref<Record<string, unknown>>>
     readonly diagnostics: Readonly<Ref<readonly SchemaDiagnostic[]>>
-    getNode: (nodeId: string) => CoreDeepReadonly<SchemaNode> | null
+    getNode: (nodeId: string) => CoreDeepReadonly<NodeDefinition> | null
     getOwner: (nodeId: string) => NodeOwner | null
     getStructurePosition: (nodeId: string) => {
       readonly owner: NodeOwner
@@ -183,7 +191,7 @@ export interface RendererSessionProjection {
       readonly sortScope: string | false
       readonly lockedIndices: ReadonlySet<number>
     } | null
-    getRegionNodes: (containerId: string, regionId: string) => readonly CoreDeepReadonly<SchemaNode>[]
+    getRegionNodes: (containerId: string, regionId: string) => readonly CoreDeepReadonly<NodeDefinition>[]
   }
   readonly materials: RendererSessionMaterials
   readonly state: {
@@ -204,7 +212,7 @@ export interface RendererSessionProjection {
 
 /** Renderer-owned grouping derived from semantic session facts for presentation only. */
 export interface RendererLayoutEntry {
-  readonly node: CoreDeepReadonly<SchemaNode>
+  readonly node: CoreDeepReadonly<NodeDefinition>
   readonly arrayIndex: number
   readonly layout: ResolvedNodeLayout
 }
@@ -484,12 +492,12 @@ export interface RendererOptions extends ContainerDropRendererOptions {
  */
 export interface RendererContext extends ContainerDropRendererOptions {
   session: RendererSessionProjection
-  /** One semantic schema snapshot shared by the renderer tree for each session revision. */
-  schema: ComputedRef<DeepReadonly<DesignerSchema>>
+  /** One canonical schema snapshot shared by the renderer tree for each session revision. */
+  schema: ComputedRef<CoreDeepReadonly<DocumentSchema> | null>
   /** Renderer-owned layout grouping derived from session document and material facts. */
   layout: ComputedRef<RendererLayoutProjection>
   /** Resolves action geometry and lock constraints from revision-scoped caches. */
-  resolveNodeActionPosition?: (node: SchemaNode, owner: NodeOwner) => {
+  resolveNodeActionPosition?: (node: RendererNode, owner: NodeOwner) => {
     owner: NodeOwner
     index: number
     siblingCount: number

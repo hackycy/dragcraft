@@ -1,28 +1,23 @@
-import type { DesignerSchema, SchemaNode } from '../presentation/semantic'
+import type { DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import { describe, expect, it } from 'vitest'
 import { createBindingAction, readBindingValue, resolveFieldBinding } from './field-binding'
 
-function makeSchema(): DesignerSchema {
+function makeSchema(): DocumentSchema {
   return {
     version: '1.0.0',
     globalConfig: { theme: 'light' },
-    root: {
-      id: 'root',
-      type: 'root',
-      props: {},
-      style: { surface: { backgroundColor: '#fff' } },
-      children: [],
-    },
+    page: { props: {}, style: { surface: { backgroundColor: '#fff' } } },
+    nodes: [],
+    structure: { root: [], containers: {} },
   }
 }
 
-function makeNode(): SchemaNode {
+function makeNode(): NodeDefinition {
   return {
     id: 'a',
     type: 'text',
     props: { title: 'Hello' },
     style: { container: { marginTop: 8 } },
-    container: { variant: 'split', regions: { left: [] } },
   }
 }
 
@@ -40,15 +35,15 @@ describe('field-binding', () => {
 
     expect(readBindingValue({ scope: 'node', path: 'props.title' }, schema, node)).toBe('Hello')
     expect(readBindingValue({ scope: 'node', path: 'style.container.marginTop' }, schema, node)).toBe(8)
-    expect(readBindingValue({ scope: 'schema', path: 'root.style.surface.backgroundColor' }, schema, null)).toBe('#fff')
+    expect(readBindingValue({ scope: 'schema', path: 'page.style.surface.backgroundColor' }, schema, null)).toBe('#fff')
     expect(readBindingValue({ scope: 'globalConfig', path: 'theme' }, schema, null)).toBe('light')
   })
 
-  it('reads only the container variant from container bindings', () => {
+  it('does not expose container variants through the document binding', () => {
     const schema = makeSchema()
     const node = makeNode()
 
-    expect(readBindingValue({ scope: 'container', path: 'variant' }, schema, node)).toBe('split')
+    expect(readBindingValue({ scope: 'container', path: 'variant' }, schema, node)).toBeUndefined()
     expect(readBindingValue({ scope: 'container', path: 'regions.left' }, schema, node)).toBeUndefined()
     expect(readBindingValue({ scope: 'container', path: 'variant' }, schema, null)).toBeUndefined()
   })
@@ -76,7 +71,7 @@ describe('field-binding', () => {
   })
 
   it('creates schema-root and globalConfig actions', () => {
-    expect(createBindingAction({ scope: 'schema', path: 'root.style.surface.backgroundColor' }, '#f5f5f5')).toEqual({
+    expect(createBindingAction({ scope: 'schema', path: 'page.style.surface.backgroundColor' }, '#f5f5f5')).toEqual({
       type: 'page.update',
       props: {},
       style: { surface: { backgroundColor: '#f5f5f5' } },
@@ -104,7 +99,7 @@ describe('field-binding', () => {
 
   it('returns null for unsupported or unsafe paths', () => {
     expect(createBindingAction({ scope: 'node', path: 'layout.order' }, 1, 'a')).toBeNull()
-    expect(createBindingAction({ scope: 'schema', path: 'root.__proto__.polluted' }, true)).toBeNull()
+    expect(createBindingAction({ scope: 'schema', path: 'page.__proto__.polluted' }, true)).toBeNull()
     expect(createBindingAction({ scope: 'node', path: 'props.title' }, 'World')).toBeNull()
   })
 })

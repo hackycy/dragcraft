@@ -19,8 +19,11 @@ export function describeDesignerSessionContract(
       const { session } = createFixture()
 
       expect(session.document.rootNodes.value.map(node => node.id)).toEqual(['ordinary', 'layout'])
-      expect(session.document.root.value.id).toBe('root')
+      expect(session.document.schema.value?.structure.root).toEqual(['ordinary', 'layout'])
       expect(session.document.getNode('ordinary')?.type).toBe('text')
+      expect(session.document.getNode('ordinary')).not.toHaveProperty('children')
+      expect(session.document.getNode('ordinary')).not.toHaveProperty('layout')
+      expect(session.document.getNode('layout')).not.toHaveProperty('container')
       expect(session.document.getOwner('ordinary')).toEqual({ kind: 'root', sortScope: 'content' })
       expect(session.document.getOwner('region-child')).toEqual({
         kind: 'container',

@@ -3,10 +3,8 @@ import type {
   ContainerRegionDefinition,
   ContainerRegionId,
   ContainerVariantId,
-  SchemaNode,
 } from './semantic'
-import type { AuthoringResult, DeepReadonly, RendererContext } from './types'
-import { cloneDeep } from '@dragcraft/utils'
+import type { AuthoringResult, DeepReadonly, RendererContext, RendererNode } from './types'
 import { computed, inject } from 'vue'
 
 function deepFreeze<T>(value: T): DeepReadonly<T> {
@@ -18,35 +16,29 @@ function deepFreeze<T>(value: T): DeepReadonly<T> {
   return value as DeepReadonly<T>
 }
 
-function toReadonlySnapshot<T>(value: T): DeepReadonly<T> {
-  return Object.isFrozen(value)
-    ? value as DeepReadonly<T>
-    : deepFreeze(cloneDeep(value))
-}
-
 export interface ContainerRuntime {
   nodeId: ComputedRef<string>
   variant: ComputedRef<ContainerVariantId>
   regionDefinitions: ComputedRef<DeepReadonly<ContainerRegionDefinition[]>>
-  getRegionNodes: (regionId: ContainerRegionId) => DeepReadonly<SchemaNode[]>
+  getRegionNodes: (regionId: ContainerRegionId) => readonly RendererNode[]
   requestVariantChange: (variant: ContainerVariantId) => AuthoringResult
 }
 
 export const CONTAINER_RUNTIME_CONTEXT_KEY: InjectionKey<ContainerRuntime> = Symbol('dc-container-runtime')
 
 export function createContainerRuntime(
-  getNode: () => SchemaNode,
+  getNode: () => RendererNode,
   ctx: RendererContext,
 ): ContainerRuntime {
-  const resolveNode = (): SchemaNode => {
+  const resolveNode = (): RendererNode => {
     void ctx.schema.value
-    return ctx.session.document.getNode(getNode().id) as SchemaNode ?? getNode()
+    return ctx.session.document.getNode(getNode().id) ?? getNode()
   }
   const plan = computed(() => ctx.session.materials.resolveContainer(resolveNode()))
 
   return {
     nodeId: computed(() => resolveNode().id),
-    variant: computed(() => resolveNode().container?.variant ?? ''),
+    variant: computed(() => plan.value.ok ? plan.value.plan.variant.title : ''),
     regionDefinitions: computed(() => deepFreeze(
       plan.value.ok
         ? plan.value.plan.variant.regions.map(region => ({
@@ -61,9 +53,7 @@ export function createContainerRuntime(
           }))
         : [],
     )),
-    getRegionNodes: regionId => toReadonlySnapshot(
-      ctx.session.document.getRegionNodes(resolveNode().id, regionId),
-    ),
+    getRegionNodes: regionId => ctx.session.document.getRegionNodes(resolveNode().id, regionId),
     requestVariantChange: variant => ctx.session.execute({
       type: 'container.change-variant',
       containerId: getNode().id,

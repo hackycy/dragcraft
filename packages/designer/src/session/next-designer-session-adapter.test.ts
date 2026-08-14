@@ -1,5 +1,4 @@
 import type { DocumentSchema } from '@dragcraft/core'
-import type { DesignerSchema } from '../presentation/semantic'
 import { describe, expect, it } from 'vitest'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import { createMaterialCatalog } from '../materials/create-material-catalog'
@@ -240,7 +239,7 @@ describe('next adapter backend contract', () => {
     if (typeof creatable === 'function') {
       expect(creatable({
         widgetType: 'tab-bar',
-        schema: session.document.schema!.value,
+        schema: session.document.schema.value!,
       })).toEqual({ allowed: false, code: 'POLICY_DENIED' })
     }
   })
@@ -372,14 +371,17 @@ describe('next adapter backend contract', () => {
   })
 
   it('exports detached JSON snapshots without exposing the engine document', () => {
-    const { session } = createFixture()
+    const { session, engine } = createFixture()
+    expect(engine.document.value.status).not.toBe('rejected')
+    if (engine.document.value.status !== 'rejected')
+      expect(session.document.schema.value).toBe(engine.document.value.schema)
     const exported = session.exportSchema()!
     exported.nodes[0]!.props.changed = true
     expect(session.document.getNode('ordinary')?.props).not.toHaveProperty('changed')
     expect(JSON.parse(JSON.stringify(session.exportSchema()))).toEqual(session.exportSchema())
   })
 
-  it('rejects the obsolete projected schema import action', () => {
+  it('imports canonical DocumentSchema snapshots without tree projection', () => {
     const { session } = createFixture()
     const replacement: DocumentSchema = {
       version: '1',
@@ -389,22 +391,12 @@ describe('next adapter backend contract', () => {
       structure: { root: ['replacement'], containers: {} },
     }
 
-    const action = {
-      type: 'schema.import' as const,
-      schema: {
-        version: replacement.version,
-        globalConfig: replacement.globalConfig,
-        root: {
-          id: 'root',
-          type: 'root',
-          props: replacement.page.props,
-          children: replacement.nodes.map(node => ({ id: node.id, type: node.type, props: node.props })),
-        },
-      } as DesignerSchema,
-    }
-    expect(session.evaluate(action)).toEqual({ allowed: false, code: 'SCHEMA_IMPORT_REJECTED' })
-    expect(session.execute(action)).toEqual({ ok: false, code: 'SCHEMA_IMPORT_REJECTED' })
-    expect(session.document.rootNodes.value.map(node => node.id)).toEqual(['ordinary', 'layout'])
+    const action = { type: 'schema.import' as const, schema: replacement }
+    expect(session.evaluate(action)).toEqual({ allowed: true })
+    expect(session.execute(action)).toEqual({ ok: true, changed: true })
+    expect(session.document.schema.value).toEqual(replacement)
+    expect(session.document.rootNodes.value.map(node => node.id)).toEqual(['replacement'])
+    expect(JSON.parse(JSON.stringify(session.exportSchema()))).toEqual(replacement)
     expect(session.state.history.value).toMatchObject({ canRedo: false, canUndo: false })
   })
 })

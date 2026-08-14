@@ -1,3 +1,5 @@
+import type { DocumentSchema, NodeDefinition } from '@dragcraft/core'
+
 export type DeepReadonly<T>
   = T extends (...args: infer Args) => infer Result
     ? (...args: Args) => Result
@@ -6,22 +8,6 @@ export type DeepReadonly<T>
       : T extends object
         ? { readonly [Key in keyof T]: DeepReadonly<T[Key]> }
         : T
-
-export interface SchemaNode {
-  readonly id: string
-  readonly type: string
-  readonly props: Record<string, unknown>
-  readonly style?: NodeStyle
-  readonly layout?: NodeLayout
-  readonly container?: ContainerState
-  readonly children?: readonly SchemaNode[]
-}
-
-export interface DesignerSchema {
-  readonly version: string
-  readonly globalConfig: Record<string, unknown>
-  readonly root: SchemaNode
-}
 
 export type StyleValueMap = Record<string, unknown>
 
@@ -81,12 +67,12 @@ export interface ContainerDefinition {
 
 export interface ContainerState {
   readonly variant: string
-  readonly regions: Readonly<Record<ContainerRegionId, readonly SchemaNode[]>>
+  readonly regions: Readonly<Record<ContainerRegionId, readonly NodeDefinition[]>>
 }
 
 export interface ContainerPlanRegion {
   readonly definition: ContainerRegionDefinition
-  readonly nodes: readonly SchemaNode[]
+  readonly nodes: readonly NodeDefinition[]
   readonly isEmpty: boolean
 }
 
@@ -103,7 +89,7 @@ export type ContainerPlanResult
 export interface NodeLayout {
   readonly placement?: NodePlacement
   readonly order?: number
-  readonly visible?: boolean | ((context: { readonly node: SchemaNode, readonly schema: DesignerSchema }) => boolean)
+  readonly visible?: boolean | ((context: { readonly node: NodeDefinition, readonly schema: DocumentSchema }) => boolean)
 }
 
 export type LayoutEdge = 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
@@ -136,7 +122,7 @@ export interface ResolvedNodeLayout {
   readonly visible: boolean
 }
 
-export interface LayoutNodeEntry { readonly node: SchemaNode, readonly arrayIndex: number, readonly layout: ResolvedNodeLayout }
+export interface LayoutNodeEntry { readonly node: NodeDefinition, readonly arrayIndex: number, readonly layout: ResolvedNodeLayout }
 export interface DragTarget {
   readonly sourceNodeId: string | null
   readonly widgetType: string | null
@@ -150,11 +136,11 @@ export interface HistoryState {
 }
 
 export interface BehaviorContext {
-  readonly node: DeepReadonly<SchemaNode>
-  readonly schema: DeepReadonly<DesignerSchema>
+  readonly node: DeepReadonly<NodeDefinition>
+  readonly schema: DeepReadonly<DocumentSchema>
 }
 export type BehaviorPredicate<Context = BehaviorContext> = boolean | ((context: Context) => boolean)
-export type CreatablePredicate = boolean | CreationBlockReason & { readonly allowed: boolean } | ((context: { readonly widgetType: string, readonly schema: DeepReadonly<DesignerSchema> }) => boolean | CreationBlockReason & { readonly allowed: boolean })
+export type CreatablePredicate = boolean | CreationBlockReason & { readonly allowed: boolean } | ((context: { readonly widgetType: string, readonly schema: DeepReadonly<DocumentSchema> }) => boolean | CreationBlockReason & { readonly allowed: boolean })
 
 export interface CoreWidgetMeta {
   readonly type: string
@@ -196,9 +182,9 @@ export interface SchemaDiagnostic {
 }
 
 export interface ResolvedNodeDestination {
-  readonly children: readonly SchemaNode[]
+  readonly children: readonly NodeDefinition[]
   readonly destination: NodeDestination
-  readonly container?: SchemaNode
+  readonly container?: NodeDefinition
   readonly definition?: ContainerDefinition
   readonly variant?: ContainerVariantDefinition
   readonly region?: ContainerRegionDefinition
@@ -260,7 +246,7 @@ export function isWidgetVisibleInMaterialPanel(meta: WidgetMeta): boolean {
   return !isSchemaManagedWidget(meta)
 }
 
-export function resolveAuthoringCapability(meta: WidgetMeta | undefined, node: DeepReadonly<SchemaNode>, schema: DeepReadonly<DesignerSchema>, capability: 'selectable' | 'configurable' | 'draggable' | 'sortable' | 'deletable' | 'variantChangeable'): boolean {
+export function resolveAuthoringCapability(meta: WidgetMeta | undefined, node: DeepReadonly<NodeDefinition>, schema: DeepReadonly<DocumentSchema>, capability: 'selectable' | 'configurable' | 'draggable' | 'sortable' | 'deletable' | 'variantChangeable'): boolean {
   const defaultValue = capability === 'draggable' || capability === 'deletable' || capability === 'variantChangeable'
     ? !isSchemaManagedWidget(meta)
     : true
@@ -278,7 +264,7 @@ export function resolveAuthoringCapability(meta: WidgetMeta | undefined, node: D
   }
 }
 
-export function resolveWidgetCreation(meta: WidgetMeta | undefined, widgetType: string, schema: DeepReadonly<DesignerSchema>): PlacementDecision {
+export function resolveWidgetCreation(meta: WidgetMeta | undefined, widgetType: string, schema: DeepReadonly<DocumentSchema>): PlacementDecision {
   if (isSchemaManagedWidget(meta))
     return { allowed: false, code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN' }
   if (meta?.creatable === undefined)
@@ -324,7 +310,7 @@ export function isRemoveAllowed(removeIndex: number, lockedIndices: ReadonlySet<
   return true
 }
 
-export function getValidDropIndices(children: readonly (SchemaNode | LayoutNodeEntry)[], lockedIndices: ReadonlySet<number>, sourceNodeId: string | null): Set<number> {
+export function getValidDropIndices(children: readonly (NodeDefinition | LayoutNodeEntry)[], lockedIndices: ReadonlySet<number>, sourceNodeId: string | null): Set<number> {
   const valid = new Set<number>()
   const count = children.length
   if (lockedIndices.size === 0) {
@@ -374,12 +360,12 @@ export function clampInsertIndex(index: number | undefined, length: number): num
 export function resolvePlacementDecision(context: {
   readonly definition: ContainerDefinition
   readonly region: ContainerRegionDefinition
-  readonly child: SchemaNode
+  readonly child: NodeDefinition
   readonly childHasContainerCapability: boolean
   readonly targetCount: number
   readonly callbackContext: Record<string, unknown>
 }): PlacementDecision {
-  if (context.child.container || context.childHasContainerCapability)
+  if (context.childHasContainerCapability)
     return { allowed: false, code: 'CONTAINER_NESTING_FORBIDDEN' }
   const constraints = context.region.constraints ?? {}
   if (constraints.includeTypes && !constraints.includeTypes.includes(context.child.type))
