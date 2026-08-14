@@ -39,8 +39,8 @@
 | --- | --- | --- | --- | --- |
 | G0: Reproducible Convergence Guard | passed | none | `implementation-plan.md` -> `G0: Reproducible Convergence Guard` | 209-finding active-source inventory, strict-mode expected failure, and ordered repository baseline passed at `79322a5be38a5308153b72b59b9f3a8d2da0c02c` |
 | G1: DocumentSchema Session Cutover | passed | G0 | `implementation-plan.md` -> `G1: DocumentSchema Session Cutover` | Exit 1-3 recorded below at `543ccda6f0f4392924b17c73a13e71d16ecce5f4` |
-| G2: Public Presentation Boundary | active | G1 | `implementation-plan.md` -> `G2: Public Presentation Boundary` | Reopened after Device Frame visual acceptance failure; fix and user confirmation pending |
-| G3: Legacy Protocol Removal | planned | G2 | `implementation-plan.md` -> `G3: Legacy Protocol Removal` | G2 visual acceptance pending |
+| G2: Public Presentation Boundary | passed | G1 | `implementation-plan.md` -> `G2: Public Presentation Boundary` | Exit 1-3 and user visual acceptance passed; constrained `DcDesigner.deviceFrame` boundary verified |
+| G3: Legacy Protocol Removal | active | G2 | `implementation-plan.md` -> `G3: Legacy Protocol Removal` | 已激活，尚未开始实施 |
 | G4: Evidence Closeout | planned | G3 | `implementation-plan.md` -> `G4: Evidence Closeout` | G3 pending |
 
 ## Progress Log
@@ -72,12 +72,14 @@
 - 2026-08-15: user rejected the prior G2 pass after observing Device Frame overlap: a fixed Navbar covered the top of the first Document Plane material. Diagnosis established a deterministic reproduction across every scaled frame: `canvas-surface.ts` measured fixed Chrome with post-transform `getBoundingClientRect()` values, then used that value as a pre-transform grid inset, applying the Canvas scale twice. G2 is reopened as `active`; G3 is restored to `planned` and must not begin until the repaired frame passes the user's manual acceptance.
 - 2026-08-15: fixed-Chrome reservation slice changed `packages/designer/src/presentation/canvas-surface.ts` and `playground/tests/browser/next-harness.spec.ts`. Measured Chrome now contributes its unscaled layout-box dimensions to the pre-transform surface grid, so a scaled Device Frame applies scale once to both the navigation bar and the content inset. The new browser regression sets a short viewport, traverses all seven built-in Device Frames, and asserts that the fixed Navbar never covers `swiper-banner`, the first Document Plane node. It failed red before the change and passed green after `pnpm --filter @dragcraft/designer build` and the focused Playwright run (1/1). Risk: complete G2 repository verification and explicit user visual acceptance remain; next action is the declared verification sequence, then an acceptance environment. G3 remains `planned`.
 - 2026-08-15: G2 automatic verification completed in order: focused Designer contract tests (85), Playground tests (18), Guide tests (14), `pnpm check:public-boundary`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm test:browser` (32/32) all passed; `git diff --check` passed. The 93-item obsolete-protocol inventory remains unchanged and reserved for G3. Per user direction, G2 now requires explicit manual visual acceptance before it can be marked `passed`; G3 must remain `planned`. Next action: start the Playground acceptance environment and wait without further implementation or Gate transition.
+- 2026-08-15: user manually accepted the repaired Device Frame presentation in the Playground acceptance environment. G2 Exit 1 passed: approved public Designer/Schema/material/Presentation boundary remains intact. Exit 2 passed: no public Renderer interface import path remains. Exit 3 passed: the full automated evidence above, including the new seven-Device-Frame Chrome-reservation browser regression, is green. Manual acceptance passed: the user confirmed that fixed navigation and normal content no longer overlap. G2 is marked `passed`; G3 is activated and has not been analyzed, implemented, or verified.
 
 ### G3: Legacy Protocol Removal
 
 - 2026-08-14: initialized as `planned`; G2 pending.
 - 2026-08-15: 已激活，尚未开始实施。
 - 2026-08-15: restored to `planned` because G2 visual acceptance was rejected; no G3 implementation or verification was performed.
+- 2026-08-15: 已激活，尚未开始实施。
 
 ### G4: Evidence Closeout
 
