@@ -8,7 +8,7 @@
     "build": "turbo build",
     "build:packages": "turbo build --filter='./packages/**'",
     "check:public-boundary": "node scripts/check-public-boundary.mjs",
-    "check:obsolete-protocol": "node scripts/check-obsolete-protocol.mjs",
+    "check:obsolete-protocol": "node scripts/check-obsolete-protocol.mjs --inventory",
     "dev": "turbo dev",
     "docs:dev": "pnpm --dir docs dev",
     "docs:build": "pnpm --dir docs build",
