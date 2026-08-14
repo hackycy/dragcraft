@@ -10,7 +10,7 @@ Blocked by: 03, 05, 06, 10
 
 ## Answer
 
-`@dragcraft/designer` 的公共 seam 以一个 `createDesigner({ schema?, materials, ... })` 为中心。使用者只维护一个 `MaterialDefinition[]`，不再分别管理 Schema definition、Designer binding、ComponentMap 或其他 registry；`defineMaterial()` 只是无副作用的类型推断辅助函数，真正的注册只发生在 `createDesigner()`。
+`@dragcraft/designer` 的公共 seam 以一个 `createDesigner({ schema?, materials, ... })` 和标准 `DcDesigner` 工作台为中心。使用者只维护一个 `MaterialDefinition[]`，不再分别管理 Schema definition、Designer binding、ComponentMap 或其他 registry；`defineMaterial()` 只是无副作用的类型推断辅助函数，真正的注册只发生在 `createDesigner()`。宿主若需要设备外壳，只向 `DcDesigner` 提供受限的 `deviceFrame` 展示属性；它不进入 `createDesigner`、Schema、history 或任何 Renderer context。
 
 ```ts
 const designer = createDesigner({
@@ -64,6 +64,22 @@ interface DesignerInstance {
 }
 ```
 
+`DcDesigner` 的设备展示属性是唯一的整面 Application Surface 外壳 seam：
+
+```ts
+interface DesignerDeviceFrame {
+  readonly id: string
+  readonly containerShell: VueComponent
+}
+
+interface DcDesignerProps {
+  readonly instance: DesignerInstance
+  readonly deviceFrame?: DesignerDeviceFrame
+}
+```
+
+`deviceFrame` 只允许 slot-only 外壳恰好渲染一次 Application Surface；它不能读取 Schema、创建节点、拥有交互 hooks 或替换 NodeHost/Region Outlet。设备切换只更新展示投影，并保留当前 document、selection 和 history。
+
 配置错误与 Schema 数据错误分离：配置错误抛出；Schema 解析返回 `ready`、`degraded`、`conflicted` 或 `rejected`。成功状态安装当前文档；`rejected` 不覆盖已有文档，初始 rejected 只显示框架恢复态且允许重新导入。未知 type 进入 degraded 并以只读 fallback 保留；与定义或 region 约束冲突进入 conflicted 并限制受影响结构写入。
 
 诊断是有界纯数据：
@@ -91,4 +107,4 @@ interface MaterialPreviewContext<Props extends JsonObject>
 
 PresentationFrame 通过 Vue 默认 slot 恰好渲染一次完整 NodeHost，可使用公开 `DesignerViewportPortal`、`DesignerRegionOutlet` 和 `useSurfaceReservation()`；NodeHost、ApplicationSurface、plane、Geometry Registry、Surface Reservation Registry 和所有空间枚举仍是 Designer implementation。Frame 不写 Schema，也不拥有结构顺序。Frame 配置错误产生 presentation diagnostic 并回退到 Document Plane，不能静默丢失节点。
 
-根入口公开 `createDesigner`、`defineMaterial`、`DcDesigner`、`useDesigner`、Presentation 扩展值、`DOCUMENT_SCHEMA_VERSION` 及上述纯数据/宿主/物料类型。字段 schema 类型由 Designer 聚合导出，具体字段实现来自 `@dragcraft/fields-*`。不再导出 Core Engine、Command、ResolvedDocument、SchemaOperation、ComponentMap、Widget registry、RootRenderer、NodeHost 或几何内部类型，也不保留旧名称别名。`@dragcraft/designer/standard.css` 和 `structure.css` 继续是公开 CSS 入口。
+根入口公开 `createDesigner`、`defineMaterial`、`DcDesigner`、`useDesigner`、`DesignerDeviceFrame`、DesignerRegionOutlet、Presentation 扩展值、`DOCUMENT_SCHEMA_VERSION` 及上述纯数据/宿主/物料类型。字段 schema 类型由 Designer 聚合导出，具体字段实现来自 `@dragcraft/fields-*`。不再导出 Core Engine、Command、ResolvedDocument、SchemaOperation、ComponentMap、Widget registry、RootRenderer、NodeHost、RendererExtensions、RendererEventHooks 或几何内部类型，也不保留旧名称别名。`@dragcraft/designer/standard.css` 和 `structure.css` 继续是公开 CSS 入口。

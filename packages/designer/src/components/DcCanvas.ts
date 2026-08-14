@@ -15,7 +15,7 @@ export default defineComponent({
     const session = useDesignerSession()
     const {
       componentMap,
-      extensions,
+      deviceFrame,
       dragOverNodeId,
       dragOverIndex,
       handleCanvasDragOver,
@@ -44,7 +44,7 @@ export default defineComponent({
     let observedFitTarget: HTMLElement | null = null
 
     const rendererExtensions = computed(() => ({
-      ...(extensions.rendererExtensions ?? {}),
+      ...(deviceFrame.value ? { containerShell: deviceFrame.value.containerShell } : {}),
     }))
 
     const handleClick = (event: MouseEvent) => {

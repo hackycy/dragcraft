@@ -13,6 +13,7 @@ import { registerDesignerRuntimeConfiguration } from './instance-config'
 import { createMaterialCatalog, DesignerConfigurationError } from './materials/create-material-catalog'
 import { designerMessages } from './messages'
 import { createDefaultActions, createNodeActionRegistry } from './presentation/action-registry'
+import { createDefaultEventHooks } from './presentation/event-hooks'
 import { rendererMessages } from './presentation/messages'
 import { registerDesignerSession } from './session/get-designer-session'
 import { createNextDesignerSessionAdapter } from './session/next-designer-session-adapter'
@@ -109,7 +110,7 @@ function createNextDesigner(options: DesignerOptions): DesignerInstance {
     extensions: options.extensions ?? {},
     fieldComponentMap: options.fieldComponentMap,
     globalConfigSchema: options.globalConfigSchema ?? null,
-    eventHooks: options.eventHooks ?? {},
+    eventHooks: createDefaultEventHooks(),
     actionInterceptors: options.actionInterceptors ?? [],
     actionRegistry,
     i18n,

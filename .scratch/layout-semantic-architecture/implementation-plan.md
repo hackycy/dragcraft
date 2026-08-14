@@ -195,6 +195,7 @@ Public exports, public option/context types, package boundary tests, docs/exampl
 
 - No public compatibility alias or renderer interface.
 - PresentationFrame remains the only allowed visual extension boundary.
+- Device Frame is the one explicitly authorized Designer-level shell exception: `DcDesigner.deviceFrame` accepts only a readonly `{ id, containerShell }` value, never `createDesigner` options, Schema data, Renderer context, or event hooks.
 - Public consumer imports stay within CLAUDE.md allowlist.
 
 ### Slice policy

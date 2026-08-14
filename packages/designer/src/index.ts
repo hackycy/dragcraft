@@ -16,21 +16,12 @@ export type { FieldBinding, ResolvedFieldBinding } from './bindings/field-bindin
 
 // ── Components ──────────────────────────
 export {
-  DcCanvas,
-  DcCanvasControls,
   DcDesigner,
-  DcLeftSidebar,
-  DcMaterialGroup,
-  DcMaterialItem,
-  DcMaterialPanel,
-  DcPropertyPanel,
-  DcRightSidebar,
-  DcStructurePanel,
 } from './components'
 
 // ── Composables ─────────────────────────
-export { useDesigner, useDragDrop, usePropertyBinding } from './composables'
-export type { UseDragDropReturn, UsePropertyBindingReturn } from './composables'
+export { useDesigner, usePropertyBinding } from './composables'
+export type { UsePropertyBindingReturn } from './composables'
 // ── Context ─────────────────────────────
 // ── Factory ─────────────────────────────
 export { createDesigner, DOCUMENT_SCHEMA_VERSION } from './factory'
@@ -59,17 +50,8 @@ export type {
 export { designerMessages } from './messages'
 
 // ── Re-exports: Presentation ────────────
-export {
-  ActionKey,
-  createDefaultActions,
-  createNodeActionRegistry,
-} from './presentation/action-registry'
-
 export type {
-  NodeActionContext,
   NodeActionDefinition,
-  NodeActionRegistry,
-  ResolvedNodeAction,
 } from './presentation/action-registry'
 export { createConfirmActionInterceptor } from './presentation/action-runtime'
 
@@ -81,41 +63,11 @@ export type {
   ActionRisk,
   ConfirmActionInterceptorOptions,
 } from './presentation/action-runtime'
-export { default as ContainerRegionOutlet } from './presentation/container-region-outlet'
-
+export { default as DesignerRegionOutlet } from './presentation/container-region-outlet'
 export { useContainerRuntime } from './presentation/container-runtime'
-export { default as DefaultEmptyState } from './presentation/default-empty-state'
-
-export { default as DefaultNodeHandle } from './presentation/default-node-handle'
-
-export { default as DefaultNodeMask } from './presentation/default-node-mask'
-export { default as DefaultNodeToolbar } from './presentation/default-node-toolbar'
-
-export type { RendererEventHooks } from './presentation/event-hooks'
-export type {
-  ContainerShell,
-  ContainerShellSource,
-  EmptyStateProps,
-  NodeHandleProps,
-  NodeMaskProps,
-  NodeToolbarProps,
-  RendererExtensions,
-  ResolveContainerDropIndexContext,
-} from './presentation/types'
-export { useNodeActions } from './presentation/use-node-actions'
-export { useNodeDrag } from './presentation/use-node-drag'
-export { useNodeInteractionGeometry } from './presentation/use-node-interaction-geometry'
-export type {
-  NodeInteractionGeometry,
-  NodeInteractionRect,
-  UseNodeInteractionGeometryOptions,
-  UseNodeInteractionGeometryReturn,
-} from './presentation/use-node-interaction-geometry'
-export { useWidgetNode } from './presentation/use-widget-node'
-export { useWidgetRuntime } from './presentation/widget-runtime'
-export type { WidgetRuntimeContext } from './presentation/widget-runtime'
 // ── Types ───────────────────────────────
 export type {
+  DesignerDeviceFrame,
   DesignerExtensions,
   DesignerInstance,
   DesignerOptions,

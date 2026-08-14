@@ -142,12 +142,6 @@ button:disabled {
   padding: 8px 10px;
 }
 
-.guide-empty-state {
-  margin: 20px;
-  color: #607088;
-  text-align: center;
-}
-
 .guide-asset-field {
   width: 100%;
 }

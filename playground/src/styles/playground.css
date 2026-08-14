@@ -29,40 +29,6 @@ body {
   background: transparent;
 }
 
-/* ── Mini-Program Empty State ─────────────── */
-
-.mp-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 24px;
-  color: #bfbfbf;
-  transition: all 0.3s ease;
-}
-
-.mp-empty-state--drag-over {
-  color: var(--pg-brand);
-  background: var(--pg-brand-subtle);
-}
-
-.mp-empty-state__icon {
-  font-size: 56px;
-  margin-bottom: 16px;
-  opacity: 0.6;
-}
-
-.mp-empty-state--drag-over .mp-empty-state__icon {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-.mp-empty-state__text {
-  font-size: 14px;
-  text-align: center;
-  line-height: 1.6;
-}
-
 /* ── Playground Material Cards ───────────── */
 
 .pg-material-card {

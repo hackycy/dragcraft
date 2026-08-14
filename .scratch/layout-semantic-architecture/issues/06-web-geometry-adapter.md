@@ -10,7 +10,7 @@ Blocked by: 02, 03, 05, 10
 
 ## Answer
 
-第一版不公开整页 `MiniProgramSurfaceAdapter` 或通用 Surface Adapter。Dragcraft 的常见形态就是应用页面设计画布，目前只有一个真实实现；因此 Renderer 内部提供单一深 module `ApplicationSurface`，框架使用者只注册 `MaterialDefinition[]`。未来只有出现第二个无法由当前体系表达的真实画布实现时，才提取可替换 seam。
+第一版不公开整页 `MiniProgramSurfaceAdapter` 或通用 Surface Adapter。Dragcraft 的常见形态就是应用页面设计画布，目前只有一个真实实现；因此 Renderer 内部提供单一深 module `ApplicationSurface`，框架使用者只注册 `MaterialDefinition[]`，并可通过 `DcDesigner` 的受限 `deviceFrame` 展示属性提供宿主选定的 Device Frame。未来只有出现第二个无法由当前体系表达的真实画布实现时，才提取可替换 seam。
 
 整体层级固定为：
 
@@ -29,7 +29,7 @@ Designer Canvas Workspace
                 └── diagnostics
 ```
 
-Canvas Workspace 保留现有居中、pan、缩放和 stage 尺寸行为。Renderer Frame Boundary 是每个 Designer 实例的稳定坐标与 portal owner。Device Frame/ContainerShell 是实际存在的 slot-only seam，只能恰好渲染一次 ApplicationSurface slot，并提供设备外观、业务 viewport、裁剪与登记的 logical safe-area CSS 变量；它不接收 Schema、`ResolvedDocument`、NodeHost、material、reservation、selection 或任何布局计划。切换 Frame 保留 Schema、Authoring Engine 和 history，Shell DOM 与 preview-local Vue state 不保证保留。
+Canvas Workspace 保留现有居中、pan、缩放和 stage 尺寸行为。Renderer Frame Boundary 是每个 Designer 实例的稳定坐标与 portal owner。Device Frame/ContainerShell 是实际存在的 slot-only seam，只能恰好渲染一次 ApplicationSurface slot，并提供设备外观、业务 viewport、裁剪与登记的 logical safe-area CSS 变量；它不接收 Schema、`ResolvedDocument`、NodeHost、material、reservation、selection 或任何布局计划。宿主通过 `DcDesigner.deviceFrame` 提供只读的 `{ id, containerShell }`，而不是 Renderer 扩展或 `createDesigner` 选项；切换 Frame 保留 Schema、Authoring Engine 和 history，Shell DOM 与 preview-local Vue state 不保证保留。
 
 ApplicationSurface 是框架拥有的唯一应用预览表面。它按 `ResolvedDocument.root` 的真实结构顺序为每个 root node 创建一次 PresentationFrame/NodeHost，不按 type 预设 navbar、bottom bar、FAB 或 dialog 区域，也不生成新的 LayoutPlan。
 

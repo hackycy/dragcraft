@@ -4,10 +4,10 @@ description: "@dragcraft/device-frames 的无状态 Device Frame Definitions、C
 
 # @dragcraft/device-frames
 
-Device Frame Definition 是引用稳定的只读目录项。宿主持有 Active Device Frame，并把它的 `containerShell` 交给 Designer。
+Device Frame Definition 是引用稳定的只读目录项。宿主持有 Active Device Frame，并将整个 definition 传给 `DcDesigner`。
 
 ```ts
-import { createDesigner } from '@dragcraft/designer'
+import { createDesigner, DcDesigner } from '@dragcraft/designer'
 import {
   BUILT_IN_DEVICE_FRAMES,
   IPHONE_DEVICE_FRAME,
@@ -21,15 +21,11 @@ const activeDefinition = computed(() =>
   ?? IPHONE_DEVICE_FRAME,
 )
 
-const designer = createDesigner({
-  schema,
-  materials,
-  extensions: {
-    rendererExtensions: {
-      containerShell: computed(() => activeDefinition.value.containerShell),
-    },
-  },
-})
+const designer = createDesigner({ schema, materials })
+```
+
+```vue
+<DcDesigner :instance="designer" :device-frame="activeDefinition" />
 ```
 
 ## Definition

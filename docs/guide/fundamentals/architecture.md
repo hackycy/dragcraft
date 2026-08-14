@@ -61,7 +61,7 @@ DragCraft 的公开入口是一个可视化工作台，但页面数据始终由�
 | 改变工作台视觉 | 主题 token、公开 data hook 或 Presentation 扩展 |
 | 保存和发布页面 | 宿主仓储、校验与发布流程 |
 
-组件内部需要修改自身节点时，可以使用 `useWidgetRuntime()`。它仍会执行受控 authoring action，不应以本地 DOM 状态模拟应该持久化的页面状态。
+组件内部的持久化修改通过受控 Authoring Action 执行，不应以本地 DOM 状态模拟应该持久化的页面状态。
 
 ## 不受支持的路径
 

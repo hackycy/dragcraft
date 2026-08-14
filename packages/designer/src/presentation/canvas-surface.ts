@@ -200,8 +200,8 @@ export default defineComponent({
       for (const item of Array.from(surface.querySelectorAll<HTMLElement>(CHROME_MEASURE_SELECTOR))) {
         const edge = item.dataset.dcChromeEdge as LayoutEdge
         const target = item.querySelector<HTMLElement>(':scope > [data-dc-component="node"]') ?? item
-        const rect = target.getBoundingClientRect()
-        totals[edge] += edge === 'block-start' || edge === 'block-end' ? rect.height : rect.width
+        // Grid insets use the pre-transform layout coordinate space.
+        totals[edge] += edge === 'block-start' || edge === 'block-end' ? target.offsetHeight : target.offsetWidth
       }
       for (const [edge, value] of Object.entries(totals))
         surface.style.setProperty(`--dc-measured-inset-${edge}`, `${value}px`)

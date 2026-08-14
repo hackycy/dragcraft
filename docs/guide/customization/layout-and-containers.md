@@ -15,7 +15,7 @@ schema: {
 presentation: { kind: 'visual', preview: ColumnPreview },
 ```
 
-业务 preview 通过 `ContainerRegionOutlet` 将 region 放到正确的 DOM 位置。Designer 维护 `schema.structure.containers` 中的所有权与顺序，并负责 selection、drop decision、action 和 history。
+业务 preview 通过 `DesignerRegionOutlet` 将 region 放到正确的 DOM 位置。Designer 维护 `schema.structure.containers` 中的所有权与顺序，并负责 selection、drop decision、action 和 history。
 
 ## 约束
 

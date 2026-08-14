@@ -1,7 +1,7 @@
 import type { PropType } from 'vue'
-import type { DesignerContext, DesignerInstance } from '../types'
+import type { DesignerContext, DesignerDeviceFrame, DesignerInstance } from '../types'
 import { I18N_KEY } from '@dragcraft/i18n'
-import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
+import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, provide, ref, toRef, watch } from 'vue'
 import { useDragDrop } from '../composables/useDragDrop'
 import { getDesignerRuntimeConfiguration } from '../instance-config'
 import { DESIGNER_SESSION_KEY } from '../session/context'
@@ -26,6 +26,10 @@ export default defineComponent({
       type: Object as PropType<DesignerInstance>,
       required: true,
     },
+    deviceFrame: {
+      type: Object as PropType<DesignerDeviceFrame>,
+      default: undefined,
+    },
   },
 
   setup(props) {
@@ -47,6 +51,7 @@ export default defineComponent({
     const leftPanelRef = ref<HTMLElement | null>(null)
     const rightPanelRef = ref<HTMLElement | null>(null)
     const searchQuery = ref('')
+    const deviceFrame = toRef(props, 'deviceFrame')
     const dragDrop = useDragDrop(session)
     let resizeObserver: ResizeObserver | null = null
     const focusTimers = new Set<ReturnType<typeof setTimeout>>()
@@ -57,6 +62,7 @@ export default defineComponent({
       extensions,
       fieldComponentMap,
       globalConfigSchema,
+      deviceFrame,
       eventHooks,
       actionInterceptors,
       actionRegistry,

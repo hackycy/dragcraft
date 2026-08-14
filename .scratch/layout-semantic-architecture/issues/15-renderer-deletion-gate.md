@@ -14,7 +14,7 @@ Blocked by: 14
 
 ### 1. 调用方闸门
 
-- Designer、Playground、Guide Project、docs 和 skills 不再 import 或描述旧 Renderer 接口。
+- Designer、Playground、Guide Project、docs 和 skills 不再 import 或描述旧 Renderer 接口；Device Frame 只能通过受限的 `DcDesigner.deviceFrame` 展示属性接入。
 - UI 只依赖 `DesignerSession`，不依赖旧 Engine、Store、Registry、Command 或 LayoutPlan。
 - `ContainerRegionOutlet`、Material Preview Context 等最终接口已由 Designer 拥有。
 - 临时旧 Engine Adapter 没有运行时调用方。

@@ -39,6 +39,29 @@ test('keeps type-defined chrome and layer materials out of the content flow', as
     expect(floatingActionBounds.y + floatingActionBounds.height).toBeLessThanOrEqual(tabbarBounds.y)
 })
 
+test('reserves fixed Device Frame chrome before the first document node', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 800 })
+  await page.goto('/')
+
+  const devicePicker = page.locator('.dc-device-picker__select')
+  const navbar = page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]')
+  const firstDocumentNode = page.locator('[data-dc-component="node"][data-node-id="swiper-banner"]')
+
+  for (const device of ['iphone', 'iphone-x', 'iphone-8', 'android', 'android-waterdrop', 'tablet', 'desktop']) {
+    await devicePicker.selectOption(device)
+    await expect(page.locator(`.dc-device-frame--${device}`), `${device} Device Frame`).toBeVisible()
+    await expect.poll(async () => {
+      const [navbarBounds, firstDocumentNodeBounds] = await Promise.all([
+        navbar.boundingBox(),
+        firstDocumentNode.boundingBox(),
+      ])
+      return navbarBounds !== null
+        && firstDocumentNodeBounds !== null
+        && navbarBounds.y + navbarBounds.height <= firstDocumentNodeBounds.y
+    }, { message: `${device} Navbar must not cover document content` }).toBe(true)
+  }
+})
+
 test('keeps chrome and layer materials out of root sorting controls', async ({ page }) => {
   await page.goto('/')
 

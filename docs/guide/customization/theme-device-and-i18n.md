@@ -41,10 +41,13 @@ const activeDeviceFrame = computed(() =>
   BUILT_IN_DEVICE_FRAMES.find(item => item.id === activeDeviceFrameId.value)
   ?? IPHONE_DEVICE_FRAME,
 )
-const activeContainerShell = computed(() => activeDeviceFrame.value.containerShell)
 ```
 
-Picker 只发出请求的 ID，宿主决定是否接受并更新状态。当前 definition 的 readonly Container Shell ref 传给 Designer 后，可以在现有实例上切换设备；document 和 history 不会重建。
+```vue
+<DcDesigner :instance="designer" :device-frame="activeDeviceFrame" />
+```
+
+Picker 只发出请求的 ID，宿主决定是否接受并更新状态。当前 definition 通过 `DcDesigner.deviceFrame` 传给 Designer 后，可以在现有实例上切换设备；document 和 history 不会重建。
 
 Device Frame 只模拟设计态 viewport 和系统 chrome。生产运行时根据目标平台决定真实安全区、导航和窗口尺寸。
 
@@ -60,7 +63,7 @@ Device Frame 只模拟设计态 viewport 和系统 chrome。生产运行时根�
 
 - 品牌覆盖只使用公开 token 或 data hook。
 - 切换设备后页面数据和撤销栈不变。
-- Container Shell 只渲染一次 Canvas Surface slot。
+- Device Frame 只渲染一次 Canvas Surface slot。
 - 改变 `locale` 后工作台消息更新，业务正文保持自己的语言状态。
 
 完整 token 契约见 [样式与国际化参考](/reference/designer-styles)，设备 definitions 见 [Device Frames 参考](/reference/device-frames)。

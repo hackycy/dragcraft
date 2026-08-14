@@ -43,7 +43,7 @@ pnpm --filter guide-project dev
 | 字段 adapter 协议和表单状态 | UI 库、异步选项、权限和服务端校验 |
 
 > [!IMPORTANT]
-> `DcDesigner`、`ContainerRegionOutlet` 和编辑器的 Container Shell 都包含设计态语义。生产页面应读取 Schema，并使用自己的只读运行时渲染。
+> `DcDesigner`、`DesignerRegionOutlet` 和编辑器的 Device Frame 都包含设计态语义。生产页面应读取 Schema，并使用自己的只读运行时渲染。
 
 ## 选择阅读入口
 

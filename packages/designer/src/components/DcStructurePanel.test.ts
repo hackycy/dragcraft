@@ -2,7 +2,7 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h, nextTick } from 'vue'
-import { ContainerRegionOutlet, createDesigner } from '../index'
+import { createDesigner, DesignerRegionOutlet } from '../index'
 import DcDesigner from './DcDesigner'
 
 describe('dcStructurePanel', () => {
@@ -28,7 +28,7 @@ describe('dcStructurePanel', () => {
         {
           type: 'container',
           schema: { container: { regions: [{ id: 'content' }] } },
-          presentation: { kind: 'visual', preview: defineComponent({ setup: () => () => h(ContainerRegionOutlet, { regionId: 'content' }) }) },
+          presentation: { kind: 'visual', preview: defineComponent({ setup: () => () => h(DesignerRegionOutlet, { regionId: 'content' }) }) },
         },
         { type: 'text', presentation: { kind: 'visual', preview: defineComponent({}) } },
       ],

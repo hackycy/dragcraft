@@ -7,10 +7,9 @@ import {
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
 import { Modal } from 'ant-design-vue'
-import { computed, defineComponent, h, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
 import { buildPlaygroundFieldComponentMap } from './components/fields'
-import { IconArrowDown, IconPhone } from './components/icons'
 import { playgroundWidgetMessages } from './components/widgets/messages'
 import { globalConfigSchema } from './config/global-config-schema'
 import { playgroundNextMaterials, playgroundNextTemplates } from './config/next-fixtures'
@@ -27,40 +26,11 @@ const activeDeviceFrame = computed(() =>
   BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
   ?? IPHONE_DEVICE_FRAME,
 )
-const activeContainerShell = computed(() => activeDeviceFrame.value.containerShell)
 
 function selectDeviceFrame(id: string) {
   if (BUILT_IN_DEVICE_FRAMES.some(definition => definition.id === id))
     activeDeviceFrameId.value = id
 }
-
-// ── Mini-Program Empty State ────────────────────
-
-const MiniProgramEmptyState = defineComponent({
-  name: 'MiniProgramEmptyState',
-  props: {
-    isDragOver: { type: Boolean, default: false },
-  },
-  setup(props) {
-    return () =>
-      h('div', {
-        class: {
-          'mp-empty-state': true,
-          'mp-empty-state--drag-over': props.isDragOver,
-        },
-        'data-dc-component': 'empty-state',
-        'data-dc-state': props.isDragOver ? 'drag-over' : undefined,
-      }, [
-        h('div', { class: 'mp-empty-state__icon' }, [
-          props.isDragOver
-            ? h(IconArrowDown, { size: 56, color: 'currentColor' })
-            : h(IconPhone, { size: 56, color: 'currentColor' }),
-        ]),
-        h('div', { class: 'mp-empty-state__text' },
-          props.isDragOver ? '松开放置组件' : '从左侧拖入组件开始装修'),
-      ])
-  },
-})
 
 function renderMaterialIcon(icon: MaterialItemIcon | undefined) {
   if (!icon)
@@ -128,10 +98,6 @@ const actionInterceptors = [
 
 const extensions: DesignerExtensions = {
   materialItemRenderer,
-  rendererExtensions: {
-    containerShell: activeContainerShell,
-    emptyState: MiniProgramEmptyState,
-  },
 }
 
 const designer = createDesigner({
@@ -198,7 +164,7 @@ async function handleTemplateSwitch(id: string, target: HTMLSelectElement) {
       </template>
     </PlaygroundHeader>
 
-    <DcDesigner :instance="designer" />
+    <DcDesigner :instance="designer" :device-frame="activeDeviceFrame" />
 
     <!-- Import / Export Modals -->
     <SchemaIOModal

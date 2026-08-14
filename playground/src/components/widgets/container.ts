@@ -7,7 +7,7 @@ import type {
   ResolveDropIndexContext,
   SchemaNode,
 } from './contract'
-import { ContainerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
+import { DesignerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
 import { defineContainerFixture } from './contract'
 
@@ -128,7 +128,7 @@ export const FlexContainer = defineComponent({
   name: 'PlaygroundFlexContainer',
   props: flexProps,
   setup(props) {
-    return () => h(ContainerRegionOutlet, {
+    return () => h(DesignerRegionOutlet, {
       regionId: 'default',
       resolveDropIndex: (ctx: any) =>
         resolveLinearDropIndex(ctx, props.direction === 'row' ? 'x' : 'y'),
@@ -280,7 +280,7 @@ export const splitContainerMeta: MaterialMeta & { container: ContainerDefinition
 }
 
 function region(regionId: string, className: string) {
-  return h(ContainerRegionOutlet, {
+  return h(DesignerRegionOutlet, {
     regionId,
     class: className,
     resolveDropIndex: (ctx: any) => resolveLinearDropIndex(ctx, 'y'),

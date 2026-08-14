@@ -56,6 +56,10 @@ _Avoid_: MiniProgramSurfaceAdapter、LayoutPlan、业务 Runtime Surface
 每个 Designer 画布实例中稳定包围 Device Frame/Application Surface 并承载私有 Interaction Plane 的坐标边界，使业务预览接受设备裁剪而选区与 toolbar 不被裁剪。
 _Avoid_: body portal、Device Frame interaction layer、全局 toolbar boundary
 
+**Device Frame**:
+宿主持有的只读设计态设备外壳定义，通过 `DcDesigner` 的 `deviceFrame` 展示属性包围唯一 Application Surface；它只渲染一次 surface slot，不读取 Schema、历史或 Renderer context，也不进入 DocumentSchema。
+_Avoid_: ContainerShell public extension、RendererExtensions、Schema device field
+
 **Presentation Frame**:
 Visual Material 可选提供的设计态 Vue 包装，用于控制单个 NodeHost 在 Application Surface 中的 DOM 挂载与几何；它只渲染一次节点 slot，不定义 Schema 归属或顺序。
 _Avoid_: Schema placement、layout kind、物料自行渲染 NodeHost

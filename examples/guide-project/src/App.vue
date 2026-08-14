@@ -17,13 +17,12 @@ const activeDeviceFrame = computed(() =>
   BUILT_IN_DEVICE_FRAMES.find(definition => definition.id === activeDeviceFrameId.value)
   ?? IPHONE_DEVICE_FRAME,
 )
-const activeContainerShell = computed(() => activeDeviceFrame.value.containerShell)
 
 function selectDeviceFrame(id: string) {
   if (BUILT_IN_DEVICE_FRAMES.some(definition => definition.id === id))
     activeDeviceFrameId.value = id
 }
-const designer = createPageDesigner({ containerShell: activeContainerShell })
+const designer = createPageDesigner()
 const repository = createMemoryPageRepository()
 const revision = ref(0)
 const status = ref('尚未保存')
@@ -99,7 +98,7 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <DcDesigner v-if="!showPreview" :instance="designer" />
+    <DcDesigner v-if="!showPreview" :instance="designer" :device-frame="activeDeviceFrame" />
     <section v-else-if="runtimeSchema" class="guide-project__preview">
       <RuntimePage
         :schema="runtimeSchema"

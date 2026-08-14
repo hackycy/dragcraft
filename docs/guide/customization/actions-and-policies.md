@@ -16,11 +16,7 @@ visible -> available -> policy -> interceptor -> action -> result
 
 结果为 `committed`、`unchanged`、`rejected` 或 `confirmation-required`。拒绝和无变化不增加 history。
 
-## 交互 Hooks
-
-selection、drag 和 hover 使用 `eventHooks`，不属于持久化 action。before drag 必须同步，以便浏览器接收 `preventDefault()`；hover 是高频通知，不能作为保存触发器。
-
-宿主若要标记草稿已修改，应观察 `designer.document`，而不是从 selection 或 hover 推断数据变化。
+宿主若要标记草稿已修改，应观察 `designer.document`，而不是从 selection、drag 或 hover 推断数据变化；这些交互由 Designer 自己拥有，不是公共事件 hook。
 
 ## 物料策略
 

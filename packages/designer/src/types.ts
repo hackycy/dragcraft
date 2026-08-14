@@ -8,7 +8,7 @@ import type { NodeActionDefinition, NodeActionRegistry } from './presentation/ac
 import type { ActionInterceptor } from './presentation/action-runtime'
 import type { RendererEventHooks } from './presentation/event-hooks'
 import type { CreationBlockReason, NodeDestination, PlacementDecision } from './presentation/semantic'
-import type { AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererExtensions, RendererWidgetMeta } from './presentation/types'
+import type { AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from './presentation/types'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
 
@@ -107,6 +107,15 @@ export interface MaterialItemRenderProps {
   dragging: boolean
 }
 
+/**
+ * Host-owned device shell for the Designer Application Surface.
+ * The shell is a presentation-only slot boundary and never receives Schema state.
+ */
+export interface DesignerDeviceFrame {
+  readonly id: string
+  readonly containerShell: Component
+}
+
 // ──────────────────────────────────────────
 // Designer options (input to createDesigner)
 // ──────────────────────────────────────────
@@ -129,8 +138,6 @@ export interface DesignerOptions {
   globalConfigSchema?: FormSchema
   /** Extension point overrides */
   extensions?: DesignerExtensions
-  /** Renderer event hooks for selection, drag, and hover */
-  eventHooks?: RendererEventHooks
   /** Interceptors for node actions such as delete, move, duplicate, and custom actions */
   actionInterceptors?: ActionInterceptor[]
   /** Custom node action definitions to add or override default actions */
@@ -166,8 +173,6 @@ export interface DesignerExtensions {
   propertyPanelRenderer?: Component
   /** Custom content renderer for a single material item. Designer owns the outer shell and drag behavior. */
   materialItemRenderer?: (props: MaterialItemRenderProps) => VNodeChild
-  /** Presentation extensions forwarded to the Designer canvas. */
-  rendererExtensions?: RendererExtensions
   /** Optional controls appended to the left sidebar rail. */
   leftRailRenderer?: (api: DesignerRailSlotAPI) => VNodeChild
   /** Optional controls appended to the right sidebar rail. */
@@ -205,6 +210,7 @@ export interface DesignerContext {
   extensions: DesignerExtensions
   fieldComponentMap: FieldComponentMap | undefined
   globalConfigSchema: FormSchema | null
+  deviceFrame: Ref<DesignerDeviceFrame | undefined>
   eventHooks: RendererEventHooks
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry

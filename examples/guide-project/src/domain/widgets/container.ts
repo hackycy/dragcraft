@@ -6,7 +6,7 @@ import type {
   SchemaNode,
   WidgetFixtureDefinition,
 } from './contract'
-import { ContainerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
+import { DesignerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
 import { defineContainerFixture } from './contract'
 
@@ -111,7 +111,7 @@ export function migrateColumnVariant(
 // #endregion tutorial-container-migration
 
 function outlet(regionId: string) {
-  return h(ContainerRegionOutlet, {
+  return h(DesignerRegionOutlet, {
     regionId,
     class: 'guide-column-container__region',
     resolveDropIndex: resolveVerticalDropIndex,

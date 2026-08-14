@@ -1,4 +1,4 @@
-import type { ContainerShellSource, DocumentSchema } from '@dragcraft/designer'
+import type { DocumentSchema } from '@dragcraft/designer'
 import { createDesigner } from '@dragcraft/designer'
 import { guideMaterials } from '../domain/materials'
 import { createGuideFieldComponentMap } from '../forms'
@@ -10,7 +10,6 @@ import { guideMessages } from './messages'
 
 export interface CreatePageDesignerOptions {
   initialSchema?: DocumentSchema
-  containerShell?: ContainerShellSource
 }
 
 export function createPageDesigner(options: CreatePageDesignerOptions = {}) {
@@ -27,7 +26,7 @@ export function createPageDesigner(options: CreatePageDesignerOptions = {}) {
     },
     customActions: guideCustomActions,
     actionInterceptors: createGuideActionInterceptors(),
-    extensions: createGuideExtensions(options.containerShell),
+    extensions: createGuideExtensions(),
     messages: guideMessages,
   })
 }

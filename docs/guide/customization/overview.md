@@ -11,9 +11,9 @@ description: "根据要改变的产品行为选择 DragCraft 的公开扩展点�
 | 添加可拖入的业务组件 | `MaterialDefinition` | Vue preview、props、资源和内容主题 |
 | 固定由模板提供的组件 | `authoring.policy.create: 'denied'` | 初始 Schema、服务端白名单 |
 | 增加属性编辑字段 | `FormSchema`、`fieldComponentMap`、`bindTo` | UI 控件、异步数据和业务校验 |
-| 让组件承载子节点 | `ContainerDefinition`、`ContainerRegionOutlet` | DOM、CSS、插入几何和迁移策略 |
-| 增加确认、权限或审计 | `customActions`、`actionInterceptors`、`eventHooks` | 授权判断、确认 UI、审计服务 |
-| 替换工作台部件 | `DesignerExtensions`、`RendererExtensions` | 产品面板、搜索和自定义视觉 |
+| 让组件承载子节点 | `ContainerDefinition`、`DesignerRegionOutlet` | DOM、CSS、插入几何和迁移策略 |
+| 增加确认、权限或审计 | `customActions`、`actionInterceptors` | 授权判断、确认 UI、审计服务 |
+| 替换工作台部件 | `DesignerExtensions` | 产品面板、搜索和自定义视觉 |
 | 改变品牌、设备或语言 | 公开 token、Device Frame、`messages` | 品牌主题、设备状态和业务文案 |
 | 保存、发布和线上渲染 | `exportSchema()`、`importSchema()` | 服务端、发布流程和生产运行时 |
 
