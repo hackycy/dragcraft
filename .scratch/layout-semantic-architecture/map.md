@@ -13,7 +13,7 @@ Type: map
 - 本地图是架构决策与实施顺序的唯一 canonical map；不再为本次重构创建其他路线图。
 - 地图只记录已经解决的决策和实施顺序，不把代码任务拆成新的 Wayfinder 票；实际改动按交互切片落实为提交或 PR。
 - 每张票使用 `grilling` 与 `domain-modeling`；涉及模块接口时使用 `codebase-design` 的 module、interface、seam、adapter、depth、locality 术语。
-- 已确认约束：直接重构，不做迁移或兼容层；Schema 必须纯数据；不支持递归容器；结构顺序是默认唯一顺序；文档结构独立于空间展示；Core 结构不变量封闭；Designer 展示通过 Vue Preview 与 PresentationFrame 扩展，外部消费端自主解释 Schema；第一阶段只实现 Vue + 浏览器 Designer 宿主。
+- 已确认约束：直接重构，不做迁移或兼容层；Schema 必须纯数据；不支持递归容器；结构顺序是默认唯一顺序；文档结构独立于空间展示；Core 结构不变量封闭；Designer 业务预览通过 Vue Preview 与 PresentationFrame 扩展，工作台面板/rail 与 Authoring Action 拦截器是非 Renderer 的宿主扩展，不接收 Schema、几何或 Renderer context；外部消费端自主解释 Schema；第一阶段只实现 Vue + 浏览器 Designer 宿主。
 - 公共复用边界：`@dragcraft/designer` 只向生产消费端交付纯数据 Schema 的结构与 type/props 语义契约，不交付 `ResolvedDocument`、registry、Presentation Adapter 或 renderer interface。
 - 生产消费边界：Dragcraft 不拥有或注册生产 renderer；Flutter、原生、Web 或其他消费端仅按纯数据 Schema 的稳定 type 与 props 自主解释和展示。
 - 交互保留边界：现有 toolbar、画布拖放、结构树、选中反馈和撤销重做体验保持不变；本次重构替换其下方的 Authoring Action、Policy、Schema Operation、提交与 history 管线，不重新设计设计器交互。

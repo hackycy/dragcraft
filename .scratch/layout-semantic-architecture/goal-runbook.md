@@ -6,7 +6,7 @@
 | --- | --- |
 | `CLAUDE.md` | `291a48e1f96855e5e0a60cabd6f9dd7ef23fdf4696da363a7cfa6fe9e758a37a` |
 | `CONTEXT.md` | `79f65a2e3ec7dc8dfe4a91d00fe62a38ea59c6dde04f1ec73cd33383ec70425a` |
-| `.scratch/layout-semantic-architecture/implementation-plan.md` | `bdb3345cee5b02db74b8b01a43e66268602aa592e66bb863ea8b9bdf217bee30` |
+| `.scratch/layout-semantic-architecture/implementation-plan.md` | `fc3db89aa0ccdc5f953ae1b732dbadc5c627e7de0e1b87f3eeed0885a8aaf037` |
 | `.scratch/layout-semantic-architecture/issues/01-canonical-schema-model.md` | `59af741dae2f326846ec4adb816e189b4c90b449e2caf5cc3b6d3f0ad91cad36` |
 | `.scratch/layout-semantic-architecture/issues/02-layout-capability-algebra.md` | `cbf681c10600a6471df9c430bf0485a9720b68786eb49c68e537a0fbcd6e5cab` |
 | `.scratch/layout-semantic-architecture/issues/03-schema-structure-resolver-output.md` | `96da0e3e1f0e243b2090f6da9063553be8d0e91aea7fbda098f3b4221b2fcb94` |
@@ -14,7 +14,7 @@
 | `.scratch/layout-semantic-architecture/issues/05-declarative-state-and-visibility.md` | `4eceb9b40d3984df461b0fcfdc8d1054798509c4b07e2d8f4c9e1df556094f4c` |
 | `.scratch/layout-semantic-architecture/issues/06-web-geometry-adapter.md` | `ca64e50339d9725a07c6775820900d5c2e442046e00f682c32b9b634e994e721` |
 | `.scratch/layout-semantic-architecture/issues/07-authoring-operations-model.md` | `6c015c13ae2b8a77d8e857792e965e2fbf56016db4739fe233e4f9d34bf43fee` |
-| `.scratch/layout-semantic-architecture/issues/08-public-designer-contract.md` | `61d7dfb01c89311139a22e55b93142cbb80af4d1e0e2bdcfec85065ad91ad4dd` |
+| `.scratch/layout-semantic-architecture/issues/08-public-designer-contract.md` | `6032aeef38f070b57159a262cb04c44623e225ab59a10a70304d1e964c4c636d` |
 | `.scratch/layout-semantic-architecture/issues/09-validation-and-conformance.md` | `1fa66d722ffc0dd6d03dec56018dcfcb9968b7f8cec0261b71fd36ccf201c708` |
 | `.scratch/layout-semantic-architecture/issues/10-semantic-render-binding.md` | `9c2f534e2d156057dba4c0ca33e92bbf59017ecf29d7a8861bd8a0a306827909` |
 | `.scratch/layout-semantic-architecture/issues/11-interaction-baseline.md` | `330ee3aea9dee4a6ebde5c70b4a18f998d4caaa99fa67049c208226d109a691f` |
@@ -22,7 +22,7 @@
 | `.scratch/layout-semantic-architecture/issues/13-session-state-continuity.md` | `1c578770ae237b2144c275f7d5253bf5274ca86ce66f878b2f032c55760fb13f` |
 | `.scratch/layout-semantic-architecture/issues/14-slice-cutover-order.md` | `da7cc4fbfaa487cb3e84541dea547f35c0652489179a845a1107d9cc5c96ab9f` |
 | `.scratch/layout-semantic-architecture/issues/15-renderer-deletion-gate.md` | `027fe17b66dfc73f859ceff48b0cbfef40460f5195fb3bfd065734b45db4efd5` |
-| `.scratch/layout-semantic-architecture/map.md` | `b71161630069c40f0982f24c1bb3a5dd4a5dc8c84aa1c270bc1e244acb4f24c7` |
+| `.scratch/layout-semantic-architecture/map.md` | `bb17e20d85b806d65f541110761e212d54d752e001bb6196a9973cc8c4d0f156` |
 
 ## State Rules
 
@@ -41,7 +41,8 @@
 | G1: DocumentSchema Session Cutover | passed | G0 | `implementation-plan.md` -> `G1: DocumentSchema Session Cutover` | Exit 1-3 recorded below at `543ccda6f0f4392924b17c73a13e71d16ecce5f4` |
 | G2: Public Presentation Boundary | passed | G1 | `implementation-plan.md` -> `G2: Public Presentation Boundary` | Exit 1-3 and user visual acceptance passed; constrained `DcDesigner.deviceFrame` boundary verified |
 | G3: Legacy Protocol Removal | passed | G2 | `implementation-plan.md` -> `G3: Legacy Protocol Removal` | Exit 1-4 passed at cleanup SHA `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629`; automated verification and user manual acceptance recorded below |
-| G4: Evidence Closeout | passed+ | G3 | `implementation-plan.md` -> `G4: Evidence Closeout` | Exit 1-2 passed at source HEAD `c95491cdf496efab470b91265fa35d0be2340966`; Source Baseline rebased by user authorization and final validation recorded below |
+| G4: Evidence Closeout | passed | G3 | `implementation-plan.md` -> `G4: Evidence Closeout` | Historical Exit 1-2 evidence remains complete at source HEAD `c95491cdf496efab470b91265fa35d0be2340966`; terminal closeout was reopened by the post-closeout review |
+| G5: Public Contract and Closeout Reconciliation | active | G4 | `implementation-plan.md` -> `G5: Public Contract and Closeout Reconciliation` | Post-closeout review identified public-name/documentation and checker-coverage drift; implementation has not started |
 
 ## Progress Log
 
@@ -95,3 +96,8 @@
 - 2026-08-15: final G4 closeout at source HEAD `c95491cdf496efab470b91265fa35d0be2340966`. Directed runbook validation passed with 0 Source Baseline mismatches, strict Gate order, `passed,passed,passed,passed,active` pre-transition statuses, and all six non-empty G9 evidence groups. Repository verification passed in order: `git rev-parse HEAD` and `git diff --check`; `pnpm check:obsolete-protocol --strict` (0 findings); `pnpm check:public-boundary`; `pnpm build`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (Designer 84/84, Device Frames 15/15, Playground 16/16, Guide 14/14, and all workspace suites); and `pnpm test:browser` (Playwright 32/32). Exit 1 passed: the ledger is now `passed+` and every Gate Progress Log is evidence-complete. Exit 2 passed: the G9 six-group deletion evidence remains traceable to cleanup SHA `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629` after the authorized Source Baseline rebase. G4 is marked `passed`; no successor exists, and the effort is complete.
 - 2026-08-15: resumed closeout audit after user authorization. The prior evidence proved all G4 checks, but the ledger row was still `passed` instead of the required terminal `passed+`; changed `.scratch/layout-semantic-architecture/goal-runbook.md` only. The production source tree remains unchanged at `c95491cdf496efab470b91265fa35d0be2340966`; current `HEAD` `86881714fc26ccc9653ae1cc3fa1e6a2de78065a` contains runbook metadata only. Risk: final contract revalidation is required before declaring the Goal complete. Next action: run the directed validator and the exact G4/G3 repository verification order.
 - 2026-08-15: final G4 correction verification passed. The first temporary validator incorrectly treated the successful no-output return from `git cat-file -e 57b3b5fc2044b8dff4c5c0484d52eefcfd67b629^{commit}` as false; the direct command resolved the cleanup commit, and the corrected validator passed 19 Source Baseline hashes, Gate order `G0,G1,G2,G3,G4`, terminal ledger state `passed,passed,passed,passed,passed+`, and G9 groups 1-6. Repository verification then passed in the declared order: `git rev-parse HEAD` and `git diff --check`; independent `pnpm check:obsolete-protocol --strict` (0 findings); G3 sequence `pnpm check:public-boundary`, `pnpm check:obsolete-protocol --strict` (0 findings), `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test` (Designer 84/84, Device Frames 15/15, Playground 16/16, Guide 14/14, all workspace suites), and `pnpm test:browser` (Playwright 32/32). Changed file: `.scratch/layout-semantic-architecture/goal-runbook.md` only; no production source, package, or behavior changes occurred. Exit 1 passed: the ledger is `passed+` and every Gate log has exit/final evidence. Exit 2 passed: the six G9 groups remain independently traceable to cleanup SHA `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629` after the authorized baseline rebase. Risk: none identified. Next action: effort complete; no successor exists.
+- 2026-08-15: post-closeout review reopened the effort without invalidating historical G4 evidence. The review found stale public `ContainerRegionOutlet` references in `.github/architecture`, a contract-test `DesignerSchema` reference in a skipped test file, and an extension-taxonomy ambiguity between `PresentationFrame` and non-Renderer workbench/authoring extensions. The user requested a control-plane update; `map.md`, `issues/08-public-designer-contract.md`, and `implementation-plan.md` now state the approved distinction, and G5 was added as the direct successor. The Source Baseline was rebased for those three decision/plan files; no runtime source, package export, or cleanup commit changed. G4 is historical `passed`; G5 is `active` and implementation has not started.
+
+### G5: Public Contract and Closeout Reconciliation
+
+- 2026-08-15: initialized as `active` after the post-closeout plan revision; no G5 implementation or verification has started.

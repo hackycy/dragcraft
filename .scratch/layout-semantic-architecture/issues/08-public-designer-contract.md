@@ -80,6 +80,8 @@ interface DcDesignerProps {
 
 `deviceFrame` 只允许 slot-only 外壳恰好渲染一次 Application Surface；它不能读取 Schema、创建节点、拥有交互 hooks 或替换 NodeHost/Region Outlet。设备切换只更新展示投影，并保留当前 document、selection 和 history。
 
+工作台 `DesignerExtensions`、`actionInterceptors` 与 `customActions` 是受控的宿主扩展，用于面板/rail、物料项和 authoring action 协调；它们不接收 Schema、ResolvedDocument、几何 registry、PresentationFrame 或 Renderer context，也不能创建第二个 Surface、Region Outlet 或写入旁路。它们与唯一的 Application Surface `PresentationFrame` seam 分开定义。
+
 配置错误与 Schema 数据错误分离：配置错误抛出；Schema 解析返回 `ready`、`degraded`、`conflicted` 或 `rejected`。成功状态安装当前文档；`rejected` 不覆盖已有文档，初始 rejected 只显示框架恢复态且允许重新导入。未知 type 进入 degraded 并以只读 fallback 保留；与定义或 region 约束冲突进入 conflicted 并限制受影响结构写入。
 
 诊断是有界纯数据：

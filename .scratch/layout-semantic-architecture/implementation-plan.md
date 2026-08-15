@@ -21,7 +21,7 @@
 
 ## Outcome
 
-The active Designer runtime consumes and exposes the pure `DocumentSchema` contract directly. `ResolvedDocument` remains an internal Core read model; no tree-shaped `DesignerSchema`/`SchemaNode` compatibility projection is created, `schema.import` accepts the same `DocumentSchema` input as the public factory, and no `Renderer*` interface is exported from `@dragcraft/designer`. Legacy protocol files, adapters, exports, package edges, and denylist exceptions are physically removed in one separately verifiable cleanup boundary.
+The active Designer runtime consumes and exposes the pure `DocumentSchema` contract directly. `ResolvedDocument` remains an internal Core read model; no tree-shaped `DesignerSchema`/`SchemaNode` compatibility projection is created, `schema.import` accepts the same `DocumentSchema` input as the public factory, and no `Renderer*` interface is exported from `@dragcraft/designer`. `PresentationFrame` is the only Application Surface geometry seam; approved `DesignerExtensions`, `actionInterceptors`, and `customActions` remain non-Renderer workbench/authoring extensions that cannot receive Schema, geometry, or Renderer context. Legacy protocol files, adapters, exports, package edges, and denylist exceptions are physically removed in one separately verifiable cleanup boundary, and public documentation names are checked against the final exports.
 
 ## Non-Negotiable Rules
 
@@ -31,6 +31,7 @@ The active Designer runtime consumes and exposes the pure `DocumentSchema` contr
 4. One Designer instance has one document, one history, and one active authoring backend; no double read, write, render, or shadow comparison.
 5. Public consumers may depend only on `@dragcraft/designer`, `@dragcraft/device-frames`, and approved field packages.
 6. Physical deletion is separate from behavior changes; the cleanup slice must be independently reviewable and revertible.
+7. The public contract has one exact name for each supported entry point; historical aliases may remain only inside `.scratch` evidence and never in public architecture, examples, skills, or contract-test text.
 
 ## Gate Overview
 
@@ -41,6 +42,7 @@ The active Designer runtime consumes and exposes the pure `DocumentSchema` contr
 | G2 | Public presentation boundary | G1 Exit all satisfied | Public Designer exports contain only approved Designer, Schema, material, and PresentationFrame contracts. |
 | G3 | Legacy protocol removal | G2 Exit all satisfied | Old Schema/Layout/Renderer protocol and all production callers are removed from source and package graph. |
 | G4 | Deletion evidence and closeout | G3 Exit all satisfied | Six deletion evidence groups are independently recorded and the behavior-free cleanup commit is verified. |
+| G5 | Public contract and closeout reconciliation | G4 Exit all satisfied | Canonical public documentation, approved extension taxonomy, and obsolete-name verification agree with the shipped exports without runtime changes. |
 
 ## G0: Reproducible Convergence Guard
 
@@ -194,7 +196,7 @@ Public exports, public option/context types, package boundary tests, docs/exampl
 ### Constraints
 
 - No public compatibility alias or renderer interface.
-- PresentationFrame remains the only allowed visual extension boundary.
+- PresentationFrame remains the only allowed Application Surface geometry/visual seam. `DesignerExtensions`, `actionInterceptors`, and `customActions` are approved non-Renderer workbench/authoring extension points; they cannot receive Schema, `ResolvedDocument`, geometry registry, PresentationFrame, or Renderer context.
 - Device Frame is the one explicitly authorized Designer-level shell exception: `DcDesigner.deviceFrame` accepts only a readonly `{ id, containerShell }` value, never `createDesigner` options, Schema data, Renderer context, or event hooks.
 - Public consumer imports stay within CLAUDE.md allowlist.
 
@@ -259,7 +261,7 @@ Only physical deletion, import/export/dependency cleanup, denylist cleanup, and 
 ### Constraints
 
 - Cleanup must be a distinct commit boundary and independently revertible.
-- Strict source scan covers `packages/designer/src`, all workspace source, docs, examples, playground, manifests, and lockfile; `.scratch` is historical evidence only.
+- Strict source scan covers `packages/designer/src`, all workspace source and tests, docs, examples, Playground, skills, manifests, and lockfile; `.scratch` is historical evidence only. Public-contract checks distinguish obsolete public names from intentionally internal implementation filenames.
 - Preserve behavior tests migrated to the new interface.
 
 ### Slice policy
@@ -364,15 +366,86 @@ Revert the runbook-only append; preserve the cleanup commit and source state.
 
 ### Exit conditions
 
-1. The runbook ledger is `passed+` and every Gate Progress Log is evidence-complete.
+1. The G4 Progress Log has explicit evidence for both G4 Exit conditions, the cleanup SHA remains traceable, and the runbook can transition to its direct successor without rewriting prior evidence.
 2. G9 deletion evidence remains independently traceable after later documentation or style changes.
+
+## G5: Public Contract and Closeout Reconciliation
+
+### Purpose
+
+Close the post-cleanup drift found by review: canonical architecture documents still mention removed public names, and the obsolete-protocol checker does not prove that public documentation and contract-test text use the shipped contract. This Gate makes the public boundary auditable without reopening runtime behavior.
+
+### Inputs
+
+- G4 evidence and `map.md`, `issues/08-public-designer-contract.md`, `issues/09-validation-and-conformance.md`, and `issues/15-renderer-deletion-gate.md`.
+- `CLAUDE.md`, `CONTEXT.md`, `.github/architecture`, public `docs`, `skills/dragcraft`, examples, Playground fixtures, `scripts/check-obsolete-protocol.mjs`, and Designer public-interface tests.
+
+### Objective
+
+Align canonical architecture and supported skills with the actual `@dragcraft/designer` exports (`DesignerRegionOutlet` and the approved non-Renderer workbench/authoring extensions), and extend deterministic verification to catch obsolete public names in nonhistorical docs and contract-test text while preserving intentional internal implementation names.
+
+### Scope boundary
+
+Documentation, skills, checker rules/fixtures, public contract tests, and append-only control-plane evidence only. Do not change runtime behavior, public compatibility aliases, Schema, history, Presentation geometry, or the cleanup commit.
+
+### Constraints
+
+- Do not restore `ContainerRegionOutlet`, `RendererExtensions`, `RendererEventHooks`, `DesignerSchema`, or any other compatibility alias.
+- Keep `PresentationFrame` as the only Application Surface geometry seam; document `DesignerExtensions`, `actionInterceptors`, and `customActions` only as non-Renderer workbench/authoring extensions with their existing narrow inputs.
+- The checker must exclude `.scratch` history and generated `dist` output, but must cover public architecture, docs, skills, examples, Playground, manifests, and contract-test text.
+- If the approved extension taxonomy cannot be stated consistently in `map.md` and `issues/08-public-designer-contract.md`, stop and resolve that decision before touching consumers.
+
+### Slice policy
+
+One slice for decision and canonical-document wording; one slice for public docs/skills/examples and contract-test naming; one slice for checker fixtures and deterministic coverage. Keep runtime source and package exports unchanged.
+
+### Verification
+
+#### Directed
+
+- A public-contract fixture containing `ContainerRegionOutlet`, `DesignerSchema`, and Renderer extension names fails with stable path/line findings, while a fixture containing the approved `DesignerRegionOutlet` and workbench extension names passes.
+- A source/doc inventory confirms no obsolete public names remain outside `.scratch` or intentionally internal implementation identifiers.
+- Public type tests compile the approved extension taxonomy and reject Renderer/legacy imports.
+
+#### Repository
+
+1. `pnpm check:public-boundary`.
+2. `pnpm check:obsolete-protocol --strict`.
+3. `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm test:browser` in that order.
+4. `git diff --check` and a cleanup-scope diff proving no runtime behavior files changed.
+
+#### Manual acceptance
+
+无
+
+### Evidence rule
+
+The decision wording, public-name inventory, checker fixture regression, public type tests, ordered repository verification, and cleanup-scope diff must jointly prove every Exit condition. Existing G3/G4 product acceptance remains historical evidence and is not silently reused for new behavior.
+
+### Stop conditions
+
+- `map.md`, `issues/08-public-designer-contract.md`, and shipped exports still disagree about an extension boundary or public name.
+- The checker cannot distinguish public stale references from intentional internal implementation identifiers without broadening the runtime change.
+- Any runtime, Schema, history, geometry, package-export, or public compatibility change appears in the slice.
+
+### Rollback
+
+Revert the single documentation/checker/test reconciliation commit and its append-only control-plane evidence; preserve the G3 cleanup commit and prior G4 evidence.
+
+### Exit conditions
+
+1. Canonical map, public contract decision, architecture docs, public docs, skills, examples, Playground, and contract-test text use the shipped public names and explicitly distinguish Application Surface `PresentationFrame` from non-Renderer workbench/authoring extensions.
+2. The checker has deterministic fixture coverage for obsolete public names, scans the declared nonhistorical surfaces, and strict mode reports zero findings without banning intentional internal implementation names.
+3. Public boundary/type tests and the ordered repository/browser verification pass with no runtime or package-export behavior diff.
+4. The reconciliation diff is independently reviewable, limited to docs/checker/tests/control-plane evidence, and leaves G0-G4 evidence traceable to their original commits.
 
 ## Definition Of Done
 
-- All five Gates are passed in order with append-only evidence.
+- All six Gates are passed in order with append-only evidence.
 - Active Designer session and public package use only `DocumentSchema`, `MaterialDefinition`, and internal Designer Presentation contracts.
 - No old Schema/Layout/Renderer protocol, renderer interface export, package edge, or active caller remains outside `.scratch` history.
 - The cleanup commit is behavior-free, independently reviewable, and verified by strict scan, full repository/browser checks, and explicit manual acceptance.
+- Canonical public documentation and obsolete-name verification agree with the shipped exports, including the distinction between `PresentationFrame` and non-Renderer workbench/authoring extensions.
 
 ## Explicitly Out Of Scope
 
