@@ -25,7 +25,7 @@ body {
   --pg-brand-ring: rgba(7, 193, 96, 0.2);
 }
 
-.dc-root-renderer {
+.dc-application-surface {
   background: transparent;
 }
 

@@ -11,11 +11,10 @@ import type { Ref } from 'vue'
 import type { AuthoringEngine, SchemaAuthoringAction } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
 import type { MaterialPresentationLayout } from '../materials/types'
-import type { ResolvedNodeLayout } from '../presentation/semantic'
+import type { ResolvedPresentationLayout } from '../presentation/semantic'
 import type {
   DesignerMaterialCapability,
   DesignerSession,
-  DesignerSessionContainerDefinition,
   DesignerSessionDocument,
   DesignerSessionDropRejectionReason,
   DesignerSessionMaterials,
@@ -33,11 +32,8 @@ export interface NextDesignerSessionHostState {
 }
 
 type ProjectedNode = Exclude<ReturnType<DesignerSessionDocument['getNode']>, null>
-type ProjectedMaterial = Exclude<ReturnType<DesignerSessionMaterials['get']>, undefined>
 type ProjectedDiagnostic = DesignerSessionDocument['diagnostics']['value'][number]
-type ProjectedContainerPlan = ReturnType<DesignerSessionMaterials['resolveContainer']>
-type ProjectedContainerRegion = Extract<ProjectedContainerPlan, { ok: true }>['plan']['regions'][number]
-type ProjectedContainerNodes = ProjectedContainerRegion['nodes']
+type ProjectedContainerPresentation = ReturnType<DesignerSessionMaterials['resolveContainer']>
 type ProjectedDestination = ReturnType<NonNullable<DesignerSessionDocument['resolveDestination']>>
 type DragTargetValue = DesignerSession['state']['dragTarget']['value']
 type ActiveDestinationValue = DesignerSession['state']['drag']['activeDestination']['value']
@@ -91,7 +87,7 @@ function destinationForIndex(
     const scopedIds = ids.filter((nodeId) => {
       const node = document.nodesById.get(nodeId)?.node
       return node !== undefined
-        && resolveMaterialLayout(catalog.getMaterial(node.type)?.presentation.layout).sortScope === destination.sortScope
+        && resolvePresentationLayout(catalog.getMaterial(node.type)?.presentation.layout).sortScope === destination.sortScope
     })
     const index = destination.index ?? scopedIds.length
     if (scopedIds.length === 0)
@@ -163,7 +159,7 @@ function requiresRootDestination(
   destination: { readonly kind: 'root' | 'container' },
 ): boolean {
   return destination.kind === 'container'
-    && resolveMaterialLayout(catalog.getMaterial(type)?.presentation.layout).placement.kind !== 'flow'
+    && resolvePresentationLayout(catalog.getMaterial(type)?.presentation.layout).placement.kind !== 'flow'
 }
 
 export interface CreateNextDesignerSessionAdapterOptions {
@@ -186,67 +182,6 @@ export function createNextDesignerSessionHostState(): NextDesignerSessionHostSta
   }
 }
 
-function projectMaterial(
-  catalog: MaterialCatalog,
-  type: string,
-  document: ResolvedDocument | null = null,
-): ProjectedMaterial | undefined {
-  const material = catalog.getMaterial(type)
-  if (!material)
-    return undefined
-  const regions = material.schema?.container?.regions
-  const hasCreatePolicy = document !== null && catalog.getAuthoring(type)?.policy?.create !== undefined
-  return {
-    type: material.type,
-    headless: material.presentation.kind === 'headless',
-    title: material.panel?.title ?? material.type,
-    ...(material.panel?.titleKey ? { titleKey: material.panel.titleKey } : {}),
-    group: material.panel?.group ?? 'default',
-    ...(typeof material.panel?.icon === 'string' ? { icon: material.panel.icon } : {}),
-    defaultProps: material.schema?.defaultProps ?? {},
-    formSchema: material.inspector?.formSchema ?? { sections: [] },
-    ...(hasCreatePolicy
-      ? {
-          creatable: () => {
-            const policy = evaluateAuthoringPolicy(catalog, document, {
-              type: 'create-node',
-              materialType: material.type,
-              to: { owner: { kind: 'page-root' }, position: { kind: 'end' } },
-            })
-            return policy.decision === 'allowed'
-              ? true
-              : { allowed: false, code: policy.code }
-          },
-        }
-      : {}),
-    ...(regions
-      ? {
-          container: {
-            defaultVariant: 'default',
-            variants: {
-              default: {
-                title: material.panel?.title ?? material.type,
-                regions: regions.map(region => ({
-                  id: region.id,
-                  title: region.id,
-                  ...(region.accepts || region.cardinality
-                    ? {
-                        constraints: {
-                          ...(region.accepts?.types ? { includeTypes: [...region.accepts.types] } : {}),
-                          ...(region.cardinality?.min === undefined ? {} : { minItems: region.cardinality.min }),
-                          ...(region.cardinality?.max === undefined ? {} : { maxItems: region.cardinality.max }),
-                        },
-                      }
-                    : {}),
-                })),
-              },
-            },
-          },
-        }
-      : {}),
-  } as unknown as ProjectedMaterial
-}
-
 function resolveCapability(
   document: ResolvedDocument | null,
   catalog: MaterialCatalog,
@@ -258,7 +193,7 @@ function resolveCapability(
     return resolved?.readOnly ? capability === 'selectable' : false
   if (resolved?.readOnly)
     return capability === 'selectable'
-  return capability !== 'variantChangeable'
+  return true
 }
 
 function projectDiagnostics(engine: AuthoringEngine): readonly ProjectedDiagnostic[] {
@@ -273,7 +208,7 @@ function projectDiagnostics(engine: AuthoringEngine): readonly ProjectedDiagnost
   })) as ProjectedDiagnostic[]
 }
 
-function resolveMaterialLayout(layout: MaterialPresentationLayout | undefined): ResolvedNodeLayout {
+function resolvePresentationLayout(layout: MaterialPresentationLayout | undefined): ResolvedPresentationLayout {
   const placement = layout?.placement
   if (!placement || placement.kind === 'flow') {
     const region = placement?.region ?? 'content'
@@ -415,8 +350,6 @@ function compileSchemaAction(
         type: 'update-global-config',
         globalConfig: mergeJsonObjects(document.schema.globalConfig, action.config),
       }
-    case 'container.change-variant':
-      return { status: 'rejected', code: 'CONTAINER_VARIANT_NOT_PERSISTED' }
     case 'schema.import':
       return { status: 'rejected', code: 'SCHEMA_IMPORT_REQUIRES_DOCUMENT_SCHEMA' }
     default:
@@ -489,9 +422,9 @@ export function createNextDesignerSessionAdapter(
         })
       : []
   })
-  const resolveNodeLayout = (current: ResolvedDocument, nodeId: string): ResolvedNodeLayout => {
+  const resolvePresentationLayoutConfiguration = (current: ResolvedDocument, nodeId: string): ResolvedPresentationLayout => {
     const node = current.nodesById.get(nodeId)?.node
-    return resolveMaterialLayout(options.catalog.getMaterial(node?.type ?? '')?.presentation.layout)
+    return resolvePresentationLayout(options.catalog.getMaterial(node?.type ?? '')?.presentation.layout)
   }
 
   const session: NextDesignerSessionAdapter = {
@@ -516,7 +449,7 @@ export function createNextDesignerSessionAdapter(
           return null
         if (location.kind !== 'page-root')
           return { kind: 'container', containerId: location.containerId, regionId: location.regionId }
-        const sortScope = resolveNodeLayout(current, nodeId).sortScope
+        const sortScope = resolvePresentationLayoutConfiguration(current, nodeId).sortScope
         return {
           kind: 'root',
           ...(sortScope === false ? {} : { sortScope }),
@@ -534,7 +467,7 @@ export function createNextDesignerSessionAdapter(
           return null
         const siblings = nodesForIds(current, siblingIds)
         if (location.kind === 'page-root') {
-          const sortScope = resolveNodeLayout(current, nodeId).sortScope
+          const sortScope = resolvePresentationLayoutConfiguration(current, nodeId).sortScope
           if (sortScope === false) {
             return {
               owner: { kind: 'root' as const },
@@ -544,7 +477,7 @@ export function createNextDesignerSessionAdapter(
               lockedIndices: new Set<number>(),
             }
           }
-          const scopedSiblings = siblings.filter(sibling => resolveNodeLayout(current, sibling.id).sortScope === sortScope)
+          const scopedSiblings = siblings.filter(sibling => resolvePresentationLayoutConfiguration(current, sibling.id).sortScope === sortScope)
           return {
             owner: { kind: 'root' as const, sortScope },
             index: scopedSiblings.findIndex(sibling => sibling.id === nodeId),
@@ -585,12 +518,10 @@ export function createNextDesignerSessionAdapter(
         const container = current.containersById.get(destination.containerId)
         const owner = container?.owner
         const material = owner ? options.catalog.getMaterial(owner.node.type) : undefined
-        const projected = owner ? projectMaterial(options.catalog, owner.node.type) : undefined
-        const definition = projected?.container as DesignerSessionContainerDefinition | undefined
-        const variant = definition?.variants.default
-        const region = variant?.regions.find(item => item.id === destination.regionId)
+        const definition = material?.schema?.container
+        const regionDeclaration = definition?.regions.find(item => item.id === destination.regionId)
         const resolvedRegion = container?.regions.get(destination.regionId)
-        if (!owner || !definition || !variant || !region || !resolvedRegion || !material?.schema?.container)
+        if (!owner || !regionDeclaration || !resolvedRegion)
           return { ok: false, code: 'CONTAINER_UNRESOLVED' }
 
         return {
@@ -599,50 +530,64 @@ export function createNextDesignerSessionAdapter(
             children: nodesForIds(current, current.schema.structure.containers[destination.containerId]!.regions[destination.regionId]!),
             destination,
             container: owner.node,
-            definition,
-            variant,
-            region,
+            region: {
+              id: regionDeclaration.id,
+              title: regionDeclaration.id,
+              ...(regionDeclaration.accepts || regionDeclaration.cardinality
+                ? {
+                    constraints: {
+                      ...(regionDeclaration.accepts?.types ? { includeTypes: [...regionDeclaration.accepts.types] } : {}),
+                      ...(regionDeclaration.cardinality?.min === undefined ? {} : { minItems: regionDeclaration.cardinality.min }),
+                      ...(regionDeclaration.cardinality?.max === undefined ? {} : { maxItems: regionDeclaration.cardinality.max }),
+                    },
+                  }
+                : {}),
+            },
           },
         } as ProjectedDestination
       },
     },
     materials: {
-      get: type => projectMaterial(options.catalog, type, document.value),
-      getAll: () => options.catalog.getAllMaterials().flatMap((material) => {
-        const projected = projectMaterial(options.catalog, material.type, document.value)
-        return projected ? [projected] : []
-      }),
+      get: type => options.catalog.getMaterial(type),
+      getAll: () => options.catalog.getAllMaterials(),
       resolveCapability: (node, capability) => resolveCapability(
         document.value,
         options.catalog,
         node,
         capability,
       ),
-      resolveLayout: node => resolveMaterialLayout(options.catalog.getMaterial(node.type)?.presentation.layout),
-      resolveContainer: (node): ProjectedContainerPlan => {
+      resolvePresentation: node => resolvePresentationLayout(options.catalog.getMaterial(node.type)?.presentation.layout),
+      resolveContainer: (node): ProjectedContainerPresentation => {
         const current = document.value
         const container = current?.containersById.get(node.id)
         const material = options.catalog.getMaterial(node.type)
         const resolved = current?.nodesById.get(node.id)
         if (!current || !container || !material?.schema?.container || resolved?.readOnly)
           return { ok: false, code: 'CONTAINER_UNRESOLVED', containerId: node.id }
-        const projected = projectMaterial(options.catalog, node.type, current)
-        const variant = projected?.container?.variants.default
-        if (!variant)
-          return { ok: false, code: 'CONTAINER_UNRESOLVED', containerId: node.id }
         return {
           ok: true,
-          plan: {
+          presentation: {
             containerId: node.id,
-            variant,
-            regions: Array.from(container.regions, ([regionId]) => ({
-              definition: variant.regions.find(item => item.id === regionId) ?? {
-                id: regionId,
-                title: regionId,
-              },
-              nodes: nodesForIds(current, current.schema.structure.containers[node.id]!.regions[regionId]!) as unknown as ProjectedContainerNodes,
-              isEmpty: current.schema.structure.containers[node.id]!.regions[regionId]!.length === 0,
-            })),
+            regions: material.schema.container.regions.map((declaration) => {
+              const nodeIds = current.schema.structure.containers[node.id]?.regions[declaration.id] ?? []
+              return {
+                definition: {
+                  id: declaration.id,
+                  title: declaration.id,
+                  ...(declaration.accepts || declaration.cardinality
+                    ? {
+                        constraints: {
+                          ...(declaration.accepts?.types ? { includeTypes: [...declaration.accepts.types] } : {}),
+                          ...(declaration.cardinality?.min === undefined ? {} : { minItems: declaration.cardinality.min }),
+                          ...(declaration.cardinality?.max === undefined ? {} : { maxItems: declaration.cardinality.max }),
+                        },
+                      }
+                    : {}),
+                },
+                nodes: nodesForIds(current, nodeIds),
+                isEmpty: nodeIds.length === 0,
+              }
+            }),
           },
         }
       },

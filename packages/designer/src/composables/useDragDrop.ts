@@ -1,19 +1,16 @@
-import type { DeepReadonly, DocumentSchema, JsonObject, NodeDefinition } from '@dragcraft/core'
+import type { JsonObject, NodeDefinition } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
+import type { MaterialDefinition } from '../materials/types'
 import type { NodeDestination, PlacementDecision } from '../presentation/semantic'
-import type { ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from '../presentation/types'
+import type { ContainerDropRejection, ContainerDropTarget } from '../presentation/types'
 import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
 import { generateShortId } from '@dragcraft/utils'
 import { computed, watch } from 'vue'
 import { hideNativeDragImage } from '../presentation/drag-image'
 import {
-  clampInsertIndex,
-  DEFAULT_LAYOUT_REGION,
   DEFAULT_SORT_SCOPE,
   findNearestValidIndex,
   getValidDropIndices,
-  resolvePlacementDecision,
-  resolveWidgetCreation,
 } from '../presentation/semantic'
 
 // ──────────────────────────────────────────
@@ -23,20 +20,20 @@ import {
 export interface UseDragDropReturn {
   /** Unified root/container destination selected during drag-over. */
   dragOverDestination: Ref<NodeDestination | null>
-  /** Alias used by renderer container outlets. */
+  /** Active destination shared with Presentation. */
   activeDestination: Ref<NodeDestination | null>
   /** Advisory placement decision for the active container destination. */
   containerDropDecision: Ref<PlacementDecision | null>
-  /** Compatibility projection for renderer extensions. */
+  /** Root or container receiving drag feedback. */
   dragOverNodeId: Ref<string | null>
-  /** Compatibility projection for renderer extensions. */
+  /** Visual insertion index for root feedback. */
   dragOverIndex: Ref<number | null>
   /** Cached locked indices (recomputed only when schema changes) */
   lockedIndices: ComputedRef<ReadonlySet<number>>
   /** Valid drop indices for the current drag operation */
   validDropIndices: ComputedRef<ReadonlySet<number> | null>
-  /** Start dragging a new widget from the material panel */
-  handleMaterialDragStart: (e: DragEvent, meta: RendererWidgetMeta) => void
+  /** Start dragging a new material from the material panel. */
+  handleMaterialDragStart: (e: DragEvent, material: Readonly<MaterialDefinition>) => void
   /** Handle dragover on the canvas (event delegation) */
   handleCanvasDragOver: (e: DragEvent) => void
   /** Handle dragleave on the canvas (event delegation) */
@@ -118,17 +115,9 @@ export function useDragDrop(
     midpoints: number[]
   } | null = null
   let dropGeometryFrame: number | null = null
-  const schemaSnapshot = computed<DeepReadonly<DocumentSchema>>(() => session.document.schema.value ?? {
-    version: session.document.version.value,
-    globalConfig: session.document.globalConfig.value as unknown as JsonObject,
-    page: { props: {} },
-    nodes: [],
-    structure: { root: [], containers: {} },
-  })
-
   function getActiveSortScopeNodes(sortScope: string): NodeDefinition[] {
     return session.document.rootNodes.value
-      .filter(node => session.materials.resolveLayout(node).sortScope === sortScope)
+      .filter(node => session.materials.resolvePresentation(node).sortScope === sortScope)
       .slice()
       .sort((a, b) => {
         const positionA = session.document.getStructurePosition(a.id)?.index ?? 0
@@ -161,23 +150,24 @@ export function useDragDrop(
     const target = session.state.dragTarget.value
     if (!target?.widgetType)
       return { allowed: true }
-    const meta = session.materials.get(target.widgetType)
-    if (!meta)
+    const material = session.materials.get(target.widgetType)
+    if (!material)
       return { allowed: true }
-    return resolveWidgetCreation(meta, target.widgetType, schemaSnapshot.value as never)
+    return session.evaluate({
+      type: 'node.add',
+      node: createNodeDefinition(material),
+      destination: dragOverDestination.value ?? { kind: 'root' },
+    })
   })
 
   // ── Visual drop index computation ──
 
-  function resolveMetaSortScope(meta: RendererWidgetMeta): string | false {
-    const placement = meta.defaultLayout?.placement
-    if (!placement || placement.kind === 'flow') {
-      const region = placement?.region ?? DEFAULT_LAYOUT_REGION
-      return placement?.sortScope === undefined
-        ? (region === DEFAULT_LAYOUT_REGION ? DEFAULT_SORT_SCOPE : false)
-        : placement.sortScope
-    }
-    return false
+  function resolveMaterialSortScope(material: Readonly<MaterialDefinition>): string | false {
+    return session.materials.resolvePresentation({
+      id: '__material-preview__',
+      type: material.type,
+      props: {},
+    }).sortScope
   }
 
   function getActiveSortScopeEntries(sortScope: string) {
@@ -192,11 +182,11 @@ export function useDragDrop(
       const node = session.document.getNode(target.sourceNodeId)
       if (!node)
         return false
-      return session.materials.resolveLayout(node).sortScope
+      return session.materials.resolvePresentation(node).sortScope
     }
     if (target.widgetType) {
-      const meta = session.materials.get(target.widgetType)
-      return meta ? resolveMetaSortScope(meta) : DEFAULT_SORT_SCOPE
+      const material = session.materials.get(target.widgetType)
+      return material ? resolveMaterialSortScope(material) : DEFAULT_SORT_SCOPE
     }
     return DEFAULT_SORT_SCOPE
   }
@@ -251,12 +241,12 @@ export function useDragDrop(
       containerDropDecision.value = { allowed: false, ...rejection }
   }
 
-  function createNodeDefinition(meta: RendererWidgetMeta): NodeDefinition {
+  function createNodeDefinition(material: Readonly<MaterialDefinition>): NodeDefinition {
     return {
       id: generateShortId(),
-      type: meta.type,
-      props: { ...meta.defaultProps } as JsonObject,
-      ...(meta.defaultStyle ? { style: meta.defaultStyle as unknown as JsonObject } : {}),
+      type: material.type,
+      props: { ...(material.schema?.defaultProps ?? {}) } as JsonObject,
+      ...(material.schema?.defaultStyle ? { style: material.schema.defaultStyle as JsonObject } : {}),
     }
   }
 
@@ -294,18 +284,18 @@ export function useDragDrop(
 
   // ── Drag start handlers ──
 
-  function handleMaterialDragStart(e: DragEvent, meta: RendererWidgetMeta): void {
+  function handleMaterialDragStart(e: DragEvent, material: Readonly<MaterialDefinition>): void {
     clearDropGeometry(true)
     session.execute({
       type: 'drag.set',
       target: {
         sourceNodeId: null,
-        widgetType: meta.type,
+        widgetType: material.type,
       },
     })
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'copy'
-      e.dataTransfer.setData('text/plain', meta.type)
+      e.dataTransfer.setData('text/plain', material.type)
       hideNativeDragImage(e.dataTransfer)
     }
   }
@@ -381,19 +371,19 @@ export function useDragDrop(
       })
     }
     else {
-      const meta = dragTarget.widgetType
+      const material = dragTarget.widgetType
         ? session.materials.get(dragTarget.widgetType)
         : undefined
-      if (!meta) {
-        result = { ok: false, code: 'DRAGGED_WIDGET_META_MISSING' }
+      if (!material) {
+        result = { ok: false, code: 'DRAGGED_MATERIAL_MISSING' }
       }
       else if (destination.kind === 'root'
-        && resolveMetaSortScope(meta) !== false
+        && resolveMaterialSortScope(material) !== false
         && destination.index === undefined) {
         result = { ok: false, code: 'DROP_TARGET_MISSING' }
       }
       else {
-        const node = createNodeDefinition(meta)
+        const node = createNodeDefinition(material)
         result = session.execute({
           type: 'node.add',
           node,
@@ -433,7 +423,6 @@ export function useDragDrop(
   function preflightContainerDestination(
     destination: Extract<NodeDestination, { kind: 'container' }>,
   ): PlacementDecision {
-    const schema = schemaSnapshot.value
     const dragTarget = session.state.dragTarget.value
     if (!dragTarget)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
@@ -443,45 +432,23 @@ export function useDragDrop(
     const child = dragTarget.sourceNodeId
       ? source
       : (() => {
-          const meta = dragTarget.widgetType
+          const material = dragTarget.widgetType
             ? session.materials.get(dragTarget.widgetType)
             : undefined
-          return meta ? createNodeDefinition(meta) : null
+          return material ? createNodeDefinition(material) : null
         })()
     if (!child)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }
-    if (session.materials.resolveLayout(child).placement.kind !== 'flow')
-      return { allowed: false, code: 'CONTAINER_NON_FLOW_MATERIAL' }
-    const targetResult = session.document.resolveDestination?.(destination)
-    if (!targetResult)
-      return { allowed: false, code: 'CONTAINER_UNRESOLVED' }
-    if (!targetResult.ok)
-      return { allowed: false, code: targetResult.code, message: targetResult.message }
-    const target = targetResult.value
-    if (!target.container || !target.definition || !target.variant || !target.region)
-      return { allowed: false, code: 'CONTAINER_DESTINATION_REQUIRED' }
-    const sourceOwner = dragTarget.sourceNodeId
-      ? session.document.getOwner(dragTarget.sourceNodeId)
-      : null
-    const sameRegion = sourceOwner?.kind === 'container'
-      && sourceOwner.containerId === destination.containerId
-      && sourceOwner.regionId === destination.regionId
-    return resolvePlacementDecision({
-      definition: target.definition,
-      region: target.region,
-      child: child as unknown as NodeDefinition,
-      childHasContainerCapability: Boolean(session.materials.get(child.type)?.container),
-      targetCount: target.children.length - (sameRegion ? 1 : 0),
-      callbackContext: {
-        operation: dragTarget.sourceNodeId ? 'move' : 'add',
-        schema,
-        container: target.container,
-        variant: target.variant,
-        region: target.region,
-        child,
-        targetIndex: clampInsertIndex(destination.index, target.children.length),
-      },
-    })
+    const decision = dragTarget.sourceNodeId
+      ? session.evaluate({ type: 'node.move', nodeId: dragTarget.sourceNodeId, destination })
+      : session.evaluate({ type: 'node.add', node: child as NodeDefinition, destination })
+    return {
+      allowed: decision.allowed,
+      ...(decision.code ? { code: decision.code } : {}),
+      ...(decision.messageKey ? { messageKey: decision.messageKey } : {}),
+      ...(decision.message ? { message: decision.message } : {}),
+      ...(decision.details ? { details: decision.details } : {}),
+    }
   }
 
   function handleContainerDragOver(payload: ContainerDropTarget | ContainerDropRejection): void {

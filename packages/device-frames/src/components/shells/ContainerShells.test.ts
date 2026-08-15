@@ -67,7 +67,7 @@ describe('built-in Container Shells', () => {
     }
   })
 
-  it('provides each built-in frame radius to the stable Renderer boundary', () => {
+  it('provides each built-in frame radius to the stable Presentation boundary', () => {
     const cssFiles = ['iphone.css', 'android.css', 'tablet.css', 'desktop.css']
       .map(file => readFileSync(path.resolve(process.cwd(), 'src/styles', file), 'utf8'))
       .join('\n')
@@ -75,15 +75,15 @@ describe('built-in Container Shells', () => {
     for (const { modifier, radius } of EXPECTATIONS) {
       const escaped = modifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const boundaryRadiusRule = cssFiles.match(new RegExp(
-        `\\.${escaped}\\s*,\\s*\\[data-dc-component="renderer-frame-boundary"\\]:has\\(> \\.${escaped}\\)\\s*\\{[^}]*\\}`,
+        `\\.${escaped}\\s*,\\s*\\[data-dc-component="presentation-frame-boundary"\\]:has\\(> \\.${escaped}\\)\\s*\\{[^}]*\\}`,
       ))?.[0]
       expect(boundaryRadiusRule).toContain(`--dc-device-frame-radius: ${radius}`)
     }
   })
 
-  it('does not contain Renderer layout or selection implementation selectors', () => {
+  it('does not contain Presentation layout or selection implementation selectors', () => {
     const css = readFileSync(path.resolve(process.cwd(), 'src/styles/device-frame.css'), 'utf8')
-    const boundaryRule = css.match(/\[data-dc-component="renderer-frame-boundary"\]:has\(> \.dc-device-frame\)\s*\{[^}]*\}/)?.[0]
+    const boundaryRule = css.match(/\[data-dc-component="presentation-frame-boundary"\]:has\(> \.dc-device-frame\)\s*\{[^}]*\}/)?.[0]
     expect(boundaryRule).toContain('--dc-internal-designer-root-selection-plane-outset: var(--dc-device-frame-border-width)')
     expect(boundaryRule).toContain('--dc-internal-designer-root-selection-plane-radius: var(--dc-device-frame-radius)')
     expect(boundaryRule).toContain('--dc-node-selection-root-block-overlap: var(--dc-device-frame-border-width)')
@@ -96,9 +96,9 @@ describe('built-in Container Shells', () => {
     expect(css).not.toContain('forbidden-overlay')
   })
 
-  it('lets a narrow device define the Designer Frame Boundary width', () => {
+  it('lets a narrow device define the Designer Presentation Frame Boundary width', () => {
     const css = readFileSync(path.resolve(process.cwd(), '../designer/src/presentation/structure.css'), 'utf8')
-    const boundaryRule = css.match(/\.dc-renderer-frame-boundary\s*\{[^}]*\}/)?.[0]
+    const boundaryRule = css.match(/\.dc-presentation-frame-boundary\s*\{[^}]*\}/)?.[0]
     const defaultShellRule = css.match(/\.dc-container-shell\s*\{[^}]*\}/)?.[0]
 
     expect(boundaryRule).toContain('width: max-content')

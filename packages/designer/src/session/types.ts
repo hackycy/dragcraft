@@ -1,7 +1,7 @@
 import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
+import type { MaterialDefinition } from '../materials/types'
 import type {
-  ContainerPlanResult,
   CreationBlockReason,
   DeepReadonly,
   DragTarget,
@@ -10,10 +10,10 @@ import type {
   NodeOwner,
   OwnerResolutionResult,
   PlacementDecision,
-  ResolvedNodeLayout,
+  ResolvedPresentationLayout,
   SchemaDiagnostic,
 } from '../presentation/semantic'
-import type { AuthoringAction, AuthoringDecision, AuthoringResult, RendererWidgetMeta } from '../presentation/types'
+import type { AuthoringAction, AuthoringDecision, AuthoringResult, PresentationRegionDefinition } from '../presentation/types'
 
 export type DesignerMaterialCapability
   = | 'selectable'
@@ -21,7 +21,6 @@ export type DesignerMaterialCapability
     | 'draggable'
     | 'sortable'
     | 'deletable'
-    | 'variantChangeable'
 
 export interface DesignerSessionStructurePosition {
   readonly owner: NodeOwner
@@ -69,44 +68,31 @@ export interface DesignerSessionDestination {
   readonly children: readonly CoreDeepReadonly<NodeDefinition>[]
   readonly destination: NodeDestination
   readonly container?: CoreDeepReadonly<NodeDefinition>
-  readonly definition?: DesignerSessionContainerDefinition
-  readonly variant?: DesignerSessionContainerVariant
   readonly region?: DesignerSessionContainerRegion
 }
 
-export interface DesignerSessionContainerRegion {
-  readonly id: string
-  readonly title: string
-  readonly titleKey?: string
-  readonly constraints?: {
-    readonly includeTypes?: readonly string[]
-    readonly excludeTypes?: readonly string[]
-    readonly minItems?: number
-    readonly maxItems?: number
-  }
-}
+export type DesignerSessionContainerRegion = PresentationRegionDefinition
 
-export interface DesignerSessionContainerVariant {
-  readonly title: string
-  readonly titleKey?: string
-  readonly regions: readonly DesignerSessionContainerRegion[]
-}
-
-export interface DesignerSessionContainerDefinition {
-  readonly defaultVariant: string
-  readonly variants: Readonly<Record<string, DesignerSessionContainerVariant>>
-  readonly canPlace?: (context: Record<string, unknown>) => PlacementDecision
+export interface DesignerSessionContainerPresentation {
+  readonly containerId: string
+  readonly regions: readonly {
+    readonly definition: DesignerSessionContainerRegion
+    readonly nodes: readonly CoreDeepReadonly<NodeDefinition>[]
+    readonly isEmpty: boolean
+  }[]
 }
 
 export interface DesignerSessionMaterials {
-  get: (type: string) => RendererWidgetMeta | undefined
-  getAll: () => readonly RendererWidgetMeta[]
+  get: (type: string) => Readonly<MaterialDefinition> | undefined
+  getAll: () => readonly Readonly<MaterialDefinition>[]
   resolveCapability: (
     node: DesignerSessionNode,
     capability: DesignerMaterialCapability,
   ) => boolean
-  resolveLayout: (node: DesignerSessionNode) => ResolvedNodeLayout
-  resolveContainer: (node: DesignerSessionNode) => ContainerPlanResult
+  resolvePresentation: (node: DesignerSessionNode) => ResolvedPresentationLayout
+  resolveContainer: (node: DesignerSessionNode) =>
+    | { readonly ok: true, readonly presentation: DesignerSessionContainerPresentation }
+    | { readonly ok: false, readonly code: 'CONTAINER_UNRESOLVED', readonly containerId: string }
   getLockedIndices: (nodes: readonly DesignerSessionNode[]) => Set<number>
   canCreateSubtree: (node: DesignerSessionNode) => boolean
   canDeleteSubtree: (node: DesignerSessionNode) => boolean
@@ -121,7 +107,7 @@ export interface DesignerSessionState {
 }
 
 /**
- * The internal read seam shared by the existing Designer UI and Renderer.
+ * The internal read seam shared by the existing Designer UI and Presentation layer.
  * It deliberately exposes document and material facts, never legacy runtime
  * collaborators such as a backend store or registry.
  */

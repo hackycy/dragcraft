@@ -2,7 +2,7 @@ import type { Component, PropType, VNode } from 'vue'
 import type { ResolveContainerDropIndex } from './types'
 import { computed, defineComponent, h, mergeProps } from 'vue'
 import { useContainerRuntime } from './container-runtime'
-import { useRendererContext } from './context'
+import { usePresentationContext } from './context'
 import DefaultDropIndicator from './default-drop-indicator'
 import DefaultEmptyState from './default-empty-state'
 import DefaultForbiddenOverlay from './default-forbidden-overlay'
@@ -25,18 +25,12 @@ export default defineComponent({
     },
   },
   setup(props, { attrs }) {
-    const ctx = useRendererContext()
+    const ctx = usePresentationContext()
     const runtime = useContainerRuntime()
     const definition = computed(() =>
       runtime.regionDefinitions.value.find(item => item.id === props.regionId),
     )
     const regionNodes = computed(() => runtime.getRegionNodes(props.regionId))
-    const containerMeta = computed(() => {
-      const containerNode = ctx.session.document.getNode(runtime.nodeId.value)
-      return containerNode
-        ? ctx.session.materials.get(containerNode.type)
-        : undefined
-    })
     const isEmpty = computed(() => regionNodes.value.length === 0)
     const isActive = computed(() => {
       const destination = ctx.activeDestination.value
@@ -51,7 +45,7 @@ export default defineComponent({
       const target = ctx.session.state.dragTarget.value
       return target?.sourceNodeId === null
         && target.widgetType !== null
-        && ctx.session.materials.get(target.widgetType)?.headless === true
+        && ctx.session.materials.get(target.widgetType)?.presentation.kind === 'headless'
     })
     const showPlacementFeedback = computed(() =>
       isActive.value && !isHeadlessMaterialDrag.value,
@@ -63,7 +57,7 @@ export default defineComponent({
         return
       event.preventDefault()
       event.stopPropagation()
-      const resolver = props.resolveDropIndex ?? containerMeta.value?.containerAdapter?.resolveDropIndex
+      const resolver = props.resolveDropIndex
       if (!resolver) {
         ctx.onContainerDragOver?.({
           event,
@@ -137,8 +131,7 @@ export default defineComponent({
     }
 
     return () => {
-      const NodeRenderer = ctx.nodeRenderer ?? NodeHost
-      const children: VNode[] = regionNodes.value.map(node => h(NodeRenderer, {
+      const children: VNode[] = regionNodes.value.map(node => h(NodeHost, {
         key: node.id,
         node,
         owner: {
@@ -147,21 +140,17 @@ export default defineComponent({
           regionId: props.regionId,
         },
       }))
-      const DropIndicator = ctx.extensions.dropIndicator ?? DefaultDropIndicator
-      const EmptyState = ctx.extensions.emptyState ?? DefaultEmptyState
-      const ForbiddenOverlay = ctx.extensions.forbiddenOverlay ?? DefaultForbiddenOverlay
-
       if (isEmpty.value)
-        children.push(h(EmptyState, { isDragOver: showPlacementFeedback.value }))
+        children.push(h(DefaultEmptyState, { isDragOver: showPlacementFeedback.value }))
 
       if (showPlacementFeedback.value && !isForbidden.value) {
         const index = ctx.activeDestination.value?.index
         if (Number.isInteger(index) && index != null && index >= 0 && index <= regionNodes.value.length)
-          children.splice(index, 0, h(DropIndicator, { key: '__container-drop-indicator__' }))
+          children.splice(index, 0, h(DefaultDropIndicator, { key: '__container-drop-indicator__' }))
       }
 
       if (isForbidden.value) {
-        children.push(h(ForbiddenOverlay, {
+        children.push(h(DefaultForbiddenOverlay, {
           widgetType: ctx.session.state.dragTarget.value?.widgetType ?? '',
           reason: ctx.containerDropDecision.value,
         }))

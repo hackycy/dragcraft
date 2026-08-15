@@ -1,4 +1,3 @@
-import type { WidgetFixtureDefinition } from './contract'
 import { defineComponent, h } from 'vue'
 
 export const FloatingActionWidget = defineComponent({
@@ -13,36 +12,3 @@ export const FloatingActionWidget = defineComponent({
     }, props.label)
   },
 })
-
-export const floatingActionWidgetDefinition: WidgetFixtureDefinition = {
-  meta: {
-    type: 'floating-action',
-    title: '浮动操作',
-    group: 'marketing',
-    defaultProps: { label: '咨询' },
-    defaultLayout: {
-      placement: {
-        kind: 'layer',
-        mode: 'framework',
-        anchor: { block: 'end', inline: 'end' },
-        offset: { blockEnd: 16, inlineEnd: 16 },
-      },
-    },
-    formSchema: {
-      sections: [{
-        title: '浮动操作',
-        fields: [{
-          key: 'label',
-          label: '按钮文字',
-          component: 'Input',
-          rules: [{ required: true, message: '按钮文字不能为空' }],
-        }],
-      }],
-    },
-    material: {
-      description: '固定在页面内容上方的操作入口',
-      tags: ['营销', '浮层'],
-    },
-  },
-  component: FloatingActionWidget,
-}

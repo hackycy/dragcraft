@@ -36,12 +36,10 @@ export default defineComponent({
     const session = getDesignerSession(props.instance)
     const configuration = getDesignerRuntimeConfiguration(props.instance)
     const {
-      componentMap,
       materialGroups,
       extensions,
       fieldComponentMap,
       globalConfigSchema,
-      eventHooks,
       actionInterceptors,
       actionRegistry,
       i18n,
@@ -57,13 +55,11 @@ export default defineComponent({
     const focusTimers = new Set<ReturnType<typeof setTimeout>>()
 
     const ctx: DesignerContext = {
-      componentMap,
       materialGroups,
       extensions,
       fieldComponentMap,
       globalConfigSchema,
       deviceFrame,
-      eventHooks,
       actionInterceptors,
       actionRegistry,
       workspace,

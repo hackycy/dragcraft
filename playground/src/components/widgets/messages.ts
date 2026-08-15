@@ -151,8 +151,6 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
         title: 'Flex 容器',
         material: { description: '由外部物料定义方向、换行和插入轴' },
         form: { layout: { title: '布局' } },
-        variant: { single: '默认' },
-        region: { default: '内容' },
         field: {
           direction: { label: '方向', option: { row: '横向', column: '纵向' } },
           wrap: { label: '自动换行' },
@@ -162,12 +160,9 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'split-container': {
         title: '异形容器',
-        material: { description: '由外部物料定义三分区结构和变体迁移' },
+        material: { description: '由外部物料声明固定三分区结构' },
         form: { layout: { title: '布局' } },
-        variant: { 'left-one-right-two': '左一右二', 'top-one-bottom-two': '上一下二' },
-        region: { left: '左侧', rightTop: '右上', rightBottom: '右下', top: '顶部', bottomLeft: '左下', bottomRight: '右下' },
         field: {
-          variant: { label: '布局变体', option: { 'left-one-right-two': '左一右二', 'top-one-bottom-two': '上一下二' } },
           gap: { label: '间距' },
           primarySize: { label: '主区域尺寸' },
         },
@@ -228,8 +223,6 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
         title: 'Flex Container',
         material: { description: 'Define direction, wrapping, and insertion axis in external material code' },
         form: { layout: { title: 'Layout' } },
-        variant: { single: 'Default' },
-        region: { default: 'Content' },
         field: {
           direction: { label: 'Direction', option: { row: 'Row', column: 'Column' } },
           wrap: { label: 'Wrap' },
@@ -239,12 +232,9 @@ export const playgroundWidgetMessages: Record<string, MessageTree> = {
       },
       'split-container': {
         title: 'Split Container',
-        material: { description: 'Define a three-region structure and variant migration in external material code' },
+        material: { description: 'Declare a fixed three-region structure in external material code' },
         form: { layout: { title: 'Layout' } },
-        variant: { 'left-one-right-two': 'Left one, right two', 'top-one-bottom-two': 'Top one, bottom two' },
-        region: { left: 'Left', rightTop: 'Right top', rightBottom: 'Right bottom', top: 'Top', bottomLeft: 'Bottom left', bottomRight: 'Bottom right' },
         field: {
-          variant: { label: 'Layout variant', option: { 'left-one-right-two': 'Left one, right two', 'top-one-bottom-two': 'Top one, bottom two' } },
           gap: { label: 'Gap' },
           primarySize: { label: 'Primary region size' },
         },

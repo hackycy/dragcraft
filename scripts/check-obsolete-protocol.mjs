@@ -6,7 +6,9 @@ const repoRoot = path.resolve(import.meta.dirname, '..')
 const textExtensions = new Set(['.cjs', '.css', '.html', '.js', '.json', '.md', '.mdx', '.mjs', '.ts', '.tsx', '.txt', '.vue', '.yaml', '.yml'])
 const strict = process.argv.includes('--strict')
 const inventory = process.argv.includes('--inventory')
-const forbidden = /\b(?:DesignerSchema|DesignerEngine|CommandType|createEngine|SchemaNode|WidgetMeta|WidgetDefinition|ComponentMap|RootRenderer|LayoutPlan|NodeLayout|ResolvedNodeLayout|ContainerPlan|RendererExtensions|RendererEventHooks|MaterialWidgetDefinition|WidgetGroupConfig|buildComponentMap|getWidgetMetas|createContainerPlan|engineOptions|widgetMetas|componentMap|fieldmaterials|DesignerMaterialDefinition|RendererMaterialDefinition)\b|root\.children|@dragcraft\/(?:renderer|widgets|legacy-core)/g
+const forbiddenIdentifiers = 'DesignerSchema|DesignerEngine|CommandType|createEngine|SchemaNode|WidgetMeta|WidgetDefinition|ComponentMap|RootRenderer|LayoutPlan|NodeLayout|ResolvedNodeLayout|ContainerPlan|RendererExtensions|RendererEventHooks|MaterialWidgetDefinition|WidgetGroupConfig|buildComponentMap|getWidgetMetas|createContainerPlan|engineOptions|widgetMetas|componentMap|fieldmaterials|DesignerMaterialDefinition|RendererMaterialDefinition'
+const forbiddenPackages = ['renderer', 'widgets', 'legacy-core'].join('|')
+const forbidden = new RegExp(`\\b(?:${forbiddenIdentifiers})\\b|root\\.children|@dragcraft\\/(?:${forbiddenPackages})`, 'g')
 const errors = []
 
 function collect(relativePath) {
@@ -34,7 +36,11 @@ function collect(relativePath) {
 
 const files = [
   path.join(repoRoot, 'README.md'),
-  ...collect('packages/designer/src'),
+  path.join(repoRoot, 'package.json'),
+  path.join(repoRoot, 'pnpm-lock.yaml'),
+  path.join(repoRoot, 'pnpm-workspace.yaml'),
+  path.join(repoRoot, 'turbo.json'),
+  ...collect('packages'),
   ...collect('docs'),
   ...collect('.github/architecture'),
   ...collect('examples'),

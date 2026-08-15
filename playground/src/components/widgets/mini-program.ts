@@ -1,5 +1,5 @@
 import type { PropType } from 'vue'
-import type { MaterialMeta } from './contract'
+import type { MaterialEditorMetadata } from './contract'
 import { defineComponent, h } from 'vue'
 import { IconMaterial, IconNavHome, IconNavRecent, IconPlus } from '../icons'
 
@@ -41,7 +41,7 @@ function renderTabIcon(icon: string, active: boolean) {
   return h('span', { class: 'pg-widget-tabbar__text-icon' }, text)
 }
 
-export const navbarWidgetMeta: MaterialMeta = {
+export const navbarWidgetMeta: MaterialEditorMetadata = {
   type: 'navbar',
   title: '导航栏',
   titleKey: 'widget.navbar.title',
@@ -104,7 +104,7 @@ export const NavbarWidget = defineComponent({
   },
 })
 
-export const tabBarWidgetMeta: MaterialMeta = {
+export const tabBarWidgetMeta: MaterialEditorMetadata = {
   type: 'tab-bar',
   title: 'Tab 栏',
   titleKey: 'widget.tab-bar.title',
@@ -209,7 +209,7 @@ export const TabBarWidget = defineComponent({
   },
 })
 
-export const floatingButtonWidgetMeta: MaterialMeta = {
+export const floatingButtonWidgetMeta: MaterialEditorMetadata = {
   type: 'floating-button',
   title: '浮动按钮',
   titleKey: 'widget.floating-button.title',
@@ -306,7 +306,7 @@ export const FloatingButtonWidget = defineComponent({
   },
 })
 
-export const swiperWidgetMeta: MaterialMeta = {
+export const swiperWidgetMeta: MaterialEditorMetadata = {
   type: 'swiper',
   title: '轮播',
   titleKey: 'widget.swiper.title',
@@ -384,10 +384,3 @@ export const SwiperWidget = defineComponent({
     }
   },
 })
-
-export const miniProgramWidgetDefinitions = [
-  { meta: navbarWidgetMeta, component: NavbarWidget },
-  { meta: tabBarWidgetMeta, component: TabBarWidget },
-  { meta: floatingButtonWidgetMeta, component: FloatingButtonWidget },
-  { meta: swiperWidgetMeta, component: SwiperWidget },
-]

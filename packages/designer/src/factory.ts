@@ -1,6 +1,5 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import type { MessageTree } from '@dragcraft/i18n'
-import type { ComponentMap } from './presentation/types'
 import type {
   DesignerInstance,
   DesignerOptions,
@@ -13,8 +12,7 @@ import { registerDesignerRuntimeConfiguration } from './instance-config'
 import { createMaterialCatalog, DesignerConfigurationError } from './materials/create-material-catalog'
 import { designerMessages } from './messages'
 import { createDefaultActions, createNodeActionRegistry } from './presentation/action-registry'
-import { createDefaultEventHooks } from './presentation/event-hooks'
-import { rendererMessages } from './presentation/messages'
+import { presentationMessages } from './presentation/presentation-messages'
 import { registerDesignerSession } from './session/get-designer-session'
 import { createNextDesignerSessionAdapter } from './session/next-designer-session-adapter'
 import { createDesignerWorkspace } from './workspace'
@@ -32,13 +30,13 @@ const EMPTY_DOCUMENT_SCHEMA: DocumentSchema = {
 function mergeDefaultMessages(): Record<string, MessageTree> {
   const merged: Record<string, MessageTree> = {}
   const locales = new Set([
-    ...Object.keys(rendererMessages),
+    ...Object.keys(presentationMessages),
     ...Object.keys(designerMessages),
   ])
 
   for (const locale of locales) {
     merged[locale] = {
-      ...(rendererMessages[locale] ?? {}),
+      ...(presentationMessages[locale] ?? {}),
       ...(designerMessages[locale] ?? {}),
     }
   }
@@ -60,15 +58,6 @@ function materialGroupsFromMaterials(materials: readonly DesignerOptions['materi
     })
   }
   return [...groups.values()]
-}
-
-function componentMapFromMaterials(materials: DesignerOptions['materials']): ComponentMap {
-  const map: ComponentMap = {}
-  for (const material of materials) {
-    if (material.presentation.kind === 'visual')
-      map[material.type] = material.presentation.preview
-  }
-  return map
 }
 
 function createNextDesigner(options: DesignerOptions): DesignerInstance {
@@ -105,12 +94,10 @@ function createNextDesigner(options: DesignerOptions): DesignerInstance {
   }
 
   registerDesignerRuntimeConfiguration(instance, {
-    componentMap: componentMapFromMaterials(materials),
     materialGroups: materialGroupsFromMaterials(materials),
     extensions: options.extensions ?? {},
     fieldComponentMap: options.fieldComponentMap,
     globalConfigSchema: options.globalConfigSchema ?? null,
-    eventHooks: createDefaultEventHooks(),
     actionInterceptors: options.actionInterceptors ?? [],
     actionRegistry,
     i18n,

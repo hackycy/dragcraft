@@ -1,4 +1,5 @@
-import type { DesignerWidgetMeta, ResolvedMaterialItem } from './types'
+import type { MaterialDefinition } from './materials/types'
+import type { ResolvedMaterialItem } from './types'
 
 type Translate = (key: string, fallback?: string) => string
 
@@ -12,24 +13,24 @@ function resolveText(
   return t(key, fallback ?? '')
 }
 
-export function resolveMaterialItem(meta: DesignerWidgetMeta, t: Translate): ResolvedMaterialItem {
-  const material = meta.material
-  const titleFallback = material?.title ?? meta.title
-  const title = resolveText(material?.titleKey ?? meta.titleKey, titleFallback, t) ?? meta.title
+export function resolveMaterialItem(material: Readonly<MaterialDefinition>, t: Translate): ResolvedMaterialItem {
+  const panel = material.panel
+  const titleFallback = panel?.title ?? material.type
+  const title = resolveText(panel?.titleKey, titleFallback, t) ?? material.type
 
   return {
     title,
-    icon: material?.icon ?? meta.icon,
-    description: resolveText(material?.descriptionKey, material?.description, t),
-    thumbnail: material?.thumbnail,
-    tags: material?.tags ?? [],
-    keywords: material?.keywords ?? [],
+    icon: panel?.icon,
+    description: resolveText(panel?.descriptionKey, panel?.description, t),
+    thumbnail: panel?.thumbnail,
+    tags: [...(panel?.tags ?? [])],
+    keywords: [...(panel?.keywords ?? [])],
   }
 }
 
 export function materialItemMatchesQuery(
-  meta: DesignerWidgetMeta,
-  material: ResolvedMaterialItem,
+  material: Readonly<MaterialDefinition>,
+  item: ResolvedMaterialItem,
   query: string,
 ): boolean {
   const normalizedQuery = query.toLowerCase().trim()
@@ -37,15 +38,14 @@ export function materialItemMatchesQuery(
     return true
 
   const values = [
-    meta.type,
-    meta.title,
-    meta.titleKey,
-    meta.icon,
-    meta.group,
-    material.title,
-    material.description,
-    material.tags.join(' '),
-    material.keywords.join(' '),
+    material.type,
+    material.panel?.title,
+    material.panel?.titleKey,
+    material.panel?.group,
+    item.title,
+    item.description,
+    item.tags.join(' '),
+    item.keywords.join(' '),
   ]
 
   return values.some(value =>

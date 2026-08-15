@@ -1,6 +1,11 @@
 import type { NodeActionContext } from './action-registry'
-import type { MaybePromise, PendingGuard } from './event-hooks'
 import type { AuthoringAction } from './types'
+
+export type MaybePromise<T> = T | Promise<T>
+
+export interface PendingGuard {
+  value: boolean
+}
 
 export type ActionRisk = 'normal' | 'destructive'
 

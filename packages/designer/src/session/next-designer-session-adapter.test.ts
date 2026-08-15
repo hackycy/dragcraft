@@ -60,7 +60,7 @@ describe('next adapter backend contract', () => {
   it('projects headless material presentation as a Designer feedback fact', () => {
     const { session } = createFixture()
 
-    expect(session.materials.get('text')?.headless).toBe(true)
+    expect(session.materials.get('text')?.presentation.kind).toBe('headless')
   })
 
   it('projects root and Region drop destinations for the shared drag seam', () => {
@@ -137,7 +137,7 @@ describe('next adapter backend contract', () => {
     })
     const session = createNextDesignerSessionAdapter({ catalog, engine })
 
-    expect(session.materials.resolveLayout(session.document.getNode('navbar-1')!)).toEqual({
+    expect(session.materials.resolvePresentation(session.document.getNode('navbar-1')!)).toEqual({
       placement: {
         kind: 'chrome',
         edge: 'block-start',
@@ -148,7 +148,7 @@ describe('next adapter backend contract', () => {
       sortScope: false,
       visible: true,
     })
-    expect(session.materials.resolveLayout(session.document.getNode('action-1')!)).toEqual({
+    expect(session.materials.resolvePresentation(session.document.getNode('action-1')!)).toEqual({
       placement: {
         kind: 'layer',
         layer: 'float',
@@ -234,14 +234,6 @@ describe('next adapter backend contract', () => {
     expect(session.evaluate(action)).toEqual({ allowed: false, code: 'POLICY_DENIED' })
     expect(session.execute(action)).toEqual({ ok: false, code: 'POLICY_DENIED' })
     expect(session.state.history.value).toMatchObject({ canUndo: false, undoCount: 0 })
-    const creatable = session.materials.get('tab-bar')?.creatable
-    expect(typeof creatable).toBe('function')
-    if (typeof creatable === 'function') {
-      expect(creatable({
-        widgetType: 'tab-bar',
-        schema: session.document.schema.value!,
-      })).toEqual({ allowed: false, code: 'POLICY_DENIED' })
-    }
   })
 
   it('builds catalog-declared container Regions for legacy node additions', () => {

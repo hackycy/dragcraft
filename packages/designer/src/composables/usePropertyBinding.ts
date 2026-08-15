@@ -2,7 +2,7 @@ import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition }
 import type { FieldSchema, FormSchema } from '@dragcraft/form-generator'
 import type { ComputedRef } from 'vue'
 import type { FieldBinding } from '../bindings/field-binding'
-import type { WidgetMeta } from '../presentation/semantic'
+import type { MaterialDefinition } from '../materials/types'
 import type { DesignerSession } from '../session/types'
 import { cloneDeep } from '@dragcraft/utils'
 import { computed } from 'vue'
@@ -22,8 +22,8 @@ export interface UsePropertyBindingReturn {
   selectedNode: ComputedRef<CoreDeepReadonly<NodeDefinition> | null>
   /** The form schema for the selected node's widget type */
   selectedFormSchema: ComputedRef<FormSchema | null>
-  /** The selected widget meta */
-  selectedWidgetMeta: ComputedRef<WidgetMeta | undefined>
+  /** The selected material definition. */
+  selectedMaterial: ComputedRef<Readonly<MaterialDefinition> | undefined>
   /** The current property values for the selected node */
   selectedNodeProps: ComputedRef<Record<string, unknown>>
   /** The current values for the global config form */
@@ -76,7 +76,6 @@ export function usePropertyBinding(
   session: DesignerSession,
   options: UsePropertyBindingOptions = {},
 ): UsePropertyBindingReturn {
-  const translate = options.t ?? ((key: string, fallback?: string) => fallback ?? key)
   const bindingDocument = computed<Pick<CoreDeepReadonly<DocumentSchema>, 'globalConfig' | 'page'>>(() => {
     const schema = session.document.schema.value
     return schema
@@ -91,7 +90,7 @@ export function usePropertyBinding(
     return session.document.getNode(nodeId)
   })
 
-  const selectedWidgetMeta = computed<WidgetMeta | undefined>(() => {
+  const selectedMaterial = computed<Readonly<MaterialDefinition> | undefined>(() => {
     const node = selectedNode.value
     if (!node)
       return undefined
@@ -99,23 +98,15 @@ export function usePropertyBinding(
   })
 
   const selectedFormSchema = computed<FormSchema | null>(() => {
-    const meta = selectedWidgetMeta.value
+    const material = selectedMaterial.value
     const node = selectedNode.value
-    if (!meta || !node)
+    if (!material || !node)
       return null
-    // WidgetMeta.formSchema is Record<string, unknown> but structured as FormSchema.
-    const schema = cloneDeep(meta.formSchema as FormSchema)
+    const formSchema = material.inspector?.formSchema
+    if (!formSchema)
+      return null
+    const schema = cloneDeep(formSchema)
     const configurable = session.materials.resolveCapability(node, 'configurable')
-    const variantChangeable = session.materials.resolveCapability(node, 'variantChangeable')
-
-    const variantOptions = meta.container
-      ? Object.entries(meta.container.variants).map(([value, variant]) => ({
-          value,
-          label: variant.titleKey
-            ? translate(variant.titleKey, variant.title)
-            : variant.title,
-        }))
-      : []
 
     for (const section of schema.sections) {
       for (const field of section.fields) {
@@ -123,18 +114,6 @@ export function usePropertyBinding(
           getFieldBinding(field),
           { scope: 'node', path: `props.${field.key}` },
         )
-        const isVariant = binding.scope === 'container' && binding.path === 'variant'
-        if (isVariant) {
-          const original = field.componentProps
-          field.componentProps = ctx => ({
-            ...(typeof original === 'function' ? original(ctx) : original ?? {}),
-            options: variantOptions,
-          })
-          if (!variantChangeable)
-            forceFieldDisabled(field)
-          continue
-        }
-
         const isNodeConfiguration = binding.scope === 'node'
           && (binding.path.startsWith('props.') || binding.path.startsWith('style.'))
         if (isNodeConfiguration && !configurable)
@@ -218,7 +197,7 @@ export function usePropertyBinding(
   return {
     selectedNode,
     selectedFormSchema,
-    selectedWidgetMeta,
+    selectedMaterial,
     selectedNodeProps,
     globalConfigValues,
     handlePropertyChange,

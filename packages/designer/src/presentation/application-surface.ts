@@ -1,13 +1,13 @@
 import type { Component, PropType, Ref, VNode } from 'vue'
+import type { DesignerSession } from '../session/types'
 import type { NodeActionRegistry } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
-import type { RendererEventHooks } from './event-hooks'
 import type { NodeDestination, PlacementDecision } from './semantic'
-import type { ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererContext, RendererExtensions } from './types'
+import type { ContainerDropRejection, ContainerDropTarget, PresentationContext } from './types'
 import { useI18n } from '@dragcraft/i18n'
-import { computed, defineComponent, h, isRef, provide } from 'vue'
+import { computed, defineComponent, h, provide } from 'vue'
 import CanvasSurface from './canvas-surface'
-import { createRendererContext } from './context'
+import { createPresentationContext } from './context'
 import DefaultContainerShell from './default-container-shell'
 import DefaultDropIndicator from './default-drop-indicator'
 import DefaultEmptyState from './default-empty-state'
@@ -15,21 +15,19 @@ import DefaultForbiddenOverlay from './default-forbidden-overlay'
 import NodeHost from './node-host'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from './selection-presentation'
 import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, normalizeStyleValueMap } from './semantic'
-import { RENDERER_CONTEXT_KEY } from './types'
+import { PRESENTATION_CONTEXT_KEY } from './types'
 
-type RendererLayoutProjection = RendererContext['layout']['value']
-type RendererLayoutEntry = RendererLayoutProjection['entries'][number]
-type RendererSessionProjection = RendererContext['session']
-
-function regionEntryIndex(plan: RendererLayoutProjection, entry: RendererLayoutEntry): number {
+type SurfaceProjection = PresentationContext['layout']['value']
+type SurfaceEntry = SurfaceProjection['entries'][number]
+function regionEntryIndex(plan: SurfaceProjection, entry: SurfaceEntry): number {
   return (plan.regions.get(entry.layout.region ?? DEFAULT_LAYOUT_REGION) ?? [])
     .findIndex(candidate => candidate.node.id === entry.node.id)
 }
 
 function insertDropIndicator(
   regionVNodes: Record<string, VNode[]>,
-  plan: RendererLayoutProjection,
-  session: RendererSessionProjection,
+  plan: SurfaceProjection,
+  session: DesignerSession,
   destination: NodeDestination | null | undefined,
   legacyIndex: number | null | undefined,
   indicator: VNode,
@@ -54,7 +52,7 @@ function insertDropIndicator(
     ? plan.entries.find(entry => entry.node.id === dragTarget.sourceNodeId)
     : undefined
   const draggedLayout = !draggedEntry && dragTarget?.widgetType
-    ? session.materials.resolveLayout({ id: '__drop-indicator__', type: dragTarget.widgetType, props: {} })
+    ? session.materials.resolvePresentation({ id: '__drop-indicator__', type: dragTarget.widgetType, props: {} })
     : undefined
   const inferredRegion = draggedEntry?.layout.region
     ?? (draggedLayout?.placement.kind === 'flow' ? draggedLayout.region : undefined)
@@ -77,32 +75,16 @@ function insertDropIndicator(
 }
 
 export default defineComponent({
-  name: 'DcRootSurface',
+  name: 'DcApplicationSurface',
 
   props: {
     session: {
-      type: Object as PropType<RendererSessionProjection>,
+      type: Object as PropType<DesignerSession>,
       required: true,
     },
-    componentMap: {
-      type: Object as PropType<ComponentMap>,
-      required: true,
-    },
-    nodeRenderer: {
-      type: Object as PropType<Component>,
-      default: undefined,
-    },
-    regionRenderer: {
-      type: Object as PropType<Component>,
-      default: undefined,
-    },
-    extensions: {
-      type: Object as PropType<RendererExtensions>,
+    containerShell: {
+      type: [Object, Function] as PropType<Component>,
       default: () => ({}),
-    },
-    eventHooks: {
-      type: Object as PropType<RendererEventHooks>,
-      default: undefined,
     },
     actionInterceptors: {
       type: Array as PropType<ActionInterceptor[]>,
@@ -152,14 +134,10 @@ export default defineComponent({
 
   setup(props) {
     const { t } = useI18n()
-    // Create and provide context (stable for the renderer's lifetime)
-    const ctx = createRendererContext({
+    // Create and provide context for the Application Surface lifetime.
+    const ctx = createPresentationContext({
       session: props.session,
-      componentMap: props.componentMap,
-      nodeRenderer: props.nodeRenderer,
-      regionRenderer: props.regionRenderer,
-      extensions: props.extensions,
-      eventHooks: props.eventHooks,
+      containerShell: props.containerShell,
       actionInterceptors: props.actionInterceptors,
       actionRegistry: props.actionRegistry,
       dragOverNodeId: props.dragOverNodeId,
@@ -171,18 +149,17 @@ export default defineComponent({
       interactionBoundary: props.interactionBoundary,
       viewScale: props.viewScale,
     })
-    provide(RENDERER_CONTEXT_KEY, ctx)
+    provide(PRESENTATION_CONTEXT_KEY, ctx)
     const selectionPresentation = createNodeSelectionPresentation()
     provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
 
     // Resolve which container shell to use
     const ContainerShell = computed(() => {
-      const source = props.extensions?.containerShell
-      return (isRef(source) ? source.value : source) ?? DefaultContainerShell
+      return props.containerShell ?? DefaultContainerShell
     })
 
     const ForbiddenOverlay = computed(
-      () => props.extensions?.forbiddenOverlay ?? DefaultForbiddenOverlay,
+      () => DefaultForbiddenOverlay,
     )
 
     return () => {
@@ -191,11 +168,11 @@ export default defineComponent({
       const pageStyle = ctx.schema.value?.page.style as Record<string, unknown> | undefined
 
       // Resolve drop indicator and empty state components
-      const DropIndicator = props.extensions?.dropIndicator ?? DefaultDropIndicator
-      const EmptyState = props.extensions?.emptyState ?? DefaultEmptyState
+      const DropIndicator = DefaultDropIndicator
+      const EmptyState = DefaultEmptyState
 
       const regionVNodes: Record<string, VNode[]> = {}
-      const NodeRenderer = ctx.nodeRenderer ?? NodeHost
+      const NodeRenderer = NodeHost
       for (const [region, entries] of plan.regions) {
         regionVNodes[region] = entries.map(entry =>
           h(NodeRenderer, {
@@ -236,7 +213,7 @@ export default defineComponent({
       const dragTarget = ctx.session.state.dragTarget.value
       const isHeadlessMaterialDrag = dragTarget?.sourceNodeId === null
         && dragTarget.widgetType !== null
-        && ctx.session.materials.get(dragTarget.widgetType)?.headless === true
+        && ctx.session.materials.get(dragTarget.widgetType)?.presentation.kind === 'headless'
       const headlessOverlayVNode = isHeadlessMaterialDrag
         && ctx.activeDestination.value !== null
         && !isForbidden
@@ -279,8 +256,8 @@ export default defineComponent({
       return h(
         'div',
         {
-          'class': 'dc-root-renderer',
-          'data-dc-component': 'root-renderer',
+          'class': 'dc-application-surface',
+          'data-dc-component': 'application-surface',
           'data-node-id': 'root',
           'data-node-type': 'root',
         },
@@ -288,8 +265,8 @@ export default defineComponent({
           h(
             'div',
             {
-              'class': 'dc-renderer-frame-boundary',
-              'data-dc-component': 'renderer-frame-boundary',
+              'class': 'dc-presentation-frame-boundary',
+              'data-dc-component': 'presentation-frame-boundary',
               'data-dc-toolbar-boundary': '',
             },
             [

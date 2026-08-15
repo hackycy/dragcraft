@@ -9,7 +9,7 @@ import { defineComponent, h } from 'vue'
  * Renders actions based on the resolved action list from the action registry.
  * Supports both 'button' and 'drag-handle' action types.
  *
- * Positioning is owned by WidgetRenderer's measurable floating wrapper. The
+ * Positioning is owned by NodeHost's measurable floating wrapper. The
  * resolved placement controls whether actions use a vertical or horizontal row.
  */
 export default defineComponent({

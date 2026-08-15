@@ -1,6 +1,6 @@
 import type { MessageTree } from '@dragcraft/i18n'
 
-export const rendererMessages: Record<string, MessageTree> = {
+export const presentationMessages: Record<string, MessageTree> = {
   'zh-CN': {
     action: {
       'drag': '拖拽排序',

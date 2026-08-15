@@ -1,7 +1,7 @@
 import type { ComputedRef } from 'vue'
 import type { NodeActionContext, ResolvedNodeAction } from './action-registry'
 import type { NodeOwner } from './semantic'
-import type { RendererContext, RendererNode } from './types'
+import type { PresentationContext, PresentationNode } from './types'
 import { computed } from 'vue'
 
 export interface UseNodeActionsReturn {
@@ -11,7 +11,7 @@ export interface UseNodeActionsReturn {
   actionContext: ComputedRef<NodeActionContext>
 }
 
-function resolveUncachedPosition(node: RendererNode, owner: NodeOwner, ctx: RendererContext) {
+function resolveUncachedPosition(node: PresentationNode, owner: NodeOwner, ctx: PresentationContext) {
   const position = ctx.session.document.getStructurePosition(node.id)
   if (position) {
     return {
@@ -33,11 +33,11 @@ function resolveUncachedPosition(node: RendererNode, owner: NodeOwner, ctx: Rend
     }
   }
 
-  const layout = ctx.session.materials.resolveLayout(node)
+  const layout = ctx.session.materials.resolvePresentation(node)
   const siblings = layout.sortScope === false
     ? ctx.session.document.rootNodes.value
     : ctx.session.document.rootNodes.value.filter(candidate =>
-        ctx.session.materials.resolveLayout(candidate).sortScope === layout.sortScope,
+        ctx.session.materials.resolvePresentation(candidate).sortScope === layout.sortScope,
       )
   return {
     owner: {
@@ -58,11 +58,11 @@ function resolveUncachedPosition(node: RendererNode, owner: NodeOwner, ctx: Rend
  * Provides the list of visible, resolved actions with their handlers.
  *
  * @param getNode - Getter for the current schema node
- * @param ctx - The renderer context
+ * @param ctx - The Presentation context
  */
 export function useNodeActions(
-  getNode: () => RendererNode,
-  ctx: RendererContext,
+  getNode: () => PresentationNode,
+  ctx: PresentationContext,
   getOwner: () => NodeOwner = () => ({ kind: 'root' }),
 ): UseNodeActionsReturn {
   const { actionRegistry, actionInterceptors } = ctx
@@ -71,14 +71,14 @@ export function useNodeActions(
     const node = getNode()
     const schema = ctx.schema.value
     const owner = getOwner()
-    const meta = ctx.session.materials.get(node.type)
+    const material = ctx.session.materials.get(node.type)
     const position = ctx.resolveNodeActionPosition?.(node, owner)
       ?? resolveUncachedPosition(node, owner, ctx)
 
     return {
       node: node as unknown as import('@dragcraft/core').NodeDefinition,
       ...position,
-      meta,
+      material,
       materials: ctx.session.materials,
       session: ctx.session,
       schema,

@@ -1,14 +1,13 @@
-import type { LayoutEdge, NodeOwner, ResolvedChromePlacement } from './semantic'
-import type { RendererContext, RendererLayoutEntry, RendererLayoutProjection, RendererNode, RendererOptions } from './types'
+import type { LayoutEdge, NodeOwner, ResolvedChromePresentation } from './semantic'
+import type { ApplicationSurfaceOptions, PresentationContext, PresentationNode, SurfaceEntry, SurfaceProjection } from './types'
 import { computed, inject, ref } from 'vue'
 import { createNodeActionRegistry } from './action-registry'
-import { createDefaultEventHooks } from './event-hooks'
-import { RENDERER_CONTEXT_KEY } from './types'
+import { PRESENTATION_CONTEXT_KEY } from './types'
 
 function pushEntry(
-  entries: Map<string, RendererLayoutEntry[]>,
+  entries: Map<string, SurfaceEntry[]>,
   key: string,
-  entry: RendererLayoutEntry,
+  entry: SurfaceEntry,
 ): void {
   const group = entries.get(key)
   if (group)
@@ -17,7 +16,7 @@ function pushEntry(
     entries.set(key, [entry])
 }
 
-function sortEntries(entries: RendererLayoutEntry[]): void {
+function sortEntries(entries: SurfaceEntry[]): void {
   entries.sort((a, b) => {
     const orderA = a.layout.order ?? a.arrayIndex
     const orderB = b.layout.order ?? b.arrayIndex
@@ -29,18 +28,18 @@ function edgeOrder(edge: LayoutEdge): number {
   return ['block-start', 'inline-start', 'inline-end', 'block-end'].indexOf(edge)
 }
 
-function createRendererLayoutProjection(options: RendererOptions): RendererLayoutProjection {
-  const entries: RendererLayoutEntry[] = []
-  const regions = new Map<string, RendererLayoutEntry[]>()
-  const chrome: RendererLayoutEntry[] = []
-  const layers = new Map<string, RendererLayoutEntry[]>()
-  const sortScopes = new Map<string, RendererLayoutEntry[]>()
+function createSurfaceProjection(options: ApplicationSurfaceOptions): SurfaceProjection {
+  const entries: SurfaceEntry[] = []
+  const regions = new Map<string, SurfaceEntry[]>()
+  const chrome: SurfaceEntry[] = []
+  const layers = new Map<string, SurfaceEntry[]>()
+  const sortScopes = new Map<string, SurfaceEntry[]>()
 
   options.session.document.rootNodes.value.forEach((node, arrayIndex) => {
-    const entry: RendererLayoutEntry = {
+    const entry: SurfaceEntry = {
       node,
       arrayIndex,
-      layout: options.session.materials.resolveLayout(node),
+      layout: options.session.materials.resolvePresentation(node),
     }
     if (!entry.layout.visible)
       return
@@ -63,8 +62,8 @@ function createRendererLayoutProjection(options: RendererOptions): RendererLayou
   sortScopes.forEach(sortEntries)
   layers.forEach(sortEntries)
   chrome.sort((a, b) => {
-    const placementA = a.layout.placement as ResolvedChromePlacement
-    const placementB = b.layout.placement as ResolvedChromePlacement
+    const placementA = a.layout.placement as ResolvedChromePresentation
+    const placementB = b.layout.placement as ResolvedChromePresentation
     const edgeDelta = edgeOrder(placementA.edge) - edgeOrder(placementB.edge)
     if (edgeDelta !== 0)
       return edgeDelta
@@ -81,7 +80,7 @@ function createRendererLayoutProjection(options: RendererOptions): RendererLayou
     sortScopes,
     insets: {
       contributors: chrome.flatMap((entry) => {
-        const placement = entry.layout.placement as ResolvedChromePlacement
+        const placement = entry.layout.placement as ResolvedChromePresentation
         return placement.avoidContent
           ? [{ edge: placement.edge, sourceNodeId: entry.node.id, reserve: placement.reserve }]
           : []
@@ -91,14 +90,14 @@ function createRendererLayoutProjection(options: RendererOptions): RendererLayou
 }
 
 /**
- * Creates a RendererContext from the semantic session projection.
- * Called internally by RootRenderer.
+ * Creates a PresentationContext from the semantic session projection.
+ * Called internally by ApplicationSurface.
  */
-export function createRendererContext(options: RendererOptions): RendererContext {
+export function createPresentationContext(options: ApplicationSurfaceOptions): PresentationContext {
   const schema = computed(() => options.session.document.schema.value)
-  const layout = computed(() => createRendererLayoutProjection(options))
+  const layout = computed(() => createSurfaceProjection(options))
 
-  function resolveNodeActionPosition(node: RendererNode, owner: NodeOwner) {
+  function resolveNodeActionPosition(node: PresentationNode, owner: NodeOwner) {
     const position = options.session.document.getStructurePosition(node.id)
     if (position) {
       return {
@@ -122,10 +121,10 @@ export function createRendererContext(options: RendererOptions): RendererContext
     }
 
     const rootNodes = options.session.document.rootNodes.value
-    const nodeLayout = options.session.materials.resolveLayout(node)
+    const nodeLayout = options.session.materials.resolvePresentation(node)
     const siblings = nodeLayout.sortScope === false
       ? rootNodes
-      : rootNodes.filter(candidate => options.session.materials.resolveLayout(candidate).sortScope === nodeLayout.sortScope)
+      : rootNodes.filter(candidate => options.session.materials.resolvePresentation(candidate).sortScope === nodeLayout.sortScope)
     return {
       owner: {
         kind: 'root' as const,
@@ -145,11 +144,7 @@ export function createRendererContext(options: RendererOptions): RendererContext
     schema,
     layout,
     resolveNodeActionPosition,
-    componentMap: options.componentMap,
-    nodeRenderer: options.nodeRenderer,
-    regionRenderer: options.regionRenderer,
-    extensions: options.extensions ?? {},
-    eventHooks: options.eventHooks ?? createDefaultEventHooks(),
+    containerShell: options.containerShell,
     actionInterceptors: options.actionInterceptors ?? [],
     actionRegistry: options.actionRegistry ?? createNodeActionRegistry(),
     selectedNodeId: options.session.state.selectedNodeId,
@@ -166,15 +161,15 @@ export function createRendererContext(options: RendererOptions): RendererContext
 }
 
 /**
- * Injects the RendererContext from the nearest ancestor RootRenderer.
- * Throws if called outside the renderer component tree.
+ * Injects the PresentationContext from the nearest ancestor ApplicationSurface.
+ * Throws if called outside the Application Surface component tree.
  */
-export function useRendererContext(): RendererContext {
-  const ctx = inject(RENDERER_CONTEXT_KEY)
+export function usePresentationContext(): PresentationContext {
+  const ctx = inject(PRESENTATION_CONTEXT_KEY)
   if (!ctx) {
     throw new Error(
-      '[dragcraft/renderer] RendererContext not found. '
-      + 'Ensure this component is a descendant of RootRenderer.',
+      '[dragcraft/designer] PresentationContext not found. '
+      + 'Ensure this component is a descendant of ApplicationSurface.',
     )
   }
   return ctx

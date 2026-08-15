@@ -1,5 +1,5 @@
 import type { PropType } from 'vue'
-import type { DesignerWidgetMeta } from '../types'
+import type { MaterialDefinition } from '../materials/types'
 import { IconChevronDown } from '@dragcraft/icons'
 import { defineComponent, h, ref } from 'vue'
 import DcMaterialItem from './DcMaterialItem'
@@ -13,7 +13,7 @@ export default defineComponent({
       required: true,
     },
     widgets: {
-      type: Array as PropType<DesignerWidgetMeta[]>,
+      type: Array as PropType<MaterialDefinition[]>,
       required: true,
     },
   },

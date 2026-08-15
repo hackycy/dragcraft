@@ -1,9 +1,7 @@
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useCanvasPan } from '../composables/useCanvasPan'
 import { useDesignerContext } from '../context'
-import ContainerRegionOutlet from '../presentation/container-region-outlet'
-import NodeHost from '../presentation/node-host'
-import RootRenderer from '../presentation/root-surface'
+import ApplicationSurface from '../presentation/application-surface'
 import { useDesignerSession } from '../session/context'
 import DcCanvasControls from './DcCanvasControls'
 
@@ -14,7 +12,6 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const session = useDesignerSession()
     const {
-      componentMap,
       deviceFrame,
       dragOverNodeId,
       dragOverIndex,
@@ -24,7 +21,6 @@ export default defineComponent({
       handleContainerDragOver,
       handleContainerDragLeave,
       handleContainerDrop,
-      eventHooks,
       actionInterceptors,
       actionRegistry,
     } = ctx
@@ -43,10 +39,6 @@ export default defineComponent({
     let observedContainerShell: Element | null = null
     let observedFitTarget: HTMLElement | null = null
 
-    const rendererExtensions = computed(() => ({
-      ...(deviceFrame.value ? { containerShell: deviceFrame.value.containerShell } : {}),
-    }))
-
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       const nodeEl = target.closest('[data-node-id]') as HTMLElement | null
@@ -59,7 +51,7 @@ export default defineComponent({
     function observeCanvasTarget(): void {
       const content = contentRef.value
       const nextTarget = content?.querySelector<HTMLElement>('[data-dc-toolbar-boundary]')
-        ?? content?.querySelector<HTMLElement>('.dc-root-renderer')
+        ?? content?.querySelector<HTMLElement>('.dc-application-surface')
         ?? null
       const nextContainerShell = nextTarget?.firstElementChild ?? null
       const nextFitTarget = content?.querySelector<HTMLElement>('[data-dc-canvas-fit="contain"]') ?? null
@@ -158,13 +150,9 @@ export default defineComponent({
               'class': ['dc-canvas__content', { 'dc-canvas__content--bounded': hasToolbarBoundary.value }],
               'data-dc-part': 'content',
             }, [
-              h(RootRenderer, {
+              h(ApplicationSurface, {
                 session,
-                componentMap,
-                nodeRenderer: NodeHost,
-                regionRenderer: ContainerRegionOutlet,
-                extensions: rendererExtensions.value,
-                eventHooks,
+                containerShell: deviceFrame.value?.containerShell,
                 actionInterceptors,
                 actionRegistry,
                 activeDestination,

@@ -6,7 +6,7 @@
 }
 
 .dc-device-frame--android,
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--android) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame--android) {
   --dc-device-frame-radius: 20px;
 }
 
@@ -27,7 +27,7 @@
 }
 
 .dc-device-frame--android-waterdrop,
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--android-waterdrop) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame--android-waterdrop) {
   --dc-device-frame-radius: 24px;
 }
 

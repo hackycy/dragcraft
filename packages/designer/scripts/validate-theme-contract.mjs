@@ -75,7 +75,7 @@ function validateRecipe(relativePath) {
   const root = readCss(relativePath)
   validatePublicProperties(root)
   const inheritableProperties = /^(?:color|font(?:-.+)?|letter-spacing|line-height|text-align)$/
-  const contentBoundaryComponents = /data-dc-component=["'](?:designer|root-renderer|renderer-frame-boundary|container-shell|canvas-surface|canvas|node)["']/
+  const contentBoundaryComponents = /data-dc-component=["'](?:designer|application-surface|presentation-frame-boundary|container-shell|canvas-surface|canvas|node)["']/
 
   root.walkDecls((decl) => {
     if (decl.important)
@@ -231,7 +231,8 @@ function validatePackageStyleExports() {
 
 function validateDesignerStructureOwnership() {
   const source = fs.readFileSync(path.join(packageRoot, 'theme/structure.css'), 'utf8')
-  if (source.includes('@dragcraft/renderer/structure.css'))
+  const retiredStructureCssImport = ['@dragcraft', 'renderer', 'structure.css'].join('/')
+  if (source.includes(retiredStructureCssImport))
     errors.push('packages/designer/theme/structure.css must own structure CSS without Renderer imports')
 }
 

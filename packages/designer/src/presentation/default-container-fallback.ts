@@ -1,22 +1,22 @@
 import type { PropType } from 'vue'
 import type { NodeOwner } from './semantic'
-import type { RendererNode } from './types'
+import type { PresentationNode } from './types'
 import { defineComponent, h } from 'vue'
-import { useRendererContext } from './context'
+import { usePresentationContext } from './context'
 import NodeHost from './node-host'
 
 export default defineComponent({
   name: 'DcDefaultContainerFallback',
   props: {
     node: {
-      type: Object as PropType<RendererNode>,
+      type: Object as PropType<PresentationNode>,
       required: true,
     },
   },
   setup(props) {
-    const ctx = useRendererContext()
+    const ctx = usePresentationContext()
     const plan = ctx.session.materials.resolveContainer(props.node)
-    const regions = plan.ok ? plan.plan.regions : []
+    const regions = plan.ok ? plan.presentation.regions : []
     return () => h('div', {
       'class': 'dc-unresolved-container',
       'data-dc-component': 'unresolved-container',
@@ -38,7 +38,7 @@ export default defineComponent({
         'data-dc-container-region': regionId,
         'role': 'group',
         'aria-label': regionId,
-      }, nodes.map(node => h(ctx.nodeRenderer ?? NodeHost, {
+      }, nodes.map(node => h(NodeHost, {
         key: node.id,
         node,
         owner,

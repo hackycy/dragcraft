@@ -83,17 +83,10 @@ describe('field-binding', () => {
     })
   })
 
-  it('translates container.variant binding into the dedicated action', () => {
-    expect(createBindingAction({ scope: 'container', path: 'variant' }, 'stacked', 'layout')).toEqual({
-      type: 'container.change-variant',
-      containerId: 'layout',
-      variant: 'stacked',
-    })
-  })
-
-  it('rejects arbitrary container writes and invalid variant values', () => {
+  it('rejects every container write', () => {
     expect(createBindingAction({ scope: 'container', path: 'regions.left' }, [], 'layout')).toBeNull()
     expect(createBindingAction({ scope: 'container', path: 'variant' }, 1, 'layout')).toBeNull()
+    expect(createBindingAction({ scope: 'container', path: 'variant' }, 'stacked', 'layout')).toBeNull()
     expect(createBindingAction({ scope: 'container', path: 'variant' }, 'stacked')).toBeNull()
   })
 

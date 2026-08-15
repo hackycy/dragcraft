@@ -5,7 +5,7 @@
 }
 
 .dc-device-frame--iphone,
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--iphone) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame--iphone) {
   --dc-device-frame-radius: 48px;
 }
 
@@ -32,7 +32,7 @@
 }
 
 .dc-device-frame--iphone-x,
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--iphone-x) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame--iphone-x) {
   --dc-device-frame-radius: 40px;
 }
 
@@ -60,7 +60,7 @@
 }
 
 .dc-device-frame--iphone-8,
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--iphone-8) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame--iphone-8) {
   --dc-device-frame-radius: 8px;
 }
 

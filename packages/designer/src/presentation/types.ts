@@ -1,13 +1,14 @@
 import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
-import type { NodeActionContext, NodeActionRegistry, ResolvedNodeAction } from './action-registry'
-import type { ActionInterceptor, ActionRisk } from './action-runtime'
-import type { MaybePromise, RendererEventHooks } from './event-hooks'
+import type { MaterialDefinition } from '../materials/types'
+import type { DesignerSession } from '../session/types'
+import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
+import type { ActionInterceptor } from './action-runtime'
 import type { NodeToolbarOrientation } from './node-interaction'
 import type { NodeSelectionPlane, NodeSelectionProjection } from './selection-presentation'
-import type { ContainerPlanResult, ContainerRegionId, CreationBlockReason, DragTarget, HistoryState, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedNodeLayout, SchemaDiagnostic, WidgetMeta } from './semantic'
+import type { CreationBlockReason, DragTarget, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedPresentationLayout } from './semantic'
 
-export interface RendererNode {
+export interface PresentationNode {
   readonly id: string
   readonly type: string
   readonly props: Record<string, unknown>
@@ -32,9 +33,7 @@ export type DeepReadonly<T>
  *
  * Example: { button: ButtonWidget, text: TextWidget }
  */
-export type ComponentMap = Record<string, Component>
-
-export interface WidgetRendererProps {
+export interface NodeHostProps {
   node: NodeDefinition
   owner?: NodeOwner
   /** Internal coordinate plane inherited by nested container nodes. */
@@ -42,7 +41,7 @@ export interface WidgetRendererProps {
 }
 
 export interface ContainerRegionOutletProps {
-  regionId: ContainerRegionId
+  regionId: string
   as?: string | Component
 }
 
@@ -50,7 +49,7 @@ export interface ResolveContainerDropIndexContext {
   event: DragEvent
   regionElement: HTMLElement
   itemElements: readonly HTMLElement[]
-  nodes: DeepReadonly<RendererNode[]>
+  nodes: DeepReadonly<PresentationNode[]>
 }
 
 export type ResolveContainerDropIndex = (ctx: ResolveContainerDropIndexContext) => number | null
@@ -73,6 +72,19 @@ export interface ContainerDropRejection {
   message?: string
 }
 
+/** A declared Region projected from a material's Core container declaration. */
+export interface PresentationRegionDefinition {
+  readonly id: string
+  readonly title: string
+  readonly titleKey?: string
+  readonly constraints?: {
+    readonly includeTypes?: readonly string[]
+    readonly excludeTypes?: readonly string[]
+    readonly minItems?: number
+    readonly maxItems?: number
+  }
+}
+
 // ──────────────────────────────────────────
 // Extension component prop interfaces
 // ──────────────────────────────────────────
@@ -91,27 +103,11 @@ export interface NodeWrapperProps {
   /** Reactive interaction state */
   state: NodeInteractionState
   /** The resolved widget meta, if available */
-  meta: RendererWidgetMeta | undefined
-}
-
-export interface RendererWidgetActionExtra {
-  key: string
-  label: string
-  icon?: string | Component
-  type: 'button' | 'drag-handle'
-  order: number
-  risk?: ActionRisk
-  metadata?: Record<string, unknown>
-  visible?: (ctx: NodeActionContext) => boolean
-  available?: (ctx: NodeActionContext) => boolean
-  disabled?: (ctx: NodeActionContext) => boolean
-  action?: (ctx: NodeActionContext, event: MouseEvent) => AuthoringAction | null | undefined
-  handler?: (ctx: NodeActionContext, event: MouseEvent) => MaybePromise<void>
-  className?: string
+  material: Readonly<MaterialDefinition> | undefined
 }
 
 /**
- * Closed authoring intents shared by the Designer UI and Renderer.
+ * Closed authoring intents shared by the Designer UI and Application Surface.
  * Implementations translate these intents to their active backend privately.
  */
 export type AuthoringAction
@@ -126,7 +122,6 @@ export type AuthoringAction
     | { type: 'node.duplicate', nodeId: string }
     | { type: 'node.update', nodeId: string, props: Record<string, unknown>, style?: NodeStyle }
     | { type: 'page.update', props: Record<string, unknown>, style?: NodeStyle }
-    | { type: 'container.change-variant', containerId: string, variant: string }
     | { type: 'global-config.update', config: Record<string, unknown> }
     | { type: 'schema.import', schema: DocumentSchema }
 
@@ -139,95 +134,24 @@ export type AuthoringResult
   = | { ok: true, changed: boolean, eventPayload?: unknown }
     | ({ ok: false, code: string } & CreationBlockReason & { details?: Record<string, unknown> })
 
-export interface WidgetActionConfig {
-  only?: string[]
-  exclude?: string[]
-  extra?: RendererWidgetActionExtra[]
-}
-
-export interface RendererContainerAdapter {
-  resolveDropIndex?: ResolveContainerDropIndex
-}
-
-export interface RendererWidgetMeta extends WidgetMeta {
-  actions?: WidgetActionConfig
-  wrapper?: Component
-  containerAdapter?: RendererContainerAdapter
-  /** Whether the material has no business preview in the Designer canvas. */
-  headless?: boolean
-}
-
-/**
- * Renderer-facing subset of the internal DesignerSession seam.
- * It is declared locally so Renderer stays independent of the Designer package.
- */
-export interface RendererSessionMaterials {
-  get: (type: string) => RendererWidgetMeta | undefined
-  getAll: () => readonly RendererWidgetMeta[]
-  resolveCapability: (
-    node: RendererNode,
-    capability: 'selectable' | 'configurable' | 'draggable' | 'sortable' | 'deletable' | 'variantChangeable',
-  ) => boolean
-  resolveLayout: (node: RendererNode) => ResolvedNodeLayout
-  resolveContainer: (node: RendererNode) => ContainerPlanResult
-  getLockedIndices: (nodes: readonly RendererNode[]) => Set<number>
-  canCreateSubtree: (node: RendererNode) => boolean
-  canDeleteSubtree: (node: RendererNode) => boolean
-}
-
-export interface RendererSessionProjection {
-  readonly document: {
-    readonly schema: Readonly<Ref<CoreDeepReadonly<DocumentSchema> | null>>
-    readonly version: Readonly<Ref<string>>
-    readonly rootNodes: Readonly<Ref<readonly CoreDeepReadonly<NodeDefinition>[]>>
-    readonly globalConfig: Readonly<Ref<Record<string, unknown>>>
-    readonly diagnostics: Readonly<Ref<readonly SchemaDiagnostic[]>>
-    getNode: (nodeId: string) => CoreDeepReadonly<NodeDefinition> | null
-    getOwner: (nodeId: string) => NodeOwner | null
-    getStructurePosition: (nodeId: string) => {
-      readonly owner: NodeOwner
-      readonly index: number
-      readonly siblingCount: number
-      readonly sortScope: string | false
-      readonly lockedIndices: ReadonlySet<number>
-    } | null
-    getRegionNodes: (containerId: string, regionId: string) => readonly CoreDeepReadonly<NodeDefinition>[]
-  }
-  readonly materials: RendererSessionMaterials
-  readonly state: {
-    readonly selectedNodeId: Readonly<Ref<string | null>>
-    readonly hoveredNodeId: Readonly<Ref<string | null>>
-    readonly dragTarget: Readonly<Ref<{ sourceNodeId: string | null, widgetType: string | null } | null>>
-    readonly drag: {
-      readonly activeDestination: Ref<NodeDestination | null>
-      readonly containerDropDecision: Ref<PlacementDecision | null>
-      readonly isForbidden: Ref<boolean>
-      readonly forbiddenReason: Ref<CreationBlockReason | null>
-    }
-    readonly history: Readonly<Ref<HistoryState>>
-  }
-  evaluate: (action: AuthoringAction) => AuthoringDecision
-  execute: (action: AuthoringAction) => AuthoringResult
-}
-
-/** Renderer-owned grouping derived from semantic session facts for presentation only. */
-export interface RendererLayoutEntry {
+/** Presentation grouping derived from canonical Designer session facts. */
+export interface SurfaceEntry {
   readonly node: CoreDeepReadonly<NodeDefinition>
   readonly arrayIndex: number
-  readonly layout: ResolvedNodeLayout
+  readonly layout: ResolvedPresentationLayout
 }
 
-export interface RendererLayoutProjection {
-  readonly entries: readonly RendererLayoutEntry[]
-  readonly regions: ReadonlyMap<string, readonly RendererLayoutEntry[]>
-  readonly chrome: readonly RendererLayoutEntry[]
-  readonly layers: ReadonlyMap<string, readonly RendererLayoutEntry[]>
-  readonly sortScopes: ReadonlyMap<string, readonly RendererLayoutEntry[]>
+export interface SurfaceProjection {
+  readonly entries: readonly SurfaceEntry[]
+  readonly regions: ReadonlyMap<string, readonly SurfaceEntry[]>
+  readonly chrome: readonly SurfaceEntry[]
+  readonly layers: ReadonlyMap<string, readonly SurfaceEntry[]>
+  readonly sortScopes: ReadonlyMap<string, readonly SurfaceEntry[]>
   readonly insets: {
     readonly contributors: readonly {
       readonly edge: LayoutEdge
       readonly sourceNodeId: string
-      readonly reserve: Extract<RendererLayoutEntry['layout']['placement'], { kind: 'chrome' }>['reserve']
+      readonly reserve: Extract<SurfaceEntry['layout']['placement'], { kind: 'chrome' }>['reserve']
     }[]
   }
 }
@@ -307,7 +231,7 @@ export interface NodeHandleProps {
 
 /**
  * Props received by a custom nodeSelection component.
- * Renderer-owned Canvas Surface and Frame Boundary own geometry, plane routing,
+ * The Canvas Surface and Frame Boundary own geometry, plane routing,
  * and clipping; the component only owns the visual presentation.
  */
 export interface NodeSelectionProps {
@@ -317,7 +241,7 @@ export interface NodeSelectionProps {
   nodeType: string
   /** Structural owner that determines the projection kind. */
   owner: NodeOwner
-  /** Renderer-owned material and semantic selection bounds in a coordinate plane. */
+  /** Presentation-owned material and semantic selection bounds in a coordinate plane. */
   projection: NodeSelectionProjection
 }
 
@@ -340,9 +264,9 @@ export interface ForbiddenOverlayProps {
 }
 
 /**
- * Props received by a custom widgetFallback component.
+ * Props received by a custom materialFallback component.
  */
-export interface WidgetFallbackProps {
+export interface MaterialFallbackProps {
   /** The schema node ID */
   nodeId: string
   /** The unresolved widget type string */
@@ -355,79 +279,7 @@ export type ContainerShell = Component
 /** Static shells are concise; readonly refs let the host switch shells reactively. */
 export type ContainerShellSource = ContainerShell | Readonly<Ref<ContainerShell>>
 
-// ──────────────────────────────────────────
-// Extension points
-// ──────────────────────────────────────────
-
-export interface RendererExtensions {
-  /**
-   * Wraps the complete Renderer-owned Canvas Surface.
-   * The shell receives no Renderer props and must render its default slot exactly once.
-   */
-  containerShell?: ContainerShellSource
-
-  /**
-   * Replaces the default drop indicator shown inside containers
-   * during drag-over state.
-   */
-  dropIndicator?: Component
-
-  /**
-   * Wraps each rendered widget node. Receives NodeWrapperProps.
-   * Must render a default slot containing the widget content.
-   * Use this to add custom chrome, annotations, badges, etc.
-   */
-  nodeWrapper?: Component
-
-  /**
-   * Replaces the default per-node floating toolbar.
-   * Receives NodeToolbarProps with pre-resolved actions.
-   */
-  nodeToolbar?: Component
-
-  /**
-   * Replaces the default mask overlay for mask=true widgets.
-   * Receives NodeMaskProps.
-   */
-  nodeMask?: Component
-
-  /**
-   * Replaces the default selection handle for mask=false widgets.
-   * Receives NodeHandleProps.
-   */
-  nodeHandle?: Component
-
-  /**
-   * Replaces the visual presentation of the Renderer-owned selected projection.
-   * Geometry, plane routing, and clipping remain owned by Renderer.
-   */
-  nodeSelection?: Component
-
-  /**
-   * Replaces the default "drag components here" empty state.
-   * Receives EmptyStateProps.
-   */
-  emptyState?: Component
-
-  /**
-   * Replaces the default fallback for unknown widget types.
-   * Receives WidgetFallbackProps.
-   */
-  widgetFallback?: Component
-
-  /**
-   * Replaces the default forbidden overlay shown when a widget type
-   * cannot be dropped.
-   * Receives ForbiddenOverlayProps.
-   */
-  forbiddenOverlay?: Component
-}
-
-// ──────────────────────────────────────────
-// Renderer options and context
-// ──────────────────────────────────────────
-
-export interface ContainerDropRendererOptions {
+export interface ContainerDropApplicationSurfaceOptions {
   activeDestination?: Ref<NodeDestination | null>
   containerDropDecision?: Ref<PlacementDecision | null>
   onContainerDragOver?: (target: ContainerDropTarget | ContainerDropRejection) => void
@@ -436,26 +288,18 @@ export interface ContainerDropRendererOptions {
 }
 
 /**
- * Options accepted by RootRenderer as props.
+ * Options accepted by ApplicationSurface as props.
  *
- * **Immutability constraint:** These options are captured once when RootRenderer
+ * **Immutability constraint:** These options are captured once when ApplicationSurface
  * mounts and provided to all descendants via provide/inject. Changing them after
- * the initial render has no effect on the running renderer. If you need to swap
- * extensions or hooks, remount RootRenderer with a different `key`.
+ * the initial render has no effect on the running Application Surface. To swap
+ * host integrations, remount ApplicationSurface with a different `key`.
  */
-export interface RendererOptions extends ContainerDropRendererOptions {
+export interface ApplicationSurfaceOptions extends ContainerDropApplicationSurfaceOptions {
   /** Semantic read projection supplied by the Designer host. */
-  session: RendererSessionProjection
-  /** Maps node.type -> Vue component for rendering */
-  componentMap: ComponentMap
-  /** Host-owned node interaction implementation for staged Presentation cutovers. */
-  nodeRenderer?: Component
-  /** Host-owned container Region implementation for staged Presentation cutovers. */
-  regionRenderer?: Component
-  /** Optional extension point overrides */
-  extensions?: RendererExtensions
-  /** Interceptable event hooks for renderer events */
-  eventHooks?: RendererEventHooks
+  session: DesignerSession
+  /** Optional host-owned shell around the Application Surface. */
+  containerShell?: ContainerShellSource
   /** Interceptors for node actions such as delete, move, duplicate, and custom actions */
   actionInterceptors?: ActionInterceptor[]
   /** Node action registry. If not provided, default actions are used. */
@@ -488,29 +332,23 @@ export interface RendererOptions extends ContainerDropRendererOptions {
 }
 
 /**
- * Internal context provided to all renderer descendants via provide/inject.
+ * Internal context provided to all Application Surface descendants via provide/inject.
  */
-export interface RendererContext extends ContainerDropRendererOptions {
-  session: RendererSessionProjection
-  /** One canonical schema snapshot shared by the renderer tree for each session revision. */
+export interface PresentationContext extends ContainerDropApplicationSurfaceOptions {
+  session: DesignerSession
+  /** One canonical schema snapshot shared by the presentation tree for each session revision. */
   schema: ComputedRef<CoreDeepReadonly<DocumentSchema> | null>
-  /** Renderer-owned layout grouping derived from session document and material facts. */
-  layout: ComputedRef<RendererLayoutProjection>
+  /** Presentation-owned layout grouping derived from session document and material facts. */
+  layout: ComputedRef<SurfaceProjection>
   /** Resolves action geometry and lock constraints from revision-scoped caches. */
-  resolveNodeActionPosition?: (node: RendererNode, owner: NodeOwner) => {
+  resolveNodeActionPosition?: (node: PresentationNode, owner: NodeOwner) => {
     owner: NodeOwner
     index: number
     siblingCount: number
     sortScope: string | false
     lockedIndices: Set<number>
   }
-  componentMap: ComponentMap
-  /** Active node interaction implementation for this renderer instance. */
-  nodeRenderer?: Component
-  /** Active container Region implementation for this renderer instance. */
-  regionRenderer?: Component
-  extensions: RendererExtensions
-  eventHooks: RendererEventHooks
+  containerShell?: ContainerShellSource
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
   selectedNodeId: Ref<string | null>
@@ -525,9 +363,9 @@ export interface RendererContext extends ContainerDropRendererOptions {
 }
 
 /**
- * Injection key for the renderer context.
+ * Injection key for the Presentation context.
  */
-export const RENDERER_CONTEXT_KEY: InjectionKey<RendererContext> = Symbol('dc-renderer')
+export const PRESENTATION_CONTEXT_KEY: InjectionKey<PresentationContext> = Symbol('dc-presentation')
 
 // ──────────────────────────────────────────
 // Node interaction state

@@ -1,8 +1,7 @@
 import type { DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { NodeActionContext, ResolvedNodeAction } from '../presentation/action-registry'
-import type { MaybePromise, SelectHookPayload } from '../presentation/event-hooks'
 import type { DeepReadonly, NodeOwner } from '../presentation/semantic'
-import type { RendererNode } from '../presentation/types'
+import type { PresentationNode } from '../presentation/types'
 import { useI18n } from '@dragcraft/i18n'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
@@ -21,12 +20,8 @@ interface ContainerStructureRegion {
   id: string
   title: string
   owner: Extract<NodeOwner, { kind: 'container' }>
-  nodes: readonly DeepReadonly<RendererNode>[]
+  nodes: readonly DeepReadonly<PresentationNode>[]
   lockedIndices: Set<number>
-}
-
-function isPromiseLike(value: unknown): value is Promise<unknown> {
-  return value !== null && typeof value === 'object' && typeof (value as Promise<unknown>).then === 'function'
 }
 
 function createContainerStructureRegions(
@@ -38,17 +33,17 @@ function createContainerStructureRegions(
   if (!result.ok)
     return []
 
-  return result.plan.regions.map(region => ({
+  return result.presentation.regions.map(region => ({
     id: region.definition.id,
     title: region.definition.titleKey
       ? t(region.definition.titleKey, region.definition.title)
       : region.definition.title,
     owner: {
       kind: 'container',
-      containerId: result.plan.containerId,
+      containerId: result.presentation.containerId,
       regionId: region.definition.id,
     },
-    nodes: region.nodes as unknown as readonly DeepReadonly<RendererNode>[],
+    nodes: region.nodes as unknown as readonly DeepReadonly<PresentationNode>[],
     lockedIndices: session.materials.getLockedIndices(region.nodes),
   }))
 }
@@ -60,8 +55,7 @@ export default defineComponent({
     const ctx = useDesignerContext()
     const session = useDesignerSession()
     const { t } = useI18n()
-    const { actionRegistry, actionInterceptors, eventHooks } = ctx
-    const selectPending = { value: false }
+    const { actionRegistry, actionInterceptors } = ctx
     const actionSchema = computed<DeepReadonly<DocumentSchema> | null>(() => session.document.schema.value)
 
     const createStructureItem = (
@@ -73,14 +67,14 @@ export default defineComponent({
       schema: DeepReadonly<DocumentSchema> | null,
       lockedIndices: Set<number>,
     ): StructureItem => {
-      const meta = session.materials.get(node.type)
+      const material = session.materials.get(node.type)
       const actionCtx: NodeActionContext = {
         node: node as unknown as NodeDefinition,
         owner,
         index,
         siblingCount,
         sortScope,
-        meta,
+        material,
         materials: session.materials,
         session,
         schema,
@@ -94,8 +88,10 @@ export default defineComponent({
 
       return {
         node,
-        title: meta
-          ? (meta.titleKey ? t(meta.titleKey, meta.title) : meta.title)
+        title: material
+          ? (material.panel?.titleKey
+              ? t(material.panel.titleKey, material.panel.title ?? material.type)
+              : material.panel?.title ?? material.type)
           : node.type,
         actions,
         regions: createContainerStructureRegions(node, session, t),
@@ -118,67 +114,9 @@ export default defineComponent({
       })
     })
 
-    const fireAfterSelect = (payload: SelectHookPayload) => {
-      if (!eventHooks.onAfterSelect)
-        return
-      try {
-        const result = eventHooks.onAfterSelect(payload)
-        if (isPromiseLike(result)) {
-          result.catch((err) => {
-            console.error('[dragcraft] Async after-hook error:', err)
-          })
-        }
-      }
-      catch (err) {
-        console.error('[dragcraft] After-hook error:', err)
-      }
-    }
-
-    const executeSelect = (payload: SelectHookPayload) => {
-      session.execute({ type: 'selection.set', nodeId: payload.nodeId })
-      fireAfterSelect({ nodeId: payload.nodeId })
-    }
-
-    const resolveSelect = (
-      result: MaybePromise<boolean | void>,
-      payload: SelectHookPayload,
-    ) => {
-      if (!isPromiseLike(result)) {
-        if (result !== false)
-          executeSelect(payload)
-        return
-      }
-
-      selectPending.value = true
-      result
-        .then((allowed) => {
-          if (allowed !== false)
-            executeSelect(payload)
-        })
-        .catch((err) => {
-          console.error('[dragcraft] Before-hook error (action cancelled):', err)
-        })
-        .finally(() => {
-          selectPending.value = false
-        })
-    }
-
     const handleSelect = (node: DeepReadonly<NodeDefinition>, e: MouseEvent) => {
-      if (selectPending.value)
-        return
-
-      const payload = { nodeId: node.id, event: e }
-      if (!eventHooks.onBeforeSelect) {
-        executeSelect(payload)
-        return
-      }
-
-      try {
-        resolveSelect(eventHooks.onBeforeSelect(payload), payload)
-      }
-      catch (err) {
-        console.error('[dragcraft] Before-hook error (action cancelled):', err)
-      }
+      e.stopPropagation()
+      session.execute({ type: 'selection.set', nodeId: node.id })
     }
 
     const renderActionButton = (action: ResolvedNodeAction) => {

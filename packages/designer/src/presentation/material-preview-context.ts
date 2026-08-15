@@ -1,9 +1,9 @@
 import type { InjectionKey, Ref } from 'vue'
 import type { NodeStyle, StyleValueMap } from './semantic'
 import { computed, inject } from 'vue'
-import { useRendererContext } from './context'
+import { usePresentationContext } from './context'
 
-export interface WidgetRuntimeContext {
+export interface MaterialPreviewContext {
   nodeId: Readonly<Ref<string>>
   nodeType: Readonly<Ref<string>>
   updateProps: (patch: Record<string, unknown>) => void
@@ -12,12 +12,12 @@ export interface WidgetRuntimeContext {
   updateContentStyle: (patch: StyleValueMap) => void
 }
 
-export const WIDGET_RUNTIME_CONTEXT_KEY: InjectionKey<WidgetRuntimeContext> = Symbol('dc-widget-runtime')
+export const MATERIAL_PREVIEW_CONTEXT_KEY: InjectionKey<MaterialPreviewContext> = Symbol('dc-material-preview-context')
 
-export function createWidgetRuntimeContext(
+export function createMaterialPreviewContext(
   getNode: () => { id: string, type: string },
-): WidgetRuntimeContext {
-  const ctx = useRendererContext()
+): MaterialPreviewContext {
+  const ctx = usePresentationContext()
   const nodeId = computed(() => getNode().id)
   const nodeType = computed(() => getNode().type)
 
@@ -48,12 +48,12 @@ export function createWidgetRuntimeContext(
   }
 }
 
-export function useWidgetRuntime(): WidgetRuntimeContext {
-  const ctx = inject(WIDGET_RUNTIME_CONTEXT_KEY)
+export function useMaterialPreviewContext(): MaterialPreviewContext {
+  const ctx = inject(MATERIAL_PREVIEW_CONTEXT_KEY)
   if (!ctx) {
     throw new Error(
-      '[dragcraft/renderer] WidgetRuntimeContext not found. '
-      + 'Ensure this component is rendered by WidgetRenderer.',
+      '[dragcraft/designer] MaterialPreviewContext not found. '
+      + 'Ensure this component is rendered by NodeHost.',
     )
   }
   return ctx

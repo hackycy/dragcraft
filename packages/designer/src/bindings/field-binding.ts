@@ -132,15 +132,8 @@ export function createBindingAction(
   if (!isSafePath(binding.path))
     return null
 
-  if (binding.scope === 'container') {
-    if (!nodeId || binding.path !== 'variant' || typeof value !== 'string')
-      return null
-    return {
-      type: 'container.change-variant',
-      containerId: nodeId,
-      variant: value,
-    }
-  }
+  if (binding.scope === 'container')
+    return null
 
   if (binding.scope === 'globalConfig') {
     const config = setPatchPath(binding.path, value)

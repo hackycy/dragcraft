@@ -40,7 +40,7 @@ describe('usePropertyBinding', () => {
     try {
       const binding = usePropertyBinding(session)
       expect(binding.selectedNode.value?.id).toBe('text-1')
-      expect(binding.selectedWidgetMeta.value?.type).toBe('text')
+      expect(binding.selectedMaterial.value?.type).toBe('text')
       expect(binding.selectedNodeProps.value).toMatchObject({ label: 'Hello' })
       expect(binding.selectedFormSchema.value?.sections).toHaveLength(1)
     }

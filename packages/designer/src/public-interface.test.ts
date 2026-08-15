@@ -12,12 +12,12 @@ describe('designer public interface', () => {
     expect(typeof publicApi.DcDesigner).toBe('object')
     expect(publicApi).not.toHaveProperty('createEngine')
     expect(publicApi).not.toHaveProperty('CommandType')
-    expect(publicApi).not.toHaveProperty('buildComponentMap')
-    expect(publicApi).not.toHaveProperty('RootRenderer')
+    expect(publicApi).not.toHaveProperty('buildMaterialPreviewMap')
+    expect(publicApi).not.toHaveProperty('ApplicationSurface')
     expect(publicApi).toHaveProperty('DesignerRegionOutlet')
     expect(publicApi).not.toHaveProperty('ContainerRegionOutlet')
-    expect(publicApi).not.toHaveProperty('RendererExtensions')
-    expect(publicApi).not.toHaveProperty('RendererEventHooks')
+    expect(publicApi).not.toHaveProperty('PresentationDefaults')
+    expect(publicApi).not.toHaveProperty('DesignerEventHooks')
   })
 
   it('exposes the extension types through one package', () => {

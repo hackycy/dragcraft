@@ -1,11 +1,10 @@
-import type { DesignerWidgetMeta } from '../types'
+import type { MaterialDefinition } from '../materials/types'
 import { useI18n } from '@dragcraft/i18n'
 import { IconClose, IconSearch } from '@dragcraft/icons'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import { materialItemMatchesQuery, resolveMaterialItem } from '../material'
-import { isWidgetVisibleInMaterialPanel } from '../presentation/semantic'
 import { useDesignerSession } from '../session/context'
 import DcMaterialGroup from './DcMaterialGroup'
 
@@ -20,27 +19,27 @@ export default defineComponent({
 
     // Filter widgets by search query, grouped by widget group
     const filteredGroups = computed(() => {
-      const allWidgets = (session.materials.getAll() as DesignerWidgetMeta[])
-        .filter(isWidgetVisibleInMaterialPanel)
+      const allWidgets = session.materials.getAll() as readonly MaterialDefinition[]
       const query = searchQuery.value.toLowerCase().trim()
 
       const groups = materialGroups.length > 0
         ? materialGroups
-        : [...new Set(allWidgets.map(w => w.group))].map(name => ({ name, title: name, titleKey: undefined }))
+        : [...new Set(allWidgets.map(material => material.panel?.group ?? 'default'))].map(name => ({ name, title: name, titleKey: undefined }))
 
-      const widgetsByGroup = new Map<string, typeof allWidgets>()
-      for (const widget of allWidgets) {
-        const material = resolveMaterialItem(widget, t)
-        if (!materialItemMatchesQuery(widget, material, query)) {
+      const widgetsByGroup = new Map<string, MaterialDefinition[]>()
+      for (const materialDefinition of allWidgets) {
+        const material = resolveMaterialItem(materialDefinition, t)
+        if (!materialItemMatchesQuery(materialDefinition, material, query)) {
           continue
         }
 
-        const widgets = widgetsByGroup.get(widget.group)
+        const group = materialDefinition.panel?.group ?? 'default'
+        const widgets = widgetsByGroup.get(group)
         if (widgets) {
-          widgets.push(widget)
+          widgets.push(materialDefinition)
         }
         else {
-          widgetsByGroup.set(widget.group, [widget])
+          widgetsByGroup.set(group, [materialDefinition])
         }
       }
 

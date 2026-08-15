@@ -1,29 +1,27 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h, nextTick } from 'vue'
+import { playgroundNextMaterials } from '../../config/next-fixtures'
 import { templateRegistry } from '../../config/templates'
-// @vitest-environment happy-dom
-import { isMaterialVisible } from './contract'
-import { playgroundWidgetFixtures } from './index'
 import { NavbarWidget } from './mini-program'
+// @vitest-environment happy-dom
 
-describe('schema-managed navbar example', () => {
+describe('navbar material', () => {
   afterEach(() => {
     document.body.innerHTML = ''
   })
 
-  it('keeps the navbar out of materials with title-only configuration', () => {
-    const navbar = playgroundWidgetFixtures.find(definition => definition.meta.type === 'navbar')!
-    const tabBar = playgroundWidgetFixtures.find(definition => definition.meta.type === 'tab-bar')!
+  it('declares title-only schema data and fixed Chrome presentation', () => {
+    const navbar = playgroundNextMaterials.find(material => material.type === 'navbar')!
+    const tabBar = playgroundNextMaterials.find(material => material.type === 'tab-bar')!
 
-    expect(navbar.meta.authoring).toBe('schema-managed')
-    expect(isMaterialVisible(navbar.meta)).toBe(false)
-    expect(navbar.meta.defaultProps).toEqual({ title: '页面标题' })
-    expect(navbar.meta.creatable).toBeUndefined()
-    expect(navbar.meta.draggable).toBeUndefined()
-    expect(navbar.meta.sortable).toBeUndefined()
-    expect(navbar.meta.formSchema.sections).toHaveLength(1)
-    expect(navbar.meta.formSchema.sections[0].fields.map((field: any) => field.key)).toEqual(['title'])
-    expect(tabBar.meta.formSchema.sections.at(-1)?.titleKey).toBe('field.spacing.sectionTitle')
+    expect(navbar.schema?.defaultProps).toEqual({ title: '页面标题' })
+    expect(navbar.authoring?.policy?.duplicate).toBe('denied')
+    expect(navbar.presentation).toMatchObject({
+      kind: 'visual',
+      layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed' } },
+    })
+    expect(navbar.inspector?.formSchema?.sections[0].fields.map(field => field.key)).toEqual(['title'])
+    expect(tabBar.inspector?.formSchema?.sections.at(-1)?.title).toBe('内容样式')
   })
 
   it('supplies title-only navbar nodes through every built-in template', () => {

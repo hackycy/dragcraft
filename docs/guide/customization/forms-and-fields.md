@@ -22,9 +22,8 @@ FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提
 | 当前节点 style | `{ scope: 'node', path: 'style.container.*' }` | `UPDATE_PROPS` |
 | 页面 surface | `{ scope: 'page', path: 'style.surface.*' }` | 语义化页面 action |
 | 页面业务配置 | 全局字段默认值 | `SET_GLOBAL_CONFIG` |
-| 容器 variant | `{ scope: 'container', path: 'variant' }` | `CHANGE_CONTAINER_VARIANT` |
 
-默认绑定适合物料自身 props。页面视觉、容器状态和跨节点数据应显式写出 `bindTo`，让保存位置一眼可见。
+默认绑定适合物料自身 props。页面视觉和跨节点数据应显式写出 `bindTo`，让保存位置一眼可见。
 
 ## 控制字段显示和禁用
 

@@ -5,7 +5,7 @@
 }
 
 .dc-device-frame--tablet,
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--tablet) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame--tablet) {
   --dc-device-frame-radius: 24px;
 }
 

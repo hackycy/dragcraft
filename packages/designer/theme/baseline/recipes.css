@@ -393,8 +393,8 @@
   outline-offset: 1px;
 }
 
-/* Renderer feedback and node interactions */
-[data-dc-component="root-renderer"] {
+/* Presentation feedback and node interactions */
+[data-dc-component="application-surface"] {
   background: var(--dc-color-surface);
 }
 

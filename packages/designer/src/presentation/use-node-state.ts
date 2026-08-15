@@ -1,15 +1,15 @@
-import type { NodeInteractionState, RendererContext } from './types'
+import type { NodeInteractionState, PresentationContext } from './types'
 import { computed } from 'vue'
 
 /**
  * Computes reactive interaction state for a single schema node.
  *
  * @param getNodeId - Getter function returning the node ID (for reactivity safety)
- * @param ctx - The renderer context (from useRendererContext)
+ * @param ctx - The Presentation context (from usePresentationContext)
  */
 export function useNodeState(
   getNodeId: () => string,
-  ctx: RendererContext,
+  ctx: PresentationContext,
 ): NodeInteractionState {
   const { dragOverNodeId, hoveredNodeId, selectedNodeId } = ctx
 

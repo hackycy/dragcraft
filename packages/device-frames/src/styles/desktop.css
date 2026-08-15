@@ -6,7 +6,7 @@
 }
 
 .dc-device-frame--desktop,
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame--desktop) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame--desktop) {
   --dc-device-frame-radius: 8px;
 }
 

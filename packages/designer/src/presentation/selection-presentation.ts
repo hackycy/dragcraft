@@ -16,7 +16,7 @@ export interface NodeSelectionProjection {
   plane: NodeSelectionPlane
   /** Material border box relative to the registered plane. */
   materialBounds: NodeSelectionRect
-  /** Renderer-owned semantic selection range relative to the registered plane. */
+  /** Presentation-owned semantic selection range relative to the registered plane. */
   bounds: NodeSelectionRect
 }
 

@@ -1,5 +1,6 @@
 import type { PropType } from 'vue'
-import type { DesignerWidgetMeta, MaterialItemIcon } from '../types'
+import type { MaterialDefinition } from '../materials/types'
+import type { MaterialItemIcon } from '../types'
 import { useI18n } from '@dragcraft/i18n'
 import { defineComponent, h, ref } from 'vue'
 import { useDesignerContext } from '../context'
@@ -21,7 +22,7 @@ export default defineComponent({
 
   props: {
     meta: {
-      type: Object as PropType<DesignerWidgetMeta>,
+      type: Object as PropType<MaterialDefinition>,
       required: true,
     },
   },
@@ -48,7 +49,7 @@ export default defineComponent({
       const material = resolveMaterialItem(meta, t)
       const draggable = true
       const disabled = false
-      const headless = meta.headless === true
+      const headless = meta.presentation.kind === 'headless'
       const customContent = extensions.materialItemRenderer?.({
         meta,
         material,

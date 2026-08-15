@@ -2,7 +2,7 @@ import type { PropType } from 'vue'
 import { defineComponent, h } from 'vue'
 
 export default defineComponent({
-  name: 'DcDefaultWidgetFallback',
+  name: 'DcDefaultMaterialFallback',
 
   props: {
     nodeId: {

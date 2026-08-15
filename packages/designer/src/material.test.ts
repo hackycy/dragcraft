@@ -1,26 +1,27 @@
-import type { DesignerWidgetMeta } from './types'
+import type { MaterialDefinition } from './materials/types'
 import { describe, expect, it } from 'vitest'
 import { materialItemMatchesQuery, resolveMaterialItem } from './material'
 
 const t = (key: string, fallback = '') => `${fallback} (${key})`
 
-function makeMeta(overrides: Partial<DesignerWidgetMeta> = {}): DesignerWidgetMeta {
+function makeMaterial(overrides: Partial<MaterialDefinition> = {}): MaterialDefinition {
   return {
     type: 'banner',
-    title: 'Banner',
-    titleKey: 'widget.banner.title',
-    group: 'basic',
-    icon: 'banner',
-    defaultProps: {},
-    formSchema: { sections: [] },
+    panel: {
+      title: 'Banner',
+      titleKey: 'widget.banner.title',
+      group: 'basic',
+      icon: 'banner',
+    },
+    presentation: { kind: 'headless' },
     ...overrides,
   }
 }
 
 describe('material protocol helpers', () => {
   it('resolves material display data with widget fallbacks', () => {
-    const meta = makeMeta({
-      material: {
+    const material = makeMaterial({
+      panel: {
         title: 'Hero Banner',
         titleKey: 'widget.banner.material.title',
         icon: 'hero',
@@ -31,7 +32,7 @@ describe('material protocol helpers', () => {
       },
     })
 
-    expect(resolveMaterialItem(meta, t)).toEqual({
+    expect(resolveMaterialItem(material, t)).toEqual({
       title: 'Hero Banner (widget.banner.material.title)',
       icon: 'hero',
       description: 'Promotional hero section (widget.banner.material.description)',
@@ -42,17 +43,17 @@ describe('material protocol helpers', () => {
   })
 
   it('matches query against resolved material text and keywords', () => {
-    const meta = makeMeta({
-      material: {
+    const materialDefinition = makeMaterial({
+      panel: {
         description: 'Collect customer feedback',
         tags: ['form'],
         keywords: ['survey'],
       },
     })
-    const material = resolveMaterialItem(meta, t)
+    const material = resolveMaterialItem(materialDefinition, t)
 
-    expect(materialItemMatchesQuery(meta, material, 'survey')).toBe(true)
-    expect(materialItemMatchesQuery(meta, material, 'feedback')).toBe(true)
-    expect(materialItemMatchesQuery(meta, material, 'missing')).toBe(false)
+    expect(materialItemMatchesQuery(materialDefinition, material, 'survey')).toBe(true)
+    expect(materialItemMatchesQuery(materialDefinition, material, 'feedback')).toBe(true)
+    expect(materialItemMatchesQuery(materialDefinition, material, 'missing')).toBe(false)
   })
 })

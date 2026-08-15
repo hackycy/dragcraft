@@ -76,7 +76,6 @@ export type {
   DesignerWorkspaceMode,
   DesignerWorkspaceOptions,
   LeftPanelTabKey,
-  MaterialDisplayMeta,
   MaterialItemIcon,
   MaterialItemRenderProps,
   PropertyTabKey,

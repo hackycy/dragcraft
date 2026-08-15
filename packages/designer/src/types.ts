@@ -6,9 +6,8 @@ import type { AuthoringEngine, DesignerHistory, DesignerSelection, AuthoringActi
 import type { MaterialDefinition } from './materials/types'
 import type { NodeActionDefinition, NodeActionRegistry } from './presentation/action-registry'
 import type { ActionInterceptor } from './presentation/action-runtime'
-import type { RendererEventHooks } from './presentation/event-hooks'
 import type { CreationBlockReason, NodeDestination, PlacementDecision } from './presentation/semantic'
-import type { AuthoringResult, ComponentMap, ContainerDropRejection, ContainerDropTarget, RendererWidgetMeta } from './presentation/types'
+import type { AuthoringResult, ContainerDropRejection, ContainerDropTarget } from './presentation/types'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
 
@@ -45,44 +44,7 @@ export interface DesignerWorkspaceController {
   closeDrawers: () => void
 }
 
-// ──────────────────────────────────────────
-// Material item display protocol
-// ──────────────────────────────────────────
-
 export type MaterialItemIcon = string | Component
-
-/**
- * Designer-owned display metadata for a widget in the material panel.
- * Core registration remains UI-agnostic; this protocol only affects designer UI.
- */
-export interface MaterialDisplayMeta {
-  /** Material panel title override. Falls back to WidgetMeta.title/titleKey. */
-  title?: string
-  /** i18n message key for material panel title. */
-  titleKey?: string
-  /** Icon or Vue component shown in the material panel. Falls back to WidgetMeta.icon. */
-  icon?: MaterialItemIcon
-  /** Short supporting copy for richer material cards. */
-  description?: string
-  /** i18n message key for description. */
-  descriptionKey?: string
-  /** Image URL for visual material cards. */
-  thumbnail?: string
-  /** Compact labels shown by custom material item renderers. */
-  tags?: string[]
-  /** Additional search terms for the material panel. */
-  keywords?: string[]
-  /** App-specific display data for custom material item renderers. */
-  metadata?: Record<string, unknown>
-}
-
-/**
- * Widget metadata accepted by designer. Extends renderer metadata with
- * material-panel display information without coupling core to Vue UI.
- */
-export interface DesignerWidgetMeta extends RendererWidgetMeta {
-  material?: MaterialDisplayMeta
-}
 
 export interface ResolvedMaterialItem {
   title: string
@@ -100,7 +62,7 @@ export interface MaterialPanelGroup {
 }
 
 export interface MaterialItemRenderProps {
-  meta: DesignerWidgetMeta
+  meta: Readonly<MaterialDefinition>
   material: ResolvedMaterialItem
   draggable: boolean
   disabled: boolean
@@ -132,7 +94,7 @@ export interface DesignerOptions {
   materials: readonly MaterialDefinition[]
   /** Maximum number of undoable document revisions. */
   maxHistoryEntries?: number
-  /** Field type → Vue component map for form-generator */
+  /** Field type → Vue material preview map for form-generator */
   fieldComponentMap?: FieldComponentMap
   /** Global config form schema for the right panel Global tab */
   globalConfigSchema?: FormSchema
@@ -144,7 +106,7 @@ export interface DesignerOptions {
   customActions?: NodeActionDefinition[]
   /** Current locale (default: 'zh-CN') */
   locale?: string
-  /** Additional/override messages merged on top of designer and renderer defaults */
+  /** Additional/override messages merged on top of Designer and Presentation defaults */
   messages?: LocaleMessages
   /** Workbench layout and keyboard behavior. */
   workspace?: DesignerWorkspaceOptions
@@ -205,13 +167,11 @@ export interface DesignerInstance {
  * Internal context provided to all designer descendants via provide/inject.
  */
 export interface DesignerContext {
-  componentMap: ComponentMap
   materialGroups: readonly MaterialPanelGroup[]
   extensions: DesignerExtensions
   fieldComponentMap: FieldComponentMap | undefined
   globalConfigSchema: FormSchema | null
   deviceFrame: Ref<DesignerDeviceFrame | undefined>
-  eventHooks: RendererEventHooks
   actionInterceptors: ActionInterceptor[]
   actionRegistry: NodeActionRegistry
   workspace: DesignerWorkspaceController
@@ -219,7 +179,7 @@ export interface DesignerContext {
   containerDropDecision: Ref<PlacementDecision | null>
   dragOverNodeId: Ref<string | null>
   dragOverIndex: Ref<number | null>
-  handleMaterialDragStart: (e: DragEvent, meta: RendererWidgetMeta) => void
+  handleMaterialDragStart: (e: DragEvent, material: Readonly<MaterialDefinition>) => void
   handleDragEnd: (e: DragEvent) => void
   handleCanvasDragOver: (e: DragEvent) => void
   handleCanvasDragLeave: (e: DragEvent) => void

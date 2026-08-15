@@ -1,12 +1,12 @@
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPresentationHost } from './selection-presentation'
-import type { LayoutEdge, ResolvedChromePlacement, ResolvedLayerPlacement, StyleValueMap } from './semantic'
-import type { RendererContext } from './types'
+import type { LayoutEdge, ResolvedChromePresentation, ResolvedLayerPresentation, StyleValueMap } from './semantic'
+import type { PresentationContext } from './types'
 import { DcScrollArea } from '@dragcraft/ui'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue'
 import { DEFAULT_LAYOUT_REGION } from './semantic'
 
-type RendererLayoutProjection = RendererContext['layout']['value']
+type SurfaceProjection = PresentationContext['layout']['value']
 
 const CHROME_MEASURE_SELECTOR = '[data-dc-chrome-position="fixed"][data-dc-reserve-mode="measure"][data-dc-avoid-content="true"]'
 
@@ -27,7 +27,7 @@ function edgeStyle(edge: LayoutEdge): Record<string, string> {
   }
 }
 
-function chromeItemStyle(placement: ResolvedChromePlacement): Record<string, string> {
+function chromeItemStyle(placement: ResolvedChromePresentation): Record<string, string> {
   if (placement.position === 'flow')
     return { position: 'relative', pointerEvents: 'auto' }
   if (placement.position === 'fixed') {
@@ -66,7 +66,7 @@ function fixedChromeStackStyle(edge: LayoutEdge): Record<string, string> {
   return style
 }
 
-function layerItemStyle(placement: ResolvedLayerPlacement): Record<string, string> {
+function layerItemStyle(placement: ResolvedLayerPresentation): Record<string, string> {
   if (placement.mode === 'self') {
     return {
       position: 'absolute',
@@ -105,7 +105,7 @@ function layerItemStyle(placement: ResolvedLayerPlacement): Record<string, strin
   return style
 }
 
-function insetVariables(plan: RendererLayoutProjection): Record<string, string> {
+function insetVariables(plan: SurfaceProjection): Record<string, string> {
   const sized: Record<LayoutEdge, string[]> = {
     'block-start': [],
     'block-end': [],
@@ -119,7 +119,7 @@ function insetVariables(plan: RendererLayoutProjection): Record<string, string> 
     'inline-end': [],
   }
   for (const entry of plan.chrome) {
-    const placement = entry.layout.placement as ResolvedChromePlacement
+    const placement = entry.layout.placement as ResolvedChromePresentation
     if (placement.position !== 'fixed' || !placement.avoidContent)
       continue
     if (placement.reserve.mode === 'size')
@@ -162,7 +162,7 @@ export default defineComponent({
       required: true,
     },
     layoutPlan: {
-      type: Object as PropType<RendererLayoutProjection>,
+      type: Object as PropType<SurfaceProjection>,
       required: true,
     },
     surfaceStyle: {
@@ -244,7 +244,7 @@ export default defineComponent({
         'inline-end': { reserved: [], overlay: [] },
       }
       for (const [index, entry] of props.layoutPlan.chrome.entries()) {
-        const placement = entry.layout.placement as ResolvedChromePlacement
+        const placement = entry.layout.placement as ResolvedChromePresentation
         const item = h('div', {
           'key': entry.node.id,
           'class': ['dc-canvas-surface__chrome-item', `dc-canvas-surface__chrome-item--${placement.position}`],
@@ -289,7 +289,7 @@ export default defineComponent({
           'data-dc-layer': layer,
           'style': { position: 'absolute', inset: '0px', zIndex: '30', pointerEvents: 'none' },
         }, entries.map((entry, index) => {
-          const placement = entry.layout.placement as ResolvedLayerPlacement
+          const placement = entry.layout.placement as ResolvedLayerPresentation
           return h('div', {
             'key': entry.node.id,
             'class': ['dc-canvas-surface__layer-item', `dc-canvas-surface__layer-item--${placement.mode}`],

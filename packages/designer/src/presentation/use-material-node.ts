@@ -1,24 +1,24 @@
 import type { Component, ComputedRef } from 'vue'
-import type { BehaviorPredicate, BehaviorContext as InstanceBehaviorContext, ResolvedNodeLayout } from './semantic'
-import type { NodeInteractionState, RendererContext, RendererNode, RendererWidgetMeta } from './types'
+import type { MaterialDefinition } from '../materials/types'
+import type { ResolvedPresentationLayout } from './semantic'
+import type { NodeInteractionState, PresentationContext, PresentationNode } from './types'
 import { computed } from 'vue'
-import { runBeforeAfterHook } from './event-hooks'
 import { useNodeState } from './use-node-state'
 
-export interface UseWidgetNodeReturn {
+export interface UseMaterialNodeReturn {
   /** Reactive interaction state (selected, hovered, drag-over) */
   state: NodeInteractionState
   /** The resolved Vue component for this widget type, or undefined */
   resolvedComponent: ComputedRef<Component | undefined>
-  /** The widget meta from the registry */
-  meta: ComputedRef<RendererWidgetMeta | undefined>
-  /** Whether to use mask (from meta.mask, default true) */
+  /** The registered material definition, if available. */
+  material: ComputedRef<Readonly<MaterialDefinition> | undefined>
+  /** Whether to use the Designer-owned blocking mask. */
   useMask: ComputedRef<boolean>
-  /** Whether this node is selectable (from meta.selectable, default true) */
+  /** Whether this node is selectable. */
   selectable: ComputedRef<boolean>
-  /** Whether this node is draggable (from meta.draggable, default true) */
+  /** Whether this node is draggable. */
   draggable: ComputedRef<boolean>
-  /** Whether this node is sortable / position-locked (from meta.sortable, default true) */
+  /** Whether this node is sortable. */
   sortable: ComputedRef<boolean>
   /** Whether this node belongs to a sortable scope */
   inSortScope: ComputedRef<boolean>
@@ -27,7 +27,7 @@ export interface UseWidgetNodeReturn {
   /** Whether this node is visible (from layout.visible, default true) */
   visible: ComputedRef<boolean>
   /** Resolved open layout metadata */
-  layout: ComputedRef<ResolvedNodeLayout>
+  layout: ComputedRef<ResolvedPresentationLayout>
   /** CSS classes for the node wrapper */
   wrapperClasses: ComputedRef<Array<string | Record<string, boolean>>>
   /** Handle select event */
@@ -40,40 +40,31 @@ export interface UseWidgetNodeReturn {
 
 /**
  * Composable that extracts all widget node state and event handling logic.
- * This is the primary composable for building custom node renderers.
+ * This is the primary composable for building custom NodeHost behavior.
  *
  * @param getNode - Getter for the current schema node
- * @param ctx - The renderer context (from useRendererContext)
+ * @param ctx - The Presentation context (from usePresentationContext)
  */
-export function useWidgetNode(
-  getNode: () => RendererNode,
-  ctx: RendererContext,
-): UseWidgetNodeReturn {
-  const { componentMap, eventHooks, session } = ctx
+export function useMaterialNode(
+  getNode: () => PresentationNode,
+  ctx: PresentationContext,
+): UseMaterialNodeReturn {
+  const { session } = ctx
 
   const state = useNodeState(() => getNode().id, ctx)
 
-  const meta = computed<RendererWidgetMeta | undefined>(() =>
+  const material = computed<Readonly<MaterialDefinition> | undefined>(() =>
     session.materials.get(getNode().type),
   )
-  const resolvedComponent = computed(() => componentMap[getNode().type])
-  const layout = computed(() => session.materials.resolveLayout(getNode()))
+  const resolvedComponent = computed(() => {
+    const presentation = material.value?.presentation
+    return presentation?.kind === 'visual' ? presentation.preview : undefined
+  })
+  const layout = computed(() => session.materials.resolvePresentation(getNode()))
   const inSortScope = computed(() => layout.value.sortScope !== false)
   const isDragging = computed(() => session.state.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
-  function readInstanceCtx(): InstanceBehaviorContext {
-    return { node: getNode() as never, schema: ctx.schema.value as never }
-  }
-
-  function resolveMetaBehavior(
-    field: BehaviorPredicate<InstanceBehaviorContext> | undefined,
-  ): boolean {
-    if (typeof field !== 'function')
-      return field !== false
-    return field(readInstanceCtx())
-  }
-
-  const useMask = computed(() => resolveMetaBehavior(meta.value?.mask))
+  const useMask = computed(() => true)
 
   const selectable = computed(() =>
     session.materials.resolveCapability(getNode(), 'selectable'),
@@ -104,24 +95,11 @@ export function useWidgetNode(
     state.interactionClasses.value,
   ])
 
-  // Guard against concurrent async selections
-  const selectPending = { value: false }
-
   const handleSelect = (e: MouseEvent) => {
-    if (!selectable.value || selectPending.value)
+    if (!selectable.value)
       return
     e.stopPropagation()
-
-    const nodeId = getNode().id
-    runBeforeAfterHook(
-      eventHooks.onBeforeSelect,
-      { nodeId, event: e },
-      () => session.execute({ type: 'selection.set', nodeId }),
-      eventHooks.onAfterSelect
-        ? () => eventHooks.onAfterSelect?.({ nodeId })
-        : undefined,
-      selectPending,
-    )
+    session.execute({ type: 'selection.set', nodeId: getNode().id })
   }
 
   const handleMouseEnter = () => {
@@ -129,20 +107,18 @@ export function useWidgetNode(
     if (ctx.hoveredNodeId.value === nodeId)
       return
     session.execute({ type: 'hover.set', nodeId })
-    eventHooks.onHoverChange?.({ nodeId })
   }
 
   const handleMouseLeave = () => {
     if (ctx.hoveredNodeId.value !== getNode().id)
       return
     session.execute({ type: 'hover.set', nodeId: null })
-    eventHooks.onHoverChange?.({ nodeId: null })
   }
 
   return {
     state,
     resolvedComponent,
-    meta,
+    material,
     useMask,
     selectable,
     draggable,

@@ -1,5 +1,5 @@
 import type { PropType } from 'vue'
-import type { MaterialMeta } from './contract'
+import type { MaterialEditorMetadata } from './contract'
 import { defineComponent, h } from 'vue'
 
 interface OptionItem {
@@ -16,7 +16,7 @@ function renderRequired(required: boolean) {
   return required ? h('span', { class: 'pg-widget-form__required' }, '*') : null
 }
 
-export const formInputWidgetMeta: MaterialMeta = {
+export const formInputWidgetMeta: MaterialEditorMetadata = {
   type: 'form-input',
   title: '输入框',
   titleKey: 'widget.form-input.title',
@@ -79,7 +79,7 @@ export const FormInputWidget = defineComponent({
   },
 })
 
-export const formTextareaWidgetMeta: MaterialMeta = {
+export const formTextareaWidgetMeta: MaterialEditorMetadata = {
   type: 'form-textarea',
   title: '多行文本',
   titleKey: 'widget.form-textarea.title',
@@ -145,7 +145,7 @@ export const FormTextareaWidget = defineComponent({
   },
 })
 
-export const formSelectWidgetMeta: MaterialMeta = {
+export const formSelectWidgetMeta: MaterialEditorMetadata = {
   type: 'form-select',
   title: '下拉选择',
   titleKey: 'widget.form-select.title',
@@ -213,7 +213,7 @@ export const FormSelectWidget = defineComponent({
   },
 })
 
-export const formCheckboxWidgetMeta: MaterialMeta = {
+export const formCheckboxWidgetMeta: MaterialEditorMetadata = {
   type: 'form-checkbox',
   title: '复选框',
   titleKey: 'widget.form-checkbox.title',
@@ -264,7 +264,7 @@ export const FormCheckboxWidget = defineComponent({
   },
 })
 
-export const formRadioWidgetMeta: MaterialMeta = {
+export const formRadioWidgetMeta: MaterialEditorMetadata = {
   type: 'form-radio-group',
   title: '单选组',
   titleKey: 'widget.form-radio-group.title',
@@ -345,11 +345,3 @@ export const FormRadioWidget = defineComponent({
       ])
   },
 })
-
-export const formWidgetDefinitions = [
-  { meta: formInputWidgetMeta, component: FormInputWidget },
-  { meta: formTextareaWidgetMeta, component: FormTextareaWidget },
-  { meta: formSelectWidgetMeta, component: FormSelectWidget },
-  { meta: formCheckboxWidgetMeta, component: FormCheckboxWidget },
-  { meta: formRadioWidgetMeta, component: FormRadioWidget },
-]

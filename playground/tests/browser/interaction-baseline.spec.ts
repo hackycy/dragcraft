@@ -51,7 +51,7 @@ test.describe(backend.name, () => {
 
     await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()
 
-    const boundary = page.locator('[data-dc-component="renderer-frame-boundary"]')
+    const boundary = page.locator('[data-dc-component="presentation-frame-boundary"]')
     const rootPlane = boundary.locator(':scope > .dc-node-selection-plane--root')
     const [boundaryBox, rootPlaneBox] = await Promise.all([
       boundary.boundingBox(),

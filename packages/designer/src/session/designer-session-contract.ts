@@ -44,13 +44,13 @@ export function describeDesignerSessionContract(
       const { session } = createFixture()
       const layout = session.document.getNode('layout')!
 
-      expect(session.materials.get('text')?.title).toBe('Text')
+      expect(session.materials.get('text')?.panel?.title).toBe('Text')
       expect(session.materials.getAll().map(meta => meta.type)).toEqual(['text', 'layout'])
       expect(session.materials.resolveCapability(session.document.getNode('ordinary')!, 'configurable')).toBe(true)
-      expect(session.materials.resolveLayout(session.document.getNode('ordinary')!).sortScope).toBe('content')
+      expect(session.materials.resolvePresentation(session.document.getNode('ordinary')!).sortScope).toBe('content')
       expect(session.materials.resolveContainer(layout)).toMatchObject({
         ok: true,
-        plan: { containerId: 'layout' },
+        presentation: { containerId: 'layout' },
       })
       expect('engine' in session).toBe(false)
       expect('store' in session).toBe(false)

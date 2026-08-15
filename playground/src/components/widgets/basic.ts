@@ -1,8 +1,8 @@
 import type { PropType } from 'vue'
-import type { MaterialMeta } from './contract'
+import type { MaterialEditorMetadata } from './contract'
 import { defineComponent, h } from 'vue'
 
-export const textWidgetMeta: MaterialMeta = {
+export const textWidgetMeta: MaterialEditorMetadata = {
   type: 'text',
   title: '文本',
   titleKey: 'widget.text.title',
@@ -106,7 +106,7 @@ export const TextWidget = defineComponent({
   },
 })
 
-export const buttonWidgetMeta: MaterialMeta = {
+export const buttonWidgetMeta: MaterialEditorMetadata = {
   type: 'button',
   title: '按钮',
   titleKey: 'widget.button.title',
@@ -176,7 +176,7 @@ export const ButtonWidget = defineComponent({
   },
 })
 
-export const imageWidgetMeta: MaterialMeta = {
+export const imageWidgetMeta: MaterialEditorMetadata = {
   type: 'image',
   title: '图片',
   titleKey: 'widget.image.title',
@@ -246,7 +246,7 @@ export const ImageWidget = defineComponent({
   },
 })
 
-export const linkWidgetMeta: MaterialMeta = {
+export const linkWidgetMeta: MaterialEditorMetadata = {
   type: 'link',
   title: '链接',
   titleKey: 'widget.link.title',
@@ -309,7 +309,7 @@ export const LinkWidget = defineComponent({
   },
 })
 
-export const dividerWidgetMeta: MaterialMeta = {
+export const dividerWidgetMeta: MaterialEditorMetadata = {
   type: 'divider',
   title: '分割线',
   titleKey: 'widget.divider.title',
@@ -371,11 +371,3 @@ export const DividerWidget = defineComponent({
       })
   },
 })
-
-export const basicWidgetDefinitions = [
-  { meta: textWidgetMeta, component: TextWidget },
-  { meta: buttonWidgetMeta, component: ButtonWidget },
-  { meta: imageWidgetMeta, component: ImageWidget },
-  { meta: linkWidgetMeta, component: LinkWidget },
-  { meta: dividerWidgetMeta, component: DividerWidget },
-]

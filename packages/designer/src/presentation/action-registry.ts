@@ -1,12 +1,12 @@
 import type { DocumentSchema, NodeDefinition } from '@dragcraft/core'
 import type { Component } from 'vue'
-import type { ActionInterceptor, ActionRisk } from './action-runtime'
-import type { MaybePromise } from './event-hooks'
+import type { MaterialDefinition } from '../materials/types'
+import type { ActionInterceptor, ActionRisk, MaybePromise } from './action-runtime'
 import type { DeepReadonly, NodeOwner } from './semantic'
-import type { AuthoringAction, RendererContext, RendererWidgetMeta } from './types'
+import type { AuthoringAction, PresentationContext } from './types'
 import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dragcraft/icons'
 import { runActionPipeline } from './action-runtime'
-import { isInsertAllowed, isMoveAllowed, isRemoveAllowed, isSchemaManagedWidget } from './semantic'
+import { isInsertAllowed, isMoveAllowed, isRemoveAllowed } from './semantic'
 
 function canReorder(ctx: NodeActionContext): boolean {
   return ctx.owner.kind !== 'root' || ctx.sortScope !== false
@@ -42,12 +42,12 @@ export interface NodeActionContext {
   siblingCount: number
   /** Sort scope this action context belongs to, or false when unsorted */
   sortScope: string | false
-  /** The widget meta, if registered */
-  meta: RendererWidgetMeta | undefined
+  /** The registered material, if available. */
+  material: Readonly<MaterialDefinition> | undefined
   /** Semantic material and authoring facts from the session read projection. */
-  materials: RendererContext['session']['materials']
-  /** The only authoring entry point available to Renderer. */
-  session: RendererContext['session']
+  materials: PresentationContext['session']['materials']
+  /** The only authoring entry point available to Presentation. */
+  session: PresentationContext['session']
   /** Safe schema snapshot shared by all action predicates for this resolution. */
   schema: DeepReadonly<DocumentSchema> | null
   /** Precomputed lock set for the owning sort scope or container region. */
@@ -145,7 +145,7 @@ export interface NodeActionRegistry {
   unregister: (key: string) => void
   /**
    * Resolve actions for a specific node, applying visibility/disabled predicates
-   * and per-widget overrides from WidgetMeta.
+   * and material authoring policy.
    */
   resolve: (ctx: NodeActionContext, actionInterceptors?: ActionInterceptor[], keys?: readonly string[]) => ResolvedNodeAction[]
 }
@@ -172,8 +172,6 @@ function isBuiltInActionAuthorized(key: string, ctx: NodeActionContext): boolean
       && ctx.materials.canDeleteSubtree(ctx.node)
   }
   if (key === ActionKey.DUPLICATE) {
-    if (isSchemaManagedWidget(ctx.meta))
-      return false
     return ctx.materials.canCreateSubtree(ctx.node)
   }
   return undefined
@@ -317,10 +315,6 @@ export function createNodeActionRegistry(
     },
 
     resolve(ctx: NodeActionContext, actionInterceptors: ActionInterceptor[] = [], keys?: readonly string[]): ResolvedNodeAction[] {
-      // Get per-widget action overrides from WidgetMeta
-      const widgetActions = ctx.meta?.actions
-
-      const onlyKeys = widgetActions?.only ? new Set(widgetActions.only) : undefined
       const requestedKeys = keys ? new Set(keys) : undefined
       const authorizationByKey = new Map<string, boolean | undefined>()
       const resolveAuthorization = (key: string): boolean | undefined => {
@@ -339,28 +333,8 @@ export function createNodeActionRegistry(
         const builtInDecision = resolveAuthorization(action.key)
         if (builtInDecision !== undefined)
           return true
-        return !isSchemaManagedWidget(ctx.meta) || onlyKeys?.has(action.key) === true
+        return true
       })
-
-      // Apply per-widget overrides
-      if (widgetActions) {
-        if (onlyKeys)
-          actionDefs = actionDefs.filter(a => onlyKeys.has(a.key))
-        if (widgetActions.exclude) {
-          const excludeKeys = new Set(widgetActions.exclude)
-          actionDefs = actionDefs.filter(a => !excludeKeys.has(a.key))
-        }
-        if (widgetActions.extra) {
-          const admittedExtras = widgetActions.extra.filter((action) => {
-            if (requestedKeys && !requestedKeys.has(action.key))
-              return false
-            const builtInDecision = resolveAuthorization(action.key)
-            return builtInDecision ?? true
-          })
-          actionDefs = [...actionDefs, ...admittedExtras]
-            .sort((a, b) => a.order - b.order)
-        }
-      }
       return actionDefs
         .map((def): ResolvedNodeAction | null => {
           const visible = def.visible ? def.visible(ctx) : true

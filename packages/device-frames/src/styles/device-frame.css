@@ -22,7 +22,7 @@
   box-shadow: none;
 }
 
-[data-dc-component="renderer-frame-boundary"]:has(> .dc-device-frame) {
+[data-dc-component="presentation-frame-boundary"]:has(> .dc-device-frame) {
   --dc-internal-designer-root-selection-plane-outset: var(--dc-device-frame-border-width);
   --dc-internal-designer-root-selection-plane-radius: var(--dc-device-frame-radius);
   --dc-node-selection-root-block-overlap: var(--dc-device-frame-border-width);

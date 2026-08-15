@@ -1,4 +1,4 @@
-import type { DocumentSchema, NodeDefinition } from '@dragcraft/core'
+import type { NodeDefinition } from '@dragcraft/core'
 
 export type DeepReadonly<T>
   = T extends (...args: infer Args) => infer Result
@@ -36,62 +36,6 @@ export interface PlacementDecision extends CreationBlockReason {
   readonly details?: Record<string, unknown>
 }
 
-export type ContainerRegionId = string
-export type ContainerVariantId = string
-
-export interface ContainerRegionConstraints {
-  readonly includeTypes?: readonly string[]
-  readonly excludeTypes?: readonly string[]
-  readonly minItems?: number
-  readonly maxItems?: number
-}
-
-export interface ContainerRegionDefinition {
-  readonly id: ContainerRegionId
-  readonly title: string
-  readonly titleKey?: string
-  readonly constraints?: ContainerRegionConstraints
-}
-
-export interface ContainerVariantDefinition {
-  readonly title: string
-  readonly titleKey?: string
-  readonly regions: readonly ContainerRegionDefinition[]
-}
-
-export interface ContainerDefinition {
-  readonly defaultVariant: string
-  readonly variants: Readonly<Record<string, ContainerVariantDefinition>>
-  readonly canPlace?: (context: Record<string, unknown>) => PlacementDecision
-}
-
-export interface ContainerState {
-  readonly variant: string
-  readonly regions: Readonly<Record<ContainerRegionId, readonly NodeDefinition[]>>
-}
-
-export interface ContainerPlanRegion {
-  readonly definition: ContainerRegionDefinition
-  readonly nodes: readonly NodeDefinition[]
-  readonly isEmpty: boolean
-}
-
-export interface ContainerPlan {
-  readonly containerId: string
-  readonly variant: ContainerVariantDefinition
-  readonly regions: readonly ContainerPlanRegion[]
-}
-
-export type ContainerPlanResult
-  = | { readonly ok: true, readonly plan: ContainerPlan }
-    | { readonly ok: false, readonly code: 'CONTAINER_UNRESOLVED' | 'CONTAINER_VARIANT_UNKNOWN', readonly containerId: string }
-
-export interface NodeLayout {
-  readonly placement?: NodePlacement
-  readonly order?: number
-  readonly visible?: boolean | ((context: { readonly node: NodeDefinition, readonly schema: DocumentSchema }) => boolean)
-}
-
 export type LayoutEdge = 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
 export type LayoutAnchor = 'start' | 'center' | 'end'
 export type LayoutChromePosition = 'fixed' | 'sticky' | 'flow'
@@ -110,19 +54,19 @@ export type NodePlacement
     | { readonly kind: 'chrome', readonly edge: LayoutEdge, readonly position?: LayoutChromePosition, readonly reserve?: LayoutReserveSpec, readonly avoidContent?: boolean }
     | { readonly kind: 'layer', readonly layer?: string, readonly mode?: LayoutLayerMode, readonly anchor?: { readonly block?: LayoutAnchor, readonly inline?: LayoutAnchor }, readonly offset?: LayoutOffsets, readonly avoid?: readonly LayoutAvoidTarget[] }
 
-export interface ResolvedFlowPlacement { readonly kind: 'flow', readonly region: string, readonly sortScope: string | false }
-export interface ResolvedChromePlacement { readonly kind: 'chrome', readonly edge: LayoutEdge, readonly position: LayoutChromePosition, readonly reserve: { readonly mode: LayoutReserveMode, readonly size?: string | number }, readonly avoidContent: boolean }
-export interface ResolvedLayerPlacement { readonly kind: 'layer', readonly layer: string, readonly mode: LayoutLayerMode, readonly anchor: { readonly block?: LayoutAnchor, readonly inline?: LayoutAnchor }, readonly offset?: LayoutOffsets, readonly avoid: readonly LayoutAvoidTarget[] }
-export type ResolvedNodePlacement = ResolvedFlowPlacement | ResolvedChromePlacement | ResolvedLayerPlacement
-export interface ResolvedNodeLayout {
-  readonly placement: ResolvedNodePlacement
+export interface ResolvedFlowPresentation { readonly kind: 'flow', readonly region: string, readonly sortScope: string | false }
+export interface ResolvedChromePresentation { readonly kind: 'chrome', readonly edge: LayoutEdge, readonly position: LayoutChromePosition, readonly reserve: { readonly mode: LayoutReserveMode, readonly size?: string | number }, readonly avoidContent: boolean }
+export interface ResolvedLayerPresentation { readonly kind: 'layer', readonly layer: string, readonly mode: LayoutLayerMode, readonly anchor: { readonly block?: LayoutAnchor, readonly inline?: LayoutAnchor }, readonly offset?: LayoutOffsets, readonly avoid: readonly LayoutAvoidTarget[] }
+export type ResolvedPresentationPlacement = ResolvedFlowPresentation | ResolvedChromePresentation | ResolvedLayerPresentation
+export interface ResolvedPresentationLayout {
+  readonly placement: ResolvedPresentationPlacement
   readonly region?: string
   readonly sortScope: string | false
   readonly order?: number
   readonly visible: boolean
 }
 
-export interface LayoutNodeEntry { readonly node: NodeDefinition, readonly arrayIndex: number, readonly layout: ResolvedNodeLayout }
+export interface LayoutNodeEntry { readonly node: NodeDefinition, readonly arrayIndex: number, readonly layout: ResolvedPresentationLayout }
 export interface DragTarget {
   readonly sourceNodeId: string | null
   readonly widgetType: string | null
@@ -134,38 +78,6 @@ export interface HistoryState {
   readonly undoCount: number
   readonly redoCount: number
 }
-
-export interface BehaviorContext {
-  readonly node: DeepReadonly<NodeDefinition>
-  readonly schema: DeepReadonly<DocumentSchema>
-}
-export type BehaviorPredicate<Context = BehaviorContext> = boolean | ((context: Context) => boolean)
-export type CreatablePredicate = boolean | CreationBlockReason & { readonly allowed: boolean } | ((context: { readonly widgetType: string, readonly schema: DeepReadonly<DocumentSchema> }) => boolean | CreationBlockReason & { readonly allowed: boolean })
-
-export interface CoreWidgetMeta {
-  readonly type: string
-  readonly title: string
-  readonly titleKey?: string
-  readonly group: string
-  readonly icon?: string
-  readonly defaultProps: Record<string, unknown>
-  readonly defaultStyle?: NodeStyle
-  readonly formSchema: { readonly sections: readonly unknown[] }
-  readonly container?: ContainerDefinition
-  readonly authoring?: 'schema-managed'
-  readonly mask?: BehaviorPredicate
-  readonly selectable?: BehaviorPredicate
-  readonly draggable?: BehaviorPredicate
-  readonly sortable?: BehaviorPredicate
-  readonly deletable?: BehaviorPredicate
-  readonly configurable?: BehaviorPredicate
-  readonly variantChangeable?: BehaviorPredicate
-  readonly defaultLayout?: NodeLayout
-  readonly creatable?: CreatablePredicate
-  readonly actions?: { readonly only?: readonly string[], readonly exclude?: readonly string[] }
-}
-
-export type WidgetMeta = CoreWidgetMeta
 
 export type OwnerResolutionResult<T>
   = | { readonly ok: true, readonly value: T }
@@ -179,15 +91,6 @@ export interface SchemaDiagnostic {
   readonly regionId?: string
   readonly path?: string
   readonly details?: Record<string, unknown>
-}
-
-export interface ResolvedNodeDestination {
-  readonly children: readonly NodeDefinition[]
-  readonly destination: NodeDestination
-  readonly container?: NodeDefinition
-  readonly definition?: ContainerDefinition
-  readonly variant?: ContainerVariantDefinition
-  readonly region?: ContainerRegionDefinition
 }
 
 export const DEFAULT_LAYOUT_REGION = 'content'
@@ -236,50 +139,6 @@ export function normalizeStyleValueMap(style: DeepReadonly<StyleValueMap> | unde
   for (const [key, value] of Object.entries(style))
     normalized[key] = typeof value === 'number' && value !== 0 && LENGTH_STYLE_KEYS.has(key) ? `${value}px` : value
   return normalized
-}
-
-export function isSchemaManagedWidget(meta: WidgetMeta | undefined): boolean {
-  return meta?.authoring === 'schema-managed'
-}
-
-export function isWidgetVisibleInMaterialPanel(meta: WidgetMeta): boolean {
-  return !isSchemaManagedWidget(meta)
-}
-
-export function resolveAuthoringCapability(meta: WidgetMeta | undefined, node: DeepReadonly<NodeDefinition>, schema: DeepReadonly<DocumentSchema>, capability: 'selectable' | 'configurable' | 'draggable' | 'sortable' | 'deletable' | 'variantChangeable'): boolean {
-  const defaultValue = capability === 'draggable' || capability === 'deletable' || capability === 'variantChangeable'
-    ? !isSchemaManagedWidget(meta)
-    : true
-  const value = meta?.[capability]
-  if (value === undefined)
-    return defaultValue
-  if (typeof value === 'boolean')
-    return value
-  try {
-    const resolved = value({ node, schema })
-    return typeof resolved === 'boolean' ? resolved : false
-  }
-  catch {
-    return false
-  }
-}
-
-export function resolveWidgetCreation(meta: WidgetMeta | undefined, widgetType: string, schema: DeepReadonly<DocumentSchema>): PlacementDecision {
-  if (isSchemaManagedWidget(meta))
-    return { allowed: false, code: 'SCHEMA_MANAGED_CREATION_FORBIDDEN' }
-  if (meta?.creatable === undefined)
-    return { allowed: true }
-  try {
-    const value = typeof meta.creatable === 'function' ? meta.creatable({ widgetType, schema }) : meta.creatable
-    if (typeof value === 'boolean')
-      return { allowed: value }
-    if (value && typeof value === 'object' && typeof value.allowed === 'boolean')
-      return value
-  }
-  catch {
-    return { allowed: false, code: 'AUTHORING_PREDICATE_FAILED' }
-  }
-  return { allowed: false, code: 'AUTHORING_PREDICATE_INVALID' }
 }
 
 export function isInsertAllowed(insertIndex: number, lockedIndices: ReadonlySet<number>): boolean {
@@ -355,30 +214,4 @@ export function findNearestValidIndex(rawIndex: number, validIndices: ReadonlySe
 
 export function clampInsertIndex(index: number | undefined, length: number): number {
   return Math.max(0, Math.min(index ?? length, length))
-}
-
-export function resolvePlacementDecision(context: {
-  readonly definition: ContainerDefinition
-  readonly region: ContainerRegionDefinition
-  readonly child: NodeDefinition
-  readonly childHasContainerCapability: boolean
-  readonly targetCount: number
-  readonly callbackContext: Record<string, unknown>
-}): PlacementDecision {
-  if (context.childHasContainerCapability)
-    return { allowed: false, code: 'CONTAINER_NESTING_FORBIDDEN' }
-  const constraints = context.region.constraints ?? {}
-  if (constraints.includeTypes && !constraints.includeTypes.includes(context.child.type))
-    return { allowed: false, code: 'CONTAINER_TYPE_NOT_INCLUDED' }
-  if (constraints.excludeTypes?.includes(context.child.type))
-    return { allowed: false, code: 'CONTAINER_TYPE_EXCLUDED' }
-  if (context.targetCount + 1 > (constraints.maxItems ?? Number.POSITIVE_INFINITY))
-    return { allowed: false, code: 'CONTAINER_REGION_MAX_ITEMS' }
-  try {
-    const result = context.definition.canPlace?.(context.callbackContext) ?? { allowed: true }
-    return result && typeof result.allowed === 'boolean' ? result : { allowed: false, code: 'CONTAINER_PLACEMENT_PREDICATE_INVALID' }
-  }
-  catch (error) {
-    return { allowed: false, code: 'CONTAINER_PLACEMENT_PREDICATE_FAILED', message: error instanceof Error ? error.message : String(error) }
-  }
 }

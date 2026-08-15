@@ -1,15 +1,7 @@
 import type { PropType } from 'vue'
-import type {
-  ContainerDefinition,
-  ContainerVariantMigrationContext,
-  ContainerVariantMigrationResult,
-  MaterialMeta,
-  ResolveDropIndexContext,
-  SchemaNode,
-} from './contract'
-import { DesignerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
+import type { MaterialEditorMetadata, ResolveDropIndexContext } from './contract'
+import { DesignerRegionOutlet } from '@dragcraft/designer'
 import { defineComponent, h } from 'vue'
-import { defineContainerFixture } from './contract'
 
 type FlexDirection = 'row' | 'column'
 type FlexAlign = 'stretch' | 'flex-start' | 'center' | 'flex-end'
@@ -84,7 +76,7 @@ function makeFlexPropertySection() {
   }
 }
 
-export const flexContainerMeta: MaterialMeta & { container: ContainerDefinition } = {
+export const flexContainerMeta: MaterialEditorMetadata = {
   type: 'flex-container',
   title: 'Flex 容器',
   titleKey: 'widget.flex-container.title',
@@ -97,24 +89,6 @@ export const flexContainerMeta: MaterialMeta & { container: ContainerDefinition 
   },
   defaultProps: { direction: 'column', wrap: false, gap: 12, align: 'stretch' },
   formSchema: { sections: [makeFlexPropertySection()] },
-  container: {
-    defaultVariant: 'single',
-    variants: {
-      single: {
-        title: '默认',
-        titleKey: 'widget.flex-container.variant.single',
-        regions: [{
-          id: 'default',
-          title: '内容',
-          titleKey: 'widget.flex-container.region.default',
-          constraints: { maxItems: 12 },
-        }],
-      },
-    },
-  },
-  containerAdapter: {
-    resolveDropIndex: ctx => resolveLinearDropIndex(ctx, 'y'),
-  },
 }
 
 const flexProps = {
@@ -143,91 +117,14 @@ export const FlexContainer = defineComponent({
   },
 })
 
-const splitVariants = {
-  'left-one-right-two': {
-    title: '左一右二',
-    titleKey: 'widget.split-container.variant.left-one-right-two',
-    regions: [
-      { id: 'left', title: '左侧', titleKey: 'widget.split-container.region.left', constraints: { maxItems: 8 } },
-      { id: 'rightTop', title: '右上', titleKey: 'widget.split-container.region.rightTop', constraints: { maxItems: 8 } },
-      { id: 'rightBottom', title: '右下', titleKey: 'widget.split-container.region.rightBottom', constraints: { maxItems: 8 } },
-    ],
-  },
-  'top-one-bottom-two': {
-    title: '上一下二',
-    titleKey: 'widget.split-container.variant.top-one-bottom-two',
-    regions: [
-      { id: 'top', title: '顶部', titleKey: 'widget.split-container.region.top', constraints: { maxItems: 8 } },
-      { id: 'bottomLeft', title: '左下', titleKey: 'widget.split-container.region.bottomLeft', constraints: { maxItems: 8 } },
-      { id: 'bottomRight', title: '右下', titleKey: 'widget.split-container.region.bottomRight', constraints: { maxItems: 8 } },
-    ],
-  },
-}
-
-function migrateSplitVariant(
-  ctx: ContainerVariantMigrationContext,
-): ContainerVariantMigrationResult {
-  const nodes = ctx.fromVariant.regions.flatMap(region => ctx.state.regions[region.id] ?? [])
-  const targets = ctx.toVariant.regions.map(region => ({
-    id: region.id,
-    minItems: region.constraints?.minItems ?? 0,
-    maxItems: region.constraints?.maxItems ?? Number.POSITIVE_INFINITY,
-  }))
-  if (targets.length === 0)
-    return { allowed: false, code: 'SPLIT_VARIANT_HAS_NO_REGIONS' }
-
-  const requiredItems = targets.reduce((total, target) => total + target.minItems, 0)
-  if (nodes.length < requiredItems) {
-    return {
-      allowed: false,
-      code: 'SPLIT_VARIANT_MIN_ITEMS_UNSATISFIED',
-      details: { minItems: requiredItems, nodeCount: nodes.length },
-    }
-  }
-
-  const capacity = targets.reduce((total, target) => total + target.maxItems, 0)
-  if (nodes.length > capacity) {
-    return {
-      allowed: false,
-      code: 'SPLIT_VARIANT_CAPACITY_EXCEEDED',
-      details: { maxItems: capacity, nodeCount: nodes.length },
-    }
-  }
-
-  const counts = targets.map(target => target.minItems)
-  let remaining = nodes.length - requiredItems
-  for (const [index, target] of targets.entries()) {
-    if (remaining === 0)
-      break
-    if (counts[index] === 0 && target.maxItems > 0) {
-      counts[index]++
-      remaining--
-    }
-  }
-  for (let index = targets.length - 1; index >= 0 && remaining > 0; index--) {
-    const available = targets[index].maxItems - counts[index]
-    const assigned = Math.min(remaining, available)
-    counts[index] += assigned
-    remaining -= assigned
-  }
-
-  let offset = 0
-  const regions = Object.fromEntries(targets.map((target, index) => {
-    const children = nodes.slice(offset, offset + counts[index])
-    offset += counts[index]
-    return [target.id, children as SchemaNode[]]
-  }))
-  return { allowed: true, state: { variant: ctx.toVariantId, regions } }
-}
-
-export const splitContainerMeta: MaterialMeta & { container: ContainerDefinition } = {
+export const splitContainerMeta: MaterialEditorMetadata = {
   type: 'split-container',
   title: '异形容器',
   titleKey: 'widget.split-container.title',
   group: 'layout',
   material: {
     icon: '分',
-    description: '由外部物料定义三分区结构和变体迁移',
+    description: '由外部物料声明固定三分区结构',
     descriptionKey: 'widget.split-container.material.description',
     tags: ['布局'],
   },
@@ -237,20 +134,6 @@ export const splitContainerMeta: MaterialMeta & { container: ContainerDefinition
       title: '布局',
       titleKey: 'widget.split-container.form.layout.title',
       fields: [
-        {
-          key: 'variant',
-          label: '布局变体',
-          labelKey: 'widget.split-container.field.variant.label',
-          optionKeyPrefix: 'widget.split-container.field.variant.option',
-          component: 'Select',
-          bindTo: { scope: 'container', path: 'variant' },
-          componentProps: {
-            options: [
-              { label: '左一右二', value: 'left-one-right-two' },
-              { label: '上一下二', value: 'top-one-bottom-two' },
-            ],
-          },
-        },
         {
           key: 'gap',
           label: '间距',
@@ -269,14 +152,6 @@ export const splitContainerMeta: MaterialMeta & { container: ContainerDefinition
       ],
     }],
   },
-  container: {
-    defaultVariant: 'left-one-right-two',
-    variants: splitVariants,
-    migrateVariant: migrateSplitVariant,
-  },
-  containerAdapter: {
-    resolveDropIndex: ctx => resolveLinearDropIndex(ctx, 'y'),
-  },
 }
 
 function region(regionId: string, className: string) {
@@ -294,30 +169,16 @@ export const SplitContainer = defineComponent({
     primarySize: { type: String, default: '40%' },
   },
   setup(props) {
-    const runtime = useContainerRuntime()
     const style = () => ({
       '--pg-split-gap': `${props.gap}px`,
       '--pg-split-primary-size': props.primarySize,
     })
-    return () => runtime.variant.value === 'left-one-right-two'
-      ? h('div', { class: 'pg-split pg-split--left-one-right-two', style: style() }, [
-          region('left', 'pg-split__left'),
-          h('div', { class: 'pg-split__right' }, [
-            region('rightTop', 'pg-split__right-top'),
-            region('rightBottom', 'pg-split__right-bottom'),
-          ]),
-        ])
-      : h('div', { class: 'pg-split pg-split--top-one-bottom-two', style: style() }, [
-          region('top', 'pg-split__top'),
-          h('div', { class: 'pg-split__bottom' }, [
-            region('bottomLeft', 'pg-split__bottom-left'),
-            region('bottomRight', 'pg-split__bottom-right'),
-          ]),
-        ])
+    return () => h('div', { class: 'pg-split pg-split--top-one-bottom-two', style: style() }, [
+      region('top', 'pg-split__top'),
+      h('div', { class: 'pg-split__bottom' }, [
+        region('bottomLeft', 'pg-split__bottom-left'),
+        region('bottomRight', 'pg-split__bottom-right'),
+      ]),
+    ])
   },
 })
-
-export const playgroundContainerWidgetDefinitions = [
-  defineContainerFixture({ meta: flexContainerMeta, component: FlexContainer }),
-  defineContainerFixture({ meta: splitContainerMeta, component: SplitContainer }),
-]

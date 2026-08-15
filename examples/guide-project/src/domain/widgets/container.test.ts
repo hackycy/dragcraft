@@ -1,49 +1,30 @@
-import type { ContainerVariantMigrationContext } from './contract'
 import { expect, it } from 'vitest'
-import { columnContainerMeta, migrateColumnVariant, node } from './container'
+import { guideMaterials } from '../materials'
+import { resolveVerticalDropIndex } from './container'
 
-function context(
-  fromVariantId: 'single' | 'split',
-  toVariantId: 'single' | 'split',
-  regions: Record<string, ReturnType<typeof node>[]>,
-): ContainerVariantMigrationContext {
-  const definition = columnContainerMeta.container
+function itemRect(top: number, height = 20): HTMLElement {
   return {
-    schema: {
-      version: '1.0.0',
-      globalConfig: {},
-      root: { id: 'root', type: 'root', props: {}, children: [] },
-    },
-    container: { id: 'layout-1', type: 'column-container', props: {} },
-    fromVariantId,
-    toVariantId,
-    fromVariant: definition.variants[fromVariantId],
-    toVariant: definition.variants[toVariantId],
-    state: { variant: fromVariantId, regions },
-  }
+    getBoundingClientRect: () => ({ top, height }) as DOMRect,
+  } as HTMLElement
 }
 
-it('keeps child order when a single column becomes two columns', () => {
-  expect(migrateColumnVariant(context('single', 'split', {
-    content: [node('one'), node('two'), node('three')],
-  }))).toEqual({
-    allowed: true,
-    state: {
-      variant: 'split',
-      regions: {
-        left: [node('one'), node('two')],
-        right: [node('three')],
-      },
-    },
-  })
+it('declares the Guide column container through the active MaterialDefinition', () => {
+  const container = guideMaterials.find(material => material.type === 'column-container')!
+
+  expect(container.schema?.container?.regions).toEqual([
+    { id: 'content', cardinality: { max: 4 } },
+  ])
+  expect(container.inspector?.formSchema?.sections[0].fields.map(field => field.key)).toEqual(['gap'])
 })
 
-it('rejects a migration that exceeds the supported capacity', () => {
-  expect(migrateColumnVariant(context('single', 'split', {
-    content: [node('one'), node('two'), node('three'), node('four'), node('five')],
-  }))).toEqual({
-    allowed: false,
-    code: 'GUIDE_CONTAINER_CAPACITY_EXCEEDED',
-    details: { maxItems: 4, nodeCount: 5 },
-  })
+it('resolves vertical Region insertion from item midpoints', () => {
+  const base = {
+    event: { clientY: 25 } as DragEvent,
+    regionElement: {} as HTMLElement,
+    itemElements: [itemRect(0), itemRect(40)],
+    nodes: [],
+  }
+
+  expect(resolveVerticalDropIndex(base)).toBe(1)
+  expect(resolveVerticalDropIndex({ ...base, event: { clientY: 80 } as DragEvent })).toBe(2)
 })

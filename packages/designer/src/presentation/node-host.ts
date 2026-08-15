@@ -1,35 +1,35 @@
 import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPlane } from './selection-presentation'
 import type { NodeOwner, NodeStyle, StyleValueMap } from './semantic'
-import type { RendererNode } from './types'
+import type { PresentationNode } from './types'
 import { computed, defineComponent, h, inject, provide, ref, Teleport } from 'vue'
 import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from './container-runtime'
-import { useRendererContext } from './context'
+import { usePresentationContext } from './context'
 import DefaultContainerFallback from './default-container-fallback'
+import DefaultMaterialFallback from './default-material-fallback'
 import DefaultNodeHandle from './default-node-handle'
 import DefaultNodeMask from './default-node-mask'
 import DefaultNodeSelection from './default-node-selection'
 import DefaultNodeToolbar from './default-node-toolbar'
-import DefaultWidgetFallback from './default-widget-fallback'
+import { MATERIAL_PREVIEW_CONTEXT_KEY } from './material-preview-context'
 import { resolveNodeInteractionPresentation } from './node-interaction'
 import { NODE_SELECTION_PLANE_KEY } from './selection-presentation'
 import { normalizeStyleValueMap } from './semantic'
+import { useMaterialNode } from './use-material-node'
 import { useNodeActions } from './use-node-actions'
 import { useNodeDrag } from './use-node-drag'
 import { useNodeInteractionGeometry } from './use-node-interaction-geometry'
 import { useNodeSelectionProjection } from './use-node-selection-projection'
 import { useToolbarPosition } from './use-toolbar-position'
-import { useWidgetNode } from './use-widget-node'
-import { WIDGET_RUNTIME_CONTEXT_KEY } from './widget-runtime'
 
 const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
 const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
 const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
 const CANVAS_INTERACTION_LAYER_SELECTOR = '[data-dc-canvas-interaction-layer]'
 
-function createNodeWidgetRuntimeContext(
+function createNodeMaterialPreviewContext(
   getNode: () => { id: string, type: string },
-  ctx: ReturnType<typeof useRendererContext>,
+  ctx: ReturnType<typeof usePresentationContext>,
 ) {
   const nodeId = computed(() => getNode().id)
   const nodeType = computed(() => getNode().type)
@@ -75,18 +75,18 @@ function resolveInteractionLayerTarget(host: HTMLElement | null): HTMLElement | 
 }
 
 /**
- * WidgetRenderer — thin orchestration layer.
+ * NodeHost is a thin Presentation orchestration layer.
  *
- * Delegates all logic to composables (useWidgetNode, useNodeActions, useNodeDrag)
+ * Delegates all logic to composables (useMaterialNode, useNodeActions, useNodeDrag)
  * and renders via configurable extension components (nodeMask, nodeHandle,
- * nodeToolbar, widgetFallback, nodeWrapper).
+ * nodeToolbar, materialFallback, nodeWrapper).
  */
 export default defineComponent({
   name: 'DcNodeHost',
 
   props: {
     node: {
-      type: Object as PropType<RendererNode>,
+      type: Object as PropType<PresentationNode>,
       required: true,
     },
     owner: {
@@ -100,13 +100,12 @@ export default defineComponent({
   },
 
   setup(props) {
-    const ctx = useRendererContext()
-    const { extensions } = ctx
-    provide(WIDGET_RUNTIME_CONTEXT_KEY, createNodeWidgetRuntimeContext(() => props.node, ctx))
+    const ctx = usePresentationContext()
+    provide(MATERIAL_PREVIEW_CONTEXT_KEY, createNodeMaterialPreviewContext(() => props.node, ctx))
     const containerRuntime = createContainerRuntime(() => props.node, ctx)
 
     // Composables extract all logic
-    const widget = useWidgetNode(() => props.node, ctx)
+    const widget = useMaterialNode(() => props.node, ctx)
     const { actions } = useNodeActions(() => props.node, ctx, () => props.owner)
     const drag = useNodeDrag(() => props.node, ctx)
     const interactionPresentation = resolveNodeInteractionPresentation(props.owner)
@@ -119,8 +118,7 @@ export default defineComponent({
 
     const containerPlan = computed(() => ctx.session.materials.resolveContainer(props.node))
     const isResolvedContainer = computed(() => {
-      const plan = containerPlan.value
-      if (plan?.ok !== true || !widget.resolvedComponent.value)
+      if (!containerPlan.value.ok || !widget.resolvedComponent.value)
         return false
       return true
     })
@@ -215,16 +213,6 @@ export default defineComponent({
       const ownerKind = isContainerOwned ? 'container' : 'root'
       const resolvedContainer = isResolvedContainer.value
 
-      // Resolve extension components with defaults
-      const NodeMask = extensions.nodeMask ?? DefaultNodeMask
-      const NodeHandle = extensions.nodeHandle ?? DefaultNodeHandle
-      const NodeToolbar = extensions.nodeToolbar ?? DefaultNodeToolbar
-      const NodeSelection = extensions.nodeSelection ?? DefaultNodeSelection
-      const WidgetFallback = extensions.widgetFallback ?? DefaultWidgetFallback
-
-      // Resolve per-widget or global wrapper
-      const NodeWrapper = widget.meta.value?.wrapper ?? extensions.nodeWrapper
-
       // Render widget content
       const widgetProps = { ...node.props }
       const nodeStyle = node.style as Record<string, unknown> | undefined
@@ -239,7 +227,7 @@ export default defineComponent({
       }
 
       let innerContent: VNode
-      if (ctx.session.materials.get(node.type)?.container && !resolvedContainer) {
+      if (ctx.session.materials.get(node.type)?.schema?.container && !resolvedContainer) {
         innerContent = h(DefaultContainerFallback, { node })
       }
       else if (widget.resolvedComponent.value) {
@@ -253,7 +241,7 @@ export default defineComponent({
           : material
       }
       else {
-        innerContent = h(WidgetFallback, {
+        innerContent = h(DefaultMaterialFallback, {
           'nodeId': node.id,
           'nodeType': node.type,
           'data-dc-node-surface': '',
@@ -282,7 +270,7 @@ export default defineComponent({
               height: `${projection.bounds.height}px`,
             },
           }, [
-            h(NodeSelection, {
+            h(DefaultNodeSelection, {
               nodeId: node.id,
               nodeType: node.type,
               owner: props.owner,
@@ -297,7 +285,7 @@ export default defineComponent({
       // material hit target instead of rendering a viewport-sized mask.
       if (usesBlockingMask.value) {
         wrapperChildren.push(
-          h(NodeMask, {
+          h(DefaultNodeMask, {
             nodeId: node.id,
             nodeType: node.type,
             owner: props.owner,
@@ -310,7 +298,7 @@ export default defineComponent({
       // selected toolbar; other unmasked nodes keep the adapter inline so their
       // interaction model does not change.
       if (usesSelectionHandle.value && !widget.state.isSelected.value) {
-        const handleVNode = h(NodeHandle, {
+        const handleVNode = h(DefaultNodeHandle, {
           nodeId: node.id,
           nodeType: node.type,
           owner: props.owner,
@@ -344,12 +332,12 @@ export default defineComponent({
 
       // TOOLBAR (when selected): action-driven floating toolbar.
       // Teleported to the designer interaction layer when present, falling
-      // back to <body> for standalone renderer usage.
+      // back to <body> for standalone Presentation usage.
       // Note: the toolbar must remain visible during drag — hiding it (display:none
       // or removing from DOM) breaks the HTML5 DnD lifecycle because the browser
       // cancels the drag when the source element becomes invisible.
       if (widget.state.isSelected.value && actions.value.length > 0) {
-        const toolbarVNode = h(NodeToolbar, {
+        const toolbarVNode = h(DefaultNodeToolbar, {
           nodeId: node.id,
           nodeType: node.type,
           owner: props.owner,
@@ -419,21 +407,6 @@ export default defineComponent({
         },
         wrapperChildren,
       )
-
-      // If nodeWrapper extension is provided, wrap the core content
-      if (NodeWrapper) {
-        return h(
-          NodeWrapper,
-          {
-            nodeId: node.id,
-            nodeType: node.type,
-            owner: props.owner,
-            state: widget.state,
-            meta: widget.meta.value,
-          },
-          { default: () => coreWrapper },
-        )
-      }
 
       return coreWrapper
     }
