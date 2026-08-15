@@ -5,23 +5,23 @@
 | Path | SHA-256 |
 | --- | --- |
 | `CLAUDE.md` | `291a48e1f96855e5e0a60cabd6f9dd7ef23fdf4696da363a7cfa6fe9e758a37a` |
-| `CONTEXT.md` | `594f04c4e08495a2e9ddbfe81a94fb685d8215f07ddbf4c67a08c9f8a638b625` |
-| `.scratch/layout-semantic-architecture/implementation-plan.md` | `8802238a3da386394342b409002dd74e2c4d834e87058da4d1d48a5b6d7b81d4` |
+| `CONTEXT.md` | `79f65a2e3ec7dc8dfe4a91d00fe62a38ea59c6dde04f1ec73cd33383ec70425a` |
+| `.scratch/layout-semantic-architecture/implementation-plan.md` | `bdb3345cee5b02db74b8b01a43e66268602aa592e66bb863ea8b9bdf217bee30` |
 | `.scratch/layout-semantic-architecture/issues/01-canonical-schema-model.md` | `59af741dae2f326846ec4adb816e189b4c90b449e2caf5cc3b6d3f0ad91cad36` |
 | `.scratch/layout-semantic-architecture/issues/02-layout-capability-algebra.md` | `cbf681c10600a6471df9c430bf0485a9720b68786eb49c68e537a0fbcd6e5cab` |
 | `.scratch/layout-semantic-architecture/issues/03-schema-structure-resolver-output.md` | `96da0e3e1f0e243b2090f6da9063553be8d0e91aea7fbda098f3b4221b2fcb94` |
 | `.scratch/layout-semantic-architecture/issues/04-one-level-container-model.md` | `780d808a7da39ef96b235544244cc5a51a151a7871571e727a512d766dc503ff` |
 | `.scratch/layout-semantic-architecture/issues/05-declarative-state-and-visibility.md` | `4eceb9b40d3984df461b0fcfdc8d1054798509c4b07e2d8f4c9e1df556094f4c` |
-| `.scratch/layout-semantic-architecture/issues/06-web-geometry-adapter.md` | `ec113e245a6fe0a13b2cd44dd0df29686f270b519981a01bfc4dd6444d452c30` |
+| `.scratch/layout-semantic-architecture/issues/06-web-geometry-adapter.md` | `ca64e50339d9725a07c6775820900d5c2e442046e00f682c32b9b634e994e721` |
 | `.scratch/layout-semantic-architecture/issues/07-authoring-operations-model.md` | `6c015c13ae2b8a77d8e857792e965e2fbf56016db4739fe233e4f9d34bf43fee` |
-| `.scratch/layout-semantic-architecture/issues/08-public-designer-contract.md` | `5a8f87792139faf4f68c880131da920e64f9fc903fd93012e1230a0f0e326918` |
+| `.scratch/layout-semantic-architecture/issues/08-public-designer-contract.md` | `61d7dfb01c89311139a22e55b93142cbb80af4d1e0e2bdcfec85065ad91ad4dd` |
 | `.scratch/layout-semantic-architecture/issues/09-validation-and-conformance.md` | `1fa66d722ffc0dd6d03dec56018dcfcb9968b7f8cec0261b71fd36ccf201c708` |
 | `.scratch/layout-semantic-architecture/issues/10-semantic-render-binding.md` | `9c2f534e2d156057dba4c0ca33e92bbf59017ecf29d7a8861bd8a0a306827909` |
 | `.scratch/layout-semantic-architecture/issues/11-interaction-baseline.md` | `330ee3aea9dee4a6ebde5c70b4a18f998d4caaa99fa67049c208226d109a691f` |
 | `.scratch/layout-semantic-architecture/issues/12-transition-adapter-seam.md` | `87c26b3f8a46967ff43281a289a023b0a8c231b898edae9470bd07bd680d63da` |
 | `.scratch/layout-semantic-architecture/issues/13-session-state-continuity.md` | `1c578770ae237b2144c275f7d5253bf5274ca86ce66f878b2f032c55760fb13f` |
 | `.scratch/layout-semantic-architecture/issues/14-slice-cutover-order.md` | `da7cc4fbfaa487cb3e84541dea547f35c0652489179a845a1107d9cc5c96ab9f` |
-| `.scratch/layout-semantic-architecture/issues/15-renderer-deletion-gate.md` | `6bef96260f5d0b44722d0f7df700d800777e7c5fa30eda3eb73fa8a4783b36e0` |
+| `.scratch/layout-semantic-architecture/issues/15-renderer-deletion-gate.md` | `027fe17b66dfc73f859ceff48b0cbfef40460f5195fb3bfd065734b45db4efd5` |
 | `.scratch/layout-semantic-architecture/map.md` | `b71161630069c40f0982f24c1bb3a5dd4a5dc8c84aa1c270bc1e244acb4f24c7` |
 
 ## State Rules
@@ -41,7 +41,7 @@
 | G1: DocumentSchema Session Cutover | passed | G0 | `implementation-plan.md` -> `G1: DocumentSchema Session Cutover` | Exit 1-3 recorded below at `543ccda6f0f4392924b17c73a13e71d16ecce5f4` |
 | G2: Public Presentation Boundary | passed | G1 | `implementation-plan.md` -> `G2: Public Presentation Boundary` | Exit 1-3 and user visual acceptance passed; constrained `DcDesigner.deviceFrame` boundary verified |
 | G3: Legacy Protocol Removal | passed | G2 | `implementation-plan.md` -> `G3: Legacy Protocol Removal` | Exit 1-4 passed at cleanup SHA `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629`; automated verification and user manual acceptance recorded below |
-| G4: Evidence Closeout | active | G3 | `implementation-plan.md` -> `G4: Evidence Closeout` | 已激活，尚未开始实施 |
+| G4: Evidence Closeout | passed | G3 | `implementation-plan.md` -> `G4: Evidence Closeout` | Exit 1-2 passed at source HEAD `c95491cdf496efab470b91265fa35d0be2340966`; Source Baseline rebased by user authorization and final validation recorded below |
 
 ## Progress Log
 
@@ -90,3 +90,6 @@
 ### G4: Evidence Closeout
 
 - 2026-08-14: initialized as `planned`; G3 pending.
+- 2026-08-15: activated after G3 acceptance; the append-only G9 evidence slice was executed against current source HEAD `c95491cdf496efab470b91265fa35d0be2340966` and cleanup SHA `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629`. Changed file: `.scratch/layout-semantic-architecture/goal-runbook.md` only. G9 group 1 (caller/protocol): `pnpm check:public-boundary` returned `public package boundary valid` and `pnpm check:obsolete-protocol --strict` returned `obsolete protocol denylist valid (0 findings)`; both trace to cleanup SHA `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629`. G9 group 2 (interaction baseline): `pnpm test` passed all workspace suites, including Designer 84/84 and Device Frames 15/15, and `pnpm test:browser` passed 32/32. G9 group 3 (product scenarios): the 32 browser tests cover all three Playground templates and Guide Project; the required manual product confirmation is recorded in the G3 acceptance entry at the same cleanup SHA. G9 group 4 (recovery/state): the Designer, Playground, Guide, and browser suites passed unknown/headless/Region, rejected/no-op history, selection, import/export, drag, and frame-session coverage recorded by the G3 acceptance evidence. G9 group 5 (CSS/release): `pnpm build`, `pnpm lint`, `pnpm typecheck`, the public-boundary check, and the 32 browser tests passed; package/theme/export and strict scans remained clean. G9 group 6 (cleanup boundary): cleanup commit `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629` remains independently reviewable; prior `git show --check HEAD` and staged-diff review passed, while current `git diff --check` is clean. Directed runbook validation then found five Source Baseline SHA mismatches (`CONTEXT.md`, `implementation-plan.md`, `issues/06-web-geometry-adapter.md`, `issues/08-public-designer-contract.md`, `issues/15-renderer-deletion-gate.md`); the same check confirmed Gate order `G0,G1,G2,G3,G4` and statuses `passed,passed,passed,passed,active`. This triggers the G4 Stop condition. Risk: the baseline ledger is stale relative to already-approved G2 decision changes, so the G4 atomic transition is not authorized. Recovery input: explicitly authorize rebasing the Source Baseline hashes to the current decision files/current source state, or restore those files to the recorded baseline; then rerun the validator and the declared G4 verification sequence. Next action: pause with G4 `active`; do not mark `passed+` or begin any later work.
+- 2026-08-15: user authorized rebasing the five stale Source Baseline entries to the current approved decision files. Updated only the SHA table for `CONTEXT.md`, `implementation-plan.md`, `issues/06-web-geometry-adapter.md`, `issues/08-public-designer-contract.md`, and `issues/15-renderer-deletion-gate.md`; current hashes are the exact versions introduced by `1a91871`, and `1a91871..HEAD` contains no later changes to those files. No production source or prior evidence was changed. Next action: rerun the directed runbook validator and G4 repository verification.
+- 2026-08-15: final G4 closeout at source HEAD `c95491cdf496efab470b91265fa35d0be2340966`. Directed runbook validation passed with 0 Source Baseline mismatches, strict Gate order, `passed,passed,passed,passed,active` pre-transition statuses, and all six non-empty G9 evidence groups. Repository verification passed in order: `git rev-parse HEAD` and `git diff --check`; `pnpm check:obsolete-protocol --strict` (0 findings); `pnpm check:public-boundary`; `pnpm build`; `pnpm lint`; `pnpm typecheck`; `pnpm test` (Designer 84/84, Device Frames 15/15, Playground 16/16, Guide 14/14, and all workspace suites); and `pnpm test:browser` (Playwright 32/32). Exit 1 passed: the ledger is now `passed+` and every Gate Progress Log is evidence-complete. Exit 2 passed: the G9 six-group deletion evidence remains traceable to cleanup SHA `57b3b5fc2044b8dff4c5c0484d52eefcfd67b629` after the authorized Source Baseline rebase. G4 is marked `passed`; no successor exists, and the effort is complete.
