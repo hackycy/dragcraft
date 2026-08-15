@@ -16,7 +16,7 @@
 - `DcDesigner`、`useDesigner()`
 - `MaterialDefinition`、`defineMaterial()`、`DocumentSchema`
 - `AuthoringAction`、`AuthoringResult`、`SchemaLoadResult`
-- `DesignerExtensions`、`ContainerRegionOutlet`、node action 和 event hook 类型
+- `DesignerExtensions`、`DesignerRegionOutlet`、`actionInterceptors`、`customActions` 和 node action 类型
 - `@dragcraft/designer/standard.css` 与 `@dragcraft/designer/structure.css`
 
 `DesignerInstance` 只暴露 document、selection、history、execute、import/export、locale 与 dispose。内部运行模块不属于业务 API。

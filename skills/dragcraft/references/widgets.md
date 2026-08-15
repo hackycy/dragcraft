@@ -7,7 +7,7 @@
 1. 在一个 MaterialDefinition 中共置 Schema 声明、authoring 策略、inspector、panel 和 Presentation。
 2. 为 visual material 提供 preview；为 headless material 明确声明 kind，并保留可编辑 Schema 配置。
 3. 使用 `authoring.policy` 表达 create、duplicate、move、remove、unwrap 与 update 的裁决。
-4. 需要 children 时声明 container regions，并让 preview 用 `ContainerRegionOutlet` 呈现。
+4. 需要 children 时声明 container regions，并让 preview 用 `DesignerRegionOutlet` 呈现。
 5. 组件负责业务展示；Designer 负责 action、history、selection 与 drag feedback。
 
 ## 完成标准

@@ -28,7 +28,7 @@ const noticeMaterial = defineMaterial({
 
 ## 容器物料
 
-容器物料在 `schema.container` 中声明 region 与容量约束。Designer 根据 `schema.structure.containers` 保持 children 的 owner 和顺序；业务 preview 通过 `ContainerRegionOutlet` 呈现它们。
+容器物料在 `schema.container` 中声明 region 与容量约束。Designer 根据 `schema.structure.containers` 保持 children 的 owner 和顺序；业务 preview 通过 `DesignerRegionOutlet` 呈现它们。
 
 业务组件拥有 DOM、CSS 与插入几何，Designer 拥有 selection、drop decision、action 和 history。当前结构只允许一层容器，容器不应嵌套。
 

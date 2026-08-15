@@ -1,7 +1,7 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentDefinition, FieldRenderFactory, FormContext, FormGeneratorContext, FormValidation, TypedFormSchema } from '@dragcraft/form-generator'
+import type { ActionInterceptor, DesignerDeviceFrame, DesignerExtensions, DesignerInstance, NodeActionDefinition } from './index'
 import type { DesignerPresentation, MaterialDefinition } from './materials/types'
-import type { DesignerDeviceFrame, DesignerInstance } from './types'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import * as publicApi from './index'
 
@@ -27,6 +27,9 @@ describe('designer public interface', () => {
     expectTypeOf<DesignerInstance>().toHaveProperty('execute')
     expectTypeOf<DesignerDeviceFrame>().toHaveProperty('id')
     expectTypeOf<DesignerDeviceFrame>().toHaveProperty('containerShell')
+    expectTypeOf<DesignerExtensions>().toHaveProperty('materialPanelRenderer')
+    expectTypeOf<ActionInterceptor>().toHaveProperty('beforeAction')
+    expectTypeOf<NodeActionDefinition>().toHaveProperty('key')
     expectTypeOf<FieldComponentDefinition>().toBeObject()
     expectTypeOf<FieldRenderFactory>().toBeFunction()
     expectTypeOf<FormContext>().toBeObject()

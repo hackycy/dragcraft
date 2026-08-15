@@ -8,7 +8,7 @@ description: "使用节点动作、拦截器、事件 hooks 和 authoring policy
 
 ## 自定义 Action
 
-自定义 action 适合补充节点工具栏。它可以产生 `AuthoringAction`，或只执行宿主侧 UI、跳转与审计。确认、权限和错误处理通过 `actionInterceptors` 协调，不能绕过 material policy。
+自定义 action 适合补充节点工具栏。它可以产生 `AuthoringAction`，或只执行宿主侧 UI、跳转与审计。确认、权限和错误处理通过 `actionInterceptors` 协调，不能绕过 material policy。`customActions` 与 `actionInterceptors` 是非 Renderer 的 authoring 扩展，不接收 Schema、几何或 Renderer context；Application Surface 的唯一几何展示 seam 是 `PresentationFrame`。
 
 ```text
 visible -> available -> policy -> interceptor -> action -> result

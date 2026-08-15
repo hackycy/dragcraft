@@ -65,7 +65,7 @@ it('records a changed write once and restores it through undo', () => {
   designer.dispose()
 })
 
-it('round-trips the complete DesignerSchema through JSON persistence', () => {
+it('round-trips the complete DocumentSchema through JSON persistence', () => {
   const designer = createPageDesigner()
   const exported = designer.exportSchema() as DocumentSchema
   const persisted = roundTripGuideSchema(exported)

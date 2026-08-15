@@ -14,7 +14,7 @@
 
 ## 容器
 
-容器的 region 和容量由 material schema 声明，children 顺序由 `schema.structure.containers` 保存。业务组件通过 `ContainerRegionOutlet` 将 region 放入自己的 DOM，因此框架不会定义 flex、grid、插入方向或轨道。
+容器的 region 和容量由 material schema 声明，children 顺序由 `schema.structure.containers` 保存。业务组件通过 `DesignerRegionOutlet` 将 region 放入自己的 DOM，因此框架不会定义 flex、grid、插入方向或轨道。
 
 ## 几何边界
 

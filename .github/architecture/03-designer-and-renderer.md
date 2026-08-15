@@ -36,9 +36,9 @@ Canvas Surface 是业务预览的滚动与裁剪边界。Device Frame 只裁剪�
 
 ## Container 与扩展
 
-业务容器通过 `ContainerRegionOutlet` 在自己的 DOM 中渲染 region。容器定义 Schema 所有权和约束，业务组件负责 flex、grid 或其他插入几何；Designer 负责 action、selection、drop decision 和 history。
+业务容器通过 `DesignerRegionOutlet` 在自己的 DOM 中渲染 region。容器定义 Schema 所有权和约束，业务组件负责 flex、grid 或其他插入几何；Designer 负责 action、selection、drop decision 和 history。
 
-`DesignerExtensions` 可替换面板、物料项和 Presentation 局部。`ContainerShell` 只能恰好渲染一次 slot；它不能读取或写入 Schema，不能复刻 Canvas Surface，也不能创建第二个滚动边界。
+`PresentationFrame` 是 Application Surface 唯一的几何 seam，可选包装单个 NodeHost。`DesignerExtensions`、`actionInterceptors` 与 `customActions` 只提供面板、物料项和 authoring action 协调，是不接收 Schema、几何或 Renderer context 的非 Renderer 宿主扩展。Device Frame 的 `ContainerShell` 只能由受限的 `DcDesigner.deviceFrame` 恰好渲染一次 Application Surface slot；它不能读取或写入 Schema，不能复刻 Canvas Surface，也不能创建第二个滚动边界。
 
 ## 生产运行时
 

@@ -29,6 +29,8 @@ const designer = createDesigner({
 | `AuthoringAction` | 执行节点、页面、历史和 Schema 操作。 |
 | `@dragcraft/designer/standard.css` | 加载完整 Standard 工作台主题。 |
 
+`PresentationFrame` 是 Application Surface 唯一的几何展示 seam，可选包装单个 NodeHost。`DesignerExtensions`、`actionInterceptors` 与 `customActions` 只用于工作台面板/rail、物料项和 authoring action 协调，是不接收 Schema、几何或 Renderer context 的非 Renderer 宿主扩展。
+
 `MaterialDefinition.presentation.kind` 必须是 `visual` 或 `headless`。Headless 物料没有画布预览，但仍可以拥有 Schema 默认值和 inspector；拖拽释放后只创建配置节点。
 
 ## 实例控制
