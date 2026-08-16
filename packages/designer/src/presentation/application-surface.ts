@@ -5,7 +5,7 @@ import type { ActionInterceptor } from './action-runtime'
 import type { NodeDestination, PlacementDecision } from './semantic'
 import type { ContainerDropRejection, ContainerDropTarget } from './types'
 import { useI18n } from '@dragcraft/i18n'
-import { computed, defineComponent, h, provide } from 'vue'
+import { computed, defineComponent, h, provide, ref } from 'vue'
 import CanvasSurface from './canvas-surface'
 import { createPresentationContext } from './context'
 import DefaultContainerShell from './default-container-shell'
@@ -16,6 +16,7 @@ import { createNodeGeometryRegistry, provideNodeGeometryRegistry } from './geome
 import NodeHost from './node-host'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from './selection-presentation'
 import { normalizeStyleValueMap } from './semantic'
+import { createSurfaceReservationManager, SURFACE_RESERVATION_MANAGER_KEY, SURFACE_VIEWPORT_TARGET_KEY } from './surface-geometry'
 import { PRESENTATION_CONTEXT_KEY } from './types'
 
 function insertDropIndicator(
@@ -46,7 +47,7 @@ export default defineComponent({
     },
     containerShell: {
       type: [Object, Function] as PropType<Component>,
-      default: () => ({}),
+      default: undefined,
     },
     actionInterceptors: {
       type: Array as PropType<ActionInterceptor[]>,
@@ -96,9 +97,12 @@ export default defineComponent({
 
   setup(props) {
     const { t } = useI18n()
+    const surfaceReservations = createSurfaceReservationManager()
+    const viewportTarget = ref<HTMLElement | null>(null)
     // Create and provide context for the Application Surface lifetime.
     const ctx = createPresentationContext({
       session: props.session,
+      surfaceReservations,
       containerShell: props.containerShell,
       actionInterceptors: props.actionInterceptors,
       actionRegistry: props.actionRegistry,
@@ -115,6 +119,8 @@ export default defineComponent({
     const selectionPresentation = createNodeSelectionPresentation()
     provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
     provideNodeGeometryRegistry(createNodeGeometryRegistry())
+    provide(SURFACE_RESERVATION_MANAGER_KEY, surfaceReservations)
+    provide(SURFACE_VIEWPORT_TARGET_KEY, viewportTarget)
 
     // Resolve which container shell to use
     const ContainerShell = computed(() => {
@@ -134,12 +140,17 @@ export default defineComponent({
       const DropIndicator = DefaultDropIndicator
       const EmptyState = DefaultEmptyState
 
-      const rootVNodes: VNode[] = rootNodes.map(node => h(NodeHost, {
-        key: node.id,
-        node,
-        selectionPlane: 'content',
-        owner: { kind: 'root' },
-      }))
+      const rootVNodes: VNode[] = rootNodes.map((node) => {
+        const presentation = ctx.session.materials.get(node.type)?.presentation
+        const nodeHost = h(NodeHost, {
+          key: node.id,
+          node,
+          owner: { kind: 'root' },
+        })
+        return presentation?.kind === 'visual' && presentation.frame
+          ? h(presentation.frame, { key: `${node.id}:frame` }, { default: () => nodeHost })
+          : nodeHost
+      })
 
       // Show forbidden overlay or drop indicator at the computed insertion index
       const isForbidden = ctx.session.state.drag.isForbidden.value
@@ -185,6 +196,7 @@ export default defineComponent({
 
       const ContainerShellComponent = ContainerShell.value
 
+      const insets = surfaceReservations.insets.value
       return h(
         'div',
         {
@@ -192,6 +204,16 @@ export default defineComponent({
           'data-dc-component': 'application-surface',
           'data-node-id': 'root',
           'data-node-type': 'root',
+          'style': {
+            '--dc-internal-surface-reservation-block-start': `${insets['block-start']}px`,
+            '--dc-internal-surface-reservation-block-end': `${insets['block-end']}px`,
+            '--dc-internal-surface-reservation-inline-start': `${insets['inline-start']}px`,
+            '--dc-internal-surface-reservation-inline-end': `${insets['inline-end']}px`,
+            '--dc-inset-block-start': `calc(var(--dc-safe-area-block-start, 0px) + ${insets['block-start']}px)`,
+            '--dc-inset-block-end': `calc(var(--dc-safe-area-block-end, 0px) + ${insets['block-end']}px)`,
+            '--dc-inset-inline-start': `calc(var(--dc-safe-area-inline-start, 0px) + ${insets['inline-start']}px)`,
+            '--dc-inset-inline-end': `calc(var(--dc-safe-area-inline-end, 0px) + ${insets['inline-end']}px)`,
+          },
         },
         [
           h(
@@ -209,6 +231,7 @@ export default defineComponent({
                     rootVNodes,
                     surfaceStyle: normalizeStyleValueMap(pageStyle?.surface as Record<string, unknown> | undefined),
                     selectionPresentation,
+                    viewportPlaneRef: viewportTarget,
                     forbiddenOverlay: forbiddenOverlayVNode,
                     headlessOverlay: headlessOverlayVNode,
                   }),

@@ -6,10 +6,10 @@ test('mounts the Guide floating action through the root ApplicationSurface', asy
   const floatingAction = page.locator('[data-dc-component="node"][data-node-id="floating-action-1"]')
   const content = page.locator('.dc-canvas-surface__content')
 
-  await expect(floatingAction).toHaveAttribute('data-dc-layout-placement', 'layer')
-  await expect(floatingAction).toHaveAttribute('data-dc-layer-mode', 'framework')
-  await expect(content.locator('[data-node-id="floating-action-1"]')).toHaveCount(1)
-  await expect(page.locator('[data-dc-layer="float"]')).toHaveCount(0)
+  await expect(floatingAction).not.toHaveAttribute('data-dc-layout-placement', /.*/)
+  await expect(floatingAction.locator('xpath=ancestor::*[contains(@class, "guide-presentation-frame--floating-action")]')).toHaveCount(1)
+  await expect(content.locator('[data-node-id="floating-action-1"]')).toHaveCount(0)
+  await expect(page.locator('.dc-canvas-surface__viewport-plane [data-node-id="floating-action-1"]')).toHaveCount(1)
 })
 
 test('fits the Guide Device Frame inside a short Canvas viewport', async ({ page }) => {

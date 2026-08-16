@@ -36,37 +36,6 @@ export interface PlacementDecision extends CreationBlockReason {
   readonly details?: Record<string, unknown>
 }
 
-export type LayoutEdge = 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
-export type LayoutAnchor = 'start' | 'center' | 'end'
-export type LayoutChromePosition = 'fixed' | 'sticky' | 'flow'
-export type LayoutLayerMode = 'framework' | 'self'
-export type LayoutReserveMode = 'measure' | 'size' | 'none'
-export type LayoutAvoidTarget = 'safe-area' | 'chrome' | 'viewport'
-export interface LayoutReserveSpec { readonly mode?: LayoutReserveMode, readonly size?: string | number }
-export interface LayoutOffsets {
-  readonly blockStart?: string | number
-  readonly blockEnd?: string | number
-  readonly inlineStart?: string | number
-  readonly inlineEnd?: string | number
-}
-export type NodePlacement
-  = | { readonly kind: 'flow', readonly region?: string, readonly sortScope?: string | false }
-    | { readonly kind: 'chrome', readonly edge: LayoutEdge, readonly position?: LayoutChromePosition, readonly reserve?: LayoutReserveSpec, readonly avoidContent?: boolean }
-    | { readonly kind: 'layer', readonly layer?: string, readonly mode?: LayoutLayerMode, readonly anchor?: { readonly block?: LayoutAnchor, readonly inline?: LayoutAnchor }, readonly offset?: LayoutOffsets, readonly avoid?: readonly LayoutAvoidTarget[] }
-
-export interface ResolvedFlowPresentation { readonly kind: 'flow', readonly region: string, readonly sortScope: string | false }
-export interface ResolvedChromePresentation { readonly kind: 'chrome', readonly edge: LayoutEdge, readonly position: LayoutChromePosition, readonly reserve: { readonly mode: LayoutReserveMode, readonly size?: string | number }, readonly avoidContent: boolean }
-export interface ResolvedLayerPresentation { readonly kind: 'layer', readonly layer: string, readonly mode: LayoutLayerMode, readonly anchor: { readonly block?: LayoutAnchor, readonly inline?: LayoutAnchor }, readonly offset?: LayoutOffsets, readonly avoid: readonly LayoutAvoidTarget[] }
-export type ResolvedPresentationPlacement = ResolvedFlowPresentation | ResolvedChromePresentation | ResolvedLayerPresentation
-export interface ResolvedPresentationLayout {
-  readonly placement: ResolvedPresentationPlacement
-  readonly region?: string
-  readonly sortScope: string | false
-  readonly order?: number
-  readonly visible: boolean
-}
-
-export interface LayoutNodeEntry { readonly node: NodeDefinition, readonly arrayIndex: number, readonly layout: ResolvedPresentationLayout }
 export interface DragTarget {
   readonly sourceNodeId: string | null
   readonly widgetType: string | null
@@ -92,10 +61,6 @@ export interface SchemaDiagnostic {
   readonly path?: string
   readonly details?: Record<string, unknown>
 }
-
-export const DEFAULT_LAYOUT_REGION = 'content'
-export const DEFAULT_SORT_SCOPE = 'content'
-export const DEFAULT_LAYER = 'float'
 
 const LENGTH_STYLE_KEYS = new Set([
   'bottom',
@@ -169,7 +134,7 @@ export function isRemoveAllowed(removeIndex: number, lockedIndices: ReadonlySet<
   return true
 }
 
-export function getValidDropIndices(children: readonly (NodeDefinition | LayoutNodeEntry)[], lockedIndices: ReadonlySet<number>, sourceNodeId: string | null): Set<number> {
+export function getValidDropIndices(children: readonly NodeDefinition[], lockedIndices: ReadonlySet<number>, sourceNodeId: string | null): Set<number> {
   const valid = new Set<number>()
   const count = children.length
   if (lockedIndices.size === 0) {
@@ -184,7 +149,7 @@ export function getValidDropIndices(children: readonly (NodeDefinition | LayoutN
     }
     return valid
   }
-  const sourceIndex = children.findIndex(item => 'node' in item ? item.node.id === sourceNodeId : item.id === sourceNodeId)
+  const sourceIndex = children.findIndex(item => item.id === sourceNodeId)
   if (sourceIndex === -1)
     return valid
   for (let visualIndex = 0; visualIndex <= count; visualIndex++) {

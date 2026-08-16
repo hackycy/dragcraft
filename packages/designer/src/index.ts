@@ -40,11 +40,8 @@ export type {
   MaterialAuthoringDefinition,
   MaterialDefinition,
   MaterialPanelDefinition,
-  MaterialPresentationAnchor,
-  MaterialPresentationEdge,
-  MaterialPresentationLayout,
-  MaterialPresentationPlacement,
   MaterialSchemaDeclaration,
+  PresentationFrame,
 } from './materials/types'
 // ── Messages ────────────────────────────
 export { designerMessages } from './messages'
@@ -65,6 +62,7 @@ export type {
 } from './presentation/action-runtime'
 export { default as DesignerRegionOutlet } from './presentation/container-region-outlet'
 export { useContainerRuntime } from './presentation/container-runtime'
+export { DesignerViewportPortal, useSurfaceReservation } from './presentation/surface-geometry'
 // ── Types ───────────────────────────────
 export type {
   DesignerDeviceFrame,

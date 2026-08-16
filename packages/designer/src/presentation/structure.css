@@ -6,6 +6,7 @@
 .dc-canvas-surface__content-layout,
 .dc-canvas-surface__content-row,
 .dc-canvas-surface__content,
+.dc-canvas-surface__viewport-plane,
 .dc-node-selection-plane,
 .dc-empty-state,
 .dc-node,
@@ -151,6 +152,22 @@
   min-width: 0;
   min-height: 100%;
   box-sizing: border-box;
+  padding-block-start: var(--dc-internal-surface-reservation-block-start, 0px);
+  padding-block-end: var(--dc-internal-surface-reservation-block-end, 0px);
+  padding-inline-start: var(--dc-internal-surface-reservation-inline-start, 0px);
+  padding-inline-end: var(--dc-internal-surface-reservation-inline-end, 0px);
+}
+
+.dc-canvas-surface__viewport-plane {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dc-canvas-surface__viewport-plane > * {
+  pointer-events: auto !important;
 }
 
 

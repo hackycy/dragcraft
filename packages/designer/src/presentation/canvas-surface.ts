@@ -1,4 +1,4 @@
-import type { PropType, VNode } from 'vue'
+import type { PropType, Ref, VNode } from 'vue'
 import type { NodeSelectionPresentationHost } from './selection-presentation'
 import type { StyleValueMap } from './semantic'
 import { DcScrollArea } from '@dragcraft/ui'
@@ -12,6 +12,7 @@ export default defineComponent({
     rootVNodes: { type: Array as PropType<VNode[]>, required: true },
     surfaceStyle: { type: Object as PropType<StyleValueMap>, default: undefined },
     selectionPresentation: { type: Object as PropType<NodeSelectionPresentationHost>, required: true },
+    viewportPlaneRef: { type: Object as PropType<Ref<HTMLElement | null>>, required: true },
     forbiddenOverlay: { type: Object as PropType<VNode | null>, default: null },
     headlessOverlay: { type: Object as PropType<VNode | null>, default: null },
   },
@@ -40,9 +41,12 @@ export default defineComponent({
       }),
       h('div', {
         'ref': (element: unknown) => {
-          props.selectionPresentation.registerPlane('viewport', element instanceof HTMLElement ? element : null)
+          const viewport = element instanceof HTMLElement ? element : null
+          props.viewportPlaneRef.value = viewport
+          props.selectionPresentation.registerPlane('viewport', viewport)
         },
-        'class': 'dc-node-selection-plane dc-node-selection-plane--viewport',
+        'class': 'dc-canvas-surface__viewport-plane dc-node-selection-plane dc-node-selection-plane--viewport',
+        'data-dc-mount-plane': 'viewport',
         'data-dc-selection-plane': 'viewport',
         'aria-hidden': 'true',
       }),

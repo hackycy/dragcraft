@@ -61,6 +61,7 @@ export function createPresentationContext(options: ApplicationSurfaceOptions): P
     onContainerDrop: options.onContainerDrop,
     interactionBoundary: options.interactionBoundary,
     viewScale: options.viewScale ?? ref(1),
+    surfaceReservations: options.surfaceReservations,
   }
 }
 

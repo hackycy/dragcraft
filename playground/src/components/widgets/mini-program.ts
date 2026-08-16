@@ -55,15 +55,6 @@ export const navbarWidgetMeta: MaterialEditorMetadata = {
     tags: ['框架'],
     keywords: ['navigation', 'header', 'top bar', '导航'],
   },
-  defaultLayout: {
-    placement: {
-      kind: 'chrome',
-      edge: 'block-start',
-      position: 'fixed',
-      reserve: { mode: 'measure', size: 44 },
-      avoidContent: true,
-    },
-  },
   defaultProps: {
     title: '页面标题',
   },
@@ -116,15 +107,6 @@ export const tabBarWidgetMeta: MaterialEditorMetadata = {
     descriptionKey: 'widget.tab-bar.material.description',
     tags: ['框架'],
     keywords: ['tab', 'bottom navigation', 'tabs', '底部导航'],
-  },
-  defaultLayout: {
-    placement: {
-      kind: 'chrome',
-      edge: 'block-end',
-      position: 'fixed',
-      reserve: { mode: 'measure', size: 50 },
-      avoidContent: true,
-    },
   },
   creatable: (ctx: any) => {
     const children = ctx.schema.structure?.root ?? []
@@ -221,14 +203,6 @@ export const floatingButtonWidgetMeta: MaterialEditorMetadata = {
     descriptionKey: 'widget.floating-button.material.description',
     tags: ['操作'],
     keywords: ['fab', 'floating action', 'quick action', '悬浮'],
-  },
-  defaultLayout: {
-    placement: {
-      kind: 'layer',
-      layer: 'float',
-      mode: 'self',
-      avoid: ['safe-area', 'chrome'],
-    },
   },
   defaultProps: {
     label: '+',

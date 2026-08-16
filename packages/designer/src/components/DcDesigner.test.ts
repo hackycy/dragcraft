@@ -19,6 +19,12 @@ const SecondDeviceFrame = defineComponent({
     return () => h('main', { class: 'test-device-frame test-device-frame--second' }, slots.default?.())
   },
 })
+const PresentationFrame = defineComponent({
+  name: 'TestPresentationFrame',
+  setup(_, { slots }) {
+    return () => h('div', { class: 'test-presentation-frame' }, slots.default?.())
+  },
+})
 const MissingOutletContainer = defineComponent({
   name: 'MissingOutletContainer',
   setup: () => () => h('div', 'container without an outlet'),
@@ -165,6 +171,36 @@ describe('dcDesigner', () => {
       expect(host.querySelectorAll('[data-dc-selection-plane="root"]')).toHaveLength(1)
       expect(host.querySelector('[data-dc-selection-plane="root"]')?.closest('.test-device-frame')).toBeNull()
       expect(host.querySelector('[data-node-id="headless"] [data-dc-component="widget-fallback"]')).toBeNull()
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it('renders a visual material through exactly one PresentationFrame slot', async () => {
+    const designer = createDesigner({
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [{ id: 'framed', type: 'framed', props: {} }],
+        structure: { root: ['framed'], containers: {} },
+      },
+      materials: [{
+        type: 'framed',
+        presentation: { kind: 'visual', preview: Preview, frame: PresentationFrame },
+      }],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, { instance: designer }) })
+    try {
+      app.mount(host)
+      await nextTick()
+      expect(host.querySelectorAll('.test-presentation-frame')).toHaveLength(1)
+      expect(host.querySelectorAll('.test-presentation-frame > [data-dc-component="node"][data-node-id="framed"]')).toHaveLength(1)
     }
     finally {
       app.unmount()

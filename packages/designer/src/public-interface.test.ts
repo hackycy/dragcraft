@@ -23,6 +23,8 @@ describe('designer public interface', () => {
   it('exposes the extension types through one package', () => {
     expectTypeOf<MaterialDefinition>().toBeObject()
     expectTypeOf<DesignerPresentation>().toMatchTypeOf<{ kind: 'visual' | 'headless' }>()
+    expectTypeOf<DesignerPresentation>().not.toHaveProperty('layout')
+    expectTypeOf<DesignerPresentation>().not.toHaveProperty('placement')
     expectTypeOf<DocumentSchema>().toBeObject()
     expectTypeOf<DesignerInstance>().toHaveProperty('execute')
     expectTypeOf<DesignerDeviceFrame>().toHaveProperty('id')

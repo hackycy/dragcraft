@@ -2,7 +2,7 @@ import type { DocumentSchema } from '@dragcraft/core'
 import { describe, expect, it } from 'vitest'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import { createMaterialCatalog } from '../materials/create-material-catalog'
-import { resolveContainerRegions, resolveNodePresentation } from '../presentation/material-presentation'
+import { resolveContainerRegions } from '../presentation/material-presentation'
 import { describeDesignerSessionContract } from './designer-session-contract'
 import {
   createNextDesignerSessionAdapter,
@@ -71,36 +71,36 @@ describe('next adapter backend contract', () => {
     expect('resolveDestination' in session.document).toBe(false)
   })
 
-  it('projects type-defined presentation layouts without adding them to DocumentSchema', () => {
+  it('retains Frame presentation declarations without adding them to DocumentSchema', () => {
+    const NavbarFrame = {} as any
+    const FloatingFrame = {} as any
+    const TabBarFrame = {} as any
     const catalog = createMaterialCatalog([
       {
         type: 'navbar',
         authoring: { policy: { duplicate: 'denied', move: 'denied' } },
         presentation: {
-          kind: 'headless',
-          layout: {
-            placement: {
-              kind: 'chrome',
-              edge: 'block-start',
-              reserve: { mode: 'measure', size: 44 },
-            },
-          },
+          kind: 'visual',
+          preview: {},
+          frame: NavbarFrame,
         },
       },
       {
         type: 'floating-action',
         authoring: { policy: { move: 'denied' } },
         presentation: {
-          kind: 'headless',
-          layout: { placement: { kind: 'layer', mode: 'self' } },
+          kind: 'visual',
+          preview: {},
+          frame: FloatingFrame,
         },
       },
       {
         type: 'tab-bar',
         authoring: { policy: { move: 'denied' } },
         presentation: {
-          kind: 'headless',
-          layout: { placement: { kind: 'chrome', edge: 'block-end' } },
+          kind: 'visual',
+          preview: {},
+          frame: TabBarFrame,
         },
       },
       { type: 'text', presentation: { kind: 'headless' } },
@@ -123,28 +123,9 @@ describe('next adapter backend contract', () => {
     })
     const session = createNextDesignerSessionAdapter({ catalog, engine })
 
-    expect(resolveNodePresentation(session, session.document.getNode('navbar-1')!)).toEqual({
-      placement: {
-        kind: 'chrome',
-        edge: 'block-start',
-        position: 'fixed',
-        reserve: { mode: 'measure', size: 44 },
-        avoidContent: true,
-      },
-      sortScope: false,
-      visible: true,
-    })
-    expect(resolveNodePresentation(session, session.document.getNode('action-1')!)).toEqual({
-      placement: {
-        kind: 'layer',
-        layer: 'float',
-        mode: 'self',
-        anchor: { block: 'end', inline: 'end' },
-        avoid: ['safe-area', 'chrome'],
-      },
-      sortScope: false,
-      visible: true,
-    })
+    expect(session.materials.get('navbar')?.presentation).toMatchObject({ frame: NavbarFrame })
+    expect(session.materials.get('floating-action')?.presentation).toMatchObject({ frame: FloatingFrame })
+    expect(session.materials.get('tab-bar')?.presentation).toMatchObject({ frame: TabBarFrame })
     expect(session.document.getStructurePosition('navbar-1')).toMatchObject({
       owner: { kind: 'root' },
       index: 0,
@@ -267,7 +248,7 @@ describe('next adapter backend contract', () => {
       },
       {
         type: 'navbar',
-        presentation: { kind: 'headless', layout: { placement: { kind: 'chrome', edge: 'block-start' } } },
+        presentation: { kind: 'headless' },
       },
     ])
     const engine = createAuthoringEngine({

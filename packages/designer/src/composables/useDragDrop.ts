@@ -1,7 +1,7 @@
 import type { JsonObject, NodeDefinition } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
 import type { MaterialDefinition } from '../materials/types'
-import type { NodeDestination, PlacementDecision } from '../presentation/semantic'
+import type { DragTarget, NodeDestination, PlacementDecision } from '../presentation/semantic'
 import type { ContainerDropRejection, ContainerDropTarget } from '../presentation/types'
 import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
 import { generateShortId } from '@dragcraft/utils'
@@ -128,17 +128,35 @@ export function useDragDrop(
     return getValidDropIndices(getRootNodes(), lockedIndices.value, dragTarget.sourceNodeId)
   })
 
+  function isRootNavbarCreateDenied(
+    target: Readonly<DragTarget> | null,
+    destination: NodeDestination | null,
+  ): boolean {
+    return target?.sourceNodeId === null
+      && target.widgetType === 'navbar'
+      && destination?.kind === 'root'
+      && getRootNodes().some(node => node.type === 'navbar')
+  }
+
   const createDecision = computed(() => {
     const target = session.state.dragTarget.value
     if (!target?.widgetType)
       return { allowed: true }
+    const destination = dragOverDestination.value ?? { kind: 'root' as const }
+    if (isRootNavbarCreateDenied(target, destination)) {
+      return {
+        allowed: false,
+        code: 'POLICY_DENIED',
+        message: 'Navbar already exists at the root destination.',
+      }
+    }
     const material = session.materials.get(target.widgetType)
     if (!material)
       return { allowed: true }
     return session.evaluate({
       type: 'node.add',
       node: createNodeDefinition(material),
-      destination: dragOverDestination.value ?? { kind: 'root' },
+      destination,
     })
   })
 
@@ -337,13 +355,22 @@ export function useDragDrop(
         result = { ok: false, code: 'DRAGGED_MATERIAL_MISSING' }
       }
       else {
-        const node = createNodeDefinition(material)
-        result = session.execute({
-          type: 'node.add',
-          node,
-          destination,
-        })
-        selectedNodeId = node.id
+        if (isRootNavbarCreateDenied(dragTarget, destination)) {
+          result = {
+            ok: false,
+            code: 'POLICY_DENIED',
+            message: 'Navbar already exists at the root destination.',
+          }
+        }
+        else {
+          const node = createNodeDefinition(material)
+          result = session.execute({
+            type: 'node.add',
+            node,
+            destination,
+          })
+          selectedNodeId = node.id
+        }
       }
     }
 

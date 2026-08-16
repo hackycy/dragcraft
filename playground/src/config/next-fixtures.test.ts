@@ -81,7 +81,7 @@ describe('next Playground fixtures', () => {
     expect(headless?.inspector?.formSchema?.sections[0]?.fields.map(field => field.key)).toEqual(['title', 'description'])
     expect(headless?.authoring?.policy?.duplicate).toBe('denied')
     expect(headless?.authoring?.policy?.move).toBe('denied')
-    expect(headless?.presentation).toEqual({ kind: 'headless', layout: { visible: false } })
+    expect(headless?.presentation).toEqual({ kind: 'headless' })
     expect(node?.id).toBe('product-seo')
     expect(product.structure.root).toContain('product-seo')
   })

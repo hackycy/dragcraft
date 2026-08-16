@@ -7,6 +7,7 @@ import type { ActionInterceptor } from './action-runtime'
 import type { NodeToolbarOrientation } from './node-interaction'
 import type { NodeSelectionPlane, NodeSelectionProjection } from './selection-presentation'
 import type { CreationBlockReason, DragTarget, NodeDestination, NodeOwner, NodeStyle, PlacementDecision } from './semantic'
+import type { SurfaceReservationManager } from './surface-geometry'
 
 export interface PresentationNode {
   readonly id: string
@@ -276,6 +277,8 @@ export interface ContainerDropApplicationSurfaceOptions {
 export interface ApplicationSurfaceOptions extends ContainerDropApplicationSurfaceOptions {
   /** Semantic read projection supplied by the Designer host. */
   session: DesignerSession
+  /** Private geometry registry for Frame-owned reservations. */
+  surfaceReservations: SurfaceReservationManager
   /** Optional host-owned shell around the Application Surface. */
   containerShell?: ContainerShellSource
   /** Interceptors for node actions such as delete, move, duplicate, and custom actions */
@@ -335,6 +338,7 @@ export interface PresentationContext extends ContainerDropApplicationSurfaceOpti
   interactionBoundary?: Ref<HTMLElement | null>
   /** Canvas stage scale shared by geometry that renders inside the scaled stage. */
   viewScale: Ref<number>
+  surfaceReservations: SurfaceReservationManager
 }
 
 /**

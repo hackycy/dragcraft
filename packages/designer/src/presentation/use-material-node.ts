@@ -1,9 +1,7 @@
 import type { Component, ComputedRef } from 'vue'
 import type { MaterialDefinition } from '../materials/types'
-import type { ResolvedPresentationLayout } from './semantic'
 import type { NodeInteractionState, PresentationContext, PresentationNode } from './types'
 import { computed } from 'vue'
-import { resolveNodePresentation } from './material-presentation'
 import { useNodeState } from './use-node-state'
 
 export interface UseMaterialNodeReturn {
@@ -21,14 +19,8 @@ export interface UseMaterialNodeReturn {
   draggable: ComputedRef<boolean>
   /** Whether this node is sortable. */
   sortable: ComputedRef<boolean>
-  /** Whether this node belongs to a sortable scope */
-  inSortScope: ComputedRef<boolean>
   /** Whether this node is the active drag source */
   isDragging: ComputedRef<boolean>
-  /** Whether this node is visible (from layout.visible, default true) */
-  visible: ComputedRef<boolean>
-  /** Resolved open layout metadata */
-  layout: ComputedRef<ResolvedPresentationLayout>
   /** CSS classes for the node wrapper */
   wrapperClasses: ComputedRef<Array<string | Record<string, boolean>>>
   /** Handle select event */
@@ -61,10 +53,7 @@ export function useMaterialNode(
     const presentation = material.value?.presentation
     return presentation?.kind === 'visual' ? presentation.preview : undefined
   })
-  const layout = computed(() => resolveNodePresentation(session, getNode()))
-  const inSortScope = computed(() => true)
   const isDragging = computed(() => session.state.dragTarget.value?.sourceNodeId === getNode().id)
-  const visible = computed(() => layout.value.visible)
   const useMask = computed(() => true)
 
   const selectable = computed(() =>
@@ -88,10 +77,8 @@ export function useMaterialNode(
       'dc-node--masked': useMask.value,
       'dc-node--unmasked': !useMask.value,
       'dc-node--non-selectable': !selectable.value,
-      'dc-node--locked': inSortScope.value && !sortable.value,
-      'dc-node--unsorted': !inSortScope.value,
+      'dc-node--locked': !sortable.value,
       'dc-node--dragging': isDragging.value,
-      'dc-node--hidden': !visible.value,
     },
     state.interactionClasses.value,
   ])
@@ -124,10 +111,7 @@ export function useMaterialNode(
     selectable,
     draggable,
     sortable,
-    inSortScope,
     isDragging,
-    visible,
-    layout,
     wrapperClasses,
     handleSelect,
     handleMouseEnter,

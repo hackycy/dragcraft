@@ -95,6 +95,26 @@ button:disabled {
   box-shadow: 0 6px 18px rgb(124 45 18 / 24%);
 }
 
+.guide-presentation-frame--floating-action {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dc-canvas-surface__viewport-plane > .guide-presentation-frame--floating-action {
+  pointer-events: none !important;
+}
+
+.guide-presentation-frame--floating-action > [data-dc-component="node"] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.guide-presentation-frame--floating-action .guide-floating-action {
+  pointer-events: auto;
+}
+
 .guide-notice--warm {
   color: #7a2e0a;
   background-color: #fff1df;

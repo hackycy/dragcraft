@@ -13,7 +13,6 @@ import type {
   MaterialBundleFactory,
   MaterialDefinition,
   MaterialPanelDefinition,
-  MaterialPresentationLayout,
 } from './types'
 import { cloneJsonValue, collectInvalidJsonPaths } from '@dragcraft/core'
 
@@ -126,12 +125,7 @@ function copyConfiguration<Value>(value: Value): Value {
 }
 
 function copyPresentation(presentation: DesignerPresentation): DesignerPresentation {
-  return Object.freeze({
-    ...presentation,
-    ...(presentation.layout
-      ? { layout: copyConfiguration(presentation.layout) as MaterialPresentationLayout }
-      : {}),
-  }) as DesignerPresentation
+  return Object.freeze({ ...presentation }) as DesignerPresentation
 }
 
 export function createMaterialCatalog(materials: readonly MaterialDefinition[]): MaterialCatalog {

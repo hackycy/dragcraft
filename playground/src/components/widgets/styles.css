@@ -342,6 +342,46 @@
   box-sizing: border-box;
 }
 
+.pg-presentation-frame--sticky-navigation {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: 4;
+  background: #fff;
+  pointer-events: auto;
+}
+
+.pg-presentation-frame--bottom-navigation {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 2;
+  min-height: 50px;
+  background: #fff;
+  pointer-events: auto;
+}
+
+.pg-presentation-frame--floating-action {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.dc-canvas-surface__viewport-plane > .pg-presentation-frame--floating-action {
+  pointer-events: none !important;
+}
+
+.pg-presentation-frame--floating-action > [data-dc-component="node"] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pg-presentation-frame--floating-action .pg-widget-floating-button {
+  pointer-events: auto;
+}
+
 .pg-widget-navbar__title-wrap {
   min-width: 0;
   max-width: calc(100% - 208px);

@@ -10,16 +10,13 @@ describe('navbar material', () => {
     document.body.innerHTML = ''
   })
 
-  it('declares title-only schema data and fixed Chrome presentation', () => {
+  it('declares title-only schema data and a Frame presentation', () => {
     const navbar = playgroundNextMaterials.find(material => material.type === 'navbar')!
     const tabBar = playgroundNextMaterials.find(material => material.type === 'tab-bar')!
 
     expect(navbar.schema?.defaultProps).toEqual({ title: '页面标题' })
     expect(navbar.authoring?.policy?.duplicate).toBe('denied')
-    expect(navbar.presentation).toMatchObject({
-      kind: 'visual',
-      layout: { placement: { kind: 'chrome', edge: 'block-start', position: 'fixed' } },
-    })
+    expect(navbar.presentation).toMatchObject({ kind: 'visual', frame: expect.anything() })
     expect(navbar.inspector?.formSchema?.sections[0].fields.map(field => field.key)).toEqual(['title'])
     expect(tabBar.inspector?.formSchema?.sections.at(-1)?.title).toBe('内容样式')
   })

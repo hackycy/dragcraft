@@ -22,15 +22,107 @@ test('mounts type-defined root materials in Schema order through the content pla
   const tabbar = page.locator('[data-dc-component="node"][data-node-id="tabbar-main"]')
   const floatingAction = page.locator('[data-dc-component="node"][data-node-id="floating-cart"]')
   const content = page.locator('.dc-canvas-surface__content')
-  const rootIds = await content.locator(':scope > [data-dc-component="node"]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-node-id')))
+  const documentIds = await content.locator('[data-dc-component="node"]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-node-id')))
+  const viewportIds = await page.locator('.dc-canvas-surface__viewport-plane [data-dc-component="node"]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-node-id')))
 
-  await expect(navbar).toHaveAttribute('data-dc-layout-placement', 'chrome')
-  await expect(tabbar).toHaveAttribute('data-dc-layout-placement', 'chrome')
-  await expect(floatingAction).toHaveAttribute('data-dc-layout-placement', 'layer')
-  expect(rootIds).toContain('nav-ecommerce')
-  expect(rootIds).toContain('tabbar-main')
-  expect(rootIds).toContain('floating-cart')
-  expect(rootIds.indexOf('nav-ecommerce')).toBeLessThan(rootIds.indexOf('tabbar-main'))
+  await expect(navbar.locator('xpath=ancestor::*[contains(@class, "sticky-navigation")]')).toHaveCount(1)
+  await expect(tabbar.locator('xpath=ancestor::*[contains(@class, "bottom-navigation")]')).toHaveCount(1)
+  await expect(floatingAction.locator('xpath=ancestor::*[contains(@class, "floating-action")]')).toHaveCount(1)
+  await expect(navbar).not.toHaveAttribute('data-dc-layout-placement', /.*/)
+  expect(documentIds).not.toContain('nav-ecommerce')
+  expect(viewportIds).toContain('nav-ecommerce')
+  expect(viewportIds).toContain('tabbar-main')
+  expect(viewportIds).toContain('floating-cart')
+})
+
+test('keeps special Frames positioned against the scroll viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto('/')
+
+  const scrollViewport = page.locator('.dc-canvas-surface__scrollport > [data-dc-part="viewport"]')
+  const viewportPlane = page.locator('.dc-canvas-surface__viewport-plane')
+  const navbar = page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]')
+  const tabbar = page.locator('[data-dc-component="node"][data-node-id="tabbar-main"]')
+  const navbarFrame = navbar.locator('xpath=ancestor::*[contains(@class, "sticky-navigation")]')
+  const tabbarFrame = tabbar.locator('xpath=ancestor::*[contains(@class, "bottom-navigation")]')
+  const floatingButton = page.locator('[data-node-id="floating-cart"] .pg-widget-floating-button')
+
+  const [viewportBox, tabbarBox, floatingBox] = await Promise.all([
+    viewportPlane.boundingBox(),
+    tabbar.boundingBox(),
+    floatingButton.boundingBox(),
+  ])
+  if (!viewportBox || !tabbarBox || !floatingBox)
+    throw new Error('Expected viewport, Tab, and floating button bounds')
+
+  await expect(tabbarFrame).toHaveCSS('background-color', 'rgb(255, 255, 255)')
+  const reservationGeometry = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>('[data-dc-canvas-stage]')
+    const content = document.querySelector<HTMLElement>('.dc-canvas-surface__content')
+    if (!stage || !content)
+      return null
+    const transform = getComputedStyle(stage).transform
+    const scale = transform.startsWith('matrix(') ? Number.parseFloat(transform.split(',')[0].slice(7)) : 1
+    return {
+      scale,
+      contentPaddingBlockStart: Number.parseFloat(getComputedStyle(content).paddingBlockStart),
+      contentPaddingBlockEnd: Number.parseFloat(getComputedStyle(content).paddingBlockEnd),
+    }
+  })
+  if (!reservationGeometry)
+    throw new Error('Expected stage and content geometry')
+  expect(Math.abs(reservationGeometry.contentPaddingBlockEnd * reservationGeometry.scale - tabbarBox.height)).toBeLessThan(0.5)
+  const navbarFrameBox = await navbarFrame.boundingBox()
+  if (!navbarFrameBox)
+    throw new Error('Expected navigation Frame bounds')
+  expect(Math.abs(reservationGeometry.contentPaddingBlockStart * reservationGeometry.scale - navbarFrameBox.height)).toBeLessThan(0.5)
+  await expect(navbar.locator('.dc-node__handle')).toHaveCount(0)
+  await expect(navbarFrame).toHaveCSS('position', 'absolute')
+  await expect(viewportPlane.locator('.pg-presentation-frame--sticky-navigation')).toHaveCount(1)
+  await expect(viewportPlane.locator('.pg-presentation-frame--bottom-navigation')).toHaveCount(1)
+  const navbarBox = await navbar.boundingBox()
+  if (!navbarBox)
+    throw new Error('Expected navigation bounds')
+  expect(Math.abs(navbarBox.y - viewportBox.y)).toBeLessThan(0.5)
+  expect(floatingBox.y).toBeGreaterThan(viewportBox.y + viewportBox.height / 2)
+  expect(floatingBox.x).toBeGreaterThan(viewportBox.x + viewportBox.width / 2)
+  expect(floatingBox.y + floatingBox.height).toBeLessThan(tabbarBox.y - 4)
+
+  const viewportTop = viewportBox.y
+  await scrollViewport.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+  })
+  await expect.poll(async () => {
+    const box = await navbar.boundingBox()
+    return box?.y ?? Number.NaN
+  }).toBeCloseTo(viewportTop, 1)
+
+  const [scrolledTabbarBox, scrolledViewportBox] = await Promise.all([
+    tabbar.boundingBox(),
+    viewportPlane.boundingBox(),
+  ])
+  if (!scrolledTabbarBox || !scrolledViewportBox)
+    throw new Error('Expected scrolled Tab and viewport bounds')
+  expect(Math.abs(scrolledTabbarBox.y + scrolledTabbarBox.height - (scrolledViewportBox.y + scrolledViewportBox.height))).toBeLessThan(0.5)
+  expect(scrolledTabbarBox.y + scrolledTabbarBox.height).toBeGreaterThanOrEqual(
+    scrolledViewportBox.y + scrolledViewportBox.height - 0.25,
+  )
+
+  const edgeOwner = await page.evaluate(() => {
+    const viewport = document.querySelector('.dc-canvas-surface__viewport-plane')
+    if (!viewport)
+      return null
+    const rect = viewport.getBoundingClientRect()
+    const point = (y: number) => document.elementsFromPoint((rect.left + rect.right) / 2, y)
+      .slice(0, 6)
+      .map(element => ({ tag: element.tagName, className: typeof element.className === 'string' ? element.className : '' }))
+    return {
+      top: point(Math.ceil(rect.top) + 1),
+      bottom: point(Math.floor(rect.bottom) - 1),
+    }
+  })
+  expect(edgeOwner?.top.some(element => element.className.includes('pg-widget-navbar'))).toBe(true)
+  expect(edgeOwner?.bottom.some(element => element.className.includes('pg-widget-tabbar'))).toBe(true)
 })
 
 test('reserves fixed Device Frame chrome before the first document node', async ({ page }) => {
@@ -40,18 +132,22 @@ test('reserves fixed Device Frame chrome before the first document node', async 
   const devicePicker = page.locator('.dc-device-picker__select')
   const navbar = page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]')
   const firstDocumentNode = page.locator('[data-dc-component="node"][data-node-id="swiper-banner"]')
+  const viewport = page.locator('.dc-device-frame__viewport')
 
   for (const device of ['iphone', 'iphone-x', 'iphone-8', 'android', 'android-waterdrop', 'tablet', 'desktop']) {
     await devicePicker.selectOption(device)
     await expect(page.locator(`.dc-device-frame--${device}`), `${device} Device Frame`).toBeVisible()
     await expect.poll(async () => {
-      const [navbarBounds, firstDocumentNodeBounds] = await Promise.all([
+      const [navbarBounds, firstDocumentNodeBounds, viewportBounds] = await Promise.all([
         navbar.boundingBox(),
         firstDocumentNode.boundingBox(),
+        viewport.boundingBox(),
       ])
       return navbarBounds !== null
         && firstDocumentNodeBounds !== null
-        && navbarBounds.y + navbarBounds.height <= firstDocumentNodeBounds.y
+        && viewportBounds !== null
+        && Math.abs(navbarBounds.y - viewportBounds.y) < 0.5
+        && Math.abs(firstDocumentNodeBounds.y - (navbarBounds.y + navbarBounds.height)) < 0.5
     }, { message: `${device} Navbar must not cover document content` }).toBe(true)
   }
 })
@@ -87,6 +183,23 @@ test('disables Navbar duplication through its material authoring policy', async 
   await expect(toolbar.getByTitle('复制')).toBeEnabled()
 })
 
+test('rejects repeated Navbar creation without growing the top reservation', async ({ page }) => {
+  await page.goto('/')
+
+  const source = page.locator('[data-dc-component="material-item"][title="导航栏"]')
+  const boundary = page.locator('[data-dc-interaction-boundary]')
+  const navbar = page.locator('[data-dc-component="node"][data-node-id^="nav-"]')
+  const content = page.locator('.dc-canvas-surface__content')
+
+  const initialCount = await navbar.count()
+  const initialPadding = await content.evaluate(element => getComputedStyle(element).paddingBlockStart)
+  await source.dragTo(boundary)
+  await source.dragTo(boundary)
+
+  await expect(navbar).toHaveCount(initialCount)
+  await expect(content).toHaveCSS('padding-block-start', initialPadding)
+})
+
 test('renders inspector fields for image, chrome, and form materials', async ({ page }) => {
   await page.goto('/')
 
@@ -118,7 +231,7 @@ test('keeps invisible Headless material out of the business preview', async ({ p
   await page.locator('.playground-header__select').selectOption('product-detail')
 
   await expect(page.locator('[data-dc-component="node"][data-node-id="product-seo"]')).toHaveCount(1)
-  await expect(page.locator('[data-dc-component="node"][data-node-id="product-seo"]')).toHaveAttribute('data-dc-visible', 'false')
+  await expect(page.locator('[data-dc-component="node"][data-node-id="product-seo"]')).not.toHaveAttribute('data-dc-visible', /.*/)
   await expect(page.getByText('Unknown widget: seo-meta', { exact: true })).toHaveCount(0)
 })
 

@@ -1,9 +1,20 @@
 import type { MaterialDefinition } from '@dragcraft/designer'
+import { DesignerViewportPortal } from '@dragcraft/designer'
+import { defineComponent, h } from 'vue'
 import { ColumnContainerWidget } from './widgets/container'
 import { FloatingActionWidget } from './widgets/floating-action'
 import { NoticeWidget } from './widgets/notice'
 import { GuidePageHeaderWidget } from './widgets/page-header'
 import { GuideTextWidget } from './widgets/text'
+
+const GuideFloatingActionFrame = defineComponent({
+  name: 'GuideFloatingActionFrame',
+  setup(_, { slots }) {
+    return () => h(DesignerViewportPortal, null, {
+      default: () => h('div', { class: 'guide-presentation-frame guide-presentation-frame--floating-action' }, slots.default?.()),
+    })
+  },
+})
 
 export const guideMaterials: readonly MaterialDefinition[] = [
   {
@@ -131,15 +142,7 @@ export const guideMaterials: readonly MaterialDefinition[] = [
     presentation: {
       kind: 'visual',
       preview: FloatingActionWidget,
-      layout: {
-        placement: {
-          kind: 'layer',
-          layer: 'float',
-          mode: 'framework',
-          anchor: { block: 'end', inline: 'end' },
-          offset: { blockEnd: 16, inlineEnd: 16 },
-        },
-      },
+      frame: GuideFloatingActionFrame,
     },
   },
 ]

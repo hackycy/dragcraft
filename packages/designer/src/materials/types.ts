@@ -10,52 +10,17 @@ import type {
 import type { FormSchema } from '@dragcraft/form-generator'
 import type { Component } from 'vue'
 
-export type MaterialPresentationEdge = 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
-export type MaterialPresentationAnchor = 'start' | 'center' | 'end'
-
-export type MaterialPresentationPlacement
-  = | {
-    readonly kind: 'flow'
-    readonly region?: string
-    readonly sortScope?: string | false
-  }
-  | {
-    readonly kind: 'chrome'
-    readonly edge: MaterialPresentationEdge
-    readonly position?: 'fixed' | 'sticky' | 'flow'
-    readonly reserve?: { readonly mode?: 'measure' | 'size' | 'none', readonly size?: string | number }
-    readonly avoidContent?: boolean
-  }
-  | {
-    readonly kind: 'layer'
-    readonly layer?: string
-    readonly mode?: 'framework' | 'self'
-    readonly anchor?: { readonly block?: MaterialPresentationAnchor, readonly inline?: MaterialPresentationAnchor }
-    readonly offset?: {
-      readonly blockStart?: string | number
-      readonly blockEnd?: string | number
-      readonly inlineStart?: string | number
-      readonly inlineEnd?: string | number
-    }
-    readonly avoid?: readonly ('safe-area' | 'chrome' | 'viewport')[]
-  }
-
-export interface MaterialPresentationLayout {
-  readonly placement?: MaterialPresentationPlacement
-  readonly order?: number
-  readonly visible?: boolean
-}
+/** A visual Material's optional Designer-only wrapper around one NodeHost slot. */
+export type PresentationFrame = Component
 
 export type DesignerPresentation
   = | {
     readonly kind: 'visual'
     readonly preview: Component
-    readonly frame?: Component
-    readonly layout?: MaterialPresentationLayout
+    readonly frame?: PresentationFrame
   }
   | {
     readonly kind: 'headless'
-    readonly layout?: MaterialPresentationLayout
   }
 
 export interface MaterialSchemaDeclaration<Props extends JsonObject = JsonObject> {

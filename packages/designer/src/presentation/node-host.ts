@@ -15,6 +15,7 @@ import DefaultNodeToolbar from './default-node-toolbar'
 import { useNodeGeometryRegistry } from './geometry-registry'
 import { resolveContainerRegions } from './material-presentation'
 import { MATERIAL_PREVIEW_CONTEXT_KEY } from './material-preview-context'
+import { NODE_MOUNT_PLANE_KEY } from './mount-plane'
 import { resolveNodeInteractionPresentation } from './node-interaction'
 import { NODE_SELECTION_PLANE_KEY } from './selection-presentation'
 import { normalizeStyleValueMap } from './semantic'
@@ -113,11 +114,16 @@ export default defineComponent({
 
     // Composables extract all logic
     const widget = useMaterialNode(() => props.node, ctx)
+    const hasPresentationFrame = computed(() => {
+      const presentation = ctx.session.materials.get(props.node.type)?.presentation
+      return presentation?.kind === 'visual' && presentation.frame !== undefined
+    })
     const { actions } = useNodeActions(() => props.node, ctx, () => props.owner)
     const drag = useNodeDrag(() => props.node, ctx)
     const interactionPresentation = resolveNodeInteractionPresentation(props.owner)
     const inheritedSelectionPlane = inject(NODE_SELECTION_PLANE_KEY, ref<NodeSelectionPlane>('content'))
-    const subtreeSelectionPlane = computed(() => props.selectionPlane ?? inheritedSelectionPlane.value)
+    const mountPlane = inject(NODE_MOUNT_PLANE_KEY, 'document')
+    const subtreeSelectionPlane = computed(() => props.selectionPlane ?? (mountPlane === 'viewport' ? 'viewport' : inheritedSelectionPlane.value))
     const projectionPlane = computed<NodeSelectionPlane>(() =>
       props.owner.kind === 'root' ? 'root' : subtreeSelectionPlane.value,
     )
@@ -136,7 +142,11 @@ export default defineComponent({
     })
     const isViewportNode = computed(() => subtreeSelectionPlane.value === 'viewport')
     const usesBlockingMask = computed(() =>
-      widget.useMask.value && !isViewportNode.value && !isResolvedContainer.value,
+      widget.useMask.value
+      && !isViewportNode.value
+      && !isResolvedContainer.value
+      && props.selectionPlane !== 'viewport'
+      && !hasPresentationFrame.value,
     )
     const usesSelectionHandle = computed(() =>
       !usesBlockingMask.value && widget.selectable.value && !isViewportNode.value,
@@ -215,7 +225,6 @@ export default defineComponent({
 
       const node = props.node
       const interactionLayerTarget = resolveInteractionLayerTarget(nodeElRef.value)
-      const placement = widget.layout.value.placement
       const isContainerOwned = props.owner.kind === 'container'
       const ownerKind = isContainerOwned ? 'container' : 'root'
       const resolvedContainer = isResolvedContainer.value
@@ -388,10 +397,8 @@ export default defineComponent({
       const themeStates = [
         widget.useMask.value ? 'masked' : 'unmasked',
         !widget.selectable.value ? 'non-selectable' : null,
-        widget.inSortScope.value && !widget.sortable.value ? 'locked' : null,
-        !widget.inSortScope.value ? 'unsorted' : null,
+        !widget.sortable.value ? 'locked' : null,
         widget.isDragging.value ? 'dragging' : null,
-        !widget.visible.value ? 'hidden' : null,
         widget.state.isSelected.value ? 'selected' : null,
         widget.state.isHovered.value ? 'hovered' : null,
         widget.state.isDragOver.value ? 'drag-over' : null,
@@ -412,13 +419,6 @@ export default defineComponent({
           'style': wrapperStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
-          'data-dc-layout-placement': isContainerOwned ? undefined : placement.kind,
-          'data-dc-layer-mode': !isContainerOwned && placement.kind === 'layer' ? placement.mode : undefined,
-          'data-dc-layout-region': isContainerOwned ? undefined : widget.layout.value.region,
-          'data-dc-sort-scope': isContainerOwned || widget.layout.value.sortScope === false
-            ? undefined
-            : widget.layout.value.sortScope,
-          'data-dc-visible': widget.visible.value ? undefined : 'false',
           'onMouseover': resolvedContainer ? undefined : handleMouseOver,
           'onMouseleave': resolvedContainer ? undefined : widget.handleMouseLeave,
           'onClick': !usesBlockingMask.value && widget.selectable.value

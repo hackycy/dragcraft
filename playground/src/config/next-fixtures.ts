@@ -1,4 +1,6 @@
 import type { DocumentSchema, MaterialDefinition } from '@dragcraft/designer'
+import { DesignerViewportPortal, useSurfaceReservation } from '@dragcraft/designer'
+import { defineComponent, h, ref } from 'vue'
 import {
   ButtonWidget,
   buttonWidgetMeta,
@@ -39,6 +41,43 @@ import {
   TabBarWidget,
   tabBarWidgetMeta,
 } from '../components/widgets/mini-program'
+
+const StickyNavigationFrame = defineComponent({
+  name: 'PlaygroundStickyNavigationFrame',
+  setup(_, { slots }) {
+    const element = ref<HTMLElement | null>(null)
+    useSurfaceReservation(element, { edge: 'block-start', fallbackSize: 44 })
+    return () => h(DesignerViewportPortal, null, {
+      default: () => h('div', {
+        ref: element,
+        class: 'pg-presentation-frame pg-presentation-frame--sticky-navigation',
+      }, slots.default?.()),
+    })
+  },
+})
+
+const BottomNavigationFrame = defineComponent({
+  name: 'PlaygroundBottomNavigationFrame',
+  setup(_, { slots }) {
+    const element = ref<HTMLElement | null>(null)
+    useSurfaceReservation(element, { edge: 'block-end', fallbackSize: 50 })
+    return () => h(DesignerViewportPortal, null, {
+      default: () => h('div', {
+        ref: element,
+        class: 'pg-presentation-frame pg-presentation-frame--bottom-navigation',
+      }, slots.default?.()),
+    })
+  },
+})
+
+const FloatingActionFrame = defineComponent({
+  name: 'PlaygroundFloatingActionFrame',
+  setup(_, { slots }) {
+    return () => h(DesignerViewportPortal, null, {
+      default: () => h('div', { class: 'pg-presentation-frame pg-presentation-frame--floating-action' }, slots.default?.()),
+    })
+  },
+})
 
 function addStyleInspector(material: MaterialDefinition): MaterialDefinition {
   if (material.presentation.kind !== 'visual')
@@ -197,20 +236,17 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     type: 'navbar',
     panel: { title: '导航栏', group: 'navigation', groupTitle: '导航容器', groupTitleKey: 'group.navigation', icon: '导' },
     schema: { defaultProps: { title: '页面标题' } },
-    authoring: { policy: { duplicate: 'denied', move: 'denied' } },
+    authoring: {
+      policy: {
+        duplicate: 'denied',
+        move: 'denied',
+      },
+    },
     inspector: { formSchema: navbarWidgetMeta.formSchema },
     presentation: {
       kind: 'visual',
       preview: NavbarWidget,
-      layout: {
-        placement: {
-          kind: 'chrome',
-          edge: 'block-start',
-          position: 'fixed',
-          reserve: { mode: 'measure', size: 44 },
-          avoidContent: true,
-        },
-      },
+      frame: StickyNavigationFrame,
     },
   },
   {
@@ -227,15 +263,7 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     presentation: {
       kind: 'visual',
       preview: TabBarWidget,
-      layout: {
-        placement: {
-          kind: 'chrome',
-          edge: 'block-end',
-          position: 'fixed',
-          reserve: { mode: 'measure', size: 50 },
-          avoidContent: true,
-        },
-      },
+      frame: BottomNavigationFrame,
     },
   },
   {
@@ -247,14 +275,7 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     presentation: {
       kind: 'visual',
       preview: FloatingButtonWidget,
-      layout: {
-        placement: {
-          kind: 'layer',
-          layer: 'float',
-          mode: 'self',
-          avoid: ['safe-area', 'chrome'],
-        },
-      },
+      frame: FloatingActionFrame,
     },
   },
   {
@@ -319,7 +340,6 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     },
     presentation: {
       kind: 'headless',
-      layout: { visible: false },
     },
   },
 ]
