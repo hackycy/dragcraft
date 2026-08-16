@@ -3,6 +3,7 @@ import type { NodeActionContext, ResolvedNodeAction } from './action-registry'
 import type { NodeOwner } from './semantic'
 import type { PresentationContext, PresentationNode } from './types'
 import { computed } from 'vue'
+import { resolveNodePresentation } from './material-presentation'
 
 export interface UseNodeActionsReturn {
   /** Resolved actions for the current node with visibility/disabled computed */
@@ -13,13 +14,15 @@ export interface UseNodeActionsReturn {
 
 function resolveUncachedPosition(node: PresentationNode, owner: NodeOwner, ctx: PresentationContext) {
   const position = ctx.session.document.getStructurePosition(node.id)
-  if (position) {
+  if (position && owner.kind === 'container') {
     return {
       owner: position.owner,
       index: position.index,
       siblingCount: position.siblingCount,
-      sortScope: position.sortScope,
-      lockedIndices: new Set(position.lockedIndices),
+      sortScope: false as const,
+      lockedIndices: ctx.session.materials.getLockedIndices(
+        ctx.session.document.getRegionNodes(owner.containerId, owner.regionId),
+      ),
     }
   }
   if (owner.kind === 'container') {
@@ -33,11 +36,11 @@ function resolveUncachedPosition(node: PresentationNode, owner: NodeOwner, ctx: 
     }
   }
 
-  const layout = ctx.session.materials.resolvePresentation(node)
+  const layout = resolveNodePresentation(ctx.session, node)
   const siblings = layout.sortScope === false
     ? ctx.session.document.rootNodes.value
     : ctx.session.document.rootNodes.value.filter(candidate =>
-        ctx.session.materials.resolvePresentation(candidate).sortScope === layout.sortScope,
+        resolveNodePresentation(ctx.session, candidate).sortScope === layout.sortScope,
       )
   return {
     owner: {

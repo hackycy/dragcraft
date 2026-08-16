@@ -24,38 +24,35 @@ export function describeDesignerSessionContract(
       expect(session.document.getNode('ordinary')).not.toHaveProperty('children')
       expect(session.document.getNode('ordinary')).not.toHaveProperty('layout')
       expect(session.document.getNode('layout')).not.toHaveProperty('container')
-      expect(session.document.getOwner('ordinary')).toEqual({ kind: 'root', sortScope: 'content' })
+      expect(session.document.getOwner('ordinary')).toEqual({ kind: 'root' })
       expect(session.document.getOwner('region-child')).toEqual({
         kind: 'container',
         containerId: 'layout',
         regionId: 'main',
       })
       expect(session.document.getStructurePosition('ordinary')).toMatchObject({
-        owner: { kind: 'root', sortScope: 'content' },
+        owner: { kind: 'root' },
         index: 0,
         siblingCount: 2,
-        sortScope: 'content',
       })
+      expect(session.document.isNodeReadOnly('ordinary')).toBe(false)
       expect(session.document.getRegionNodes('layout', 'main').map(node => node.id)).toEqual(['region-child'])
       expect(session.document.diagnostics.value).toEqual([])
     })
 
-    it('projects material and container facts without exposing legacy collaborators', () => {
+    it('projects material facts without layout or container projections', () => {
       const { session } = createFixture()
-      const layout = session.document.getNode('layout')!
 
       expect(session.materials.get('text')?.panel?.title).toBe('Text')
       expect(session.materials.getAll().map(meta => meta.type)).toEqual(['text', 'layout'])
       expect(session.materials.resolveCapability(session.document.getNode('ordinary')!, 'configurable')).toBe(true)
-      expect(session.materials.resolvePresentation(session.document.getNode('ordinary')!).sortScope).toBe('content')
-      expect(session.materials.resolveContainer(layout)).toMatchObject({
-        ok: true,
-        presentation: { containerId: 'layout' },
-      })
+      expect('resolvePresentation' in session.materials).toBe(false)
+      expect('resolveContainer' in session.materials).toBe(false)
       expect('engine' in session).toBe(false)
       expect('store' in session).toBe(false)
       expect('registry' in session).toBe(false)
       expect('layoutPlan' in session).toBe(false)
+      expect('resolveDestination' in session.document).toBe(false)
     })
 
     it('projects reactive selection, hover, drag, and history state', () => {

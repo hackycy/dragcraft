@@ -2,6 +2,7 @@ import type { DocumentSchema } from '@dragcraft/core'
 import { describe, expect, it } from 'vitest'
 import { createAuthoringEngine } from '../authoring/create-authoring-engine'
 import { createMaterialCatalog } from '../materials/create-material-catalog'
+import { resolveContainerRegions, resolveNodePresentation } from '../presentation/material-presentation'
 import { describeDesignerSessionContract } from './designer-session-contract'
 import {
   createNextDesignerSessionAdapter,
@@ -63,28 +64,11 @@ describe('next adapter backend contract', () => {
     expect(session.materials.get('text')?.presentation.kind).toBe('headless')
   })
 
-  it('projects root and Region drop destinations for the shared drag seam', () => {
+  it('keeps root and Region reads as canonical owner sequences', () => {
     const { session } = createFixture()
-    expect(session.document.resolveDestination?.({ kind: 'root', index: 1 })).toMatchObject({
-      ok: true,
-      value: { destination: { kind: 'root', index: 1 } },
-    })
-    const region = session.document.resolveDestination?.({
-      kind: 'container',
-      containerId: 'layout',
-      regionId: 'main',
-      index: 1,
-    })
-    expect(region).toMatchObject({
-      ok: true,
-      value: {
-        destination: { kind: 'container', containerId: 'layout', regionId: 'main', index: 1 },
-        container: { id: 'layout' },
-        region: { id: 'main' },
-      },
-    })
-    if (region?.ok)
-      expect(region.value.children.map(node => node.id)).toEqual(['region-child'])
+    expect(session.document.rootNodes.value.map(node => node.id)).toEqual(['ordinary', 'layout'])
+    expect(session.document.getRegionNodes('layout', 'main').map(node => node.id)).toEqual(['region-child'])
+    expect('resolveDestination' in session.document).toBe(false)
   })
 
   it('projects type-defined presentation layouts without adding them to DocumentSchema', () => {
@@ -137,7 +121,7 @@ describe('next adapter backend contract', () => {
     })
     const session = createNextDesignerSessionAdapter({ catalog, engine })
 
-    expect(session.materials.resolvePresentation(session.document.getNode('navbar-1')!)).toEqual({
+    expect(resolveNodePresentation(session, session.document.getNode('navbar-1')!)).toEqual({
       placement: {
         kind: 'chrome',
         edge: 'block-start',
@@ -148,7 +132,7 @@ describe('next adapter backend contract', () => {
       sortScope: false,
       visible: true,
     })
-    expect(session.materials.resolvePresentation(session.document.getNode('action-1')!)).toEqual({
+    expect(resolveNodePresentation(session, session.document.getNode('action-1')!)).toEqual({
       placement: {
         kind: 'layer',
         layer: 'float',
@@ -163,26 +147,18 @@ describe('next adapter backend contract', () => {
       owner: { kind: 'root' },
       index: 0,
       siblingCount: 4,
-      sortScope: false,
     })
     expect(session.document.getStructurePosition('tab-bar-1')).toMatchObject({
       owner: { kind: 'root' },
       index: 2,
       siblingCount: 4,
-      sortScope: false,
     })
     expect(session.document.getStructurePosition('action-1')).toMatchObject({
       owner: { kind: 'root' },
       index: 3,
       siblingCount: 4,
-      sortScope: false,
     })
-    expect(session.document.getStructurePosition('text-1')).toMatchObject({
-      owner: { kind: 'root', sortScope: 'content' },
-      index: 0,
-      siblingCount: 1,
-      sortScope: 'content',
-    })
+    expect(session.document.getStructurePosition('text-1')).toMatchObject({ owner: { kind: 'root' }, index: 1, siblingCount: 4 })
     expect(session.materials.canCreateSubtree(session.document.getNode('navbar-1')!)).toBe(false)
     expect(session.evaluate({ type: 'node.duplicate', nodeId: 'navbar-1' })).toEqual({
       allowed: false,
@@ -356,10 +332,7 @@ describe('next adapter backend contract', () => {
     expect(engine.document.value.status).toBe('conflicted')
     expect(session.materials.resolveCapability(session.document.getNode('unknown')!, 'selectable')).toBe(true)
     expect(session.materials.resolveCapability(session.document.getNode('unknown')!, 'configurable')).toBe(false)
-    expect(session.materials.resolveContainer(session.document.getNode('layout')!)).toMatchObject({
-      ok: false,
-      code: 'CONTAINER_UNRESOLVED',
-    })
+    expect(resolveContainerRegions(session, session.document.getNode('layout')!)).toEqual([])
   })
 
   it('exports detached JSON snapshots without exposing the engine document', () => {

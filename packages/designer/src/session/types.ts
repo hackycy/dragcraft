@@ -8,12 +8,10 @@ import type {
   HistoryState,
   NodeDestination,
   NodeOwner,
-  OwnerResolutionResult,
   PlacementDecision,
-  ResolvedPresentationLayout,
   SchemaDiagnostic,
 } from '../presentation/semantic'
-import type { AuthoringAction, AuthoringDecision, AuthoringResult, PresentationRegionDefinition } from '../presentation/types'
+import type { AuthoringAction, AuthoringDecision, AuthoringResult } from '../presentation/types'
 
 export type DesignerMaterialCapability
   = | 'selectable'
@@ -26,8 +24,6 @@ export interface DesignerSessionStructurePosition {
   readonly owner: NodeOwner
   readonly index: number
   readonly siblingCount: number
-  readonly sortScope: string | false
-  readonly lockedIndices: ReadonlySet<number>
 }
 
 export type DesignerSessionDropRejectionReason = CreationBlockReason & {
@@ -48,12 +44,10 @@ export interface DesignerSessionDocument {
   readonly globalConfig: ComputedRef<DeepReadonly<Record<string, unknown>>>
   readonly diagnostics: ComputedRef<readonly SchemaDiagnostic[]>
   getNode: (nodeId: string) => CoreDeepReadonly<NodeDefinition> | null
+  isNodeReadOnly: (nodeId: string) => boolean
   getOwner: (nodeId: string) => NodeOwner | null
   getStructurePosition: (nodeId: string) => DesignerSessionStructurePosition | null
   getRegionNodes: (containerId: string, regionId: string) => readonly CoreDeepReadonly<NodeDefinition>[]
-  resolveDestination?: (
-    destination: NodeDestination,
-  ) => OwnerResolutionResult<DesignerSessionDestination>
 }
 
 /** Presentation-facing node shape; it is a read-only view, not a persisted tree node. */
@@ -64,24 +58,6 @@ export interface DesignerSessionNode {
   readonly style?: Record<string, unknown>
 }
 
-export interface DesignerSessionDestination {
-  readonly children: readonly CoreDeepReadonly<NodeDefinition>[]
-  readonly destination: NodeDestination
-  readonly container?: CoreDeepReadonly<NodeDefinition>
-  readonly region?: DesignerSessionContainerRegion
-}
-
-export type DesignerSessionContainerRegion = PresentationRegionDefinition
-
-export interface DesignerSessionContainerPresentation {
-  readonly containerId: string
-  readonly regions: readonly {
-    readonly definition: DesignerSessionContainerRegion
-    readonly nodes: readonly CoreDeepReadonly<NodeDefinition>[]
-    readonly isEmpty: boolean
-  }[]
-}
-
 export interface DesignerSessionMaterials {
   get: (type: string) => Readonly<MaterialDefinition> | undefined
   getAll: () => readonly Readonly<MaterialDefinition>[]
@@ -89,10 +65,6 @@ export interface DesignerSessionMaterials {
     node: DesignerSessionNode,
     capability: DesignerMaterialCapability,
   ) => boolean
-  resolvePresentation: (node: DesignerSessionNode) => ResolvedPresentationLayout
-  resolveContainer: (node: DesignerSessionNode) =>
-    | { readonly ok: true, readonly presentation: DesignerSessionContainerPresentation }
-    | { readonly ok: false, readonly code: 'CONTAINER_UNRESOLVED', readonly containerId: string }
   getLockedIndices: (nodes: readonly DesignerSessionNode[]) => Set<number>
   canCreateSubtree: (node: DesignerSessionNode) => boolean
   canDeleteSubtree: (node: DesignerSessionNode) => boolean

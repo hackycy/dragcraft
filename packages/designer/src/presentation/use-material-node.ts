@@ -3,6 +3,7 @@ import type { MaterialDefinition } from '../materials/types'
 import type { ResolvedPresentationLayout } from './semantic'
 import type { NodeInteractionState, PresentationContext, PresentationNode } from './types'
 import { computed } from 'vue'
+import { resolveNodePresentation } from './material-presentation'
 import { useNodeState } from './use-node-state'
 
 export interface UseMaterialNodeReturn {
@@ -60,7 +61,7 @@ export function useMaterialNode(
     const presentation = material.value?.presentation
     return presentation?.kind === 'visual' ? presentation.preview : undefined
   })
-  const layout = computed(() => session.materials.resolvePresentation(getNode()))
+  const layout = computed(() => resolveNodePresentation(session, getNode()))
   const inSortScope = computed(() => layout.value.sortScope !== false)
   const isDragging = computed(() => session.state.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)

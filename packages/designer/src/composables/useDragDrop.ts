@@ -7,6 +7,7 @@ import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReas
 import { generateShortId } from '@dragcraft/utils'
 import { computed, watch } from 'vue'
 import { hideNativeDragImage } from '../presentation/drag-image'
+import { resolveNodePresentation } from '../presentation/material-presentation'
 import {
   DEFAULT_SORT_SCOPE,
   findNearestValidIndex,
@@ -117,7 +118,7 @@ export function useDragDrop(
   let dropGeometryFrame: number | null = null
   function getActiveSortScopeNodes(sortScope: string): NodeDefinition[] {
     return session.document.rootNodes.value
-      .filter(node => session.materials.resolvePresentation(node).sortScope === sortScope)
+      .filter(node => resolveNodePresentation(session, node).sortScope === sortScope)
       .slice()
       .sort((a, b) => {
         const positionA = session.document.getStructurePosition(a.id)?.index ?? 0
@@ -163,11 +164,7 @@ export function useDragDrop(
   // ── Visual drop index computation ──
 
   function resolveMaterialSortScope(material: Readonly<MaterialDefinition>): string | false {
-    return session.materials.resolvePresentation({
-      id: '__material-preview__',
-      type: material.type,
-      props: {},
-    }).sortScope
+    return resolveNodePresentation(session, { type: material.type }).sortScope
   }
 
   function getActiveSortScopeEntries(sortScope: string) {
@@ -182,7 +179,7 @@ export function useDragDrop(
       const node = session.document.getNode(target.sourceNodeId)
       if (!node)
         return false
-      return session.materials.resolvePresentation(node).sortScope
+      return resolveNodePresentation(session, node).sortScope
     }
     if (target.widgetType) {
       const material = session.materials.get(target.widgetType)

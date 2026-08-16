@@ -2,6 +2,7 @@ import type { LayoutEdge, NodeOwner, ResolvedChromePresentation } from './semant
 import type { ApplicationSurfaceOptions, PresentationContext, PresentationNode, SurfaceEntry, SurfaceProjection } from './types'
 import { computed, inject, ref } from 'vue'
 import { createNodeActionRegistry } from './action-registry'
+import { resolveNodePresentation } from './material-presentation'
 import { PRESENTATION_CONTEXT_KEY } from './types'
 
 function pushEntry(
@@ -39,7 +40,7 @@ function createSurfaceProjection(options: ApplicationSurfaceOptions): SurfacePro
     const entry: SurfaceEntry = {
       node,
       arrayIndex,
-      layout: options.session.materials.resolvePresentation(node),
+      layout: resolveNodePresentation(options.session, node),
     }
     if (!entry.layout.visible)
       return
@@ -99,13 +100,15 @@ export function createPresentationContext(options: ApplicationSurfaceOptions): P
 
   function resolveNodeActionPosition(node: PresentationNode, owner: NodeOwner) {
     const position = options.session.document.getStructurePosition(node.id)
-    if (position) {
+    if (position && owner.kind === 'container') {
       return {
         owner: position.owner,
         index: position.index,
         siblingCount: position.siblingCount,
-        sortScope: position.sortScope,
-        lockedIndices: new Set(position.lockedIndices),
+        sortScope: false as const,
+        lockedIndices: options.session.materials.getLockedIndices(
+          options.session.document.getRegionNodes(owner.containerId, owner.regionId),
+        ),
       }
     }
 
@@ -121,10 +124,10 @@ export function createPresentationContext(options: ApplicationSurfaceOptions): P
     }
 
     const rootNodes = options.session.document.rootNodes.value
-    const nodeLayout = options.session.materials.resolvePresentation(node)
+    const nodeLayout = resolveNodePresentation(options.session, node)
     const siblings = nodeLayout.sortScope === false
       ? rootNodes
-      : rootNodes.filter(candidate => options.session.materials.resolvePresentation(candidate).sortScope === nodeLayout.sortScope)
+      : rootNodes.filter(candidate => resolveNodePresentation(options.session, candidate).sortScope === nodeLayout.sortScope)
     return {
       owner: {
         kind: 'root' as const,

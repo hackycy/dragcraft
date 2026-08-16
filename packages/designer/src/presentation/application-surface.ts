@@ -12,6 +12,7 @@ import DefaultContainerShell from './default-container-shell'
 import DefaultDropIndicator from './default-drop-indicator'
 import DefaultEmptyState from './default-empty-state'
 import DefaultForbiddenOverlay from './default-forbidden-overlay'
+import { resolveNodePresentation } from './material-presentation'
 import NodeHost from './node-host'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from './selection-presentation'
 import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, normalizeStyleValueMap } from './semantic'
@@ -52,7 +53,7 @@ function insertDropIndicator(
     ? plan.entries.find(entry => entry.node.id === dragTarget.sourceNodeId)
     : undefined
   const draggedLayout = !draggedEntry && dragTarget?.widgetType
-    ? session.materials.resolvePresentation({ id: '__drop-indicator__', type: dragTarget.widgetType, props: {} })
+    ? resolveNodePresentation(session, { type: dragTarget.widgetType })
     : undefined
   const inferredRegion = draggedEntry?.layout.region
     ?? (draggedLayout?.placement.kind === 'flow' ? draggedLayout.region : undefined)

@@ -3,6 +3,7 @@ import type { NodeOwner } from './semantic'
 import type { PresentationNode } from './types'
 import { defineComponent, h } from 'vue'
 import { usePresentationContext } from './context'
+import { resolveContainerRegions } from './material-presentation'
 import NodeHost from './node-host'
 
 export default defineComponent({
@@ -15,14 +16,13 @@ export default defineComponent({
   },
   setup(props) {
     const ctx = usePresentationContext()
-    const plan = ctx.session.materials.resolveContainer(props.node)
-    const regions = plan.ok ? plan.presentation.regions : []
+    const regions = resolveContainerRegions(ctx.session, props.node)
     return () => h('div', {
       'class': 'dc-unresolved-container',
       'data-dc-component': 'unresolved-container',
       'data-dc-unresolved-container': props.node.id,
     }, regions.map((region) => {
-      const regionId = region.definition.id
+      const regionId = region.id
       const nodes = ctx.session.document.getRegionNodes(props.node.id, regionId)
       const owner: NodeOwner = {
         kind: 'container',

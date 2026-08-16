@@ -11,6 +11,7 @@ import DefaultNodeHandle from './default-node-handle'
 import DefaultNodeMask from './default-node-mask'
 import DefaultNodeSelection from './default-node-selection'
 import DefaultNodeToolbar from './default-node-toolbar'
+import { resolveContainerRegions } from './material-presentation'
 import { MATERIAL_PREVIEW_CONTEXT_KEY } from './material-preview-context'
 import { resolveNodeInteractionPresentation } from './node-interaction'
 import { NODE_SELECTION_PLANE_KEY } from './selection-presentation'
@@ -116,9 +117,9 @@ export default defineComponent({
     )
     provide(NODE_SELECTION_PLANE_KEY, subtreeSelectionPlane)
 
-    const containerPlan = computed(() => ctx.session.materials.resolveContainer(props.node))
+    const containerRegions = computed(() => resolveContainerRegions(ctx.session, props.node))
     const isResolvedContainer = computed(() => {
-      if (!containerPlan.value.ok || !widget.resolvedComponent.value)
+      if (containerRegions.value.length === 0 || !widget.resolvedComponent.value)
         return false
       return true
     })

@@ -10,18 +10,16 @@ import type {
 import type { Ref } from 'vue'
 import type { AuthoringEngine, SchemaAuthoringAction } from '../authoring/types'
 import type { MaterialCatalog } from '../materials/create-material-catalog'
-import type { MaterialPresentationLayout } from '../materials/types'
-import type { ResolvedPresentationLayout } from '../presentation/semantic'
 import type {
   DesignerMaterialCapability,
   DesignerSession,
   DesignerSessionDocument,
   DesignerSessionDropRejectionReason,
-  DesignerSessionMaterials,
 } from './types'
 import { resolveSchema } from '@dragcraft/core'
 import { computed, ref } from 'vue'
 import { evaluateAuthoringPolicy } from '../authoring/policy'
+import { resolvePresentationLayout } from '../presentation/material-presentation'
 
 export interface NextDesignerSessionHostState {
   readonly activeDestination: Ref<ActiveDestinationValue>
@@ -33,8 +31,6 @@ export interface NextDesignerSessionHostState {
 
 type ProjectedNode = Exclude<ReturnType<DesignerSessionDocument['getNode']>, null>
 type ProjectedDiagnostic = DesignerSessionDocument['diagnostics']['value'][number]
-type ProjectedContainerPresentation = ReturnType<DesignerSessionMaterials['resolveContainer']>
-type ProjectedDestination = ReturnType<NonNullable<DesignerSessionDocument['resolveDestination']>>
 type DragTargetValue = DesignerSession['state']['dragTarget']['value']
 type ActiveDestinationValue = DesignerSession['state']['drag']['activeDestination']['value']
 type ContainerDropDecisionValue = DesignerSession['state']['drag']['containerDropDecision']['value']
@@ -208,55 +204,6 @@ function projectDiagnostics(engine: AuthoringEngine): readonly ProjectedDiagnost
   })) as ProjectedDiagnostic[]
 }
 
-function resolvePresentationLayout(layout: MaterialPresentationLayout | undefined): ResolvedPresentationLayout {
-  const placement = layout?.placement
-  if (!placement || placement.kind === 'flow') {
-    const region = placement?.region ?? 'content'
-    const sortScope = placement?.sortScope === undefined
-      ? region === 'content' ? 'content' : false
-      : placement.sortScope
-    return {
-      placement: { kind: 'flow' as const, region, sortScope },
-      region,
-      sortScope,
-      ...(layout?.order === undefined ? {} : { order: layout.order }),
-      visible: layout?.visible ?? true,
-    }
-  }
-  if (placement.kind === 'chrome') {
-    return {
-      placement: {
-        kind: 'chrome' as const,
-        edge: placement.edge,
-        position: placement.position ?? 'fixed',
-        reserve: {
-          mode: placement.reserve?.mode ?? 'measure',
-          ...(placement.reserve?.size === undefined ? {} : { size: placement.reserve.size }),
-        },
-        avoidContent: placement.avoidContent ?? true,
-      },
-      sortScope: false as const,
-      ...(layout?.order === undefined ? {} : { order: layout.order }),
-      visible: layout?.visible ?? true,
-    }
-  }
-  return {
-    placement: {
-      kind: 'layer' as const,
-      layer: placement.layer ?? 'float',
-      mode: placement.mode ?? (placement.anchor ? 'framework' : 'self'),
-      anchor: placement.anchor ?? { block: 'end', inline: 'end' },
-      ...(placement.offset ? { offset: placement.offset } : {}),
-      avoid: placement.avoid
-        ? [...placement.avoid] as Array<'safe-area' | 'chrome' | 'viewport'>
-        : ['safe-area', 'chrome'] as Array<'safe-area' | 'chrome' | 'viewport'>,
-    },
-    sortScope: false as const,
-    ...(layout?.order === undefined ? {} : { order: layout.order }),
-    visible: layout?.visible ?? true,
-  }
-}
-
 interface NextActionFailure { readonly status: 'rejected', readonly code: string }
 type CompiledSchemaAction = SchemaAuthoringAction | NextActionFailure
 
@@ -422,11 +369,6 @@ export function createNextDesignerSessionAdapter(
         })
       : []
   })
-  const resolvePresentationLayoutConfiguration = (current: ResolvedDocument, nodeId: string): ResolvedPresentationLayout => {
-    const node = current.nodesById.get(nodeId)?.node
-    return resolvePresentationLayout(options.catalog.getMaterial(node?.type ?? '')?.presentation.layout)
-  }
-
   const session: NextDesignerSessionAdapter = {
     document: {
       schema,
@@ -442,6 +384,7 @@ export function createNextDesignerSessionAdapter(
         const current = document.value
         return current?.nodesById.get(nodeId)?.node ?? null
       },
+      isNodeReadOnly: nodeId => document.value?.nodesById.get(nodeId)?.readOnly ?? false,
       getOwner: (nodeId) => {
         const current = document.value
         const location = current?.locationsById.get(nodeId)
@@ -449,11 +392,7 @@ export function createNextDesignerSessionAdapter(
           return null
         if (location.kind !== 'page-root')
           return { kind: 'container', containerId: location.containerId, regionId: location.regionId }
-        const sortScope = resolvePresentationLayoutConfiguration(current, nodeId).sortScope
-        return {
-          kind: 'root',
-          ...(sortScope === false ? {} : { sortScope }),
-        }
+        return { kind: 'root' }
       },
       getStructurePosition: (nodeId) => {
         const current = document.value
@@ -467,31 +406,16 @@ export function createNextDesignerSessionAdapter(
           return null
         const siblings = nodesForIds(current, siblingIds)
         if (location.kind === 'page-root') {
-          const sortScope = resolvePresentationLayoutConfiguration(current, nodeId).sortScope
-          if (sortScope === false) {
-            return {
-              owner: { kind: 'root' as const },
-              index: location.index,
-              siblingCount: siblings.length,
-              sortScope,
-              lockedIndices: new Set<number>(),
-            }
-          }
-          const scopedSiblings = siblings.filter(sibling => resolvePresentationLayoutConfiguration(current, sibling.id).sortScope === sortScope)
           return {
-            owner: { kind: 'root' as const, sortScope },
-            index: scopedSiblings.findIndex(sibling => sibling.id === nodeId),
-            siblingCount: scopedSiblings.length,
-            sortScope,
-            lockedIndices: new Set<number>(),
+            owner: { kind: 'root' as const },
+            index: location.index,
+            siblingCount: siblings.length,
           }
         }
         return {
           owner: { kind: 'container', containerId: location.containerId, regionId: location.regionId },
           index: location.index,
           siblingCount: siblings.length,
-          sortScope: false,
-          lockedIndices: new Set<number>(),
         }
       },
       getRegionNodes: (containerId, regionId) => {
@@ -500,51 +424,6 @@ export function createNextDesignerSessionAdapter(
         if (!current || !childIds)
           return []
         return nodesForIds(current, childIds)
-      },
-      resolveDestination: (destination) => {
-        const current = document.value
-        if (!current)
-          return { ok: false, code: 'NO_DOCUMENT' }
-        if (destination.kind === 'root') {
-          return {
-            ok: true,
-            value: {
-              children: rootNodes.value,
-              destination,
-            },
-          } as ProjectedDestination
-        }
-
-        const container = current.containersById.get(destination.containerId)
-        const owner = container?.owner
-        const material = owner ? options.catalog.getMaterial(owner.node.type) : undefined
-        const definition = material?.schema?.container
-        const regionDeclaration = definition?.regions.find(item => item.id === destination.regionId)
-        const resolvedRegion = container?.regions.get(destination.regionId)
-        if (!owner || !regionDeclaration || !resolvedRegion)
-          return { ok: false, code: 'CONTAINER_UNRESOLVED' }
-
-        return {
-          ok: true,
-          value: {
-            children: nodesForIds(current, current.schema.structure.containers[destination.containerId]!.regions[destination.regionId]!),
-            destination,
-            container: owner.node,
-            region: {
-              id: regionDeclaration.id,
-              title: regionDeclaration.id,
-              ...(regionDeclaration.accepts || regionDeclaration.cardinality
-                ? {
-                    constraints: {
-                      ...(regionDeclaration.accepts?.types ? { includeTypes: [...regionDeclaration.accepts.types] } : {}),
-                      ...(regionDeclaration.cardinality?.min === undefined ? {} : { minItems: regionDeclaration.cardinality.min }),
-                      ...(regionDeclaration.cardinality?.max === undefined ? {} : { maxItems: regionDeclaration.cardinality.max }),
-                    },
-                  }
-                : {}),
-            },
-          },
-        } as ProjectedDestination
       },
     },
     materials: {
@@ -556,41 +435,6 @@ export function createNextDesignerSessionAdapter(
         node,
         capability,
       ),
-      resolvePresentation: node => resolvePresentationLayout(options.catalog.getMaterial(node.type)?.presentation.layout),
-      resolveContainer: (node): ProjectedContainerPresentation => {
-        const current = document.value
-        const container = current?.containersById.get(node.id)
-        const material = options.catalog.getMaterial(node.type)
-        const resolved = current?.nodesById.get(node.id)
-        if (!current || !container || !material?.schema?.container || resolved?.readOnly)
-          return { ok: false, code: 'CONTAINER_UNRESOLVED', containerId: node.id }
-        return {
-          ok: true,
-          presentation: {
-            containerId: node.id,
-            regions: material.schema.container.regions.map((declaration) => {
-              const nodeIds = current.schema.structure.containers[node.id]?.regions[declaration.id] ?? []
-              return {
-                definition: {
-                  id: declaration.id,
-                  title: declaration.id,
-                  ...(declaration.accepts || declaration.cardinality
-                    ? {
-                        constraints: {
-                          ...(declaration.accepts?.types ? { includeTypes: [...declaration.accepts.types] } : {}),
-                          ...(declaration.cardinality?.min === undefined ? {} : { minItems: declaration.cardinality.min }),
-                          ...(declaration.cardinality?.max === undefined ? {} : { maxItems: declaration.cardinality.max }),
-                        },
-                      }
-                    : {}),
-                },
-                nodes: nodesForIds(current, nodeIds),
-                isEmpty: nodeIds.length === 0,
-              }
-            }),
-          },
-        }
-      },
       getLockedIndices: nodes => new Set(nodes.flatMap((node, index) => {
         return resolveCapability(document.value, options.catalog, node, 'sortable') ? [] : [index]
       })),

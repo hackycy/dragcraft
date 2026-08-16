@@ -38,8 +38,8 @@
 | Gate | Status | Depends on | Plan contract | Unlock evidence |
 | --- | --- | --- | --- | --- |
 | G0: Convergence Guard and Drift Inventory | passed | none | `implementation-plan.md` -> `G0: Convergence Guard and Drift Inventory` | no predecessor |
-| G1: Canonical Schema and Session | active | G0 | `implementation-plan.md` -> `G1: Canonical Schema and Session` | G0 passed |
-| G2: Authoring and Structural Operations | planned | G1 | `implementation-plan.md` -> `G2: Authoring and Structural Operations` | G1 pending |
+| G1: Canonical Schema and Session | passed | G0 | `implementation-plan.md` -> `G1: Canonical Schema and Session` | G0 passed |
+| G2: Authoring and Structural Operations | active | G1 | `implementation-plan.md` -> `G2: Authoring and Structural Operations` | G1 passed |
 | G3: Node Interaction and Geometry | planned | G2 | `implementation-plan.md` -> `G3: Node Interaction and Geometry` | G2 pending |
 | G4: Container Region Cutover | planned | G3 | `implementation-plan.md` -> `G4: Container Region Cutover` | G3 pending |
 | G5: Root Surface Cutover | planned | G4 | `implementation-plan.md` -> `G5: Root Surface Cutover` | G4 pending |
@@ -62,10 +62,14 @@
 
 - 2026-08-16: initialized as `planned`; G0 pending and no implementation evidence.
 - 2026-08-16: activated after G0 passed; not started in this Goal.
+- 2026-08-16: Slice `canonical session read projection` completed. Modified the internal Designer Session contract and Next adapter, added the private `presentation/material-presentation.ts` resolver, and rewired direct Presentation/Structure/drag consumers to use it without changing DOM or authoring behavior. Session now exposes canonical Schema, root/region owner sequences, and resolver read-only state only; it no longer exposes layout resolution, container tree projections, scoped structural positions, or destination projections. Directed verification: `pnpm exec vitest run packages/core/src/resolver/resolve-schema.test.ts packages/designer/src/session/next-designer-session-adapter.test.ts packages/designer/src/components/DcStructurePanel.test.ts packages/designer/src/composables/useDragDrop.test.ts` passed (43 tests). Risk: legacy presentation layout still intentionally exists outside the Session and continues to inform existing write paths; G2 and G6 own its later removal. Next: verify canonical import/export rejection stability and then run the declared ordered repository verification.
+- 2026-08-16: Slice `import/export stability` completed. Added a direct Authoring Engine test for rejected import state stability; no production import/export behavior changed. Directed verification: `pnpm exec vitest run packages/designer/src/authoring/create-authoring-engine.test.ts packages/designer/src/factory.test.ts packages/designer/src/session/next-designer-session-adapter.test.ts` passed (38 tests), proving JSON-safe exports and a rejected import leaves the current canonical snapshot and history intact. Risk: none beyond the preserved later-Gate presentation/write dependencies noted above. Next: run focused Core/Designer session verification, then the full repository sequence in its declared order.
+- 2026-08-16: G1 final evidence. Focused Core/Designer verification passed: `pnpm exec vitest run packages/core/src/resolver/resolve-schema.test.ts packages/designer/src/authoring/create-authoring-engine.test.ts packages/designer/src/session/next-designer-session-adapter.test.ts packages/designer/src/components/DcStructurePanel.test.ts packages/designer/src/composables/useDragDrop.test.ts packages/designer/src/factory.test.ts` (67 tests). Final ordered repository verification passed on the completed worktree: `pnpm build`; `pnpm lint` (including public-boundary and inventory checks); `pnpm typecheck`; `pnpm test`; `pnpm test:browser` (32/32; Playwright `.last-run.json` status `passed`). `git diff --check` passed. Exit 1: Session schema reads are canonical `DocumentSchema` snapshots or rejected state, with rejected import snapshot/history stability covered directly. Exit 2: Session contract tests prove no `resolvePresentation`, `resolveContainer`, or `resolveDestination` projection; Session owner/index reads are canonical resolver sequences. Exit 3: focused, repository, and browser verification pass while the Authoring Engine remains the single document/history source. Manual acceptance: none. G1 is `passed`; G2 is activated, not started in this Goal.
 
 ### G2: Authoring and Structural Operations
 
 - 2026-08-16: initialized as `planned`; G1 pending and no implementation evidence.
+- 2026-08-16: activated after G1 passed; not started in this Goal.
 
 ### G3: Node Interaction and Geometry
 

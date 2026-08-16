@@ -7,6 +7,7 @@ import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
 import { ActionKey } from '../presentation/action-registry'
+import { resolveContainerRegions } from '../presentation/material-presentation'
 import { useDesignerSession } from '../session/context'
 
 interface StructureItem {
@@ -29,22 +30,19 @@ function createContainerStructureRegions(
   session: ReturnType<typeof useDesignerSession>,
   t: (key: string, fallback?: string) => string,
 ): ContainerStructureRegion[] {
-  const result = session.materials.resolveContainer(node)
-  if (!result.ok)
-    return []
-
-  return result.presentation.regions.map(region => ({
-    id: region.definition.id,
-    title: region.definition.titleKey
-      ? t(region.definition.titleKey, region.definition.title)
-      : region.definition.title,
+  const regions = resolveContainerRegions(session, node)
+  return regions.map(region => ({
+    id: region.id,
+    title: region.titleKey
+      ? t(region.titleKey, region.title)
+      : region.title,
     owner: {
       kind: 'container',
-      containerId: result.presentation.containerId,
-      regionId: region.definition.id,
+      containerId: node.id,
+      regionId: region.id,
     },
-    nodes: region.nodes as unknown as readonly DeepReadonly<PresentationNode>[],
-    lockedIndices: session.materials.getLockedIndices(region.nodes),
+    nodes: session.document.getRegionNodes(node.id, region.id) as unknown as readonly DeepReadonly<PresentationNode>[],
+    lockedIndices: session.materials.getLockedIndices(session.document.getRegionNodes(node.id, region.id)),
   }))
 }
 
@@ -107,9 +105,9 @@ export default defineComponent({
           position?.owner ?? { kind: 'root' },
           position?.index ?? rootIndex,
           position?.siblingCount ?? children.length,
-          position?.sortScope ?? false,
+          false,
           actionSchema.value,
-          new Set(position?.lockedIndices ?? []),
+          new Set(),
         )
       })
     })

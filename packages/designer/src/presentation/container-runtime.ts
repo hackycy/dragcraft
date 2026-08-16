@@ -1,6 +1,7 @@
 import type { ComputedRef, InjectionKey } from 'vue'
 import type { DeepReadonly, PresentationContext, PresentationNode, PresentationRegionDefinition } from './types'
 import { computed, inject } from 'vue'
+import { resolveContainerRegions } from './material-presentation'
 
 function deepFreeze<T>(value: T): DeepReadonly<T> {
   if (value && typeof value === 'object' && !Object.isFrozen(value)) {
@@ -27,14 +28,12 @@ export function createContainerRuntime(
     void ctx.schema.value
     return ctx.session.document.getNode(getNode().id) ?? getNode()
   }
-  const plan = computed(() => ctx.session.materials.resolveContainer(resolveNode()))
+  const regionDefinitions = computed(() => resolveContainerRegions(ctx.session, resolveNode()))
 
   return {
     nodeId: computed(() => resolveNode().id),
     regionDefinitions: computed(() => deepFreeze(
-      plan.value.ok
-        ? plan.value.presentation.regions.map(region => ({ ...region.definition }))
-        : [],
+      regionDefinitions.value.map(region => ({ ...region })),
     )),
     getRegionNodes: regionId => ctx.session.document.getRegionNodes(resolveNode().id, regionId),
   }

@@ -420,6 +420,27 @@ describe('createAuthoringEngine', () => {
     expect(engine.history.undoCount.value).toBe(0)
   })
 
+  it('keeps the current canonical snapshot and history after a rejected import', () => {
+    const engine = createAuthoringEngine({
+      catalog: createMaterialCatalog([]),
+      createNodeId: () => 'unused',
+      schema: emptyDocument(),
+    })
+    engine.execute({ type: 'update-global-config', globalConfig: { locale: 'zh-CN' } })
+    const before = engine.document.value
+
+    expect(engine.importSchema({ version: '1' })).toMatchObject({ status: 'rejected' })
+    expect(engine.document.value).toBe(before)
+    expect(engine.exportSchema()).toEqual({
+      version: '1',
+      globalConfig: { locale: 'zh-CN' },
+      page: { props: {} },
+      nodes: [],
+      structure: { root: [], containers: {} },
+    })
+    expect(engine.history.undoCount.value).toBe(1)
+  })
+
   it('retains at most the configured number of history entries', () => {
     const engine = createAuthoringEngine({
       catalog: createMaterialCatalog([]),
