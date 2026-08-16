@@ -1,8 +1,8 @@
 <div align="center">
   <h1 align="center">dragcraft</h1>
-  <p align="center">面向小程序装修场景的可视化页面搭建引擎</p>
+  <p align="center">面向垂直业务场景的 Schema 驱动可视化页面编排框架</p>
   <p align="center">
-    用可视化设计器、结构化 Schema 和可扩展的 Vue 可视化搭建工作台，构建可维护的页面装修后台。
+    用可扩展业务物料、结构化 DocumentSchema 和 Vue 设计工作台，搭建可维护的列表、详情、营销与配置等业务页面。
   </p>
   <p align="center">
     <a href="https://hackycy.github.io/dragcraft/"><strong>阅读文档</strong></a>
@@ -28,7 +28,7 @@
 
 ## 为什么选择 dragcraft
 
-- **为页面装修而设计**：围绕物料拖拽、属性配置、设备预览和页面结构编排构建，而不只是一个通用拖拽容器。
+- **为业务页面编排而设计**：围绕业务物料、属性配置、设备预览和受约束的页面结构编排构建，适用于小程序装修等垂直业务场景，而不只是一个通用拖拽容器。
 - **DocumentSchema 驱动**：页面结构与属性保存为稳定、可导入导出的 `DocumentSchema`；业务运行时负责解释并渲染页面。
 - **AuthoringAction 写入**：新增、移动、删除和属性更新统一经过 `AuthoringAction`，并共享 history、事件通知和 authoring policy。
 - **开箱即用，也能深度扩展**：标准设计器组合了画布与配置表单；`MaterialDefinition`、字段、容器、Device Frame 和主题都可按业务替换。

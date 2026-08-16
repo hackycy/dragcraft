@@ -1,6 +1,6 @@
 # dragcraft Architecture Map
 
-本目录记录已实施架构的稳定边界。业务接入只使用 `@dragcraft/designer`、`@dragcraft/device-frames` 和 `@dragcraft/fields-*`。
+本目录记录 DragCraft 作为面向垂直业务场景的 Schema 驱动可视化页面编排框架所实施的稳定架构边界。业务接入只使用 `@dragcraft/designer`、`@dragcraft/device-frames` 和 `@dragcraft/fields-*`。
 
 ## 阅读路径
 

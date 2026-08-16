@@ -1,11 +1,11 @@
 ---
 layout: home
-description: "dragcraft 是面向小程序装修场景的可视化页面搭建引擎。"
+description: "dragcraft 是面向垂直业务场景的 Schema 驱动可视化页面编排框架。"
 
 hero:
   name: dragcraft
-  text: 页面搭建引擎
-  tagline: 使用 Schema 描述页面，在 Vue 应用中构建设计器，并由业务应用承载生产运行时。
+  text: 业务页面编排框架
+  tagline: 使用 Schema 与可扩展业务物料编排列表、详情、营销和配置等页面，在 Vue 应用中构建设计器，并由业务应用承载生产运行时。
   actions:
     - theme: brand
       text: 开始接入
