@@ -11,7 +11,7 @@
 5. [物料、字段与工具](./05-widgets-fields-and-utils.md)：MaterialDefinition、容器与字段注册。
 6. [主题与设备容器](./06-themes-and-device-frames.md)：工作台 CSS 与设备外壳。
 7. [包职责索引](./07-package-reference.md)：公开 package 支持面。
-8. [布局系统](./08-layout-system.md)：页面级 Presentation placement。
+8. [布局系统](./08-layout-system.md)：页面结构与宿主展示策略的边界。
 
 ## 维护规则
 

@@ -109,8 +109,8 @@ export const RuntimePage = defineComponent({
           ? null
           : h('div', {
               'class': {
-                'guide-runtime-chrome': true,
-                'guide-runtime-chrome--fixed': fixed,
+                'guide-runtime-edge': true,
+                'guide-runtime-edge--fixed': fixed,
               },
               'data-runtime-edge': edge,
             }, renderEntries(entries, renderNode))
@@ -119,9 +119,9 @@ export const RuntimePage = defineComponent({
         if (entry.placement.kind !== 'layer')
           return null
         return h('div', {
-          'class': 'guide-runtime-layer-entry',
-          'data-runtime-layer': layer,
-          'data-runtime-layer-mode': entry.placement.mode,
+          'class': 'guide-runtime-overlay-entry',
+          'data-runtime-overlay': layer,
+          'data-runtime-overlay-mode': entry.placement.mode,
           'style': createFrameworkLayerStyle(entry.placement),
         }, [renderNode(entry.node)])
       }))
@@ -143,7 +143,7 @@ export const RuntimePage = defineComponent({
             renderChrome('block-start', false),
             h('div', { class: 'guide-runtime-inline-layout' }, [
               renderChrome('inline-start', false),
-              h('div', { class: 'guide-runtime-flow' }, flowRegions),
+              h('div', { class: 'guide-runtime-content' }, flowRegions),
               renderChrome('inline-end', false),
             ]),
             renderChrome('block-end', false),
@@ -153,7 +153,7 @@ export const RuntimePage = defineComponent({
         renderChrome('block-end', true),
         renderChrome('inline-start', true),
         renderChrome('inline-end', true),
-        h('div', { class: 'guide-runtime-layers' }, layerVNodes),
+        h('div', { class: 'guide-runtime-overlays' }, layerVNodes),
       ])
     }
   },

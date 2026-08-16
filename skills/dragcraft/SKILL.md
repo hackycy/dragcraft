@@ -18,7 +18,7 @@ disable-model-invocation: true
 | 快照、action 结果、history、事件或撤销 | [commands](references/commands.md) |
 | 普通物料、Schema 托管物料、动作或 Authoring Policy | [widgets](references/widgets.md) |
 | 字段 adapter、绑定、联动、转换、验证或全局配置 | [forms](references/forms.md) |
-| `flow`、`chrome`、`layer`、排序、可见性或运行时布局投影 | [layout](references/layout.md) |
+| 页面空间策略、容器展示或生产运行时边界 | [layout](references/layout.md) |
 | region、放置约束、插入几何或容器变体 | [containers](references/containers.md) |
 | 主题、设备、面板、画布扩展、消息或 Container Shell | [shell](references/shell.md) |
 | 导入诊断、草稿、发布或生产运行时 | [lifecycle](references/lifecycle.md) |

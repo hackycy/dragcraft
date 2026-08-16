@@ -1,35 +1,17 @@
 ---
-description: "理解 Designer Presentation 的 flow、chrome、layer 与生产运行时边界。"
+description: "理解 Designer Presentation、Schema 和生产运行时之间的展示边界。"
 ---
 
-# 布局与 Presentation
+# 展示与空间策略
 
-Designer 的 `MaterialDefinition.presentation.layout` 描述设计态物料的布局意图。它不是生产 Runtime 协议，也不改变 DocumentSchema 的节点所有权。
+`DocumentSchema` 是纯 JSON 数据契约，保存 page、节点和结构 owner。它不包含页面空间、浏览器几何、滚动避让或叠放字段。节点的 `type` 是 Designer 和外部 Runtime 选择语义解释的唯一公共键。
 
-| placement | 设计态位置 | 典型物料 |
-| --- | --- | --- |
-| `flow` | 业务内容流 | 文本、公告、图片。 |
-| `chrome` | 业务页面边缘 | 页头、固定底栏。 |
-| `layer` | 业务预览浮层 | 浮动操作、角标。 |
+Designer 的 `MaterialDefinition.presentation` 只声明 `visual` 或 `headless`。Visual Material 可以提供一个 Vue preview，并可选提供只包装完整 NodeHost 的 `PresentationFrame`。
 
-```ts
-presentation: {
-  kind: 'visual',
-  preview: FloatingActionPreview,
-  layout: {
-    placement: {
-      kind: 'layer',
-      layer: 'float',
-      mode: 'framework',
-      anchor: { block: 'end', inline: 'end' },
-      offset: { blockEnd: 16, inlineEnd: 16 },
-    },
-  },
-}
-```
+`PresentationFrame`、`DesignerViewportPortal` 和 `useSurfaceReservation` 是受控的 Designer Presentation 扩展。Frame 只决定节点在 Application Surface 中的挂载和几何，不决定结构归属、顺序或 Schema 内容。
 
-`flow` 节点按 `schema.structure.root` 的顺序出现。`chrome` 和 `layer` 是同一业务预览中的不同 Presentation plane，不能通过提高业务 z-index 覆盖 Designer 工具栏或 Device Frame。
+Container Material 使用 `DesignerRegionOutlet` 在业务 DOM 中挂载 region children。Region children 只按 Schema 的 owner 序列渲染一次，容器组件自行决定排列、滚动和响应式策略。
 
-容器 region 的节点由业务容器组件排列，不参与页面级 placement。flex、grid、分栏轨道和响应式断点由业务组件定义。
+生产 Runtime 只读取 `DocumentSchema`、`type`、props 和结构关系。它可以按自己的平台组件和布局策略组织页面，但不能导入 Designer Presentation、Canvas Surface、Frame 或内部解析/几何类型。
 
 生产运行时独立按 type 决定布局和平台组件。它读取 DocumentSchema，但不导入或复用 Designer 的 Presentation、Canvas Surface 或 Device Frame 交互。

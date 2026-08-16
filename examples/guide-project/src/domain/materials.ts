@@ -19,7 +19,7 @@ const GuideFloatingActionFrame = defineComponent({
 export const guideMaterials: readonly MaterialDefinition[] = [
   {
     type: 'page-header',
-    panel: { title: '活动页头', group: 'chrome', groupTitle: '页面框架' },
+    panel: { title: '活动页头', group: 'framework', groupTitle: '页面框架' },
     schema: { defaultProps: { title: '夏日活动页' } },
     authoring: { policy: { create: 'denied' } },
     inspector: {

@@ -1,16 +1,14 @@
-# 页面 Presentation 布局
+# 页面 Presentation 边界
 
-页面级 Presentation 将 `schema.structure.root` 的节点投影为 flow、chrome 与 layer 三类业务预览位置。每个节点只从自己的 owner 路径展示一次。
+`DocumentSchema` 只保存节点、唯一 owner 和 owner 内顺序。Designer 按 owner 序列为每个节点建立一个 NodeHost；Schema 不声明节点如何占据空间、参与滚动或形成叠放关系。
 
 ## 规则
 
-- `flow` 进入业务内容流，并按 root 顺序处理。
-- `chrome` 位于业务页面边缘，可由 material 的 layout 声明表达固定、sticky 或 flow 行为。
-- `layer` 位于业务预览的浮层坐标系。
-- 容器 region children 由容器组件展示，不再次参加页面级投影。
-- Device Frame 的系统外观和 Designer 的选中、工具栏、禁止反馈不属于页面布局。
-
-布局意图来自 `MaterialDefinition.presentation.layout`。它仅描述设计态；生产 Runtime 按稳定 type 独立决定其平台布局与 fallback 策略。
+- Visual Material 通过 `presentation` 提供预览，可选提供只包装完整 NodeHost 的 `PresentationFrame`。
+- Container Material 通过 `DesignerRegionOutlet` 在自己的 DOM 中挂载 region children；容器组件拥有其空间策略。
+- `PresentationFrame`、viewport mount、reservation 和几何测量属于 Designer 内部实现；Frame 不写 Schema，也不改变 owner 或顺序。
+- Device Frame 只包围一次 Application Surface；设备外壳不能读取 Schema、创建节点或拥有 Designer 交互。
+- 生产 Runtime 按稳定 `type` 解释纯数据 Schema，并自行选择组件、滚动、边缘控件和叠放策略。
 
 ## 容器
 

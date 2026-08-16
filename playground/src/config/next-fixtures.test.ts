@@ -57,7 +57,7 @@ describe('next Playground fixtures', () => {
 
   it('keeps the existing browser baseline node identities and Region order', () => {
     const content = playgroundNextTemplates[1].schema
-    expect(content.structure.containers['article-flow']?.regions.default).toEqual([
+    expect(content.structure.containers['article-content']?.regions.default).toEqual([
       'article-title',
       'author-info',
       'divider-1',

@@ -94,7 +94,7 @@ const widePreview: DeviceFrameDefinition = Object.freeze({
 })
 ```
 
-slot 已包含完整 Canvas Surface 业务预览：flow、chrome、layer、scroll、insets 与 empty state。外壳不能读取 Schema、重建业务节点或处理 Designer 的交互层。设备 system chrome 可以放在 slot 前后，并可通过 `--dc-safe-area-*` 变量向 Canvas Surface 声明安全区。
+slot 已包含完整 Canvas Surface 业务预览、滚动、边缘避让和 empty state。外壳不能读取 Schema、重建业务节点或处理 Designer 的交互层。设备系统 UI 可以放在 slot 前后，并可通过 `--dc-safe-area-*` 变量向 Canvas Surface 声明安全区。
 
 设备 Frame 只用于设计态预览，不负责业务页面运行时。继续阅读 [主题、设备与国际化](/guide/customization/theme-device-and-i18n)。
 

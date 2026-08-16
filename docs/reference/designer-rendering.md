@@ -40,6 +40,6 @@ Device Frame 不接收布局 props，必须恰好渲染一次 default slot。Des
 
 容器 region 的子节点由 `schema.structure.containers` 拥有，不要把它们写入节点对象。Device Frame 与业务 container widget 是不同概念：前者包围整个 Canvas Surface，后者通过 `DesignerRegionOutlet` 组织 Schema 节点。
 
-页面级 `flow/chrome/layer` 的默认值、排序域、可见性和运行时映射见 [布局投影](/guide/fundamentals/layout-system)。业务容器的 region、迁移与插入几何见 [容器与 region](/guide/customization/layout-and-containers)。
+页面空间策略不属于 Designer 公共 Schema 或 MaterialDefinition 协议。生产 Runtime 按稳定 `type` 自主解释展示；业务容器的 region、迁移与插入几何见 [容器与 region](/guide/customization/layout-and-containers)。
 
 未知物料由 Designer 的只读 fallback 呈现，生产运行时必须提供自己的 fallback。不要在生产页面复用 `DcDesigner`、Device Frame 或节点交互实现。

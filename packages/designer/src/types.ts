@@ -1,8 +1,8 @@
 import type { DocumentSchema } from '@dragcraft/core'
 import type { FieldComponentMap, FormSchema } from '@dragcraft/form-generator'
 import type { I18nInstance, LocaleMessages } from '@dragcraft/i18n'
-import type { Component, InjectionKey, Ref, VNodeChild } from 'vue'
-import type { AuthoringEngine, DesignerHistory, DesignerSelection, AuthoringAction as EngineAuthoringAction, AuthoringResult as EngineAuthoringResult, SchemaLoadResult } from './authoring/types'
+import type { Component, InjectionKey, Ref, ShallowRef, VNodeChild } from 'vue'
+import type { DesignerDocumentState, DesignerHistory, DesignerSelection, AuthoringAction as EngineAuthoringAction, AuthoringResult as EngineAuthoringResult, SchemaLoadResult } from './authoring/types'
 import type { MaterialDefinition } from './materials/types'
 import type { NodeActionDefinition, NodeActionRegistry } from './presentation/action-registry'
 import type { ActionInterceptor } from './presentation/action-runtime'
@@ -149,7 +149,7 @@ export interface DesignerExtensions {
  * The host control interface returned by createDesigner().
  */
 export interface DesignerInstance {
-  readonly document: AuthoringEngine['document']
+  readonly document: ShallowRef<DesignerDocumentState>
   readonly selection: Readonly<DesignerSelection>
   readonly history: Readonly<DesignerHistory>
   execute: (action: EngineAuthoringAction) => EngineAuthoringResult

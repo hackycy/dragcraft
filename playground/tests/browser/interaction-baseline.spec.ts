@@ -87,8 +87,8 @@ test.describe(backend.name, () => {
     await page.goto(backend.url)
     await page.getByRole('combobox').first().selectOption('content-detail')
 
-    await page.locator('[data-dc-node-handle-for="article-flow"] [data-dc-component="node-handle"]').click()
-    await expect(page.locator('[data-dc-selection-plane] [data-node-id="article-flow"]')).toBeVisible()
+    await page.locator('[data-dc-node-handle-for="article-content"] [data-dc-component="node-handle"]').click()
+    await expect(page.locator('[data-dc-selection-plane] [data-node-id="article-content"]')).toBeVisible()
     await expect(page.locator('[data-dc-component="node-toolbar"]')).toHaveAttribute('data-dc-state', /vertical/)
 
     await page.locator('[data-dc-component="node"][data-node-id="article-title"]').click()
@@ -187,9 +187,9 @@ test.describe(backend.name, () => {
     await page.getByRole('combobox').first().selectOption('content-detail')
 
     await page.locator('[data-dc-component="node"][data-node-id="cover-img"]').click()
-    await page.locator('[data-dc-component="node-toolbar"] [data-dc-state~="drag"]').dragTo(page.locator('[data-dc-container-id="article-flow"][data-dc-container-region="default"]'))
+    await page.locator('[data-dc-component="node-toolbar"] [data-dc-state~="drag"]').dragTo(page.locator('[data-dc-container-id="article-content"][data-dc-container-region="default"]'))
 
-    await expect(page.locator('[data-dc-container-id="article-flow"] [data-dc-component="node"][data-node-id="cover-img"]')).toBeVisible()
+    await expect(page.locator('[data-dc-container-id="article-content"] [data-dc-component="node"][data-node-id="cover-img"]')).toBeVisible()
   })
 
   test('creates a material in a resolved container Region', async ({ page }) => {
@@ -197,7 +197,7 @@ test.describe(backend.name, () => {
     await page.getByRole('combobox').first().selectOption('content-detail')
 
     const source = page.locator(backend.textMaterial)
-    const region = page.locator('[data-dc-container-id="article-flow"][data-dc-container-region="default"]')
+    const region = page.locator('[data-dc-container-id="article-content"][data-dc-container-region="default"]')
     const children = region.locator(':scope > [data-dc-component="node"]')
     const countBefore = await children.count()
 
@@ -223,7 +223,7 @@ test.describe(backend.name, () => {
     await page.goto(backend.url)
     await page.getByRole('combobox').first().selectOption('content-detail')
 
-    const region = page.locator('[data-dc-container-id="article-flow"][data-dc-container-region="default"]')
+    const region = page.locator('[data-dc-container-id="article-content"][data-dc-container-region="default"]')
     for (const title of ['导航栏', 'Tab 栏']) {
       const source = page.locator(`[data-dc-component="material-item"][title="${title}"]`)
       const countBefore = await region.locator(':scope > [data-dc-component="node"]').count()
@@ -248,14 +248,14 @@ test.describe(backend.name, () => {
     )
 
     await expect(page.locator('[data-dc-component="node"][data-node-id="article-title"]')).toHaveAttribute('data-dc-node-owner', 'root')
-    await expect(page.locator('[data-dc-container-id="article-flow"] [data-node-id="article-title"]')).toHaveCount(0)
+    await expect(page.locator('[data-dc-container-id="article-content"] [data-node-id="article-title"]')).toHaveCount(0)
   })
 
   test('reorders Region children from start to end through before and after drop positions', async ({ page }) => {
     await page.goto(backend.url)
     await page.getByRole('combobox').first().selectOption('content-detail')
 
-    const region = page.locator('[data-dc-container-id="article-flow"][data-dc-container-region="default"]')
+    const region = page.locator('[data-dc-container-id="article-content"][data-dc-container-region="default"]')
     const childIds = () => region.locator(':scope > [data-node-id]').evaluateAll(nodes =>
       nodes.map(node => node.getAttribute('data-node-id')),
     )
@@ -458,7 +458,7 @@ test.describe(backend.name, () => {
     await templatePicker.selectOption('content-detail')
     await page.getByRole('dialog').last().getByRole('button', { name: /切\s*换/ }).click()
     await expect(templatePicker).toHaveValue('content-detail')
-    await expect(page.locator('[data-dc-component="node"][data-node-id="article-flow"]')).toBeVisible()
+    await expect(page.locator('[data-dc-component="node"][data-node-id="article-content"]')).toBeVisible()
   })
 
   test('switches locale without losing the active Designer session', async ({ page }) => {

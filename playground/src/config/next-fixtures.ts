@@ -381,7 +381,7 @@ export const contentDetailNextSchema: DocumentSchema = {
   nodes: [
     { id: 'nav-content', type: 'navbar', props: { title: '精选文章' } },
     { id: 'cover-img', type: 'image', props: { src: 'https://picsum.photos/seed/article-cover/750/400', alt: '文章封面', objectFit: 'cover' }, style: { content: { width: '100%', height: '200px' } } },
-    { id: 'article-flow', type: 'flex-container', props: { direction: 'column', wrap: false, gap: 12, align: 'stretch' } },
+    { id: 'article-content', type: 'flex-container', props: { direction: 'column', wrap: false, gap: 12, align: 'stretch' } },
     { id: 'article-title', type: 'text', props: { content: '如何用 Dragcraft 搭建小程序页面', fontSize: 22, fontWeight: 'bold', color: '#1a1a1a', textAlign: 'left' } },
     { id: 'author-info', type: 'text', props: { content: 'Dragcraft 团队 · 2026-06-26', fontSize: 12, fontWeight: 'normal', color: '#999999', textAlign: 'left' } },
     { id: 'divider-1', type: 'divider', props: { direction: 'horizontal', color: '#f0f0f0', thickness: 1 }, style: { content: { width: '100%' } } },
@@ -394,9 +394,9 @@ export const contentDetailNextSchema: DocumentSchema = {
     { id: 'favorite-link', type: 'link', props: { text: '收藏文章', href: '#', target: '_self', color: '#1677ff' } },
   ],
   structure: {
-    root: ['nav-content', 'cover-img', 'article-flow', 'article-actions'],
+    root: ['nav-content', 'cover-img', 'article-content', 'article-actions'],
     containers: {
-      'article-flow': { regions: { default: ['article-title', 'author-info', 'divider-1', 'body-1', 'inline-img', 'body-2'] } },
+      'article-content': { regions: { default: ['article-title', 'author-info', 'divider-1', 'body-1', 'inline-img', 'body-2'] } },
       'article-actions': { regions: { top: ['follow-btn'], bottomLeft: ['share-link'], bottomRight: ['favorite-link'] } },
     },
   },
