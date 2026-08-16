@@ -25,6 +25,6 @@
 
 如果当前 Gate 的 Manual acceptance 不是“无”，先完成全部自动化工作，启动可验收环境，提供 URL 和最小验收清单，然后请求用户确认并立即暂停本次 Goal 的一切执行。只有收到用户新的、明确的验收确认后才能恢复；等待期间不得继续调用工具、不得自行视为确认、不得执行原子转换，当前 Gate 必须保持 `active`。
 
-当前 Gate 的全部 Exit conditions（包括适用的人工验收）满足后：向 Progress Log 追加逐项验收和最终验证证据，将当前 Gate 标记为 `passed`；若存在直接后继，将其从 `planned` 标记为 `active` 并记录“已激活，尚未开始实施”；若不存在后继，记录 effort 已完成。汇总本 Gate 的验证证据，然后使用可用的 Goal 状态控制机制结束本次 Goal。
+当前 Gate 的全部 Exit conditions（包括适用的人工验收）满足后：向 Progress Log 追加逐项 Exit 和最终验证证据，将当前 Gate 标记为 `passed`；若存在直接后继，将其从 `planned` 标记为 `active` 并记录“已激活，尚未开始实施”；若不存在后继，记录 effort 已完成。汇总本 Gate 的验证证据，然后使用可用的 Goal 状态控制机制结束本次 Goal。
 
 这是整个 Goal 的强制结束点，不是只结束当前回复。即使直接后继已变为 `active`，它也不属于本次 Goal；不得重新进入执行循环，不得分析、实施或验证下一个 Gate，也不得为下一个 Gate 调用工具。
