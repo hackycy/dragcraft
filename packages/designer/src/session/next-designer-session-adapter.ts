@@ -385,12 +385,28 @@ export function createNextDesignerSessionAdapter(
           siblingCount: siblings.length,
         }
       },
+      getRegionIds: (containerId) => {
+        const state = options.engine.document.value
+        if (state.status === 'rejected')
+          return []
+        return Object.keys(state.schema.structure.containers[containerId]?.regions ?? {})
+      },
       getRegionNodes: (containerId, regionId) => {
         const current = document.value
-        const childIds = current?.schema.structure.containers[containerId]?.regions[regionId]
-        if (!current || !childIds)
+        if (current) {
+          const childIds = current.schema.structure.containers[containerId]?.regions[regionId]
+          return childIds ? nodesForIds(current, childIds) : []
+        }
+        const state = options.engine.document.value
+        if (state.status === 'rejected')
           return []
-        return nodesForIds(current, childIds)
+        const childIds = state.schema.structure.containers[containerId]?.regions[regionId]
+        if (!childIds)
+          return []
+        return childIds.flatMap((nodeId) => {
+          const node = state.schema.nodes.find(item => item.id === nodeId)
+          return node ? [node] : []
+        })
       },
     },
     materials: {

@@ -3,6 +3,7 @@ import type { DocumentSchema } from '@dragcraft/core'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h, nextTick, ref } from 'vue'
 import { createDesigner } from '../factory'
+import ContainerRegionOutlet from '../presentation/container-region-outlet'
 import DcDesigner from './DcDesigner'
 
 const Preview = defineComponent({ name: 'DesignerPreview', setup: () => () => h('div', 'preview') })
@@ -17,6 +18,21 @@ const SecondDeviceFrame = defineComponent({
   setup(_, { slots }) {
     return () => h('main', { class: 'test-device-frame test-device-frame--second' }, slots.default?.())
   },
+})
+const MissingOutletContainer = defineComponent({
+  name: 'MissingOutletContainer',
+  setup: () => () => h('div', 'container without an outlet'),
+})
+const DuplicateOutletContainer = defineComponent({
+  name: 'DuplicateOutletContainer',
+  setup: () => () => [
+    h(ContainerRegionOutlet, { regionId: 'main' }),
+    h(ContainerRegionOutlet, { regionId: 'main' }),
+  ],
+})
+const SingleOutletContainer = defineComponent({
+  name: 'SingleOutletContainer',
+  setup: () => () => h(ContainerRegionOutlet, { regionId: 'main' }),
 })
 
 function createTextDesigner(schema: DocumentSchema = {
@@ -104,6 +120,162 @@ describe('dcDesigner', () => {
       expect(host.querySelector('.test-device-frame--second')).not.toBeNull()
       expect(designer.document.value).toBe(documentAfterWrite)
       expect(designer.history.undoCount.value).toBe(1)
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it.each([
+    ['missing', MissingOutletContainer, 'CONTAINER_REGION_OUTLET_MISSING'],
+    ['duplicate', DuplicateOutletContainer, 'CONTAINER_REGION_DUPLICATE_OUTLET'],
+  ])('recovers Region children when the %s outlet configuration is invalid', async (_kind, preview, code) => {
+    const designer = createDesigner({
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [
+          { id: 'container', type: 'container', props: {} },
+          { id: 'child', type: 'text', props: {} },
+        ],
+        structure: {
+          root: ['container'],
+          containers: { container: { regions: { main: ['child'] } } },
+        },
+      },
+      materials: [
+        {
+          type: 'container',
+          schema: { container: { regions: [{ id: 'main' }] } },
+          presentation: { kind: 'visual', preview },
+        },
+        { type: 'text', presentation: { kind: 'visual', preview: Preview } },
+      ],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, {
+      instance: designer,
+      deviceFrame: { id: 'test', containerShell: FirstDeviceFrame },
+    }) })
+    try {
+      app.mount(host)
+      await nextTick()
+      await nextTick()
+      expect(host.querySelector(`[data-dc-component="container-recovery"][data-dc-diagnostic-code="${code}"]`)).not.toBeNull()
+      expect(host.querySelectorAll('[data-dc-component="node"][data-node-id="child"]')).toHaveLength(1)
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it('renders Region children in Schema order and uses one empty/active/forbidden state', async () => {
+    const designer = createDesigner({
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [
+          { id: 'container', type: 'container', props: {} },
+          { id: 'second', type: 'text', props: {} },
+          { id: 'first', type: 'text', props: {} },
+        ],
+        structure: {
+          root: ['container'],
+          containers: { container: { regions: { main: ['second', 'first'] } } },
+        },
+      },
+      materials: [
+        {
+          type: 'container',
+          schema: { container: { regions: [{ id: 'main' }] } },
+          presentation: { kind: 'visual', preview: SingleOutletContainer },
+        },
+        { type: 'text', presentation: { kind: 'visual', preview: Preview } },
+      ],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, {
+      instance: designer,
+      deviceFrame: { id: 'test', containerShell: FirstDeviceFrame },
+    }) })
+    try {
+      app.mount(host)
+      await nextTick()
+      const region = host.querySelector<HTMLElement>('[data-dc-container-region="main"]')
+      expect(region).not.toBeNull()
+      expect(Array.from(region!.querySelectorAll<HTMLElement>(':scope > [data-dc-component="node"]'))
+        .map(node => node.dataset.nodeId)).toEqual(['second', 'first'])
+      expect(region!.dataset.dcState).toBeUndefined()
+
+      designer.importSchema({
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [{ id: 'container', type: 'container', props: {} }],
+        structure: { root: ['container'], containers: { container: { regions: { main: [] } } } },
+      })
+      await nextTick()
+      expect(host.querySelector<HTMLElement>('[data-dc-container-region="main"]')?.dataset.dcState).toBe('empty')
+      expect(host.querySelector('[data-dc-container-region="main"] [data-dc-component="empty-state"]')).not.toBeNull()
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
+  it('recovers every Schema Region for unknown and conflicted container owners', async () => {
+    const designer = createDesigner({
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [
+          { id: 'unknown', type: 'external-container', props: {} },
+          { id: 'conflicted', type: 'container', props: {} },
+          { id: 'unknown-child', type: 'text', props: {} },
+          { id: 'main-child', type: 'text', props: {} },
+          { id: 'side-child', type: 'text', props: {} },
+        ],
+        structure: {
+          root: ['unknown', 'conflicted'],
+          containers: {
+            unknown: { regions: { external: ['unknown-child'] } },
+            conflicted: { regions: { main: ['main-child'], side: ['side-child'] } },
+          },
+        },
+      },
+      materials: [
+        {
+          type: 'container',
+          schema: { container: { regions: [{ id: 'main' }] } },
+          presentation: { kind: 'visual', preview: SingleOutletContainer },
+        },
+        { type: 'text', presentation: { kind: 'visual', preview: Preview } },
+      ],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, {
+      instance: designer,
+      deviceFrame: { id: 'test', containerShell: FirstDeviceFrame },
+    }) })
+    try {
+      app.mount(host)
+      await nextTick()
+      expect(host.querySelectorAll('[data-dc-component="container-recovery"][data-dc-diagnostic-code="CONTAINER_MATERIAL_UNRESOLVED"]')).toHaveLength(2)
+      for (const nodeId of ['unknown-child', 'main-child', 'side-child'])
+        expect(host.querySelectorAll(`[data-dc-component="node"][data-node-id="${nodeId}"]`)).toHaveLength(1)
+      expect(host.querySelector('[data-dc-container-id="conflicted"][data-dc-container-region="side"]')).not.toBeNull()
     }
     finally {
       app.unmount()

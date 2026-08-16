@@ -2,10 +2,11 @@ import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPlane } from './selection-presentation'
 import type { NodeOwner, NodeStyle, StyleValueMap } from './semantic'
 import type { PresentationNode } from './types'
-import { computed, defineComponent, h, inject, onBeforeUnmount, provide, ref, Teleport } from 'vue'
+import { computed, defineComponent, h, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, Teleport } from 'vue'
 import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from './container-runtime'
 import { usePresentationContext } from './context'
 import DefaultContainerFallback from './default-container-fallback'
+import DefaultContainerRecovery from './default-container-recovery'
 import DefaultMaterialFallback from './default-material-fallback'
 import DefaultNodeHandle from './default-node-handle'
 import DefaultNodeMask from './default-node-mask'
@@ -106,6 +107,9 @@ export default defineComponent({
     const geometryRegistry = useNodeGeometryRegistry()
     provide(MATERIAL_PREVIEW_CONTEXT_KEY, createNodeMaterialPreviewContext(() => props.node, ctx))
     const containerRuntime = createContainerRuntime(() => props.node, ctx)
+    onMounted(() => {
+      void nextTick(containerRuntime.finalizeOutlets)
+    })
 
     // Composables extract all logic
     const widget = useMaterialNode(() => props.node, ctx)
@@ -120,8 +124,13 @@ export default defineComponent({
     provide(NODE_SELECTION_PLANE_KEY, subtreeSelectionPlane)
 
     const containerRegions = computed(() => resolveContainerRegions(ctx.session, props.node))
+    const hasContainerRegions = computed(() =>
+      ctx.session.document.getRegionIds(props.node.id).length > 0,
+    )
     const isResolvedContainer = computed(() => {
       if (containerRegions.value.length === 0 || !widget.resolvedComponent.value)
+        return false
+      if (ctx.session.document.isNodeReadOnly(props.node.id))
         return false
       return true
     })
@@ -225,7 +234,7 @@ export default defineComponent({
       }
 
       let innerContent: VNode
-      if (ctx.session.materials.get(node.type)?.schema?.container && !resolvedContainer) {
+      if (hasContainerRegions.value && !resolvedContainer) {
         innerContent = h(DefaultContainerFallback, { node })
       }
       else if (widget.resolvedComponent.value) {
@@ -248,6 +257,14 @@ export default defineComponent({
 
       // Assemble children
       const wrapperChildren: VNode[] = [innerContent]
+
+      if (resolvedContainer && containerRuntime.recoveryRegionIds.value.length > 0) {
+        wrapperChildren.push(h(DefaultContainerRecovery, {
+          containerId: node.id,
+          regionIds: containerRuntime.recoveryRegionIds.value,
+          code: 'CONTAINER_REGION_OUTLET_MISSING',
+        }))
+      }
 
       if (selectionProjection.value && selectionTarget.value) {
         const projection = selectionProjection.value

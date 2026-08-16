@@ -47,6 +47,7 @@ export interface DesignerSessionDocument {
   isNodeReadOnly: (nodeId: string) => boolean
   getOwner: (nodeId: string) => NodeOwner | null
   getStructurePosition: (nodeId: string) => DesignerSessionStructurePosition | null
+  getRegionIds: (containerId: string) => readonly string[]
   getRegionNodes: (containerId: string, regionId: string) => readonly CoreDeepReadonly<NodeDefinition>[]
 }
 

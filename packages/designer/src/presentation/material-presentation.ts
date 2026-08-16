@@ -65,19 +65,28 @@ export function resolveContainerRegions(
   node: DeepReadonly<NodeDefinition> | PresentationNode,
 ): readonly PresentationRegionDefinition[] {
   const declaration = session.materials.get(node.type)?.schema?.container
-  if (!declaration || session.document.isNodeReadOnly(node.id))
+  const isReadOnly = session.document.isNodeReadOnly(node.id)
+  const regionIds = isReadOnly || !declaration
+    ? session.document.getRegionIds(node.id)
+    : declaration.regions.map(region => region.id)
+  if (regionIds.length === 0)
     return []
-  return declaration.regions.map(region => ({
-    id: region.id,
-    title: region.id,
-    ...(region.accepts || region.cardinality
-      ? {
-          constraints: {
-            ...(region.accepts?.types ? { includeTypes: [...region.accepts.types] } : {}),
-            ...(region.cardinality?.min === undefined ? {} : { minItems: region.cardinality.min }),
-            ...(region.cardinality?.max === undefined ? {} : { maxItems: region.cardinality.max }),
-          },
-        }
-      : {}),
-  }))
+  return regionIds.map((regionId) => {
+    const declarationRegion = !isReadOnly
+      ? declaration?.regions.find(region => region.id === regionId)
+      : undefined
+    return {
+      id: regionId,
+      title: regionId,
+      ...(declarationRegion?.accepts || declarationRegion?.cardinality
+        ? {
+            constraints: {
+              ...(declarationRegion?.accepts?.types ? { includeTypes: [...declarationRegion.accepts.types] } : {}),
+              ...(declarationRegion?.cardinality?.min === undefined ? {} : { minItems: declarationRegion.cardinality.min }),
+              ...(declarationRegion?.cardinality?.max === undefined ? {} : { maxItems: declarationRegion.cardinality.max }),
+            },
+          }
+        : {}),
+    }
+  })
 }

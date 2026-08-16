@@ -348,7 +348,11 @@ describe('next adapter backend contract', () => {
     expect(engine.document.value.status).toBe('conflicted')
     expect(session.materials.resolveCapability(session.document.getNode('unknown')!, 'selectable')).toBe(true)
     expect(session.materials.resolveCapability(session.document.getNode('unknown')!, 'configurable')).toBe(false)
-    expect(resolveContainerRegions(session, session.document.getNode('layout')!)).toEqual([])
+    expect(resolveContainerRegions(session, session.document.getNode('layout')!)).toEqual([
+      { id: 'main', title: 'main' },
+      { id: 'side', title: 'side' },
+    ])
+    expect(session.document.getRegionIds('layout')).toEqual(['main', 'side'])
   })
 
   it('exports detached JSON snapshots without exposing the engine document', () => {
