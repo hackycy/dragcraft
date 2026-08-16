@@ -128,6 +128,51 @@ describe('dcDesigner', () => {
     }
   })
 
+  it('mounts every root node once in Schema order, including headless and unknown nodes', async () => {
+    const designer = createDesigner({
+      schema: {
+        version: '1',
+        globalConfig: {},
+        page: { props: {} },
+        nodes: [
+          { id: 'unknown', type: 'unknown', props: {} },
+          { id: 'headless', type: 'headless', props: {} },
+          { id: 'visual', type: 'text', props: {} },
+        ],
+        structure: { root: ['unknown', 'headless', 'visual'], containers: {} },
+      },
+      materials: [
+        { type: 'headless', presentation: { kind: 'headless' } },
+        { type: 'text', presentation: { kind: 'visual', preview: Preview } },
+      ],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({ render: () => h(DcDesigner, {
+      instance: designer,
+      deviceFrame: { id: 'test', containerShell: FirstDeviceFrame },
+    }) })
+    try {
+      app.mount(host)
+      await nextTick()
+      const content = host.querySelector<HTMLElement>('.dc-canvas-surface__content')
+      expect(content).not.toBeNull()
+      expect(Array.from(content!.querySelectorAll<HTMLElement>(':scope > [data-dc-component="node"]'))
+        .map(node => node.dataset.nodeId)).toEqual(['unknown', 'headless', 'visual'])
+      for (const nodeId of ['unknown', 'headless', 'visual'])
+        expect(host.querySelectorAll(`[data-dc-component="node"][data-node-id="${nodeId}"]`)).toHaveLength(1)
+      expect(host.querySelectorAll('[data-dc-selection-plane="content"]')).toHaveLength(1)
+      expect(host.querySelectorAll('[data-dc-selection-plane="root"]')).toHaveLength(1)
+      expect(host.querySelector('[data-dc-selection-plane="root"]')?.closest('.test-device-frame')).toBeNull()
+      expect(host.querySelector('[data-node-id="headless"] [data-dc-component="widget-fallback"]')).toBeNull()
+    }
+    finally {
+      app.unmount()
+      designer.dispose()
+      host.remove()
+    }
+  })
+
   it.each([
     ['missing', MissingOutletContainer, 'CONTAINER_REGION_OUTLET_MISSING'],
     ['duplicate', DuplicateOutletContainer, 'CONTAINER_REGION_DUPLICATE_OUTLET'],

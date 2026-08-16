@@ -6,7 +6,7 @@ import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { NodeToolbarOrientation } from './node-interaction'
 import type { NodeSelectionPlane, NodeSelectionProjection } from './selection-presentation'
-import type { CreationBlockReason, DragTarget, LayoutEdge, NodeDestination, NodeOwner, NodeStyle, PlacementDecision, ResolvedPresentationLayout } from './semantic'
+import type { CreationBlockReason, DragTarget, NodeDestination, NodeOwner, NodeStyle, PlacementDecision } from './semantic'
 
 export interface PresentationNode {
   readonly id: string
@@ -133,28 +133,6 @@ export interface AuthoringDecision extends CreationBlockReason {
 export type AuthoringResult
   = | { ok: true, changed: boolean, eventPayload?: unknown }
     | ({ ok: false, code: string } & CreationBlockReason & { details?: Record<string, unknown> })
-
-/** Presentation grouping derived from canonical Designer session facts. */
-export interface SurfaceEntry {
-  readonly node: CoreDeepReadonly<NodeDefinition>
-  readonly arrayIndex: number
-  readonly layout: ResolvedPresentationLayout
-}
-
-export interface SurfaceProjection {
-  readonly entries: readonly SurfaceEntry[]
-  readonly regions: ReadonlyMap<string, readonly SurfaceEntry[]>
-  readonly chrome: readonly SurfaceEntry[]
-  readonly layers: ReadonlyMap<string, readonly SurfaceEntry[]>
-  readonly sortScopes: ReadonlyMap<string, readonly SurfaceEntry[]>
-  readonly insets: {
-    readonly contributors: readonly {
-      readonly edge: LayoutEdge
-      readonly sourceNodeId: string
-      readonly reserve: Extract<SurfaceEntry['layout']['placement'], { kind: 'chrome' }>['reserve']
-    }[]
-  }
-}
 
 /**
  * Viewport-relative position coordinates for floating toolbar.
@@ -338,8 +316,6 @@ export interface PresentationContext extends ContainerDropApplicationSurfaceOpti
   session: DesignerSession
   /** One canonical schema snapshot shared by the presentation tree for each session revision. */
   schema: ComputedRef<CoreDeepReadonly<DocumentSchema> | null>
-  /** Presentation-owned layout grouping derived from session document and material facts. */
-  layout: ComputedRef<SurfaceProjection>
   /** Resolves action geometry and lock constraints from revision-scoped caches. */
   resolveNodeActionPosition?: (node: PresentationNode, owner: NodeOwner) => {
     owner: NodeOwner

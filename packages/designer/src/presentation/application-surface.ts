@@ -3,7 +3,7 @@ import type { DesignerSession } from '../session/types'
 import type { NodeActionRegistry } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { NodeDestination, PlacementDecision } from './semantic'
-import type { ContainerDropRejection, ContainerDropTarget, PresentationContext } from './types'
+import type { ContainerDropRejection, ContainerDropTarget } from './types'
 import { useI18n } from '@dragcraft/i18n'
 import { computed, defineComponent, h, provide } from 'vue'
 import CanvasSurface from './canvas-surface'
@@ -13,22 +13,13 @@ import DefaultDropIndicator from './default-drop-indicator'
 import DefaultEmptyState from './default-empty-state'
 import DefaultForbiddenOverlay from './default-forbidden-overlay'
 import { createNodeGeometryRegistry, provideNodeGeometryRegistry } from './geometry-registry'
-import { resolveNodePresentation } from './material-presentation'
 import NodeHost from './node-host'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from './selection-presentation'
-import { DEFAULT_LAYOUT_REGION, normalizeStyleValueMap } from './semantic'
+import { normalizeStyleValueMap } from './semantic'
 import { PRESENTATION_CONTEXT_KEY } from './types'
 
-type SurfaceProjection = PresentationContext['layout']['value']
-type SurfaceEntry = SurfaceProjection['entries'][number]
-function regionEntryIndex(plan: SurfaceProjection, entry: SurfaceEntry): number {
-  return (plan.regions.get(entry.layout.region ?? DEFAULT_LAYOUT_REGION) ?? [])
-    .findIndex(candidate => candidate.node.id === entry.node.id)
-}
-
 function insertDropIndicator(
-  regionVNodes: Record<string, VNode[]>,
-  plan: SurfaceProjection,
+  rootVNodes: VNode[],
   session: DesignerSession,
   destination: NodeDestination | null | undefined,
   legacyIndex: number | null | undefined,
@@ -42,38 +33,7 @@ function insertDropIndicator(
   const index = requestedIndex == null
     ? rootNodes.length
     : Math.max(0, Math.min(requestedIndex, rootNodes.length))
-  const nextNodeId = rootNodes[index]?.id
-  const previousNodeId = rootNodes[index - 1]?.id
-  const nextEntry = nextNodeId
-    ? plan.entries.find(entry => entry.node.id === nextNodeId)
-    : undefined
-  const previousEntry = previousNodeId
-    ? plan.entries.find(entry => entry.node.id === previousNodeId)
-    : undefined
-
-  const dragTarget = session.state.dragTarget.value
-  const draggedEntry = dragTarget?.sourceNodeId
-    ? plan.entries.find(entry => entry.node.id === dragTarget.sourceNodeId)
-    : undefined
-  const draggedLayout = !draggedEntry && dragTarget?.widgetType
-    ? resolveNodePresentation(session, { type: dragTarget.widgetType })
-    : undefined
-  const inferredRegion = draggedEntry?.layout.region
-    ?? (draggedLayout?.placement.kind === 'flow' ? draggedLayout.region : undefined)
-  const adjacentEntry = nextEntry ?? previousEntry
-  const region = inferredRegion ?? adjacentEntry?.layout.region ?? DEFAULT_LAYOUT_REGION
-  const regionNodes = regionVNodes[region] ?? (regionVNodes[region] = [])
-  const nextRegionEntry = nextEntry?.layout.region === region ? nextEntry : undefined
-  const previousRegionEntry = previousEntry?.layout.region === region ? previousEntry : undefined
-  if (!nextRegionEntry && !previousRegionEntry) {
-    regionNodes.push(indicator)
-    return
-  }
-
-  const insertIndex = nextRegionEntry
-    ? regionEntryIndex(plan, nextRegionEntry)
-    : regionEntryIndex(plan, previousRegionEntry!) + 1
-  regionNodes.splice(Math.max(0, insertIndex), 0, indicator)
+  rootVNodes.splice(index, 0, indicator)
 }
 
 export default defineComponent({
@@ -167,49 +127,19 @@ export default defineComponent({
 
     return () => {
       const isDragOver = props.dragOverNodeId?.value === 'root'
-      const plan = ctx.layout.value
+      const rootNodes = ctx.session.document.rootNodes.value
       const pageStyle = ctx.schema.value?.page.style as Record<string, unknown> | undefined
 
       // Resolve drop indicator and empty state components
       const DropIndicator = DefaultDropIndicator
       const EmptyState = DefaultEmptyState
 
-      const regionVNodes: Record<string, VNode[]> = {}
-      const NodeRenderer = NodeHost
-      for (const [region, entries] of plan.regions) {
-        regionVNodes[region] = entries.map(entry =>
-          h(NodeRenderer, {
-            'key': entry.node.id,
-            'node': entry.node,
-            'selectionPlane': 'content',
-            'data-dc-layout-region': entry.layout.region,
-          }),
-        )
-      }
-
-      const chromeVNodes = plan.chrome.map(entry =>
-        h(NodeRenderer, {
-          'key': entry.node.id,
-          'node': entry.node,
-          'selectionPlane': entry.layout.placement.kind === 'chrome'
-            && entry.layout.placement.position === 'fixed'
-            ? 'viewport'
-            : 'content',
-          'data-dc-layout-placement': 'chrome',
-        }),
-      )
-
-      const layerVNodes: Record<string, VNode[]> = {}
-      for (const [layer, entries] of plan.layers) {
-        layerVNodes[layer] = entries.map(entry =>
-          h(NodeRenderer, {
-            'key': entry.node.id,
-            'node': entry.node,
-            'selectionPlane': 'viewport',
-            'data-dc-layout-placement': 'layer',
-          }),
-        )
-      }
+      const rootVNodes: VNode[] = rootNodes.map(node => h(NodeHost, {
+        key: node.id,
+        node,
+        selectionPlane: 'content',
+        owner: { kind: 'root' },
+      }))
 
       // Show forbidden overlay or drop indicator at the computed insertion index
       const isForbidden = ctx.session.state.drag.isForbidden.value
@@ -240,8 +170,7 @@ export default defineComponent({
 
       if (isDragOver && !isForbidden && !isHeadlessMaterialDrag) {
         insertDropIndicator(
-          regionVNodes,
-          plan,
+          rootVNodes,
           ctx.session,
           ctx.activeDestination.value,
           props.dragOverIndex?.value,
@@ -250,9 +179,9 @@ export default defineComponent({
       }
 
       // Empty state placeholder (only when the schema has no rendered nodes and not dragging)
-      const isEmpty = plan.entries.length === 0 && !isDragOver
+      const isEmpty = rootNodes.length === 0 && !isDragOver
       if (isEmpty)
-        regionVNodes[DEFAULT_LAYOUT_REGION] = [h(EmptyState, { isDragOver: false })]
+        rootVNodes.push(h(EmptyState, { isDragOver: false }))
 
       const ContainerShellComponent = ContainerShell.value
 
@@ -277,10 +206,7 @@ export default defineComponent({
                 default: () => [
                   h(CanvasSurface, {
                     isEmpty,
-                    regionVNodes,
-                    chromeVNodes,
-                    layerVNodes,
-                    layoutPlan: plan,
+                    rootVNodes,
                     surfaceStyle: normalizeStyleValueMap(pageStyle?.surface as Record<string, unknown> | undefined),
                     selectionPresentation,
                     forbiddenOverlay: forbiddenOverlayVNode,

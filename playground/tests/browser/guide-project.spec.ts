@@ -1,16 +1,15 @@
 import { expect, test } from '@playwright/test'
 
-test('projects the Guide floating action into its framework layer', async ({ page }) => {
+test('mounts the Guide floating action through the root ApplicationSurface', async ({ page }) => {
   await page.goto('http://127.0.0.1:4174/')
 
   const floatingAction = page.locator('[data-dc-component="node"][data-node-id="floating-action-1"]')
   const content = page.locator('.dc-canvas-surface__content')
-  const floatLayer = page.locator('[data-dc-layer="float"]')
 
   await expect(floatingAction).toHaveAttribute('data-dc-layout-placement', 'layer')
   await expect(floatingAction).toHaveAttribute('data-dc-layer-mode', 'framework')
-  await expect(content.locator('[data-node-id="floating-action-1"]')).toHaveCount(0)
-  await expect(floatLayer.locator('[data-node-id="floating-action-1"]')).toHaveCount(1)
+  await expect(content.locator('[data-node-id="floating-action-1"]')).toHaveCount(1)
+  await expect(page.locator('[data-dc-layer="float"]')).toHaveCount(0)
 })
 
 test('fits the Guide Device Frame inside a short Canvas viewport', async ({ page }) => {

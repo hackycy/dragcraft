@@ -15,28 +15,22 @@ test('mounts the existing workbench with the public Next backend', async ({ page
   await expect(page.locator('[data-dc-component="material-item"][title="文本"]')).toBeVisible()
 })
 
-test('keeps type-defined chrome and layer materials out of the content flow', async ({ page }) => {
+test('mounts type-defined root materials in Schema order through the content plane', async ({ page }) => {
   await page.goto('/')
 
   const navbar = page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]')
   const tabbar = page.locator('[data-dc-component="node"][data-node-id="tabbar-main"]')
   const floatingAction = page.locator('[data-dc-component="node"][data-node-id="floating-cart"]')
   const content = page.locator('.dc-canvas-surface__content')
-  const surface = page.locator('[data-dc-component="canvas-surface"]')
+  const rootIds = await content.locator(':scope > [data-dc-component="node"]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-node-id')))
 
   await expect(navbar).toHaveAttribute('data-dc-layout-placement', 'chrome')
   await expect(tabbar).toHaveAttribute('data-dc-layout-placement', 'chrome')
   await expect(floatingAction).toHaveAttribute('data-dc-layout-placement', 'layer')
-  await expect(content.locator('[data-node-id="nav-ecommerce"], [data-node-id="tabbar-main"], [data-node-id="floating-cart"]')).toHaveCount(0)
-  await expect(surface).toHaveAttribute('style', /--dc-measured-inset-block-start: (?!0px)/)
-  await expect(surface).toHaveAttribute('style', /--dc-measured-inset-block-end: (?!0px)/)
-
-  const tabbarBounds = await tabbar.boundingBox()
-  const floatingActionBounds = await floatingAction.locator('.pg-widget-floating-button').boundingBox()
-  expect(tabbarBounds).not.toBeNull()
-  expect(floatingActionBounds).not.toBeNull()
-  if (tabbarBounds && floatingActionBounds)
-    expect(floatingActionBounds.y + floatingActionBounds.height).toBeLessThanOrEqual(tabbarBounds.y)
+  expect(rootIds).toContain('nav-ecommerce')
+  expect(rootIds).toContain('tabbar-main')
+  expect(rootIds).toContain('floating-cart')
+  expect(rootIds.indexOf('nav-ecommerce')).toBeLessThan(rootIds.indexOf('tabbar-main'))
 })
 
 test('reserves fixed Device Frame chrome before the first document node', async ({ page }) => {
@@ -66,12 +60,9 @@ test('prevents navigation and floating-action materials from reordering', async 
   await page.goto('/')
 
   const toolbar = page.locator('[data-dc-component="node-toolbar"]')
+  await page.getByRole('button', { name: '结构树', exact: true }).click()
   const assertSortingDisabled = async (nodeId: string) => {
-    const node = page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`)
-    const target = nodeId === 'floating-cart'
-      ? node.locator('[data-dc-node-surface]')
-      : node
-    await target.click()
+    await page.locator(`[data-dc-component="structure-item"][data-node-id="${nodeId}"] [data-dc-part="select"]`).click()
     await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('draggable', 'false')
     await expect(toolbar.getByTitle('上移')).toBeDisabled()
     await expect(toolbar.getByTitle('下移')).toBeDisabled()
@@ -126,7 +117,8 @@ test('keeps invisible Headless material out of the business preview', async ({ p
   await page.goto('/')
   await page.locator('.playground-header__select').selectOption('product-detail')
 
-  await expect(page.locator('[data-dc-component="node"][data-node-id="product-seo"]')).toHaveCount(0)
+  await expect(page.locator('[data-dc-component="node"][data-node-id="product-seo"]')).toHaveCount(1)
+  await expect(page.locator('[data-dc-component="node"][data-node-id="product-seo"]')).toHaveAttribute('data-dc-visible', 'false')
   await expect(page.getByText('Unknown widget: seo-meta', { exact: true })).toHaveCount(0)
 })
 

@@ -1,94 +1,8 @@
-import type { LayoutEdge, NodeOwner, ResolvedChromePresentation } from './semantic'
-import type { ApplicationSurfaceOptions, PresentationContext, PresentationNode, SurfaceEntry, SurfaceProjection } from './types'
+import type { NodeOwner } from './semantic'
+import type { ApplicationSurfaceOptions, PresentationContext, PresentationNode } from './types'
 import { computed, inject, ref } from 'vue'
 import { createNodeActionRegistry } from './action-registry'
-import { resolveNodePresentation } from './material-presentation'
 import { PRESENTATION_CONTEXT_KEY } from './types'
-
-function pushEntry(
-  entries: Map<string, SurfaceEntry[]>,
-  key: string,
-  entry: SurfaceEntry,
-): void {
-  const group = entries.get(key)
-  if (group)
-    group.push(entry)
-  else
-    entries.set(key, [entry])
-}
-
-function sortEntries(entries: SurfaceEntry[]): void {
-  entries.sort((a, b) => {
-    const orderA = a.layout.order ?? a.arrayIndex
-    const orderB = b.layout.order ?? b.arrayIndex
-    return orderA === orderB ? a.arrayIndex - b.arrayIndex : orderA - orderB
-  })
-}
-
-function edgeOrder(edge: LayoutEdge): number {
-  return ['block-start', 'inline-start', 'inline-end', 'block-end'].indexOf(edge)
-}
-
-function createSurfaceProjection(options: ApplicationSurfaceOptions): SurfaceProjection {
-  const entries: SurfaceEntry[] = []
-  const regions = new Map<string, SurfaceEntry[]>()
-  const chrome: SurfaceEntry[] = []
-  const layers = new Map<string, SurfaceEntry[]>()
-  const sortScopes = new Map<string, SurfaceEntry[]>()
-
-  options.session.document.rootNodes.value.forEach((node, arrayIndex) => {
-    const entry: SurfaceEntry = {
-      node,
-      arrayIndex,
-      layout: resolveNodePresentation(options.session, node),
-    }
-    if (!entry.layout.visible)
-      return
-    entries.push(entry)
-    if (entry.layout.placement.kind === 'flow') {
-      pushEntry(regions, entry.layout.placement.region, entry)
-      if (entry.layout.placement.sortScope !== false)
-        pushEntry(sortScopes, entry.layout.placement.sortScope, entry)
-      return
-    }
-    if (entry.layout.placement.kind === 'chrome') {
-      chrome.push(entry)
-      return
-    }
-    pushEntry(layers, entry.layout.placement.layer, entry)
-  })
-
-  sortEntries(entries)
-  regions.forEach(sortEntries)
-  sortScopes.forEach(sortEntries)
-  layers.forEach(sortEntries)
-  chrome.sort((a, b) => {
-    const placementA = a.layout.placement as ResolvedChromePresentation
-    const placementB = b.layout.placement as ResolvedChromePresentation
-    const edgeDelta = edgeOrder(placementA.edge) - edgeOrder(placementB.edge)
-    if (edgeDelta !== 0)
-      return edgeDelta
-    const orderA = a.layout.order ?? a.arrayIndex
-    const orderB = b.layout.order ?? b.arrayIndex
-    return orderA === orderB ? a.arrayIndex - b.arrayIndex : orderA - orderB
-  })
-
-  return {
-    entries,
-    regions,
-    chrome,
-    layers,
-    sortScopes,
-    insets: {
-      contributors: chrome.flatMap((entry) => {
-        const placement = entry.layout.placement as ResolvedChromePresentation
-        return placement.avoidContent
-          ? [{ edge: placement.edge, sourceNodeId: entry.node.id, reserve: placement.reserve }]
-          : []
-      }),
-    },
-  }
-}
 
 /**
  * Creates a PresentationContext from the semantic session projection.
@@ -96,7 +10,6 @@ function createSurfaceProjection(options: ApplicationSurfaceOptions): SurfacePro
  */
 export function createPresentationContext(options: ApplicationSurfaceOptions): PresentationContext {
   const schema = computed(() => options.session.document.schema.value)
-  const layout = computed(() => createSurfaceProjection(options))
 
   function resolveNodeActionPosition(node: PresentationNode, owner: NodeOwner) {
     const position = options.session.document.getStructurePosition(node.id)
@@ -134,7 +47,6 @@ export function createPresentationContext(options: ApplicationSurfaceOptions): P
   return {
     session: options.session,
     schema,
-    layout,
     resolveNodeActionPosition,
     containerShell: options.containerShell,
     actionInterceptors: options.actionInterceptors ?? [],

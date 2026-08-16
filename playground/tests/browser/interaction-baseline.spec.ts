@@ -151,7 +151,7 @@ test.describe(backend.name, () => {
       throw new Error('Expected material source and root content bounds')
 
     const pointerX = contentBounds.x + contentBounds.width / 2
-    const pointerY = contentBounds.y + 244
+    const pointerY = contentBounds.y + 260
     const indicators: Array<{ readonly anchor: string, readonly bottom: number, readonly top: number }> = []
 
     await page.mouse.move(sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2)

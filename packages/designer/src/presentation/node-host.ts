@@ -247,6 +247,12 @@ export default defineComponent({
           ? h(ContainerRuntimeProvider, { runtime: containerRuntime }, { default: () => material })
           : material
       }
+      else if (widget.material.value?.presentation.kind === 'headless') {
+        innerContent = h('div', {
+          'class': 'dc-node__headless-content',
+          'aria-hidden': 'true',
+        })
+      }
       else {
         innerContent = h(DefaultMaterialFallback, {
           'nodeId': node.id,
