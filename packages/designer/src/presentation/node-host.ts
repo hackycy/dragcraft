@@ -2,7 +2,7 @@ import type { PropType, VNode } from 'vue'
 import type { NodeSelectionPlane } from './selection-presentation'
 import type { NodeOwner, NodeStyle, StyleValueMap } from './semantic'
 import type { PresentationNode } from './types'
-import { computed, defineComponent, h, inject, provide, ref, Teleport } from 'vue'
+import { computed, defineComponent, h, inject, onBeforeUnmount, provide, ref, Teleport } from 'vue'
 import { CONTAINER_RUNTIME_CONTEXT_KEY, createContainerRuntime } from './container-runtime'
 import { usePresentationContext } from './context'
 import DefaultContainerFallback from './default-container-fallback'
@@ -11,6 +11,7 @@ import DefaultNodeHandle from './default-node-handle'
 import DefaultNodeMask from './default-node-mask'
 import DefaultNodeSelection from './default-node-selection'
 import DefaultNodeToolbar from './default-node-toolbar'
+import { useNodeGeometryRegistry } from './geometry-registry'
 import { resolveContainerRegions } from './material-presentation'
 import { MATERIAL_PREVIEW_CONTEXT_KEY } from './material-preview-context'
 import { resolveNodeInteractionPresentation } from './node-interaction'
@@ -102,6 +103,7 @@ export default defineComponent({
 
   setup(props) {
     const ctx = usePresentationContext()
+    const geometryRegistry = useNodeGeometryRegistry()
     provide(MATERIAL_PREVIEW_CONTEXT_KEY, createNodeMaterialPreviewContext(() => props.node, ctx))
     const containerRuntime = createContainerRuntime(() => props.node, ctx)
 
@@ -123,17 +125,12 @@ export default defineComponent({
         return false
       return true
     })
-    const isSelfPositionedLayer = computed(() => {
-      if (props.owner.kind === 'container')
-        return false
-      const placement = widget.layout.value.placement
-      return placement.kind === 'layer' && placement.mode === 'self'
-    })
+    const isViewportNode = computed(() => subtreeSelectionPlane.value === 'viewport')
     const usesBlockingMask = computed(() =>
-      widget.useMask.value && !isSelfPositionedLayer.value && !isResolvedContainer.value,
+      widget.useMask.value && !isViewportNode.value && !isResolvedContainer.value,
     )
     const usesSelectionHandle = computed(() =>
-      !usesBlockingMask.value && widget.selectable.value && !isSelfPositionedLayer.value,
+      !usesBlockingMask.value && widget.selectable.value && !isViewportNode.value,
     )
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
@@ -282,8 +279,6 @@ export default defineComponent({
       }
 
       // MASK (mask=true): transparent overlay blocks widget interaction.
-      // Self-positioned layer hosts span the viewport, so they select from the
-      // material hit target instead of rendering a viewport-sized mask.
       if (usesBlockingMask.value) {
         wrapperChildren.push(
           h(DefaultNodeMask, {
@@ -295,9 +290,8 @@ export default defineComponent({
         )
       }
 
-      // Resolved containers use the same external Frame-left placement as the
-      // selected toolbar; other unmasked nodes keep the adapter inline so their
-      // interaction model does not change.
+      // Resolved containers use an external selection handle; other nodes keep
+      // the handle inline with their measured NodeHost.
       if (usesSelectionHandle.value && !widget.state.isSelected.value) {
         const handleVNode = h(DefaultNodeHandle, {
           nodeId: node.id,
@@ -383,7 +377,11 @@ export default defineComponent({
       const coreWrapper = h(
         'div',
         {
-          'ref': nodeElRef,
+          'ref': (element: unknown) => {
+            const host = element instanceof HTMLElement ? element : null
+            nodeElRef.value = host
+            geometryRegistry.register(node.id, host)
+          },
           'class': [widget.wrapperClasses.value, `dc-node--${ownerKind}-owned`],
           'data-dc-component': 'node',
           'data-dc-state': themeStates,
@@ -400,16 +398,16 @@ export default defineComponent({
           'data-dc-visible': widget.visible.value ? undefined : 'false',
           'onMouseover': resolvedContainer ? undefined : handleMouseOver,
           'onMouseleave': resolvedContainer ? undefined : widget.handleMouseLeave,
-          'onClick': isSelfPositionedLayer.value && widget.selectable.value
-            ? widget.handleSelect
-            : resolvedContainer && widget.selectable.value
-              ? handleDirectSelect
-              : undefined,
+          'onClick': !usesBlockingMask.value && widget.selectable.value
+            ? handleDirectSelect
+            : undefined,
         },
         wrapperChildren,
       )
 
       return coreWrapper
     }
+
+    onBeforeUnmount(() => geometryRegistry.register(props.node.id, null)())
   },
 })

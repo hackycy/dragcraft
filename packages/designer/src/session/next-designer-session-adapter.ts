@@ -19,7 +19,6 @@ import type {
 import { resolveSchema } from '@dragcraft/core'
 import { computed, ref } from 'vue'
 import { evaluateAuthoringPolicy } from '../authoring/policy'
-import { resolvePresentationLayout } from '../presentation/material-presentation'
 
 export interface NextDesignerSessionHostState {
   readonly activeDestination: Ref<ActiveDestinationValue>
@@ -64,9 +63,8 @@ function nodesForIds(document: ResolvedDocument, nodeIds: readonly string[]): re
 
 function destinationForIndex(
   document: ResolvedDocument,
-  catalog: MaterialCatalog,
   destination: (
-    | { readonly kind: 'root', readonly sortScope?: string, readonly index?: number }
+    | { readonly kind: 'root', readonly index?: number }
     | { readonly kind: 'container', readonly containerId: string, readonly regionId: string, readonly index?: number }
   ),
 ): StructuralDestination | undefined {
@@ -78,22 +76,6 @@ function destinationForIndex(
     : document.schema.structure.containers[owner.containerId]?.regions[owner.regionId]
   if (!ids)
     return undefined
-
-  if (destination.kind === 'root' && destination.sortScope) {
-    const scopedIds = ids.filter((nodeId) => {
-      const node = document.nodesById.get(nodeId)?.node
-      return node !== undefined
-        && resolvePresentationLayout(catalog.getMaterial(node.type)?.presentation.layout).sortScope === destination.sortScope
-    })
-    const index = destination.index ?? scopedIds.length
-    if (scopedIds.length === 0)
-      return { owner, position: { kind: 'end' } }
-    if (index <= 0)
-      return { owner, position: { kind: 'before', nodeId: scopedIds[0]! } }
-    if (index >= scopedIds.length)
-      return { owner, position: { kind: 'after', nodeId: scopedIds.at(-1)! } }
-    return { owner, position: { kind: 'before', nodeId: scopedIds[index]! } }
-  }
 
   const index = destination.index
   if (index === undefined || index >= ids.length)
@@ -147,15 +129,6 @@ function bundleForNodeAdd(node: unknown, catalog: MaterialCatalog): NodeBundle |
         }
       : item),
   }
-}
-
-function requiresRootDestination(
-  catalog: MaterialCatalog,
-  type: string,
-  destination: { readonly kind: 'root' | 'container' },
-): boolean {
-  return destination.kind === 'container'
-    && resolvePresentationLayout(catalog.getMaterial(type)?.presentation.layout).placement.kind !== 'flow'
 }
 
 export interface CreateNextDesignerSessionAdapterOptions {
@@ -215,26 +188,22 @@ function compileSchemaAction(
   switch (action.type) {
     case 'node.add': {
       const bundle = bundleForNodeAdd(action.node, catalog)
-      const to = destinationForIndex(document, catalog, action.destination ?? { kind: 'root' })
+      const to = destinationForIndex(document, action.destination ?? { kind: 'root' })
       if (!bundle)
         return { status: 'rejected', code: 'NODE_INVALID' }
       if (!catalog.getMaterial(bundle.nodes[0]?.type ?? ''))
         return { status: 'rejected', code: 'MATERIAL_NOT_FOUND' }
       if (!to)
         return { status: 'rejected', code: 'DESTINATION_INVALID' }
-      if (requiresRootDestination(catalog, bundle.nodes[0]!.type, action.destination ?? { kind: 'root' }))
-        return { status: 'rejected', code: 'CONTAINER_NON_FLOW_MATERIAL' }
       return { type: 'insert-bundle', bundle, to }
     }
     case 'node.move': {
       const node = document.nodesById.get(action.nodeId)?.node
       if (!node)
         return { status: 'rejected', code: 'NODE_NOT_FOUND' }
-      const to = destinationForIndex(document, catalog, action.destination)
+      const to = destinationForIndex(document, action.destination)
       if (!to)
         return { status: 'rejected', code: 'DESTINATION_INVALID' }
-      if (requiresRootDestination(catalog, node.type, action.destination))
-        return { status: 'rejected', code: 'CONTAINER_NON_FLOW_MATERIAL' }
       return { type: 'move-node', nodeId: action.nodeId, to }
     }
     case 'node.remove':
@@ -257,11 +226,9 @@ function compileSchemaAction(
             regionId: location.regionId,
             index: location.index + 1,
           }
-      const to = destinationForIndex(document, catalog, destination)
+      const to = destinationForIndex(document, destination)
       if (!to)
         return { status: 'rejected', code: 'DESTINATION_INVALID' }
-      if (requiresRootDestination(catalog, node.type, destination))
-        return { status: 'rejected', code: 'CONTAINER_NON_FLOW_MATERIAL' }
       return { type: 'duplicate-node', nodeId: action.nodeId, to }
     }
     case 'node.update': {

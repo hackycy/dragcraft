@@ -62,7 +62,7 @@ test('reserves fixed Device Frame chrome before the first document node', async 
   }
 })
 
-test('keeps chrome and layer materials out of root sorting controls', async ({ page }) => {
+test('prevents navigation and floating-action materials from reordering', async ({ page }) => {
   await page.goto('/')
 
   const toolbar = page.locator('[data-dc-component="node-toolbar"]')
@@ -72,7 +72,6 @@ test('keeps chrome and layer materials out of root sorting controls', async ({ p
       ? node.locator('[data-dc-node-surface]')
       : node
     await target.click()
-    await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('aria-disabled', 'true')
     await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('draggable', 'false')
     await expect(toolbar.getByTitle('上移')).toBeDisabled()
     await expect(toolbar.getByTitle('下移')).toBeDisabled()

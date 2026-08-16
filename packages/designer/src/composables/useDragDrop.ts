@@ -7,9 +7,7 @@ import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReas
 import { generateShortId } from '@dragcraft/utils'
 import { computed, watch } from 'vue'
 import { hideNativeDragImage } from '../presentation/drag-image'
-import { resolveNodePresentation } from '../presentation/material-presentation'
 import {
-  DEFAULT_SORT_SCOPE,
   findNearestValidIndex,
   getValidDropIndices,
 } from '../presentation/semantic'
@@ -100,10 +98,8 @@ export function useDragDrop(
           : { ...current, index }
         return
       }
-      const sortScope = getActiveSortScope()
       dragOverDestination.value = {
         kind: 'root',
-        sortScope: sortScope === false ? undefined : sortScope,
         index: index ?? undefined,
       }
     },
@@ -112,39 +108,24 @@ export function useDragDrop(
   const forbiddenReason = session.state.drag.forbiddenReason
   let dropGeometry: {
     canvas: HTMLElement
-    sortScope: string
-    midpoints: number[]
+    targets: Array<{ readonly index: number, readonly midpoint: number }>
   } | null = null
   let dropGeometryFrame: number | null = null
-  function getActiveSortScopeNodes(sortScope: string): NodeDefinition[] {
-    return session.document.rootNodes.value
-      .filter(node => resolveNodePresentation(session, node).sortScope === sortScope)
-      .slice()
-      .sort((a, b) => {
-        const positionA = session.document.getStructurePosition(a.id)?.index ?? 0
-        const positionB = session.document.getStructurePosition(b.id)?.index ?? 0
-        return positionA - positionB
-      }) as NodeDefinition[]
+  function getRootNodes(): NodeDefinition[] {
+    return [...session.document.rootNodes.value] as NodeDefinition[]
   }
 
   // ── Sortable constraint computeds ──
 
   const lockedIndices = computed(() => {
-    const sortScope = getActiveSortScope()
-    if (sortScope === false)
-      return new Set<number>()
-    return session.materials.getLockedIndices(getActiveSortScopeNodes(sortScope))
+    return session.materials.getLockedIndices(getRootNodes())
   })
 
   const validDropIndices = computed(() => {
     const dragTarget = session.state.dragTarget.value
     if (!dragTarget)
       return null
-    const sortScope = getActiveSortScope()
-    if (sortScope === false)
-      return null
-    const scopeEntries = getActiveSortScopeEntries(sortScope)
-    return getValidDropIndices(scopeEntries, lockedIndices.value, dragTarget.sourceNodeId)
+    return getValidDropIndices(getRootNodes(), lockedIndices.value, dragTarget.sourceNodeId)
   })
 
   const createDecision = computed(() => {
@@ -162,31 +143,6 @@ export function useDragDrop(
   })
 
   // ── Visual drop index computation ──
-
-  function resolveMaterialSortScope(material: Readonly<MaterialDefinition>): string | false {
-    return resolveNodePresentation(session, { type: material.type }).sortScope
-  }
-
-  function getActiveSortScopeEntries(sortScope: string) {
-    return getActiveSortScopeNodes(sortScope)
-  }
-
-  function getActiveSortScope(): string | false {
-    const target = session.state.dragTarget.value
-    if (!target)
-      return DEFAULT_SORT_SCOPE
-    if (target.sourceNodeId) {
-      const node = session.document.getNode(target.sourceNodeId)
-      if (!node)
-        return false
-      return resolveNodePresentation(session, node).sortScope
-    }
-    if (target.widgetType) {
-      const material = session.materials.get(target.widgetType)
-      return material ? resolveMaterialSortScope(material) : DEFAULT_SORT_SCOPE
-    }
-    return DEFAULT_SORT_SCOPE
-  }
 
   function clearDragOverState(): void {
     dragOverDestination.value = null
@@ -247,16 +203,24 @@ export function useDragDrop(
     }
   }
 
-  function computeDropIndex(e: DragEvent, sortScope: string): number {
+  function computeDropIndex(e: DragEvent): number {
     const canvasEl = e.currentTarget as HTMLElement
-    if (!dropGeometry || dropGeometry.canvas !== canvasEl || dropGeometry.sortScope !== sortScope) {
-      const midpoints = Array.from(canvasEl.querySelectorAll<HTMLElement>('[data-dc-sort-scope]'))
-        .filter(element => element.dataset.dcSortScope === sortScope)
+    if (!dropGeometry || dropGeometry.canvas !== canvasEl) {
+      const rootNodes = session.document.rootNodes.value
+      const rootIndices = new Map(rootNodes.map((node, index) => [node.id, index]))
+      const targets = Array.from(canvasEl.querySelectorAll<HTMLElement>(
+        '.dc-canvas-surface__content [data-dc-component="node"][data-node-id]',
+      ))
         .map((element) => {
           const rect = element.getBoundingClientRect()
-          return rect.top + rect.height / 2
+          return {
+            index: rootIndices.get(element.dataset.nodeId ?? ''),
+            midpoint: rect.top + rect.height / 2,
+          }
         })
-      dropGeometry = { canvas: canvasEl, sortScope, midpoints }
+        .filter((target): target is { readonly index: number, readonly midpoint: number } => target.index !== undefined)
+        .sort((a, b) => a.midpoint - b.midpoint || a.index - b.index)
+      dropGeometry = { canvas: canvasEl, targets }
       if (dropGeometryFrame === null) {
         dropGeometryFrame = window.requestAnimationFrame(() => {
           dropGeometryFrame = null
@@ -266,17 +230,21 @@ export function useDragDrop(
     }
 
     const mouseY = e.clientY
-    const midpoints = dropGeometry.midpoints
+    const { targets } = dropGeometry
+    if (targets.length === 0)
+      return session.document.rootNodes.value.length
     let low = 0
-    let high = midpoints.length
+    let high = targets.length
     while (low < high) {
       const middle = Math.floor((low + high) / 2)
-      if (mouseY < midpoints[middle])
+      if (mouseY < targets[middle].midpoint)
         high = middle
       else
         low = middle + 1
     }
-    return low
+    return low === 0
+      ? targets[0].index
+      : targets[low - 1].index + 1
   }
 
   // ── Drag start handlers ──
@@ -309,10 +277,8 @@ export function useDragDrop(
       e.dataTransfer.dropEffect = dragTarget?.sourceNodeId ? 'move' : 'copy'
     }
 
-    const sortScope = getActiveSortScope()
     dragOverDestination.value = {
       kind: 'root',
-      sortScope: sortScope === false ? undefined : sortScope,
     }
     containerDropDecision.value = null
 
@@ -331,14 +297,10 @@ export function useDragDrop(
     isForbidden.value = false
     forbiddenReason.value = null
 
-    if (sortScope === false)
-      return
-
-    const rawIndex = computeDropIndex(e, sortScope)
+    const rawIndex = computeDropIndex(e)
     const index = resolveVisualDropIndex(rawIndex)
     dragOverDestination.value = {
       kind: 'root',
-      sortScope,
       index: index ?? undefined,
     }
   }
@@ -373,11 +335,6 @@ export function useDragDrop(
         : undefined
       if (!material) {
         result = { ok: false, code: 'DRAGGED_MATERIAL_MISSING' }
-      }
-      else if (destination.kind === 'root'
-        && resolveMaterialSortScope(material) !== false
-        && destination.index === undefined) {
-        result = { ok: false, code: 'DROP_TARGET_MISSING' }
       }
       else {
         const node = createNodeDefinition(material)

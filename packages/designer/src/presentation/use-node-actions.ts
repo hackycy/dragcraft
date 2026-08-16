@@ -3,7 +3,6 @@ import type { NodeActionContext, ResolvedNodeAction } from './action-registry'
 import type { NodeOwner } from './semantic'
 import type { PresentationContext, PresentationNode } from './types'
 import { computed } from 'vue'
-import { resolveNodePresentation } from './material-presentation'
 
 export interface UseNodeActionsReturn {
   /** Resolved actions for the current node with visibility/disabled computed */
@@ -19,7 +18,6 @@ function resolveUncachedPosition(node: PresentationNode, owner: NodeOwner, ctx: 
       owner: position.owner,
       index: position.index,
       siblingCount: position.siblingCount,
-      sortScope: false as const,
       lockedIndices: ctx.session.materials.getLockedIndices(
         ctx.session.document.getRegionNodes(owner.containerId, owner.regionId),
       ),
@@ -31,28 +29,16 @@ function resolveUncachedPosition(node: PresentationNode, owner: NodeOwner, ctx: 
       owner,
       index: siblings.findIndex(item => item.id === node.id),
       siblingCount: siblings.length,
-      sortScope: false as const,
       lockedIndices: ctx.session.materials.getLockedIndices(siblings),
     }
   }
 
-  const layout = resolveNodePresentation(ctx.session, node)
-  const siblings = layout.sortScope === false
-    ? ctx.session.document.rootNodes.value
-    : ctx.session.document.rootNodes.value.filter(candidate =>
-        resolveNodePresentation(ctx.session, candidate).sortScope === layout.sortScope,
-      )
+  const siblings = ctx.session.document.rootNodes.value
   return {
-    owner: {
-      kind: 'root' as const,
-      sortScope: layout.sortScope === false ? undefined : layout.sortScope,
-    },
+    owner: { kind: 'root' as const },
     index: siblings.findIndex(candidate => candidate.id === node.id),
     siblingCount: siblings.length,
-    sortScope: layout.sortScope,
-    lockedIndices: layout.sortScope === false
-      ? new Set<number>()
-      : ctx.session.materials.getLockedIndices(siblings),
+    lockedIndices: ctx.session.materials.getLockedIndices(siblings),
   }
 }
 

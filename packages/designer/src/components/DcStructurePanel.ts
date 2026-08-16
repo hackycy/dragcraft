@@ -61,7 +61,6 @@ export default defineComponent({
       owner: NodeOwner,
       index: number,
       siblingCount: number,
-      sortScope: string | false,
       schema: DeepReadonly<DocumentSchema> | null,
       lockedIndices: Set<number>,
     ): StructureItem => {
@@ -71,7 +70,6 @@ export default defineComponent({
         owner,
         index,
         siblingCount,
-        sortScope,
         material,
         materials: session.materials,
         session,
@@ -105,7 +103,6 @@ export default defineComponent({
           position?.owner ?? { kind: 'root' },
           position?.index ?? rootIndex,
           position?.siblingCount ?? children.length,
-          false,
           actionSchema.value,
           new Set(),
         )
@@ -198,7 +195,6 @@ export default defineComponent({
               region.owner,
               index,
               region.nodes.length,
-              false,
               actionSchema.value,
               region.lockedIndices,
             )

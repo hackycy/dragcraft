@@ -12,10 +12,11 @@ import DefaultContainerShell from './default-container-shell'
 import DefaultDropIndicator from './default-drop-indicator'
 import DefaultEmptyState from './default-empty-state'
 import DefaultForbiddenOverlay from './default-forbidden-overlay'
+import { createNodeGeometryRegistry, provideNodeGeometryRegistry } from './geometry-registry'
 import { resolveNodePresentation } from './material-presentation'
 import NodeHost from './node-host'
 import { createNodeSelectionPresentation, NODE_SELECTION_PRESENTATION_KEY } from './selection-presentation'
-import { DEFAULT_LAYOUT_REGION, DEFAULT_SORT_SCOPE, normalizeStyleValueMap } from './semantic'
+import { DEFAULT_LAYOUT_REGION, normalizeStyleValueMap } from './semantic'
 import { PRESENTATION_CONTEXT_KEY } from './types'
 
 type SurfaceProjection = PresentationContext['layout']['value']
@@ -36,17 +37,19 @@ function insertDropIndicator(
   if (destination?.kind === 'container')
     return
 
-  const sortScope = destination === undefined
-    ? DEFAULT_SORT_SCOPE
-    : destination?.sortScope
-  if (!sortScope)
-    return
-
-  const entries = plan.sortScopes.get(sortScope) ?? []
+  const rootNodes = session.document.rootNodes.value
   const requestedIndex = destination?.index ?? legacyIndex
   const index = requestedIndex == null
-    ? entries.length
-    : Math.max(0, Math.min(requestedIndex, entries.length))
+    ? rootNodes.length
+    : Math.max(0, Math.min(requestedIndex, rootNodes.length))
+  const nextNodeId = rootNodes[index]?.id
+  const previousNodeId = rootNodes[index - 1]?.id
+  const nextEntry = nextNodeId
+    ? plan.entries.find(entry => entry.node.id === nextNodeId)
+    : undefined
+  const previousEntry = previousNodeId
+    ? plan.entries.find(entry => entry.node.id === previousNodeId)
+    : undefined
 
   const dragTarget = session.state.dragTarget.value
   const draggedEntry = dragTarget?.sourceNodeId
@@ -57,13 +60,11 @@ function insertDropIndicator(
     : undefined
   const inferredRegion = draggedEntry?.layout.region
     ?? (draggedLayout?.placement.kind === 'flow' ? draggedLayout.region : undefined)
-  const adjacentEntry = index < entries.length ? entries[index] : entries.at(-1)
+  const adjacentEntry = nextEntry ?? previousEntry
   const region = inferredRegion ?? adjacentEntry?.layout.region ?? DEFAULT_LAYOUT_REGION
   const regionNodes = regionVNodes[region] ?? (regionVNodes[region] = [])
-  const nextRegionEntry = entries.slice(index)
-    .find(entry => (entry.layout.region ?? DEFAULT_LAYOUT_REGION) === region)
-  const previousRegionEntry = entries.slice(0, index)
-    .findLast(entry => (entry.layout.region ?? DEFAULT_LAYOUT_REGION) === region)
+  const nextRegionEntry = nextEntry?.layout.region === region ? nextEntry : undefined
+  const previousRegionEntry = previousEntry?.layout.region === region ? previousEntry : undefined
   if (!nextRegionEntry && !previousRegionEntry) {
     regionNodes.push(indicator)
     return
@@ -153,6 +154,7 @@ export default defineComponent({
     provide(PRESENTATION_CONTEXT_KEY, ctx)
     const selectionPresentation = createNodeSelectionPresentation()
     provide(NODE_SELECTION_PRESENTATION_KEY, selectionPresentation)
+    provideNodeGeometryRegistry(createNodeGeometryRegistry())
 
     // Resolve which container shell to use
     const ContainerShell = computed(() => {

@@ -62,7 +62,7 @@ export function useMaterialNode(
     return presentation?.kind === 'visual' ? presentation.preview : undefined
   })
   const layout = computed(() => resolveNodePresentation(session, getNode()))
-  const inSortScope = computed(() => layout.value.sortScope !== false)
+  const inSortScope = computed(() => true)
   const isDragging = computed(() => session.state.dragTarget.value?.sourceNodeId === getNode().id)
   const visible = computed(() => layout.value.visible)
   const useMask = computed(() => true)
@@ -76,7 +76,7 @@ export function useMaterialNode(
   )
 
   const draggable = computed(() => {
-    if (!inSortScope.value || !sortable.value)
+    if (!sortable.value)
       return false
     return session.materials.resolveCapability(getNode(), 'draggable')
   })

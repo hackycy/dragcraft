@@ -22,7 +22,7 @@ export interface UseNodeSelectionProjectionReturn {
 }
 
 function resolveTargetElement(host: HTMLElement, selfTargetSelector: string | undefined): HTMLElement {
-  if (host.dataset.dcLayerMode !== 'self' || !selfTargetSelector)
+  if (!selfTargetSelector)
     return host
 
   const candidate = host.querySelector<HTMLElement>(selfTargetSelector)

@@ -32,7 +32,7 @@ describe('useDragDrop', () => {
       const start = event()
       dragDrop.handleMaterialDragStart(start, meta)
       expect(session.state.dragTarget.value).toEqual({ sourceNodeId: null, widgetType: 'text' })
-      dragDrop.dragOverDestination.value = { kind: 'root', sortScope: 'content', index: 0 }
+      dragDrop.dragOverDestination.value = { kind: 'root', index: 0 }
       expect(dragDrop.commitDrop()).toEqual({ ok: true, changed: true })
       expect(designer.exportSchema()?.structure.root).toHaveLength(1)
       expect(session.state.dragTarget.value).toBeNull()

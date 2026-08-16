@@ -18,11 +18,11 @@ export interface NodeStyle {
 }
 
 export type NodeOwner
-  = | { readonly kind: 'root', readonly sortScope?: string }
+  = | { readonly kind: 'root' }
     | { readonly kind: 'container', readonly containerId: string, readonly regionId: string }
 
 export type NodeDestination
-  = | ({ readonly kind: 'root', readonly sortScope?: string } & { readonly index?: number })
+  = | ({ readonly kind: 'root' } & { readonly index?: number })
     | ({ readonly kind: 'container', readonly containerId: string, readonly regionId: string } & { readonly index?: number })
 
 export interface CreationBlockReason {

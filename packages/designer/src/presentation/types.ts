@@ -345,7 +345,6 @@ export interface PresentationContext extends ContainerDropApplicationSurfaceOpti
     owner: NodeOwner
     index: number
     siblingCount: number
-    sortScope: string | false
     lockedIndices: Set<number>
   }
   containerShell?: ContainerShellSource

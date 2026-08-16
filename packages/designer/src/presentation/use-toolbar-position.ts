@@ -52,8 +52,7 @@ export function useToolbarPosition(
   let cleanupAutoUpdate: (() => void) | null = null
 
   function resolveReference(host: HTMLElement): HTMLElement {
-    const selector = targetSelector
-      ?? (host.dataset.dcLayerMode === 'self' ? selfTargetSelector : undefined)
+    const selector = targetSelector ?? selfTargetSelector
     if (!selector)
       return host
     const candidate = host.querySelector<HTMLElement>(selector)

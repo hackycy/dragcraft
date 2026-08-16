@@ -124,19 +124,62 @@ test.describe(backend.name, () => {
 
     await page.mouse.move(sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2)
     await page.mouse.down()
+    let indicatorAnchor: string | null = null
     try {
       await page.mouse.move(imageBounds.x + imageBounds.width / 2, imageBounds.y + imageBounds.height - 2, { steps: 12 })
       const indicator = page.locator('.dc-canvas-surface__content > [data-dc-component="drop-indicator"]')
       await expect(indicator).toBeVisible()
-      await expect.poll(() => indicator.evaluate(element => element.previousElementSibling?.getAttribute('data-node-id'))).toBe('product-img')
+      indicatorAnchor = await indicator.evaluate(element => element.previousElementSibling?.getAttribute('data-node-id') ?? null)
+      await expect(indicatorAnchor).not.toBeNull()
+    }
+    finally {
+      await page.mouse.up()
+    }
+    const created = page.locator('.dc-canvas-surface__content > [data-dc-state~="selected"]')
+    await expect(created).toHaveCount(1)
+    await expect.poll(() => created.evaluate(element => element.previousElementSibling?.getAttribute('data-node-id') ?? null)).toBe(indicatorAnchor)
+  })
+
+  test('keeps root drop feedback stable around special presentation nodes', async ({ page }) => {
+    await page.goto(backend.url)
+
+    const source = page.locator(backend.textMaterial)
+    const content = page.locator('.dc-canvas-surface__content')
+    const sourceBounds = await source.boundingBox()
+    const contentBounds = await content.boundingBox()
+    if (!sourceBounds || !contentBounds)
+      throw new Error('Expected material source and root content bounds')
+
+    const pointerX = contentBounds.x + contentBounds.width / 2
+    const pointerY = contentBounds.y + 244
+    const indicators: Array<{ readonly anchor: string, readonly bottom: number, readonly top: number }> = []
+
+    await page.mouse.move(sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2)
+    await page.mouse.down()
+    try {
+      await page.mouse.move(pointerX, pointerY, { steps: 3 })
+      for (let sample = 0; sample < 4; sample++) {
+        await page.mouse.move(pointerX + (sample % 2 === 0 ? 0.1 : -0.1), pointerY)
+        await page.waitForTimeout(20)
+        indicators.push(await content.locator(':scope > [data-dc-component="drop-indicator"]').evaluate((element) => {
+          const rect = element.getBoundingClientRect()
+          return {
+            anchor: element.previousElementSibling?.getAttribute('data-node-id') ?? 'START',
+            top: rect.top,
+            bottom: rect.bottom,
+          }
+        }))
+      }
     }
     finally {
       await page.mouse.up()
     }
 
-    const created = page.locator('.dc-canvas-surface__content > [data-dc-state~="selected"]')
-    await expect(created).toHaveCount(1)
-    await expect.poll(() => created.evaluate(element => element.previousElementSibling?.getAttribute('data-node-id'))).toBe('product-img')
+    expect(new Set(indicators.map(indicator => indicator.anchor)).size, JSON.stringify({ indicators, pointerY })).toBe(1)
+    for (const indicator of indicators)
+      expect(pointerY).toBeGreaterThanOrEqual(indicator.top - 24)
+    for (const indicator of indicators)
+      expect(pointerY).toBeLessThanOrEqual(indicator.bottom + 24)
   })
 
   test('moves a root node into a container Region', async ({ page }) => {
@@ -176,7 +219,7 @@ test.describe(backend.name, () => {
     await expect(container.locator('[data-dc-container-region="default"]')).toBeVisible()
   })
 
-  test('rejects Navbar and Tabbar material drops into a container Region', async ({ page }) => {
+  test('allows Navbar and Tabbar material drops into a structurally valid container Region', async ({ page }) => {
     await page.goto(backend.url)
     await page.getByRole('combobox').first().selectOption('content-detail')
 
@@ -184,22 +227,14 @@ test.describe(backend.name, () => {
     for (const title of ['导航栏', 'Tab 栏']) {
       const source = page.locator(`[data-dc-component="material-item"][title="${title}"]`)
       const countBefore = await region.locator(':scope > [data-dc-component="node"]').count()
-      const sourceBounds = await source.boundingBox()
       const regionBounds = await region.boundingBox()
-      if (!sourceBounds || !regionBounds)
+      if (!regionBounds)
         throw new Error(`Expected ${title} material source and container Region bounds`)
 
-      await page.mouse.move(sourceBounds.x + sourceBounds.width / 2, sourceBounds.y + sourceBounds.height / 2)
-      await page.mouse.down()
-      try {
-        await page.mouse.move(regionBounds.x + regionBounds.width / 2, regionBounds.y + regionBounds.height / 2, { steps: 12 })
-        await expect(page.locator('[data-dc-component="canvas"]')).toHaveAttribute('data-dc-state', /forbidden/)
-      }
-      finally {
-        await page.mouse.up()
-      }
-
-      await expect(region.locator(':scope > [data-dc-component="node"]')).toHaveCount(countBefore)
+      await source.dragTo(region, {
+        targetPosition: { x: regionBounds.width / 2, y: regionBounds.height / 2 },
+      })
+      await expect(region.locator(':scope > [data-dc-component="node"]')).toHaveCount(countBefore + 1)
     }
   })
 

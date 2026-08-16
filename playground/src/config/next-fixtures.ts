@@ -197,7 +197,7 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     type: 'navbar',
     panel: { title: '导航栏', group: 'navigation', groupTitle: '导航容器', groupTitleKey: 'group.navigation', icon: '导' },
     schema: { defaultProps: { title: '页面标题' } },
-    authoring: { policy: { duplicate: 'denied' } },
+    authoring: { policy: { duplicate: 'denied', move: 'denied' } },
     inspector: { formSchema: navbarWidgetMeta.formSchema },
     presentation: {
       kind: 'visual',
@@ -220,6 +220,7 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     authoring: {
       policy: {
         create: ({ schema }) => schema.nodes.some(node => node.type === 'tab-bar') ? 'denied' : 'allowed',
+        move: 'denied',
       },
     },
     inspector: { formSchema: tabBarWidgetMeta.formSchema },
@@ -241,6 +242,7 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     type: 'floating-button',
     panel: { title: '浮动按钮', group: 'action', groupTitle: '操作组件', groupTitleKey: 'group.action', icon: '浮' },
     schema: { defaultProps: { label: '+', side: 'right', bottom: 16, sideOffset: 16, size: 52, backgroundColor: '#07C160', textColor: '#ffffff' } },
+    authoring: { policy: { move: 'denied' } },
     inspector: { formSchema: floatingButtonWidgetMeta.formSchema },
     presentation: {
       kind: 'visual',

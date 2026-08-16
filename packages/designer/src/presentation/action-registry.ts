@@ -8,8 +8,8 @@ import { IconArrowDown, IconArrowUp, IconCopy, IconDelete, IconDrag } from '@dra
 import { runActionPipeline } from './action-runtime'
 import { isInsertAllowed, isMoveAllowed, isRemoveAllowed } from './semantic'
 
-function canReorder(ctx: NodeActionContext): boolean {
-  return ctx.owner.kind !== 'root' || ctx.sortScope !== false
+function canReorder(): boolean {
+  return true
 }
 
 function getScopedLockedIndices(ctx: NodeActionContext): Set<number> {
@@ -40,8 +40,6 @@ export interface NodeActionContext {
   index: number
   /** Total sibling count */
   siblingCount: number
-  /** Sort scope this action context belongs to, or false when unsorted */
-  sortScope: string | false
   /** The registered material, if available. */
   material: Readonly<MaterialDefinition> | undefined
   /** Semantic material and authoring facts from the session read projection. */
@@ -166,6 +164,11 @@ function isBuiltInActionAuthorized(key: string, ctx: NodeActionContext): boolean
   if (key === ActionKey.DRAG || key === ActionKey.MOVE_UP || key === ActionKey.MOVE_DOWN) {
     return ctx.materials.resolveCapability(ctx.node, 'draggable')
       && ctx.materials.resolveCapability(ctx.node, 'sortable')
+      && ctx.session.evaluate({
+        type: 'node.move',
+        nodeId: ctx.node.id,
+        destination: { ...ctx.owner, index: ctx.index },
+      }).allowed
   }
   if (key === ActionKey.DELETE) {
     return ctx.materials.resolveCapability(ctx.node, 'deletable')
@@ -251,8 +254,6 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       type: 'button',
       order: 350,
       disabled: (ctx) => {
-        if (ctx.owner.kind === 'root' && ctx.sortScope === false)
-          return false
         const lockedIndices = getScopedLockedIndices(ctx)
         return !isInsertAllowed(ctx.index + 1, lockedIndices)
       },
@@ -271,8 +272,6 @@ export function createDefaultActions(t?: (key: string, fallback?: string) => str
       metadata: { actionType: 'node.remove' },
       className: 'dc-node__toolbar-btn--delete',
       disabled: (ctx) => {
-        if (ctx.owner.kind === 'root' && ctx.sortScope === false)
-          return false
         const lockedIndices = getScopedLockedIndices(ctx)
         if (lockedIndices.size === 0)
           return false

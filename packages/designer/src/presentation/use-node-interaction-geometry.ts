@@ -83,7 +83,7 @@ function getEffectiveClipRect(el: HTMLElement): Pick<DOMRect, 'top' | 'right' | 
 }
 
 function resolveTargetElement(hostEl: HTMLElement, selfTargetSelector: string | undefined): HTMLElement {
-  if (hostEl.dataset.dcLayerMode !== 'self' || !selfTargetSelector)
+  if (!selfTargetSelector)
     return hostEl
 
   const candidate = hostEl.querySelector<HTMLElement>(selfTargetSelector)

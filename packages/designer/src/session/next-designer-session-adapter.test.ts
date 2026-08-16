@@ -75,7 +75,7 @@ describe('next adapter backend contract', () => {
     const catalog = createMaterialCatalog([
       {
         type: 'navbar',
-        authoring: { policy: { duplicate: 'denied' } },
+        authoring: { policy: { duplicate: 'denied', move: 'denied' } },
         presentation: {
           kind: 'headless',
           layout: {
@@ -89,6 +89,7 @@ describe('next adapter backend contract', () => {
       },
       {
         type: 'floating-action',
+        authoring: { policy: { move: 'denied' } },
         presentation: {
           kind: 'headless',
           layout: { placement: { kind: 'layer', mode: 'self' } },
@@ -96,6 +97,7 @@ describe('next adapter backend contract', () => {
       },
       {
         type: 'tab-bar',
+        authoring: { policy: { move: 'denied' } },
         presentation: {
           kind: 'headless',
           layout: { placement: { kind: 'chrome', edge: 'block-end' } },
@@ -168,6 +170,20 @@ describe('next adapter backend contract', () => {
       ok: false,
       code: 'POLICY_DENIED',
     })
+    for (const nodeId of ['navbar-1', 'tab-bar-1', 'action-1']) {
+      const action = {
+        type: 'node.move',
+        nodeId,
+        destination: { kind: 'root', index: 1 },
+      } as const
+      expect(session.evaluate(action)).toEqual({ allowed: false, code: 'POLICY_DENIED' })
+      expect(session.execute(action)).toEqual({ ok: false, code: 'POLICY_DENIED' })
+    }
+    expect(session.evaluate({
+      type: 'node.move',
+      nodeId: 'text-1',
+      destination: { kind: 'root', index: 0 },
+    })).toEqual({ allowed: true })
     expect(session.materials.canCreateSubtree(session.document.getNode('text-1')!)).toBe(true)
     expect(session.exportSchema()?.nodes).toEqual([
       { id: 'navbar-1', type: 'navbar', props: {} },
@@ -242,7 +258,7 @@ describe('next adapter backend contract', () => {
     })
   })
 
-  it('rejects non-flow materials for container Region destinations before committing', () => {
+  it('allows any non-container material in a structurally valid Region destination', () => {
     const catalog = createMaterialCatalog([
       {
         type: 'layout',
@@ -278,13 +294,13 @@ describe('next adapter backend contract', () => {
       type: 'node.add',
       node: { id: 'new-navbar', type: 'navbar', props: {} },
       destination,
-    })).toEqual({ allowed: false, code: 'CONTAINER_NON_FLOW_MATERIAL' })
+    })).toEqual({ allowed: true })
     expect(session.execute({ type: 'node.move', nodeId: 'navbar', destination })).toEqual({
-      ok: false,
-      code: 'CONTAINER_NON_FLOW_MATERIAL',
+      ok: true,
+      changed: true,
     })
-    expect(session.document.getOwner('navbar')).toEqual({ kind: 'root' })
-    expect(session.state.history.value).toMatchObject({ canUndo: false, undoCount: 0 })
+    expect(session.document.getOwner('navbar')).toEqual({ kind: 'container', containerId: 'layout', regionId: 'main' })
+    expect(session.state.history.value).toMatchObject({ canUndo: true, undoCount: 1 })
   })
 
   it('translates node creation and root/Region moves into one Next history path', () => {

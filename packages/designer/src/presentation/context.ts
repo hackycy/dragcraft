@@ -105,7 +105,6 @@ export function createPresentationContext(options: ApplicationSurfaceOptions): P
         owner: position.owner,
         index: position.index,
         siblingCount: position.siblingCount,
-        sortScope: false as const,
         lockedIndices: options.session.materials.getLockedIndices(
           options.session.document.getRegionNodes(owner.containerId, owner.regionId),
         ),
@@ -118,27 +117,17 @@ export function createPresentationContext(options: ApplicationSurfaceOptions): P
         owner,
         index: siblings.findIndex(item => item.id === node.id),
         siblingCount: siblings.length,
-        sortScope: false as const,
         lockedIndices: options.session.materials.getLockedIndices(siblings),
       }
     }
 
     const rootNodes = options.session.document.rootNodes.value
-    const nodeLayout = resolveNodePresentation(options.session, node)
-    const siblings = nodeLayout.sortScope === false
-      ? rootNodes
-      : rootNodes.filter(candidate => resolveNodePresentation(options.session, candidate).sortScope === nodeLayout.sortScope)
+    const siblings = rootNodes
     return {
-      owner: {
-        kind: 'root' as const,
-        ...(nodeLayout.sortScope === false ? {} : { sortScope: nodeLayout.sortScope }),
-      },
+      owner: { kind: 'root' as const },
       index: siblings.findIndex(item => item.id === node.id),
       siblingCount: siblings.length,
-      sortScope: nodeLayout.sortScope,
-      lockedIndices: nodeLayout.sortScope === false
-        ? new Set<number>()
-        : options.session.materials.getLockedIndices(siblings),
+      lockedIndices: options.session.materials.getLockedIndices(siblings),
     }
   }
 
