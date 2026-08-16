@@ -1,1 +1,1 @@
-The supported public contract uses DesignerRegionOutlet, DocumentSchema, PresentationFrame, DesignerExtensions, actionInterceptors, and customActions.
+The supported public contract uses DesignerRegionOutlet, DocumentSchema, PresentationFrame, SurfaceReservation, GeometryRegistry, DesignerExtensions, actionInterceptors, and customActions.

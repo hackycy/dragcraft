@@ -1,0 +1,570 @@
+obsolete protocol inventory (468 prohibited findings, 101 permitted local external-runtime findings)
+.github/architecture/08-layout-system.md:3 [G7] obsolete protocol flow
+.github/architecture/08-layout-system.md:3 [G7] obsolete protocol chrome
+.github/architecture/08-layout-system.md:3 [G7] obsolete protocol layer
+.github/architecture/08-layout-system.md:7 [G7] obsolete protocol flow
+.github/architecture/08-layout-system.md:8 [G7] obsolete protocol chrome
+.github/architecture/08-layout-system.md:8 [G7] obsolete protocol flow
+.github/architecture/08-layout-system.md:9 [G7] obsolete protocol layer
+.github/architecture/README.md:14 [G7] obsolete protocol placement
+docs/guide/customization/theme-device-and-i18n.md:52 [G7] obsolete protocol chrome
+docs/guide/fundamentals/layout-system.md:2 [G7] obsolete protocol flow
+docs/guide/fundamentals/layout-system.md:2 [G7] obsolete protocol chrome
+docs/guide/fundamentals/layout-system.md:2 [G7] obsolete protocol layer
+docs/guide/fundamentals/layout-system.md:9 [G7] obsolete protocol placement
+docs/guide/fundamentals/layout-system.md:11 [G7] obsolete protocol flow
+docs/guide/fundamentals/layout-system.md:12 [G7] obsolete protocol chrome
+docs/guide/fundamentals/layout-system.md:13 [G7] obsolete protocol layer
+docs/guide/fundamentals/layout-system.md:20 [G7] obsolete protocol placement
+docs/guide/fundamentals/layout-system.md:21 [G7] obsolete protocol layer
+docs/guide/fundamentals/layout-system.md:22 [G7] obsolete protocol layer
+docs/guide/fundamentals/layout-system.md:31 [G7] obsolete protocol flow
+docs/guide/fundamentals/layout-system.md:31 [G7] obsolete protocol chrome
+docs/guide/fundamentals/layout-system.md:31 [G7] obsolete protocol layer
+docs/guide/fundamentals/layout-system.md:33 [G7] obsolete protocol placement
+docs/guide/learn/prerequisites.md:31 [G7] obsolete protocol flow
+docs/guide/learn/prerequisites.md:32 [G7] obsolete protocol chrome
+docs/guide/learn/prerequisites.md:33 [G7] obsolete protocol layer
+docs/reference/designer-rendering.md:43 [G7] obsolete protocol flow
+docs/reference/designer-rendering.md:43 [G7] obsolete protocol chrome
+docs/reference/designer-rendering.md:43 [G7] obsolete protocol layer
+docs/reference/device-frames.md:97 [G7] obsolete protocol flow
+docs/reference/device-frames.md:97 [G7] obsolete protocol chrome
+docs/reference/device-frames.md:97 [G7] obsolete protocol layer
+docs/reference/device-frames.md:97 [G7] obsolete protocol chrome
+examples/guide-project/src/domain/materials.ts:11 [G7] obsolete protocol chrome
+examples/guide-project/src/domain/materials.ts:135 [G7] obsolete protocol placement
+examples/guide-project/src/domain/materials.ts:136 [G7] obsolete protocol layer
+examples/guide-project/src/domain/materials.ts:137 [G7] obsolete protocol layer
+examples/guide-project/src/styles.css:188 [G7] obsolete protocol flow
+examples/guide-project/src/styles.css:197 [G7] obsolete protocol chrome
+examples/guide-project/src/styles.css:201 [G7] obsolete protocol chrome
+examples/guide-project/src/styles.css:205 [G7] obsolete protocol chrome
+examples/guide-project/src/styles.css:209 [G7] obsolete protocol chrome
+examples/guide-project/src/styles.css:213 [G7] obsolete protocol chrome
+examples/guide-project/src/styles.css:217 [G7] obsolete protocol chrome
+examples/guide-project/src/styles.css:221 [G7] obsolete protocol chrome
+examples/guide-project/src/styles.css:232 [G7] obsolete protocol layer
+examples/guide-project/src/styles.css:237 [G7] obsolete protocol layer
+examples/guide-project/src/styles.css:237 [G7] obsolete protocol layer
+packages/designer/src/components/DcCanvas.ts:172 [G6] obsolete protocol layer
+packages/designer/src/components/DcCanvas.ts:173 [G6] obsolete protocol layer
+packages/designer/src/components/DcCanvas.ts:174 [G6] obsolete protocol layer
+packages/designer/src/components/DcStructurePanel.ts:66 [G6] obsolete protocol sortScope
+packages/designer/src/components/DcStructurePanel.ts:76 [G6] obsolete protocol sortScope
+packages/designer/src/components/DcStructurePanel.ts:110 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:25 [G6] obsolete protocol placement
+packages/designer/src/composables/useDragDrop.ts:102 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:105 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:105 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:105 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:114 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:118 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:120 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:120 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:132 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:133 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:135 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:142 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:143 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:145 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:170 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:173 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:174 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:185 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:253 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:255 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:255 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:257 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:262 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:315 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:318 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:318 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:318 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:337 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:340 [G6] obsolete protocol sortScope
+packages/designer/src/composables/useDragDrop.ts:344 [G6] obsolete protocol sortScope
+packages/designer/src/index.ts:45 [G6] obsolete protocol MaterialPresentationLayout
+packages/designer/src/index.ts:46 [G6] obsolete protocol MaterialPresentationPlacement
+packages/designer/src/materials/create-material-catalog.ts:16 [G6] obsolete protocol MaterialPresentationLayout
+packages/designer/src/materials/create-material-catalog.ts:132 [G6] obsolete protocol MaterialPresentationLayout
+packages/designer/src/materials/types.ts:16 [G6] obsolete protocol MaterialPresentationPlacement
+packages/designer/src/materials/types.ts:18 [G6] obsolete protocol flow
+packages/designer/src/materials/types.ts:20 [G6] obsolete protocol sortScope
+packages/designer/src/materials/types.ts:23 [G6] obsolete protocol chrome
+packages/designer/src/materials/types.ts:25 [G6] obsolete protocol flow
+packages/designer/src/materials/types.ts:30 [G6] obsolete protocol layer
+packages/designer/src/materials/types.ts:31 [G6] obsolete protocol layer
+packages/designer/src/materials/types.ts:40 [G6] obsolete protocol chrome
+packages/designer/src/materials/types.ts:43 [G6] obsolete protocol MaterialPresentationLayout
+packages/designer/src/materials/types.ts:44 [G6] obsolete protocol placement
+packages/designer/src/materials/types.ts:44 [G6] obsolete protocol MaterialPresentationPlacement
+packages/designer/src/materials/types.ts:54 [G6] obsolete protocol MaterialPresentationLayout
+packages/designer/src/materials/types.ts:58 [G6] obsolete protocol MaterialPresentationLayout
+packages/designer/src/presentation/action-registry.ts:12 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/action-registry.ts:44 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/action-registry.ts:254 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/action-registry.ts:274 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/application-surface.ts:38 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/application-surface.ts:40 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/application-surface.ts:41 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/application-surface.ts:44 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/application-surface.ts:58 [G5] obsolete protocol placement
+packages/designer/src/presentation/application-surface.ts:58 [G5] obsolete protocol flow
+packages/designer/src/presentation/application-surface.ts:187 [G5] obsolete protocol chrome
+packages/designer/src/presentation/application-surface.ts:191 [G5] obsolete protocol placement
+packages/designer/src/presentation/application-surface.ts:191 [G5] obsolete protocol chrome
+packages/designer/src/presentation/application-surface.ts:192 [G5] obsolete protocol placement
+packages/designer/src/presentation/application-surface.ts:195 [G5] obsolete protocol placement
+packages/designer/src/presentation/application-surface.ts:195 [G5] obsolete protocol chrome
+packages/designer/src/presentation/application-surface.ts:200 [G5] obsolete protocol layer
+packages/designer/src/presentation/application-surface.ts:201 [G5] obsolete protocol layer
+packages/designer/src/presentation/application-surface.ts:206 [G5] obsolete protocol placement
+packages/designer/src/presentation/application-surface.ts:206 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:11 [G5] obsolete protocol chrome
+packages/designer/src/presentation/canvas-surface.ts:30 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:31 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:31 [G5] obsolete protocol flow
+packages/designer/src/presentation/canvas-surface.ts:33 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:44 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:69 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:70 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:82 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:83 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:86 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:90 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:93 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:97 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:121 [G5] obsolete protocol chrome
+packages/designer/src/presentation/canvas-surface.ts:122 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:122 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:123 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:123 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:125 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:126 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:126 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:127 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:127 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:128 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:128 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:246 [G5] obsolete protocol chrome
+packages/designer/src/presentation/canvas-surface.ts:247 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:247 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:250 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:251 [G5] obsolete protocol chrome
+packages/designer/src/presentation/canvas-surface.ts:251 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:252 [G5] obsolete protocol chrome
+packages/designer/src/presentation/canvas-surface.ts:252 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:253 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:254 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:255 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:257 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:258 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:259 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:262 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:278 [G5] obsolete protocol chrome
+packages/designer/src/presentation/canvas-surface.ts:284 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:285 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:287 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:289 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:289 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:292 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:292 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:295 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:296 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:296 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:297 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:297 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:298 [G5] obsolete protocol layer
+packages/designer/src/presentation/canvas-surface.ts:298 [G5] obsolete protocol placement
+packages/designer/src/presentation/canvas-surface.ts:299 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:34 [G5] obsolete protocol chrome
+packages/designer/src/presentation/context.ts:47 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:47 [G5] obsolete protocol flow
+packages/designer/src/presentation/context.ts:48 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:49 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:49 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:50 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:50 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:53 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:53 [G5] obsolete protocol chrome
+packages/designer/src/presentation/context.ts:54 [G5] obsolete protocol chrome
+packages/designer/src/presentation/context.ts:57 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:57 [G5] obsolete protocol layer
+packages/designer/src/presentation/context.ts:64 [G5] obsolete protocol chrome
+packages/designer/src/presentation/context.ts:65 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:66 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:78 [G5] obsolete protocol chrome
+packages/designer/src/presentation/context.ts:82 [G5] obsolete protocol chrome
+packages/designer/src/presentation/context.ts:83 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:83 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:84 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:85 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:85 [G5] obsolete protocol placement
+packages/designer/src/presentation/context.ts:107 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:107 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:118 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:125 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:127 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:127 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:131 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:131 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:131 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:135 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:135 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/context.ts:136 [G5] obsolete protocol sortScope
+packages/designer/src/presentation/default-node-toolbar.ts:13 [G6] obsolete protocol placement
+packages/designer/src/presentation/default-node-toolbar.ts:108 [G6] obsolete protocol placement
+packages/designer/src/presentation/default-node-toolbar.ts:108 [G6] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:28 [G3] obsolete protocol layer
+packages/designer/src/presentation/node-host.ts:78 [G3] obsolete protocol layer
+packages/designer/src/presentation/node-host.ts:128 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:128 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:129 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:129 [G3] obsolete protocol layer
+packages/designer/src/presentation/node-host.ts:129 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:170 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:185 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:211 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:211 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:284 [G3] obsolete protocol layer
+packages/designer/src/presentation/node-host.ts:297 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:334 [G3] obsolete protocol layer
+packages/designer/src/presentation/node-host.ts:354 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:354 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:369 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:393 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:393 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:394 [G3] obsolete protocol layer
+packages/designer/src/presentation/node-host.ts:394 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:394 [G3] obsolete protocol layer
+packages/designer/src/presentation/node-host.ts:394 [G3] obsolete protocol placement
+packages/designer/src/presentation/node-host.ts:396 [G3] obsolete protocol sortScope
+packages/designer/src/presentation/node-host.ts:398 [G3] obsolete protocol sortScope
+packages/designer/src/presentation/semantic.ts:21 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/semantic.ts:25 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/semantic.ts:41 [G6] obsolete protocol flow
+packages/designer/src/presentation/semantic.ts:44 [G6] obsolete protocol chrome
+packages/designer/src/presentation/semantic.ts:53 [G6] obsolete protocol flow
+packages/designer/src/presentation/semantic.ts:53 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/semantic.ts:54 [G6] obsolete protocol chrome
+packages/designer/src/presentation/semantic.ts:55 [G6] obsolete protocol layer
+packages/designer/src/presentation/semantic.ts:55 [G6] obsolete protocol layer
+packages/designer/src/presentation/semantic.ts:57 [G6] obsolete protocol flow
+packages/designer/src/presentation/semantic.ts:57 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/semantic.ts:58 [G6] obsolete protocol chrome
+packages/designer/src/presentation/semantic.ts:59 [G6] obsolete protocol layer
+packages/designer/src/presentation/semantic.ts:59 [G6] obsolete protocol layer
+packages/designer/src/presentation/semantic.ts:60 [G6] obsolete protocol ResolvedPresentationPlacement
+packages/designer/src/presentation/semantic.ts:61 [G6] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/presentation/semantic.ts:62 [G6] obsolete protocol placement
+packages/designer/src/presentation/semantic.ts:62 [G6] obsolete protocol ResolvedPresentationPlacement
+packages/designer/src/presentation/semantic.ts:64 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/semantic.ts:69 [G6] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/presentation/types.ts:9 [G6] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/presentation/types.ts:141 [G6] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/presentation/types.ts:147 [G6] obsolete protocol chrome
+packages/designer/src/presentation/types.ts:154 [G6] obsolete protocol placement
+packages/designer/src/presentation/types.ts:154 [G6] obsolete protocol chrome
+packages/designer/src/presentation/types.ts:168 [G6] obsolete protocol placement
+packages/designer/src/presentation/types.ts:169 [G6] obsolete protocol placement
+packages/designer/src/presentation/types.ts:172 [G6] obsolete protocol layer
+packages/designer/src/presentation/types.ts:348 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-material-node.ts:3 [G6] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/presentation/use-material-node.ts:30 [G6] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/presentation/use-material-node.ts:64 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:21 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:21 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:31 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:37 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:40 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:40 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:45 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:45 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:45 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:49 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:49 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-node-actions.ts:50 [G6] obsolete protocol sortScope
+packages/designer/src/presentation/use-toolbar-position.ts:17 [G6] obsolete protocol placement
+packages/designer/src/presentation/use-toolbar-position.ts:41 [G6] obsolete protocol placement
+packages/designer/src/presentation/use-toolbar-position.ts:47 [G6] obsolete protocol placement
+packages/designer/src/presentation/use-toolbar-position.ts:92 [G6] obsolete protocol placement
+packages/designer/src/presentation/use-toolbar-position.ts:92 [G6] obsolete protocol placement
+packages/designer/src/presentation/use-toolbar-position.ts:137 [G6] obsolete protocol placement
+packages/designer/src/presentation/use-toolbar-position.ts:151 [G6] obsolete protocol placement
+packages/designer/src/presentation/use-toolbar-position.ts:166 [G6] obsolete protocol placement
+packages/designer/src/session/designer-session-contract.ts:27 [G1] obsolete protocol sortScope
+packages/designer/src/session/designer-session-contract.ts:34 [G1] obsolete protocol sortScope
+packages/designer/src/session/designer-session-contract.ts:37 [G1] obsolete protocol sortScope
+packages/designer/src/session/designer-session-contract.ts:50 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:13 [G1] obsolete protocol MaterialPresentationLayout
+packages/designer/src/session/next-designer-session-adapter.ts:14 [G1] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/session/next-designer-session-adapter.ts:73 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:86 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:90 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:90 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:162 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:162 [G1] obsolete protocol flow
+packages/designer/src/session/next-designer-session-adapter.ts:211 [G1] obsolete protocol MaterialPresentationLayout
+packages/designer/src/session/next-designer-session-adapter.ts:211 [G1] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/session/next-designer-session-adapter.ts:212 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:212 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:213 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:213 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:213 [G1] obsolete protocol flow
+packages/designer/src/session/next-designer-session-adapter.ts:214 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:215 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:215 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:215 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:217 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:217 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:219 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:219 [G1] obsolete protocol flow
+packages/designer/src/session/next-designer-session-adapter.ts:219 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:221 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:226 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:226 [G1] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.ts:228 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:229 [G1] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.ts:230 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:231 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:233 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:234 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:234 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:236 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:238 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:244 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:245 [G1] obsolete protocol layer
+packages/designer/src/session/next-designer-session-adapter.ts:246 [G1] obsolete protocol layer
+packages/designer/src/session/next-designer-session-adapter.ts:246 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:246 [G1] obsolete protocol layer
+packages/designer/src/session/next-designer-session-adapter.ts:247 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:247 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:248 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:249 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:249 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:250 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:251 [G1] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.ts:251 [G1] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.ts:252 [G1] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.ts:252 [G1] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.ts:254 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:425 [G1] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/session/next-designer-session-adapter.ts:452 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:452 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:455 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:455 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:470 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:470 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:471 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:476 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:480 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:480 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:482 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:485 [G1] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.ts:493 [G1] obsolete protocol sortScope
+packages/designer/src/session/types.ts:13 [G1] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/session/types.ts:29 [G1] obsolete protocol sortScope
+packages/designer/src/session/types.ts:92 [G1] obsolete protocol ResolvedPresentationLayout
+packages/designer/src/session/types.ts:110 [G1] obsolete protocol layer
+packages/designer/styles/structure.css:51 [G6] obsolete protocol layer
+packages/designer/styles/structure.css:688 [G6] obsolete protocol flow
+packages/designer/styles/structure.css:703 [G6] obsolete protocol layer
+packages/designer/styles/structure.css:710 [G6] obsolete protocol layer
+packages/designer/theme/contract/theme-contract.json:73 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:74 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:75 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:76 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:77 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:78 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:79 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:80 [G6] obsolete protocol chrome
+packages/designer/theme/contract/theme-contract.json:89 [G6] obsolete protocol layer
+packages/device-frames/src/styles/iphone.css:79 [G6] obsolete protocol chrome
+playground/src/components/widgets/mini-program.ts:59 [G7] obsolete protocol placement
+playground/src/components/widgets/mini-program.ts:60 [G7] obsolete protocol chrome
+playground/src/components/widgets/mini-program.ts:121 [G7] obsolete protocol placement
+playground/src/components/widgets/mini-program.ts:122 [G7] obsolete protocol chrome
+playground/src/components/widgets/mini-program.ts:226 [G7] obsolete protocol placement
+playground/src/components/widgets/mini-program.ts:227 [G7] obsolete protocol layer
+playground/src/components/widgets/mini-program.ts:228 [G7] obsolete protocol layer
+playground/src/components/widgets/mini-program.ts:230 [G7] obsolete protocol chrome
+playground/src/components/widgets/styles.css:413 [G7] obsolete protocol flow
+playground/src/config/next-fixtures.ts:206 [G7] obsolete protocol placement
+playground/src/config/next-fixtures.ts:207 [G7] obsolete protocol chrome
+playground/src/config/next-fixtures.ts:230 [G7] obsolete protocol placement
+playground/src/config/next-fixtures.ts:231 [G7] obsolete protocol chrome
+playground/src/config/next-fixtures.ts:249 [G7] obsolete protocol placement
+playground/src/config/next-fixtures.ts:250 [G7] obsolete protocol layer
+playground/src/config/next-fixtures.ts:251 [G7] obsolete protocol layer
+playground/src/config/next-fixtures.ts:253 [G7] obsolete protocol chrome
+playground/src/config/next-fixtures.ts:362 [G7] obsolete protocol flow
+playground/src/config/next-fixtures.ts:375 [G7] obsolete protocol flow
+playground/src/config/next-fixtures.ts:377 [G7] obsolete protocol flow
+playground/tests/browser/guide-project.spec.ts:3 [G8] obsolete protocol layer
+playground/tests/browser/guide-project.spec.ts:8 [G8] obsolete protocol layer
+playground/tests/browser/guide-project.spec.ts:10 [G8] obsolete protocol placement
+playground/tests/browser/guide-project.spec.ts:10 [G8] obsolete protocol layer
+playground/tests/browser/guide-project.spec.ts:11 [G8] obsolete protocol layer
+playground/tests/browser/interaction-baseline.spec.ts:90 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:91 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:147 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:149 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:157 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:183 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:216 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:223 [G8] obsolete protocol flow
+playground/tests/browser/interaction-baseline.spec.ts:426 [G8] obsolete protocol flow
+playground/tests/browser/next-harness.spec.ts:18 [G8] obsolete protocol chrome
+playground/tests/browser/next-harness.spec.ts:18 [G8] obsolete protocol layer
+playground/tests/browser/next-harness.spec.ts:18 [G8] obsolete protocol flow
+playground/tests/browser/next-harness.spec.ts:27 [G8] obsolete protocol placement
+playground/tests/browser/next-harness.spec.ts:27 [G8] obsolete protocol chrome
+playground/tests/browser/next-harness.spec.ts:28 [G8] obsolete protocol placement
+playground/tests/browser/next-harness.spec.ts:28 [G8] obsolete protocol chrome
+playground/tests/browser/next-harness.spec.ts:29 [G8] obsolete protocol placement
+playground/tests/browser/next-harness.spec.ts:29 [G8] obsolete protocol layer
+playground/tests/browser/next-harness.spec.ts:42 [G8] obsolete protocol chrome
+playground/tests/browser/next-harness.spec.ts:65 [G8] obsolete protocol chrome
+playground/tests/browser/next-harness.spec.ts:65 [G8] obsolete protocol layer
+playground/tests/browser/next-harness.spec.ts:100 [G8] obsolete protocol chrome
+skills/dragcraft/references/layout.md:7 [G7] obsolete protocol flow
+skills/dragcraft/references/layout.md:7 [G7] obsolete protocol chrome
+skills/dragcraft/references/layout.md:7 [G7] obsolete protocol layer
+skills/dragcraft/references/layout.md:8 [G7] obsolete protocol flow
+skills/dragcraft/references/layout.md:8 [G7] obsolete protocol chrome
+skills/dragcraft/references/layout.md:8 [G7] obsolete protocol layer
+skills/dragcraft/references/layout.md:14 [G7] obsolete protocol flow
+skills/dragcraft/references/layout.md:14 [G7] obsolete protocol chrome
+skills/dragcraft/references/layout.md:14 [G7] obsolete protocol layer
+skills/dragcraft/SKILL.md:21 [G7] obsolete protocol flow
+skills/dragcraft/SKILL.md:21 [G7] obsolete protocol chrome
+skills/dragcraft/SKILL.md:21 [G7] obsolete protocol layer
+packages/designer/src/components/DcDesigner.test.ts:53 [G8] obsolete protocol layer
+packages/designer/src/composables/useDragDrop.test.ts:35 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:98 [G8] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.test.ts:99 [G8] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.test.ts:110 [G8] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.test.ts:110 [G8] obsolete protocol layer
+packages/designer/src/session/next-designer-session-adapter.test.ts:117 [G8] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.test.ts:117 [G8] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.test.ts:141 [G8] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.test.ts:142 [G8] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.test.ts:148 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:152 [G8] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.test.ts:153 [G8] obsolete protocol layer
+packages/designer/src/session/next-designer-session-adapter.test.ts:154 [G8] obsolete protocol layer
+packages/designer/src/session/next-designer-session-adapter.test.ts:157 [G8] obsolete protocol chrome
+packages/designer/src/session/next-designer-session-adapter.test.ts:159 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:166 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:172 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:178 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:181 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:184 [G8] obsolete protocol sortScope
+packages/designer/src/session/next-designer-session-adapter.test.ts:269 [G8] obsolete protocol flow
+packages/designer/src/session/next-designer-session-adapter.test.ts:278 [G8] obsolete protocol placement
+packages/designer/src/session/next-designer-session-adapter.test.ts:278 [G8] obsolete protocol chrome
+playground/src/components/widgets/mini-program.test.ts:21 [G8] obsolete protocol placement
+playground/src/components/widgets/mini-program.test.ts:21 [G8] obsolete protocol chrome
+playground/src/config/next-fixtures.test.ts:60 [G8] obsolete protocol flow
+examples/guide-project/src/runtime/index.ts:24 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/index.ts:25 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/index.ts:40 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/index.ts:41 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/index.ts:42 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:7 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:9 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:11 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:16 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:17 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:33 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:37 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:38 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:46 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:46 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:47 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:47 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:47 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:49 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:50 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:54 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:54 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:56 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:57 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:58 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:60 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:61 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:63 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:67 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:69 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:70 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:70 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:70 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:71 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:71 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:76 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:94 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:116 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:118 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:119 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:119 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:120 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:121 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:122 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:126 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:128 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:141 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:142 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:154 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:154 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:155 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:155 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:156 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:156 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:157 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:159 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:159 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:165 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:169 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:171 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.ts:171 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:171 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.ts:175 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:175 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.ts:177 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:181 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:182 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:185 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:189 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:192 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:200 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/layout.ts:203 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/registry.ts:7 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/registry.ts:11 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/registry.ts:11 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/registry.ts:11 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/registry.ts:12 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/registry.ts:20 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/RuntimePage.ts:86 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/RuntimePage.ts:86 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/RuntimePage.ts:87 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/RuntimePage.ts:88 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/RuntimePage.ts:102 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/RuntimePage.ts:107 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/RuntimePage.ts:112 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/RuntimePage.ts:113 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/RuntimePage.ts:118 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/RuntimePage.ts:119 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/RuntimePage.ts:119 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/RuntimePage.ts:122 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/RuntimePage.ts:123 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/RuntimePage.ts:123 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/RuntimePage.ts:124 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/RuntimePage.ts:124 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/RuntimePage.ts:125 [G7] permitted local external runtime policy placement
+examples/guide-project/src/runtime/RuntimePage.ts:146 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.test.ts:7 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.test.ts:7 [G7] permitted local external runtime policy chrome
+examples/guide-project/src/runtime/layout.test.ts:7 [G7] permitted local external runtime policy layer
+examples/guide-project/src/runtime/layout.test.ts:10 [G7] permitted local external runtime policy flow
+examples/guide-project/src/runtime/layout.test.ts:14 [G7] permitted local external runtime policy chrome

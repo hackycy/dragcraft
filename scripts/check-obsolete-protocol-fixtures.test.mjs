@@ -13,19 +13,29 @@ function runFixture(name) {
 }
 
 describe('obsolete protocol checker public-contract fixtures', () => {
-  it('rejects obsolete public names with stable findings', () => {
+  it('rejects obsolete protocol names with stable path, line, and identifier findings', () => {
     const result = runFixture('public-contract-invalid.md')
 
     expect(result.status).toBe(1)
-    expect(result.stderr).toContain('scripts/fixtures/public-contract-invalid.md:1 obsolete public name ContainerRegionOutlet')
-    expect(result.stderr).toContain('scripts/fixtures/public-contract-invalid.md:1 obsolete protocol DesignerSchema')
-    expect(result.stderr).toContain('scripts/fixtures/public-contract-invalid.md:1 obsolete protocol RendererExtensions')
+    expect(result.stderr).toContain('scripts/fixtures/public-contract-invalid.md:1 [G9] obsolete public name ContainerRegionOutlet')
+    expect(result.stderr).toContain('scripts/fixtures/public-contract-invalid.md:1 [G9] obsolete protocol DesignerSchema')
+    expect(result.stderr).toContain('scripts/fixtures/public-contract-invalid.md:1 [G9] obsolete protocol RendererExtensions')
   })
 
-  it('accepts the shipped public contract names', () => {
+  it('accepts approved PresentationFrame and private geometry names', () => {
     const result = runFixture('public-contract-valid.md')
 
     expect(result.status).toBe(0)
-    expect(result.stdout).toContain('obsolete protocol denylist valid (0 findings)')
+    expect(result.stdout).toContain('obsolete protocol denylist valid (0 prohibited findings, 0 permitted local external-runtime findings)')
+  })
+
+  it('permits explicitly local external runtime policy while inventorying it', () => {
+    const result = spawnSync(process.execPath, [checker, '--inventory', '--fixture', 'examples/guide-project/src/runtime/layout.ts'], {
+      cwd: root,
+      encoding: 'utf8',
+    })
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('[G7] permitted local external runtime policy placement')
   })
 })

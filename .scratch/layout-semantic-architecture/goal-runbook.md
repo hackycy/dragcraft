@@ -37,8 +37,8 @@
 
 | Gate | Status | Depends on | Plan contract | Unlock evidence |
 | --- | --- | --- | --- | --- |
-| G0: Convergence Guard and Drift Inventory | active | none | `implementation-plan.md` -> `G0: Convergence Guard and Drift Inventory` | no predecessor |
-| G1: Canonical Schema and Session | planned | G0 | `implementation-plan.md` -> `G1: Canonical Schema and Session` | G0 pending |
+| G0: Convergence Guard and Drift Inventory | passed | none | `implementation-plan.md` -> `G0: Convergence Guard and Drift Inventory` | no predecessor |
+| G1: Canonical Schema and Session | active | G0 | `implementation-plan.md` -> `G1: Canonical Schema and Session` | G0 passed |
 | G2: Authoring and Structural Operations | planned | G1 | `implementation-plan.md` -> `G2: Authoring and Structural Operations` | G1 pending |
 | G3: Node Interaction and Geometry | planned | G2 | `implementation-plan.md` -> `G3: Node Interaction and Geometry` | G2 pending |
 | G4: Container Region Cutover | planned | G3 | `implementation-plan.md` -> `G4: Container Region Cutover` | G3 pending |
@@ -53,10 +53,15 @@
 ### G0: Convergence Guard and Drift Inventory
 
 - 2026-08-16: initialized as `active`; the new plan explicitly treats current placement/layout implementation as drift inventory, not as the target behavior. Implementation has not started.
+- 2026-08-16: Slice `scan coverage` completed. Modified `scripts/check-obsolete-protocol.mjs`, `scripts/check-obsolete-protocol-fixtures.test.mjs`, and `scripts/fixtures/public-contract-valid.md`. Directed verification: `pnpm exec vitest run scripts/check-obsolete-protocol-fixtures.test.mjs` passed (3 tests); strict invalid fixture emitted stable `path:line identifier` findings; valid fixture permits `PresentationFrame`, `SurfaceReservation`, and `GeometryRegistry`; `examples/guide-project/src/runtime/layout.ts` is recorded as permitted local external-runtime policy. Risk: the baseline still contains prohibited contracts by design, and the remaining inventory must be assigned before later gates begin. Next: capture the deterministic baseline inventory and decision-to-Gate drift assignment.
+- 2026-08-16: Slice `fixture and baseline` completed. Added `g0-obsolete-protocol-inventory.txt` and `g0-drift-report.md`; modified the scanner to annotate every finding with its later owner Gate. Directed verification: scanner fixture suite passed (3 tests); two inventory runs produced the identical SHA-256 `30083270410bbdfc92b8fb4445e2f5338f4db380e46820b9f99bde2749367bf0`; full `node scripts/check-obsolete-protocol.mjs --strict` failed closed with the recorded 468 prohibited findings, while the 101 Guide Project runtime findings remain explicitly permitted and visible. Risk: repository baseline may expose pre-existing failures; preserve their diagnostics without broadening G0. Next: run the declared repository verification order and record the exact outcome.
+- 2026-08-16: Repository verification reached the declared stop point. `pnpm check:obsolete-protocol` passed in inventory mode; `pnpm check:public-boundary`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, and `pnpm test` passed. `pnpm test:browser` started both Vite servers but all 32 browser tests failed before launch because Chromium is absent at `C:\Users\Administrator\AppData\Local\ms-playwright\chromium_headless_shell-1234\chrome-headless-shell.exe`. Stop condition: baseline verification failed for an unisolated environment prerequisite. Completed evidence is the command output above and the unchanged source inventory; recovery requires installing the pinned Playwright browser (`pnpm exec playwright install`) or providing an equivalent executable, then rerunning the full ordered verification. G0 remains `active`; no Exit condition is marked passed.
+- 2026-08-16: Browser prerequisite recovery completed with `pnpm exec playwright install chromium`. Final repository verification then passed in the required order: `pnpm check:obsolete-protocol` (inventory mode), `pnpm check:public-boundary`, `pnpm build`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm test:browser` (32 passed). Exit evidence: (1) deterministic coverage is proven by the 3-test scanner fixture suite and identical two-run inventory SHA-256 `30083270410bbdfc92b8fb4445e2f5338f4db380e46820b9f99bde2749367bf0`; (2) every recorded finding has `path:line [Gate] identifier` in `g0-obsolete-protocol-inventory.txt`, with assignments documented in `g0-drift-report.md`; (3) full strict mode fails closed on the 468 prohibited findings while 101 local external-runtime findings remain visible and permitted; (4) the baseline source SHA `85b4624ce5addfb01b39ec81c9056511601d7e54`, inventory artifact, and ordered verification are recorded here and in the drift report. No runtime behavior, public export, Schema, or interaction was changed. G0 is `passed`.
 
 ### G1: Canonical Schema and Session
 
 - 2026-08-16: initialized as `planned`; G0 pending and no implementation evidence.
+- 2026-08-16: activated after G0 passed; not started in this Goal.
 
 ### G2: Authoring and Structural Operations
 
