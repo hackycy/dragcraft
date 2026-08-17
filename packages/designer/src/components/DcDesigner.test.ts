@@ -3,7 +3,7 @@ import type { DocumentSchema } from '@dragcraft/core'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, defineComponent, h, nextTick, ref } from 'vue'
 import { createDesigner } from '../factory'
-import ContainerRegionOutlet from '../presentation/container-region-outlet'
+import DesignerRegionOutlet from '../presentation/container-region-outlet'
 import DcDesigner from './DcDesigner'
 
 const Preview = defineComponent({ name: 'DesignerPreview', setup: () => () => h('div', 'preview') })
@@ -32,13 +32,13 @@ const MissingOutletContainer = defineComponent({
 const DuplicateOutletContainer = defineComponent({
   name: 'DuplicateOutletContainer',
   setup: () => () => [
-    h(ContainerRegionOutlet, { regionId: 'main' }),
-    h(ContainerRegionOutlet, { regionId: 'main' }),
+    h(DesignerRegionOutlet, { regionId: 'main' }),
+    h(DesignerRegionOutlet, { regionId: 'main' }),
   ],
 })
 const SingleOutletContainer = defineComponent({
   name: 'SingleOutletContainer',
-  setup: () => () => h(ContainerRegionOutlet, { regionId: 'main' }),
+  setup: () => () => h(DesignerRegionOutlet, { regionId: 'main' }),
 })
 
 function createTextDesigner(schema: DocumentSchema = {

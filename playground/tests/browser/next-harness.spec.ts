@@ -125,7 +125,7 @@ test('keeps special Frames positioned against the scroll viewport', async ({ pag
   expect(edgeOwner?.bottom.some(element => element.className.includes('pg-widget-tabbar'))).toBe(true)
 })
 
-test('reserves fixed Device Frame chrome before the first document node', async ({ page }) => {
+test('reserves the fixed Device Frame edge before the first document node', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 800 })
   await page.goto('/')
 
@@ -200,7 +200,7 @@ test('rejects repeated Navbar creation without growing the top reservation', asy
   await expect(content).toHaveCSS('padding-block-start', initialPadding)
 })
 
-test('renders inspector fields for image, chrome, and form materials', async ({ page }) => {
+test('renders inspector fields for image, navigation, and form materials', async ({ page }) => {
   await page.goto('/')
 
   const propertyPanel = page.locator('[data-dc-component="property-panel"]')

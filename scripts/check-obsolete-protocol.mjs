@@ -112,6 +112,10 @@ function isIntentionalInternalIdentifier(file, match, line) {
     return true
   if (match === 'ContainerRegionOutlet' && relativePath.startsWith('packages/designer/src/presentation/'))
     return true
+  if (match === 'placement' && line.includes('not.toHaveAttribute(\'data-dc-layout-placement\''))
+    return true
+  if (match === 'layer' && line.includes('data-dc-canvas-interaction-layer'))
+    return true
   return relativePath === 'packages/designer/src/public-interface.test.ts'
     && /\.not\.toHaveProperty/.test(line)
 }
