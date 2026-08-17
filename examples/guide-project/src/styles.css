@@ -85,6 +85,15 @@ button:disabled {
   border-bottom: 1px solid #d7dee8;
 }
 
+.guide-presentation-frame--page-header {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 0;
+  z-index: 4;
+  background: #fff;
+  pointer-events: auto;
+}
+
 .guide-floating-action {
   border: 0;
   border-radius: 999px;
@@ -108,6 +117,10 @@ button:disabled {
 .guide-presentation-frame--floating-action > [data-dc-component="node"] {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 16px;
   pointer-events: none;
 }
 

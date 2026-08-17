@@ -51,6 +51,45 @@ it('keeps no-op and rejected writes out of history', () => {
   designer.dispose()
 })
 
+it('does not move or duplicate the activity page header', () => {
+  const designer = createPageDesigner()
+  const before = designer.exportSchema()
+
+  expect(designer.execute({
+    type: 'move-node',
+    nodeId: 'page-header-1',
+    to: { owner: { kind: 'page-root' }, position: { kind: 'end' } },
+  })).toEqual({ status: 'rejected', code: 'POLICY_DENIED' })
+  expect(designer.execute({
+    type: 'duplicate-node',
+    nodeId: 'page-header-1',
+    to: { owner: { kind: 'page-root' }, position: { kind: 'after', nodeId: 'page-header-1' } },
+  })).toEqual({ status: 'rejected', code: 'POLICY_DENIED' })
+  expect(designer.exportSchema()).toEqual(before)
+  expect(designer.history.undoCount.value).toBe(0)
+
+  designer.dispose()
+})
+
+it('allows the activity page header to be recreated after removal', () => {
+  const designer = createPageDesigner()
+
+  expect(designer.execute({
+    type: 'create-node',
+    materialType: 'page-header',
+    to: { owner: { kind: 'page-root' }, position: { kind: 'start' } },
+  })).toEqual({ status: 'rejected', code: 'POLICY_DENIED' })
+  expect(designer.execute({ type: 'remove-node', nodeId: 'page-header-1' })).toEqual({ status: 'committed' })
+  expect(designer.execute({
+    type: 'create-node',
+    materialType: 'page-header',
+    to: { owner: { kind: 'page-root' }, position: { kind: 'start' } },
+  })).toEqual({ status: 'committed' })
+  expect(designer.exportSchema()?.nodes.some(node => node.type === 'page-header')).toBe(true)
+
+  designer.dispose()
+})
+
 it('records a changed write once and restores it through undo', () => {
   const designer = createPageDesigner()
   const result = updateNoticeText(designer, '修改后的公告')

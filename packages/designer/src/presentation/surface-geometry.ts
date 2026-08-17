@@ -111,7 +111,9 @@ function markViewportNodeHost(vnode: VNode): VNode {
     const nextChildren = children.map(child => typeof child === 'object' && child !== null && 'type' in child
       ? markViewportNodeHost(child as VNode)
       : child)
-    return cloneVNode(vnode, { children: nextChildren })
+    const cloned = cloneVNode(vnode)
+    cloned.children = nextChildren
+    return cloned
   }
   return vnode
 }

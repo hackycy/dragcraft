@@ -394,7 +394,7 @@
 }
 
 /* Presentation feedback and node interactions */
-[data-dc-component="application-surface"] {
+[data-dc-component="canvas-surface"] {
   background: var(--dc-color-surface);
 }
 

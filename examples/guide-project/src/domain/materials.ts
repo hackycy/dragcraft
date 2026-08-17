@@ -1,11 +1,25 @@
 import type { MaterialDefinition } from '@dragcraft/designer'
-import { DesignerViewportPortal } from '@dragcraft/designer'
-import { defineComponent, h } from 'vue'
+import { DesignerViewportPortal, useSurfaceReservation } from '@dragcraft/designer'
+import { defineComponent, h, ref } from 'vue'
 import { ColumnContainerWidget } from './widgets/container'
 import { FloatingActionWidget } from './widgets/floating-action'
 import { NoticeWidget } from './widgets/notice'
 import { GuidePageHeaderWidget } from './widgets/page-header'
 import { GuideTextWidget } from './widgets/text'
+
+const GuidePageHeaderFrame = defineComponent({
+  name: 'GuidePageHeaderFrame',
+  setup(_, { slots }) {
+    const element = ref<HTMLElement | null>(null)
+    useSurfaceReservation(element, { edge: 'block-start', fallbackSize: 48 })
+    return () => h(DesignerViewportPortal, null, {
+      default: () => h('div', {
+        ref: element,
+        class: 'guide-presentation-frame guide-presentation-frame--page-header',
+      }, slots.default?.()),
+    })
+  },
+})
 
 const GuideFloatingActionFrame = defineComponent({
   name: 'GuideFloatingActionFrame',
@@ -21,7 +35,13 @@ export const guideMaterials: readonly MaterialDefinition[] = [
     type: 'page-header',
     panel: { title: '活动页头', group: 'framework', groupTitle: '页面框架' },
     schema: { defaultProps: { title: '夏日活动页' } },
-    authoring: { policy: { create: 'denied' } },
+    authoring: {
+      policy: {
+        create: ({ schema }) => schema.nodes.some(node => node.type === 'page-header') ? 'denied' : 'allowed',
+        duplicate: 'denied',
+        move: 'denied',
+      },
+    },
     inspector: {
       formSchema: {
         sections: [{
@@ -30,7 +50,7 @@ export const guideMaterials: readonly MaterialDefinition[] = [
         }],
       },
     },
-    presentation: { kind: 'visual', preview: GuidePageHeaderWidget },
+    presentation: { kind: 'visual', preview: GuidePageHeaderWidget, frame: GuidePageHeaderFrame },
   },
   {
     type: 'guide-text',
