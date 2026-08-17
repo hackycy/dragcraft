@@ -20,3 +20,44 @@ description: "替换 Designer 面板、rail 和局部 Presentation，同时保�
 Device Frame 必须恰好渲染一次 default slot。slot 已经包含完整 Canvas Surface；外壳不读取 Schema，不创建第二个业务 scrollport，也不重建 node tree。
 
 `workspace` 管理宽屏 Dock 与窄屏抽屉。自定义面板使用 workspace controller 打开和关闭面板，不直接操作私有 DOM。
+
+## 先做局部扩展
+
+物料卡片内部内容通常不需要重建拖拽逻辑。下面的扩展只替换标题呈现，外层尺寸、搜索、disabled 状态和拖拽仍由 Designer 管理：
+
+```ts
+import type { DesignerExtensions } from '@dragcraft/designer'
+import { h } from 'vue'
+
+export const extensions: DesignerExtensions = {
+  materialItemRenderer: ({ material }) => h(
+    'span',
+    { class: 'brand-material-title' },
+    material.title,
+  ),
+}
+```
+
+把它传入 `createDesigner({ extensions })`。如果需要增加业务入口，可以使用 rail slot，并通过传入的 `workspace` controller 打开标准面板：
+
+```ts
+const extensions: DesignerExtensions = {
+  leftRailRenderer: ({ workspace, t }) => h(
+    'button',
+    {
+      type: 'button',
+      onClick: () => workspace.toggleLeft('structure'),
+      'aria-label': t('panel.left.structure', '结构树'),
+    },
+    '结构',
+  ),
+}
+```
+
+## 什么时候替换整块面板
+
+只有在产品需要完全不同的物料搜索、分组或属性编辑体验时，才使用 `materialPanelRenderer` 或 `propertyPanelRenderer`。替换后宿主必须自己连接当前选择、字段表单、空态、错误和 `designer.execute()`；如果只是改标题或追加入口，使用局部 renderer 或 rail slot。
+
+## 画布与外壳的边界
+
+`MaterialDefinition.presentation.frame` 只包装一个完整 NodeHost；`DesignerRegionOutlet` 只在业务容器内部投影 region children；Device Frame 只包装一次整个 Application Surface。三者都不能通过 DOM 查询或 slot 重新构建 Schema 节点树。

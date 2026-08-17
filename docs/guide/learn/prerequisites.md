@@ -4,9 +4,9 @@ description: "确认 DragCraft 的接入边界，并运行最小编辑器和完�
 
 # 了解接入边界
 
-DragCraft 提供页面编辑能力，不替你的应用定义业务物料、保存接口或生产运行时。接入完成后，你会拥有一个能够编辑 Schema 的 Vue 工作台，以及一份可以交给服务端和多端运行时消费的页面数据。
+DragCraft 提供页面编辑能力，不替你的应用定义业务物料、保存接口或生产运行时。接入完成后，你会拥有一个能够编辑 `DocumentSchema` 的 Vue 工作台，以及一份可以交给服务端和多端 Runtime 消费的页面数据。
 
-这套指南假设你已经会使用 Vue 3 和 TypeScript。你不需要了解 DragCraft 的内部 package，也不需要先阅读架构文档。
+这套指南假设你已经会使用 Vue 3、TypeScript 和你选择的 UI 组件库。你不需要了解 DragCraft 的内部 package；先完成 [5 分钟跑通](/guide/learn/quickstart) 就可以开始。
 
 ## 先看两个可运行结果
 
@@ -22,7 +22,7 @@ pnpm --filter guide-project dev
 - `http://localhost:9982/minimal.html`：只有一个文本物料，用于确认安装和挂载过程。
 - `http://localhost:9982/`：包含业务物料、属性配置、容器、设备预览、草稿保存和 Vue 只读运行时。
 
-在最小编辑器中拖入“文本”，选中节点，再修改右侧的“文本内容”。画布更新后，使用工具栏撤销这次修改。
+在最小编辑器中拖入“文本”，选中节点，再修改右侧的“文本内容”。画布更新后，使用工作台撤销这次修改。完整示例可以继续观察设备切换、容器 region、草稿修订和生产 Runtime 的差异。
 
 在完整编辑器中可以观察四种页面结构：
 
@@ -43,7 +43,7 @@ pnpm --filter guide-project dev
 | 字段 adapter 协议和表单状态 | UI 库、异步选项、权限和服务端校验 |
 
 > [!IMPORTANT]
-> `DcDesigner`、`DesignerRegionOutlet` 和编辑器的 Device Frame 都包含设计态语义。生产页面应读取 Schema，并使用自己的只读运行时渲染。
+> `DcDesigner`、`DesignerRegionOutlet` 和编辑器的 Device Frame 都包含设计态语义。生产页面应读取导出的 Schema，并使用自己的只读 Runtime 渲染。
 
 ## 选择阅读入口
 
@@ -51,4 +51,4 @@ pnpm --filter guide-project dev
 - 已经挂载编辑器，需要理解数据流时，阅读 [Schema 与样式作用域](/guide/fundamentals/schema)。
 - 正在评估业务扩展边界时，查看 [框架如何协作](/guide/fundamentals/architecture)。
 
-完整的内部设计依据保留在 [Architecture Map](https://github.com/hackycy/dragcraft/tree/main/.github/architecture)。公开应用只能直接导入 `@dragcraft/designer`、`@dragcraft/device-frames` 和匹配的 `@dragcraft/fields-*` 字段 adapter。
+完整的内部设计依据保留在 [Architecture Map](https://github.com/hackycy/dragcraft/tree/main/.github/architecture)。公开应用只能直接导入 `@dragcraft/designer`、`@dragcraft/device-frames` 和匹配的 `@dragcraft/fields-*` 字段 adapter；其他 workspace package 由 Designer 组合，不属于业务接入面。

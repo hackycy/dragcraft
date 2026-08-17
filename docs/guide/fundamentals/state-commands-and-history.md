@@ -2,7 +2,7 @@
 description: "通过只读文档状态、AuthoringAction 和 history 理解 DragCraft 的写入保证。"
 ---
 
-# 状态、动作与历史
+# 状态、动作、历史与事件
 
 Designer 将每次 Schema 修改作为原子 `AuthoringAction` 执行。只有实际改变 DocumentSchema 的 action 才会提交新快照并进入 history。
 
@@ -12,12 +12,26 @@ Designer 将每次 Schema 修改作为原子 `AuthoringAction` 执行。只有�
 
 | 入口 | 用途 |
 | --- | --- |
-| `designer.document` | 读取当前文档状态、Schema 与 diagnostics。 |
+| `designer.document` | 读取当前文档状态、Schema 与 diagnostics；`status: 'rejected'` 时没有可安装的 schema。 |
 | `designer.selection` | 读取当前 selected 和 hovered 节点。 |
 | `designer.history` | 读取 undo/redo 是否可用及其计数。 |
 | `useDesigner(instance).schema` | 在 Vue 组件中响应 DocumentSchema。 |
 
 需要保存或传输时调用 `designer.exportSchema()`。不要修改任何只读状态返回的对象。
+
+## 观察文档变化
+
+Designer 没有把 selection、hover 或 drag 暴露为公共业务事件。宿主只需要观察 `designer.document` 判断页面是否有未保存更改：
+
+```ts
+import { watch } from 'vue'
+
+const stop = watch(designer.document, () => {
+  status.value = '有未保存的更改'
+}, { flush: 'sync' })
+```
+
+保存按钮读取 `designer.exportSchema()`；不要从 selection 或画布 DOM 推断 Schema 是否改变。组件卸载时停止 watcher，并按 [创建可运行编辑器](/guide/learn/first-editor) 释放实例。
 
 ## 执行 Action
 

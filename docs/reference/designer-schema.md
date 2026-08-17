@@ -47,6 +47,22 @@ designer.execute({ type: 'redo' })
 
 成功写入返回 `committed`，数据没有变化返回 `unchanged`，策略或结构约束拒绝时返回 `rejected`。只有 `committed` 写入进入 history；导入成功会安装新文档并重置该文档的 history。
 
+| action | 必填数据 | 用途 |
+| --- | --- | --- |
+| `create-node` | `materialType`, `to` | 使用物料默认值创建节点或容器。 |
+| `insert-bundle` | `bundle`, `to` | 一次插入节点及其容器结构。 |
+| `move-node` | `nodeId`, `to` | 移动到 root 或 container region。 |
+| `duplicate-node` | `nodeId`, `to` | 复制节点及其一层 region 子节点。 |
+| `remove-node` | `nodeId` | 删除节点及其受管辖的结构。 |
+| `unwrap-container` | `containerId` | 移除容器并按规则释放子节点。 |
+| `update-node` | `nodeId`, `node` | 更新节点的完整 `type`、`props` 和可选 `style`。 |
+| `update-page` | `page` | 更新页面 `props` 和可选 `style`。 |
+| `update-global-config` | `globalConfig` | 替换页面级业务配置。 |
+| `batch` | `actions` | 把多条 Schema action 合并成一次原子历史提交。 |
+| `undo` / `redo` | 无 | 移动已提交的历史游标。 |
+
+`select-node` 和 `hover-node` 也可以通过 `execute()` 调用，但它们只改变设计态交互状态，不进入 DocumentSchema 的保存数据。
+
 ## Headless 与容器
 
 Headless Material 仍保留节点配置和 inspector，但不会渲染业务 UI。Container Material 在 `schema.container.regions` 声明区域，区域子节点通过 `structure.containers` 归属。Designer Presentation 负责设计态的 Region outlet、选择平面和拖放反馈；生产 Runtime 可以使用同一 `DocumentSchema` 实现自己的布局。

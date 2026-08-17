@@ -112,7 +112,12 @@ export const guideMaterials: readonly MaterialDefinition[] = [
               },
             },
             { key: 'hasImage', label: '使用背景图', component: 'Switch' },
-            { key: 'image', label: '背景图', component: 'Asset' },
+            {
+              key: 'image',
+              label: '背景图',
+              component: 'Asset',
+              ifShow: ctx => ctx.values.hasImage === true,
+            },
             { key: 'featured', label: '标记为精选', component: 'Switch' },
           ],
         }],

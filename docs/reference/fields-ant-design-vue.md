@@ -19,4 +19,12 @@ const fieldComponentMap = createAntDesignVueFields()
 | `AntDesignVueFieldComponentType` | 获取受支持的稳定字段键。 |
 | `AntDesignVueFieldComponentPropsMap` | 为字段 `componentProps` 提供类型提示。 |
 
+## 支持的字段键
+
+`createAntDesignVueFields()` 返回以下稳定键，字段 Schema 通过 `component` 引用：
+
+`AutoComplete`、`Cascader`、`Checkbox`、`CheckboxGroup`、`DatePicker`、`Input`、`InputNumber`、`Mentions`、`Radio`、`RadioGroup`、`RangePicker`、`Rate`、`Select`、`Slider`、`Switch`、`Textarea`、`TimePicker`、`TreeSelect`。
+
+文本值控件使用 `value` / `onUpdate:value`，复选类控件使用 `checked` / `onUpdate:checked`。应用仍需导入 `ant-design-vue/dist/reset.css` 或自己的 UI 基础样式。
+
 业务特化字段仍由宿主合并到同一份 `fieldComponentMap`。

@@ -18,6 +18,18 @@ import { DesignerRegionOutlet, useContainerRuntime } from '@dragcraft/designer'
 | `useContainerRuntime()` | 读取当前容器 variant、region 和节点。 |
 | `DcScrollArea` | 为自定义面板提供与工作台一致的滚动区域。 |
 
+`DesignerRegionOutlet` 的最小调用是：
+
+```vue
+<DesignerRegionOutlet
+  region-id="content"
+  :resolve-drop-index="resolveVerticalDropIndex"
+  aria-label="内容"
+/>
+```
+
+`resolveDropIndex` 接收 `event`、region 元素、当前直接子元素和只读节点列表，并返回 `0..nodes.length` 的整数；返回 `null` 表示当前拖放没有目标。容器组件负责计算几何，Designer 负责把结果转换成结构 action。一个 region 只能有一个 primary outlet，重复 outlet 会显示诊断恢复态。
+
 ## Device Frame
 
 ```ts

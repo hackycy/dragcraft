@@ -19,7 +19,7 @@ export default defineConfig({
   themeConfig: {
     siteTitle: 'dragcraft',
     nav: [
-      { text: '指南', link: '/guide/learn/prerequisites' },
+      { text: '指南', link: '/guide/' },
       { text: '参考', link: '/reference/overview' },
       {
         text: 'Playground',
@@ -33,6 +33,8 @@ export default defineConfig({
         {
           text: '开始使用',
           items: [
+            { text: '开发指南总览', link: '/guide/' },
+            { text: '5 分钟跑通', link: '/guide/learn/quickstart' },
             { text: '了解接入边界', link: '/guide/learn/prerequisites' },
             { text: '创建可运行编辑器', link: '/guide/learn/first-editor' },
             { text: '理解 Schema 与写入链路', link: '/guide/learn/schema-and-write-path' },
@@ -89,6 +91,8 @@ export default defineConfig({
         {
           text: '开始使用',
           items: [
+            { text: '开发指南总览', link: '/guide/' },
+            { text: '5 分钟跑通', link: '/guide/learn/quickstart' },
             { text: '了解接入边界', link: '/guide/learn/prerequisites' },
             { text: '创建可运行编辑器', link: '/guide/learn/first-editor' },
           ],

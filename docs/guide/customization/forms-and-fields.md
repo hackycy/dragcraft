@@ -20,21 +20,21 @@ FormSchema 描述字段，Field adapter 描述真实 UI 控件如何接收和提
 | --- | --- | --- |
 | 当前节点 props | widget 字段默认值 | `UPDATE_PROPS` |
 | 当前节点 style | `{ scope: 'node', path: 'style.container.*' }` | `UPDATE_PROPS` |
-| 页面 surface | `{ scope: 'page', path: 'style.surface.*' }` | 语义化页面 action |
+| 页面 surface | `{ scope: 'schema', path: 'root.style.surface.*' }` | `update-page` |
 | 页面业务配置 | 全局字段默认值 | `SET_GLOBAL_CONFIG` |
 
 默认绑定适合物料自身 props。页面视觉和跨节点数据应显式写出 `bindTo`，让保存位置一眼可见。
 
 ## 控制字段显示和禁用
 
-`visible` 会移除字段，`show` 只隐藏 CSS 并保留 DOM 状态，`disabled` 保留当前值但拒绝编辑。字段联动读取 `FormContext.values`：
+`ifShow`（旧别名为 `visible`）会移除字段，`show` 只隐藏 CSS 并保留 DOM 状态，`disabled` 保留当前值但拒绝编辑。字段联动读取 `FormContext.values`：
 
 ```ts
 {
   key: 'image',
   label: '背景图',
   component: 'Asset',
-  visible: ctx => ctx.values.hasImage === true,
+  ifShow: ctx => ctx.values.hasImage === true,
   disabled: ctx => ctx.values.locked === true,
 }
 ```

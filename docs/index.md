@@ -9,16 +9,16 @@ hero:
   actions:
     - theme: brand
       text: 开始接入
-      link: /guide/learn/prerequisites
+      link: /guide/
     - theme: alt
       text: API 参考
       link: /reference/overview
 
 features:
   - title: 快速开始
-    details: 了解接入边界，创建第一个可运行的页面编辑器。
-    link: /guide/learn/prerequisites
-    linkText: 阅读指南
+    details: 先运行示例，再把最小编辑器接入自己的 Vue 应用。
+    link: /guide/learn/quickstart
+    linkText: 5 分钟跑通
   - title: 核心模型
     details: 理解 DocumentSchema、AuthoringAction、history 与 Designer 各自的职责。
     link: /guide/fundamentals/architecture

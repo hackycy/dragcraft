@@ -45,9 +45,9 @@ DragCraft 的公开入口是一个可视化工作台，但页面数据始终由�
 1. 调用 `createDesigner({ schema, materials, ... })`。
 2. `MaterialDefinition[]` 同时提供 Schema、authoring、inspector 和 Presentation。
 3. 初始 Schema 由同一解析管线校验。
-5. 将实例传给 `DcDesigner`。
+4. 将实例传给 `DcDesigner`。
 
-如果初始 Schema 使用未注册的 type，文档会进入 `degraded` 并保留可恢复的未知节点。
+如果初始 Schema 使用未注册的 type，文档会进入 `degraded` 并保留可恢复的未知节点。`createDesigner()` 的配置错误（例如重复 `type` 或 visual 物料缺少 preview）会直接抛出 `DesignerConfigurationError`；它和可恢复的 Schema 诊断是两类问题。
 
 ## 选择扩展位置
 
