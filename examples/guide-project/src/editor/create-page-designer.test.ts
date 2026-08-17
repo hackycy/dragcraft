@@ -71,7 +71,7 @@ it('does not move or duplicate the activity page header', () => {
   designer.dispose()
 })
 
-it('allows the activity page header to be recreated after removal', () => {
+it('keeps the activity page header while allowing its properties to be updated', () => {
   const designer = createPageDesigner()
 
   expect(designer.execute({
@@ -79,13 +79,17 @@ it('allows the activity page header to be recreated after removal', () => {
     materialType: 'page-header',
     to: { owner: { kind: 'page-root' }, position: { kind: 'start' } },
   })).toEqual({ status: 'rejected', code: 'POLICY_DENIED' })
-  expect(designer.execute({ type: 'remove-node', nodeId: 'page-header-1' })).toEqual({ status: 'committed' })
+  expect(designer.execute({ type: 'remove-node', nodeId: 'page-header-1' })).toEqual({
+    status: 'rejected',
+    code: 'POLICY_DENIED',
+  })
   expect(designer.execute({
-    type: 'create-node',
-    materialType: 'page-header',
-    to: { owner: { kind: 'page-root' }, position: { kind: 'start' } },
+    type: 'update-node',
+    nodeId: 'page-header-1',
+    node: { type: 'page-header', props: { title: '秋日活动页' } },
   })).toEqual({ status: 'committed' })
-  expect(designer.exportSchema()?.nodes.some(node => node.type === 'page-header')).toBe(true)
+  expect((designer.exportSchema() as DocumentSchema).nodes.find(node => node.id === 'page-header-1')?.props.title)
+    .toBe('秋日活动页')
 
   designer.dispose()
 })

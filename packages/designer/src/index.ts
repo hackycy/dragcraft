@@ -28,6 +28,7 @@ export { createDesigner, DOCUMENT_SCHEMA_VERSION } from './factory'
 
 // ── Material protocol helpers ────────────
 export {
+  isMaterialPanelVisible,
   materialItemMatchesQuery,
   resolveMaterialItem,
 } from './material'
@@ -40,6 +41,8 @@ export type {
   MaterialAuthoringDefinition,
   MaterialDefinition,
   MaterialPanelDefinition,
+  MaterialPanelVisibility,
+  MaterialPanelVisibilityContext,
   MaterialSchemaDeclaration,
   PresentationFrame,
 } from './materials/types'

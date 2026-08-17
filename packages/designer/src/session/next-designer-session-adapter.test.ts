@@ -78,7 +78,7 @@ describe('next adapter backend contract', () => {
     const catalog = createMaterialCatalog([
       {
         type: 'navbar',
-        authoring: { policy: { duplicate: 'denied', move: 'denied' } },
+        authoring: { policy: { duplicate: 'denied', move: 'denied', remove: 'denied' } },
         presentation: {
           kind: 'visual',
           preview: {},
@@ -143,6 +143,7 @@ describe('next adapter backend contract', () => {
     })
     expect(session.document.getStructurePosition('text-1')).toMatchObject({ owner: { kind: 'root' }, index: 1, siblingCount: 4 })
     expect(session.materials.canCreateSubtree(session.document.getNode('navbar-1')!)).toBe(false)
+    expect(session.materials.canDeleteSubtree(session.document.getNode('navbar-1')!)).toBe(false)
     expect(session.evaluate({ type: 'node.duplicate', nodeId: 'navbar-1' })).toEqual({
       allowed: false,
       code: 'POLICY_DENIED',

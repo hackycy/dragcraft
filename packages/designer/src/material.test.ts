@@ -1,6 +1,6 @@
 import type { MaterialDefinition } from './materials/types'
 import { describe, expect, it } from 'vitest'
-import { materialItemMatchesQuery, resolveMaterialItem } from './material'
+import { isMaterialPanelVisible, materialItemMatchesQuery, resolveMaterialItem } from './material'
 
 const t = (key: string, fallback = '') => `${fallback} (${key})`
 
@@ -55,5 +55,24 @@ describe('material protocol helpers', () => {
     expect(materialItemMatchesQuery(materialDefinition, material, 'survey')).toBe(true)
     expect(materialItemMatchesQuery(materialDefinition, material, 'feedback')).toBe(true)
     expect(materialItemMatchesQuery(materialDefinition, material, 'missing')).toBe(false)
+  })
+
+  it('resolves static and schema-aware material panel visibility', () => {
+    const schema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {} },
+      nodes: [{ id: 'banner-1', type: 'banner', props: {} }],
+      structure: { root: ['banner-1'], containers: {} },
+    }
+
+    expect(isMaterialPanelVisible(makeMaterial({ panel: { visible: false } }), schema)).toBe(false)
+    expect(isMaterialPanelVisible(makeMaterial({ panel: { visible: true } }), schema)).toBe(true)
+    expect(isMaterialPanelVisible(makeMaterial({
+      panel: {
+        visible: ({ materialType, schema: currentSchema }) =>
+          currentSchema?.nodes.some(node => node.type === materialType) ?? false,
+      },
+    }), schema)).toBe(true)
   })
 })

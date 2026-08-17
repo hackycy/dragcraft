@@ -4,7 +4,7 @@ import { IconClose, IconSearch } from '@dragcraft/icons'
 import { DcScrollArea } from '@dragcraft/ui'
 import { computed, defineComponent, h } from 'vue'
 import { useDesignerContext } from '../context'
-import { materialItemMatchesQuery, resolveMaterialItem } from '../material'
+import { isMaterialPanelVisible, materialItemMatchesQuery, resolveMaterialItem } from '../material'
 import { useDesignerSession } from '../session/context'
 import DcMaterialGroup from './DcMaterialGroup'
 
@@ -21,6 +21,7 @@ export default defineComponent({
     const filteredGroups = computed(() => {
       const allWidgets = session.materials.getAll() as readonly MaterialDefinition[]
       const query = searchQuery.value.toLowerCase().trim()
+      const schema = session.document.schema.value
 
       const groups = materialGroups.length > 0
         ? materialGroups
@@ -28,6 +29,8 @@ export default defineComponent({
 
       const widgetsByGroup = new Map<string, MaterialDefinition[]>()
       for (const materialDefinition of allWidgets) {
+        if (!isMaterialPanelVisible(materialDefinition, schema))
+          continue
         const material = resolveMaterialItem(materialDefinition, t)
         if (!materialItemMatchesQuery(materialDefinition, material, query)) {
           continue

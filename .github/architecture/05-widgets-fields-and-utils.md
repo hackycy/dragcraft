@@ -21,10 +21,12 @@ const noticeMaterial = defineMaterial({
 | `schema` | 默认 props、样式和容器声明。 |
 | `authoring` | 创建 bundle 与 create/move/remove/update 等策略。 |
 | `inspector` | 设计器属性面板的 FormSchema。 |
-| `panel` | 物料栏的标题、分组、搜索和辅助展示。 |
+| `panel` | 物料栏的标题、分组、搜索、可见性和辅助展示。 |
 | `presentation` | visual preview 或显式 headless 行为。 |
 
 同一 type 只能出现一次。visual 物料必须提供 preview；headless 物料不得伪造空 preview。重复或不完整声明在 Designer 初始化时失败。
+
+`panel.visible` 可以是布尔值，也可以接收当前 Schema 和物料 type 的函数。它只控制标准物料栏，不影响 Schema 节点、结构树、选择或属性面板；固定由模板提供的物料可以因此保留在 `materials` 中，同时从物料栏隐藏。
 
 ## 容器物料
 

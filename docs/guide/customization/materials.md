@@ -25,10 +25,12 @@ const noticeMaterial = defineMaterial({
 | `schema` | 默认 props、默认样式和容器 region 声明。 |
 | `authoring` | NodeBundle 创建方式以及 create、move、remove、update 策略。 |
 | `inspector` | 属性面板的 FormSchema。 |
-| `panel` | 物料栏标题、分组、标签和搜索词。 |
+| `panel` | 物料栏标题、分组、标签、搜索词和可见性。 |
 | `presentation` | visual preview 或显式 headless 行为。 |
 
 同一 materials 数组中的 type 不得重复。visual 物料必须有 preview；headless 物料不提供 preview，但仍能拥有 inspector 和默认 props。
+
+模板固定提供的物料可以通过 `panel.visible: false` 从标准物料栏隐藏；也可以传入接收 `{ schema, materialType }` 的函数，按当前文档动态决定是否显示。隐藏只影响物料栏，节点仍可在结构树中选择并通过 inspector 编辑。
 
 ## Headless 物料
 

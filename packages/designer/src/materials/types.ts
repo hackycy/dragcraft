@@ -23,6 +23,15 @@ export type DesignerPresentation
     readonly kind: 'headless'
   }
 
+export interface MaterialPanelVisibilityContext {
+  readonly materialType: NodeType
+  readonly schema: DeepReadonly<DocumentSchema> | null
+}
+
+export type MaterialPanelVisibility
+  = boolean
+    | ((context: MaterialPanelVisibilityContext) => boolean)
+
 export interface MaterialSchemaDeclaration<Props extends JsonObject = JsonObject> {
   readonly container?: ContainerDeclaration
   readonly defaultProps?: Props
@@ -43,6 +52,8 @@ export interface MaterialPanelDefinition {
   readonly thumbnail?: string
   readonly title?: string
   readonly titleKey?: string
+  /** Whether this material is listed in the standard material panel. */
+  readonly visible?: MaterialPanelVisibility
 }
 
 export interface InspectorDefinition<_Props extends JsonObject = JsonObject> {

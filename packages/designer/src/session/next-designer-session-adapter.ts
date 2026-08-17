@@ -426,7 +426,12 @@ export function createNextDesignerSessionAdapter(
         options.engine,
         options.catalog,
       ).allowed,
-      canDeleteSubtree: node => resolveCapability(document.value, options.catalog, node, 'deletable'),
+      canDeleteSubtree: node => resolveCapability(document.value, options.catalog, node, 'deletable')
+        && actionDecision(
+          { type: 'node.remove', nodeId: node.id },
+          options.engine,
+          options.catalog,
+        ).allowed,
     },
     state: {
       selectedNodeId: options.engine.selection.selectedNodeId,

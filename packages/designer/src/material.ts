@@ -1,4 +1,5 @@
-import type { MaterialDefinition } from './materials/types'
+import type { DeepReadonly, DocumentSchema } from '@dragcraft/core'
+import type { MaterialDefinition, MaterialPanelVisibilityContext } from './materials/types'
 import type { ResolvedMaterialItem } from './types'
 
 type Translate = (key: string, fallback?: string) => string
@@ -51,4 +52,19 @@ export function materialItemMatchesQuery(
   return values.some(value =>
     typeof value === 'string' && value.toLowerCase().includes(normalizedQuery),
   )
+}
+
+export function isMaterialPanelVisible(
+  material: Readonly<MaterialDefinition>,
+  schema: DeepReadonly<DocumentSchema> | null,
+): boolean {
+  const visible = material.panel?.visible
+  if (typeof visible === 'function') {
+    const context: MaterialPanelVisibilityContext = {
+      materialType: material.type,
+      schema,
+    }
+    return visible(context)
+  }
+  return visible ?? true
 }
