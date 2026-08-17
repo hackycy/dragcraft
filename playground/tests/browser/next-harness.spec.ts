@@ -217,6 +217,34 @@ test('renders inspector fields for image, navigation, and form materials', async
   }
 })
 
+test('makes newly added image materials follow the node width', async ({ page }) => {
+  await page.goto('/')
+
+  const imageNodes = page.locator('[data-dc-component="node"][data-node-type="image"]')
+  const countBefore = await imageNodes.count()
+  await page.locator('[data-dc-component="material-item"][title="图片"]').dragTo(
+    page.locator('[data-dc-interaction-boundary]'),
+  )
+  await expect(imageNodes).toHaveCount(countBefore + 1)
+
+  const addedImage = imageNodes.last()
+  const geometry = await addedImage.evaluate((node) => {
+    const surface = node.querySelector<HTMLElement>('[data-dc-node-surface]')
+    if (!surface)
+      throw new Error('Expected image material surface')
+    const nodeWidth = node.getBoundingClientRect().width
+    const surfaceWidth = surface.getBoundingClientRect().width
+    return {
+      nodeWidth,
+      surfaceWidth,
+      inlineWidth: surface.style.width,
+    }
+  })
+
+  expect(geometry.inlineWidth).toBe('100%')
+  expect(Math.abs(geometry.surfaceWidth - geometry.nodeWidth)).toBeLessThan(0.5)
+})
+
 test('switches templates using final Next fixtures', async ({ page }) => {
   await page.goto('/')
 

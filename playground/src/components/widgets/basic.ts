@@ -196,7 +196,7 @@ export const imageWidgetMeta: MaterialEditorMetadata = {
   },
   defaultStyle: {
     content: {
-      width: '200px',
+      width: '100%',
       height: '150px',
     },
   },

@@ -163,7 +163,7 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     panel: { title: '图片', group: 'basic', icon: '图' },
     schema: {
       defaultProps: { src: '', alt: '', objectFit: 'contain' },
-      defaultStyle: { content: { width: '200px', height: '150px' } },
+      defaultStyle: { content: { width: '100%', height: '150px' } },
     },
     inspector: { formSchema: imageWidgetMeta.formSchema },
     presentation: { kind: 'visual', preview: ImageWidget },
