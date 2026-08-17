@@ -256,6 +256,7 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     authoring: {
       policy: {
         create: ({ schema }) => schema.nodes.some(node => node.type === 'tab-bar') ? 'denied' : 'allowed',
+        duplicate: 'denied',
         move: 'denied',
       },
     },

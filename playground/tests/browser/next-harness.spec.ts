@@ -172,11 +172,14 @@ test('prevents navigation and floating-action materials from reordering', async 
   await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('draggable', 'true')
 })
 
-test('disables Navbar duplication through its material authoring policy', async ({ page }) => {
+test('disables Navbar and Tab bar duplication through their material authoring policies', async ({ page }) => {
   await page.goto('/')
 
   const toolbar = page.locator('[data-dc-component="node-toolbar"]')
   await page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]').click()
+  await expect(toolbar.getByTitle('复制')).toBeDisabled()
+
+  await page.locator('[data-dc-component="node"][data-node-id="tabbar-main"]').click()
   await expect(toolbar.getByTitle('复制')).toBeDisabled()
 
   await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()

@@ -18,6 +18,7 @@ describe('navbar material', () => {
     expect(navbar.authoring?.policy?.duplicate).toBe('denied')
     expect(navbar.presentation).toMatchObject({ kind: 'visual', frame: expect.anything() })
     expect(navbar.inspector?.formSchema?.sections[0].fields.map(field => field.key)).toEqual(['title'])
+    expect(tabBar.authoring?.policy?.duplicate).toBe('denied')
     expect(tabBar.inspector?.formSchema?.sections.at(-1)?.title).toBe('内容样式')
   })
 
