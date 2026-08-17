@@ -2,13 +2,13 @@ import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition }
 import type { ComputedRef, Ref } from 'vue'
 import type { MaterialDefinition } from '../materials/types'
 import type {
+  ContainerDropDecision,
   CreationBlockReason,
   DeepReadonly,
   DragTarget,
   HistoryState,
   NodeDestination,
   NodeOwner,
-  PlacementDecision,
   SchemaDiagnostic,
 } from '../presentation/semantic'
 import type { AuthoringAction, AuthoringDecision, AuthoringResult } from '../presentation/types'
@@ -32,7 +32,7 @@ export type DesignerSessionDropRejectionReason = CreationBlockReason & {
 
 export interface DesignerSessionDragState {
   readonly activeDestination: Ref<NodeDestination | null>
-  readonly containerDropDecision: Ref<PlacementDecision | null>
+  readonly containerDropDecision: Ref<ContainerDropDecision | null>
   readonly isForbidden: Ref<boolean>
   readonly forbiddenReason: Ref<DesignerSessionDropRejectionReason | null>
 }
@@ -80,8 +80,8 @@ export interface DesignerSessionState {
 }
 
 /**
- * The internal read seam shared by the existing Designer UI and Presentation layer.
- * It deliberately exposes document and material facts, never legacy runtime
+ * The internal read seam shared by the existing Designer UI and Presentation module.
+ * It deliberately exposes document and material facts, never obsolete runtime
  * collaborators such as a backend store or registry.
  */
 export interface DesignerSession {

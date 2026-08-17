@@ -110,11 +110,11 @@ function isIntentionalInternalIdentifier(file, match, line) {
   const relativePath = relativePathFor(file)
   if (match === 'flow' && /\bgrid-auto-flow\s*:/.test(line))
     return true
+  if (match === 'flow' && /\bdisplay:\s*flow-root\b/.test(line))
+    return true
   if (match === 'ContainerRegionOutlet' && relativePath.startsWith('packages/designer/src/presentation/'))
     return true
   if (match === 'placement' && line.includes('not.toHaveAttribute(\'data-dc-layout-placement\''))
-    return true
-  if (match === 'layer' && line.includes('data-dc-canvas-interaction-layer'))
     return true
   return relativePath === 'packages/designer/src/public-interface.test.ts'
     && /\.not\.toHaveProperty/.test(line)

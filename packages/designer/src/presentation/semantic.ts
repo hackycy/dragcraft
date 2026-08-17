@@ -31,7 +31,7 @@ export interface CreationBlockReason {
   readonly message?: string
 }
 
-export interface PlacementDecision extends CreationBlockReason {
+export interface ContainerDropDecision extends CreationBlockReason {
   readonly allowed: boolean
   readonly details?: Record<string, unknown>
 }

@@ -6,7 +6,7 @@ import type { DesignerDocumentState, DesignerHistory, DesignerSelection, Authori
 import type { MaterialDefinition } from './materials/types'
 import type { NodeActionDefinition, NodeActionRegistry } from './presentation/action-registry'
 import type { ActionInterceptor } from './presentation/action-runtime'
-import type { CreationBlockReason, NodeDestination, PlacementDecision } from './presentation/semantic'
+import type { ContainerDropDecision, CreationBlockReason, NodeDestination } from './presentation/semantic'
 import type { AuthoringResult, ContainerDropRejection, ContainerDropTarget } from './presentation/types'
 
 export type DesignerWorkspaceMode = 'wide' | 'compact'
@@ -176,7 +176,7 @@ export interface DesignerContext {
   actionRegistry: NodeActionRegistry
   workspace: DesignerWorkspaceController
   activeDestination: Ref<NodeDestination | null>
-  containerDropDecision: Ref<PlacementDecision | null>
+  containerDropDecision: Ref<ContainerDropDecision | null>
   dragOverNodeId: Ref<string | null>
   dragOverIndex: Ref<number | null>
   handleMaterialDragStart: (e: DragEvent, material: Readonly<MaterialDefinition>) => void

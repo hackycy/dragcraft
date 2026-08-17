@@ -10,7 +10,7 @@ import { defineComponent, h } from 'vue'
  * Supports both 'button' and 'drag-handle' action types.
  *
  * Positioning is owned by NodeHost's measurable floating wrapper. The
- * resolved placement controls whether actions use a vertical or horizontal row.
+ * resolved anchor controls whether actions use a vertical or horizontal row.
  */
 export default defineComponent({
   name: 'DcDefaultNodeToolbar',
@@ -105,7 +105,7 @@ export default defineComponent({
           useFixed ? 'floating' : null,
           pos?.orientation ?? 'vertical',
         ].filter(Boolean).join(' '),
-        'data-placement': pos?.placement,
+        'data-anchor': pos?.anchor,
         'data-orientation': pos?.orientation,
       }, actionVNodes)
     }

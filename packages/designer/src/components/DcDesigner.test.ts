@@ -72,7 +72,7 @@ describe('dcDesigner', () => {
     try {
       app.mount(host)
       await nextTick()
-      expect(host.querySelector('[data-dc-canvas-interaction-layer]')).not.toBeNull()
+      expect(host.querySelector('[data-dc-canvas-interaction-plane]')).not.toBeNull()
       expect(host.querySelector('[data-dc-canvas-stage]')).not.toBeNull()
       expect(host.querySelector('[data-dc-workspace-control="undo"]')).not.toBeNull()
       expect(host.querySelector('[data-dc-component="material-panel"] [data-dc-part="search-input"]')).not.toBeNull()

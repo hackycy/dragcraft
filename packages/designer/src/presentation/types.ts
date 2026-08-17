@@ -6,7 +6,7 @@ import type { NodeActionRegistry, ResolvedNodeAction } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
 import type { NodeToolbarOrientation } from './node-interaction'
 import type { NodeSelectionPlane, NodeSelectionProjection } from './selection-presentation'
-import type { CreationBlockReason, DragTarget, NodeDestination, NodeOwner, NodeStyle, PlacementDecision } from './semantic'
+import type { ContainerDropDecision, CreationBlockReason, DragTarget, NodeDestination, NodeOwner, NodeStyle } from './semantic'
 import type { SurfaceReservationManager } from './surface-geometry'
 
 export interface PresentationNode {
@@ -144,11 +144,11 @@ export interface ToolbarPositionData {
   x: number
   /** CSS y coordinate in pixels (viewport-relative). */
   y: number
-  /** Resolved placement after collision handling. */
-  placement: 'left-start' | 'top-end' | 'bottom-end'
+  /** Resolved toolbar anchor after collision handling. */
+  anchor: 'left-start' | 'top-end' | 'bottom-end'
   /** Action layout direction for the resolved owner presentation. */
   orientation: NodeToolbarOrientation
-  /** Positioning strategy used by the interaction layer. */
+  /** Positioning strategy used by the Interaction Plane. */
   strategy: 'fixed'
   /** Whether the toolbar should be visible (widget is at least partially in viewport) */
   visible: boolean
@@ -260,7 +260,7 @@ export type ContainerShellSource = ContainerShell | Readonly<Ref<ContainerShell>
 
 export interface ContainerDropApplicationSurfaceOptions {
   activeDestination?: Ref<NodeDestination | null>
-  containerDropDecision?: Ref<PlacementDecision | null>
+  containerDropDecision?: Ref<ContainerDropDecision | null>
   onContainerDragOver?: (target: ContainerDropTarget | ContainerDropRejection) => void
   onContainerDragLeave?: (event: DragEvent) => void
   onContainerDrop?: (event: DragEvent) => void
@@ -333,7 +333,7 @@ export interface PresentationContext extends ContainerDropApplicationSurfaceOpti
   hoveredNodeId: Ref<string | null>
   dragOverNodeId: Ref<string | null>
   activeDestination: Ref<NodeDestination | null>
-  containerDropDecision: Ref<PlacementDecision | null>
+  containerDropDecision: Ref<ContainerDropDecision | null>
   /** Optional canvas viewport used as the collision boundary for floating controls. */
   interactionBoundary?: Ref<HTMLElement | null>
   /** Canvas stage scale shared by geometry that renders inside the scaled stage. */

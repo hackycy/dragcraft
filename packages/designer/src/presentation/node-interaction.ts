@@ -2,13 +2,13 @@ import type { NodeSelectionProjectionKind } from './selection-presentation'
 import type { NodeOwner } from './semantic'
 
 export type NodeInteractionGeometryMode = 'root-band' | 'node-box'
-export type NodeToolbarPlacement = 'left-start' | 'top-end'
+export type NodeToolbarAnchor = 'left-start' | 'top-end'
 export type NodeToolbarOrientation = 'vertical' | 'horizontal'
 
 export interface NodeInteractionPresentation {
   geometryMode: NodeInteractionGeometryMode
   selectionKind: NodeSelectionProjectionKind
-  toolbarPlacement: NodeToolbarPlacement
+  toolbarAnchor: NodeToolbarAnchor
   toolbarOrientation: NodeToolbarOrientation
 }
 
@@ -19,13 +19,13 @@ export function resolveNodeInteractionPresentation(
     ? {
         geometryMode: 'node-box',
         selectionKind: 'material-bounds',
-        toolbarPlacement: 'top-end',
+        toolbarAnchor: 'top-end',
         toolbarOrientation: 'horizontal',
       }
     : {
         geometryMode: 'root-band',
         selectionKind: 'root-segment',
-        toolbarPlacement: 'left-start',
+        toolbarAnchor: 'left-start',
         toolbarOrientation: 'vertical',
       }
 }

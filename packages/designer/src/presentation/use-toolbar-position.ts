@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import type { NodeToolbarOrientation, NodeToolbarPlacement } from './node-interaction'
+import type { NodeToolbarAnchor, NodeToolbarOrientation } from './node-interaction'
 import type { ToolbarPositionData } from './types'
 import type { NodeInteractionGeometry } from './use-node-interaction-geometry'
 import { autoUpdate } from '@floating-ui/dom'
@@ -14,7 +14,7 @@ export interface UseToolbarPositionOptions {
   padding?: number
   interactionGeometry?: Ref<NodeInteractionGeometry>
   interactionGeometryUpdate?: () => void
-  placement?: NodeToolbarPlacement
+  anchor?: NodeToolbarAnchor
   orientation?: NodeToolbarOrientation
 }
 
@@ -38,13 +38,13 @@ export function useToolbarPosition(
     padding = 8,
     interactionGeometry,
     interactionGeometryUpdate,
-    placement = 'left-start',
+    anchor = 'left-start',
     orientation = 'vertical',
   } = options
   const position = ref<ToolbarPositionData>({
     x: 0,
     y: 0,
-    placement,
+    anchor,
     orientation,
     strategy: 'fixed',
     visible: false,
@@ -88,7 +88,7 @@ export function useToolbarPosition(
     if (
       current.x === next.x
       && current.y === next.y
-      && current.placement === next.placement
+      && current.anchor === next.anchor
       && current.orientation === next.orientation
       && current.strategy === next.strategy
       && current.visible === next.visible
@@ -133,7 +133,7 @@ export function useToolbarPosition(
 
     floating.style.maxHeight = `${availableHeight}px`
 
-    if (placement === 'top-end') {
+    if (anchor === 'top-end') {
       floating.style.maxWidth = `${availableWidth}px`
       const minX = clipRect.left + padding
       const maxX = Math.max(minX, clipRect.right - padding - floatingRect.width)
@@ -147,7 +147,7 @@ export function useToolbarPosition(
       applyPosition({
         x: Math.min(Math.max(referenceRect.right - floatingRect.width, minX), maxX),
         y: Math.min(Math.max(requestedY, minY), maxY),
-        placement: resolvedPlacement,
+        anchor: resolvedPlacement,
         orientation,
         strategy: 'fixed',
         visible: true,
@@ -162,7 +162,7 @@ export function useToolbarPosition(
     applyPosition({
       x: ownerRect.left - gap - floatingRect.width,
       y: Math.min(Math.max(referenceRect.top, minY), maxY),
-      placement: 'left-start',
+      anchor: 'left-start',
       orientation,
       strategy: 'fixed',
       visible: true,

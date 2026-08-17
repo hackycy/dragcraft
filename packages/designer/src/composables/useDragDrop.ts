@@ -1,7 +1,7 @@
 import type { JsonObject, NodeDefinition } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
 import type { MaterialDefinition } from '../materials/types'
-import type { DragTarget, NodeDestination, PlacementDecision } from '../presentation/semantic'
+import type { ContainerDropDecision, DragTarget, NodeDestination } from '../presentation/semantic'
 import type { ContainerDropRejection, ContainerDropTarget } from '../presentation/types'
 import type { AuthoringResult, DesignerSession, DesignerSessionDropRejectionReason } from '../session/types'
 import { generateShortId } from '@dragcraft/utils'
@@ -21,8 +21,8 @@ export interface UseDragDropReturn {
   dragOverDestination: Ref<NodeDestination | null>
   /** Active destination shared with Presentation. */
   activeDestination: Ref<NodeDestination | null>
-  /** Advisory placement decision for the active container destination. */
-  containerDropDecision: Ref<PlacementDecision | null>
+  /** Advisory policy decision for the active container destination. */
+  containerDropDecision: Ref<ContainerDropDecision | null>
   /** Root or container receiving drag feedback. */
   dragOverNodeId: Ref<string | null>
   /** Visual insertion index for root feedback. */
@@ -403,7 +403,7 @@ export function useDragDrop(
 
   function preflightContainerDestination(
     destination: Extract<NodeDestination, { kind: 'container' }>,
-  ): PlacementDecision {
+  ): ContainerDropDecision {
     const dragTarget = session.state.dragTarget.value
     if (!dragTarget)
       return { allowed: false, code: 'DROP_SOURCE_MISSING' }

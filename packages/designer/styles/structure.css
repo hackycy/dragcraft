@@ -48,7 +48,7 @@
 .dc-canvas__viewport,
 .dc-canvas__stage,
 .dc-canvas__content,
-.dc-canvas__interaction-layer {
+.dc-canvas__interaction-plane {
   box-sizing: border-box;
 }
 
@@ -700,14 +700,14 @@
   margin-inline: auto;
 }
 
-.dc-canvas__interaction-layer {
+.dc-canvas__interaction-plane {
   position: absolute;
   inset: 0;
   z-index: 90;
   pointer-events: none;
 }
 
-.dc-canvas__interaction-layer > * {
+.dc-canvas__interaction-plane > * {
   pointer-events: auto;
 }
 

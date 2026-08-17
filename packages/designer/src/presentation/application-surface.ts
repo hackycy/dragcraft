@@ -2,7 +2,7 @@ import type { Component, PropType, Ref, VNode } from 'vue'
 import type { DesignerSession } from '../session/types'
 import type { NodeActionRegistry } from './action-registry'
 import type { ActionInterceptor } from './action-runtime'
-import type { NodeDestination, PlacementDecision } from './semantic'
+import type { ContainerDropDecision, NodeDestination } from './semantic'
 import type { ContainerDropRejection, ContainerDropTarget } from './types'
 import { useI18n } from '@dragcraft/i18n'
 import { computed, defineComponent, h, provide, ref } from 'vue'
@@ -70,7 +70,7 @@ export default defineComponent({
       default: undefined,
     },
     containerDropDecision: {
-      type: Object as PropType<Ref<PlacementDecision | null>>,
+      type: Object as PropType<Ref<ContainerDropDecision | null>>,
       default: undefined,
     },
     onContainerDragOver: {

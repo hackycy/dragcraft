@@ -169,9 +169,9 @@ export default defineComponent({
           ]),
         ]),
         h('div', {
-          'class': 'dc-canvas__interaction-layer',
-          'data-dc-part': 'interaction-layer',
-          'data-dc-canvas-interaction-layer': '',
+          'class': 'dc-canvas__interaction-plane',
+          'data-dc-part': 'interaction-plane',
+          'data-dc-canvas-interaction-plane': '',
         }),
       ])
     }

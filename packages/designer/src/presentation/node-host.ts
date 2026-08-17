@@ -29,7 +29,7 @@ import { useToolbarPosition } from './use-toolbar-position'
 const NODE_SURFACE_SELECTOR = '[data-dc-node-surface]'
 const TOOLBAR_BOUNDARY_SELECTOR = '[data-dc-toolbar-boundary]'
 const OVERLAY_BOUNDARY_SELECTOR = '[data-dc-overlay-boundary]'
-const CANVAS_INTERACTION_LAYER_SELECTOR = '[data-dc-canvas-interaction-layer]'
+const CANVAS_INTERACTION_PLANE_SELECTOR = '[data-dc-canvas-interaction-plane]'
 
 function createNodeMaterialPreviewContext(
   getNode: () => { id: string, type: string },
@@ -72,14 +72,14 @@ const ContainerRuntimeProvider = defineComponent({
   },
 })
 
-function resolveInteractionLayerTarget(host: HTMLElement | null): HTMLElement | string {
+function resolveInteractionPlaneTarget(host: HTMLElement | null): HTMLElement | string {
   if (typeof document === 'undefined')
     return 'body'
-  return host?.closest('.dc-canvas')?.querySelector<HTMLElement>(CANVAS_INTERACTION_LAYER_SELECTOR) ?? 'body'
+  return host?.closest('.dc-canvas')?.querySelector<HTMLElement>(CANVAS_INTERACTION_PLANE_SELECTOR) ?? 'body'
 }
 
 /**
- * NodeHost is a thin Presentation orchestration layer.
+ * NodeHost is a thin Presentation orchestration module.
  *
  * Delegates all logic to composables (useMaterialNode, useNodeActions, useNodeDrag)
  * and renders via configurable extension components (nodeMask, nodeHandle,
@@ -184,7 +184,7 @@ export default defineComponent({
       interactionGeometryUpdate: updateInteractionGeometry,
       selfTargetSelector: NODE_SURFACE_SELECTOR,
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
-      placement: interactionPresentation.toolbarPlacement,
+      anchor: interactionPresentation.toolbarAnchor,
       orientation: interactionPresentation.toolbarOrientation,
     })
     const {
@@ -199,7 +199,7 @@ export default defineComponent({
       interactionGeometry: handleGeometry,
       interactionGeometryUpdate: updateHandleGeometry,
       boundarySelector: TOOLBAR_BOUNDARY_SELECTOR,
-      placement: 'left-start',
+      anchor: 'left-start',
       orientation: 'vertical',
     })
 
@@ -224,7 +224,7 @@ export default defineComponent({
       void ctx.schema.value
 
       const node = props.node
-      const interactionLayerTarget = resolveInteractionLayerTarget(nodeElRef.value)
+      const interactionPlaneTarget = resolveInteractionPlaneTarget(nodeElRef.value)
       const isContainerOwned = props.owner.kind === 'container'
       const ownerKind = isContainerOwned ? 'container' : 'root'
       const resolvedContainer = isResolvedContainer.value
@@ -333,7 +333,7 @@ export default defineComponent({
         })
         if (resolvedContainer) {
           const position = handlePosition.value
-          wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [
+          wrapperChildren.push(h(Teleport, { to: interactionPlaneTarget }, [
             h('div', {
               'ref': handleAnchorElRef,
               'class': [
@@ -358,7 +358,7 @@ export default defineComponent({
       }
 
       // TOOLBAR (when selected): action-driven floating toolbar.
-      // Teleported to the designer interaction layer when present, falling
+      // Teleported to the Designer Interaction Plane when present, falling
       // back to <body> for standalone Presentation usage.
       // Note: the toolbar must remain visible during drag — hiding it (display:none
       // or removing from DOM) breaks the HTML5 DnD lifecycle because the browser
@@ -374,11 +374,11 @@ export default defineComponent({
           onDragStart: drag.handleDragStart,
           onDragEnd: drag.handleDragEnd,
         })
-        wrapperChildren.push(h(Teleport, { to: interactionLayerTarget }, [
+        wrapperChildren.push(h(Teleport, { to: interactionPlaneTarget }, [
           h('div', {
             'ref': toolbarElRef,
             'class': 'dc-node__toolbar-anchor',
-            'data-placement': toolbarPosition.value.placement,
+            'data-anchor': toolbarPosition.value.anchor,
             'data-orientation': toolbarPosition.value.orientation,
             'style': {
               position: toolbarPosition.value.strategy,
@@ -393,7 +393,7 @@ export default defineComponent({
       }
 
       // Build the core wrapper vnode. Container styles control the node's box
-      // in its assigned placement; content styles are passed to the widget.
+      // in its assigned surface; content styles are passed to the widget.
       const themeStates = [
         widget.useMask.value ? 'masked' : 'unmasked',
         !widget.selectable.value ? 'non-selectable' : null,
