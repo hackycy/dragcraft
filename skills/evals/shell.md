@@ -4,7 +4,7 @@ workflows:
   - shell
 task: 接入受控设备预览、品牌 token、消息覆盖和物料卡片扩展，同时保留完整画布交互。
 evidence:
-  - extensions、主题契约和 Device Frame 公开类型
+  - extensions 局部 renderer、主题契约和 Device Frame 公开类型
   - shell resources 与宿主示例
   - DefaultContainerShell 的默认几何和 Designer Presentation-owned 内部变量约束
 boundary:

@@ -2,6 +2,7 @@
   "workflow": "integration",
   "docs": [
     { "repositoryPath": "docs/guide/learn/prerequisites.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/prerequisites" },
+    { "repositoryPath": "docs/guide/learn/quickstart.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/quickstart" },
     { "repositoryPath": "docs/guide/learn/first-editor.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/first-editor" },
     { "repositoryPath": "docs/guide/learn/completion.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/completion" },
     { "repositoryPath": "docs/guide/fundamentals/architecture.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/architecture" },

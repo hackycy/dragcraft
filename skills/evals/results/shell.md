@@ -3,13 +3,13 @@ id: shell
 workflows:
   - shell
 status: passed
-inputDigest: sha256:7e0c64d7821400213b82b2efdc97d8fad95fa5183cc2f00afe3c217cefb59f7b
+inputDigest: sha256:b395542cb872da0c3d6210cee09e8633cca2a5bb0228c032eb90249840e17b8e
 executedAt: "2026-08-11T06:57:27Z"
 runner:
   agent: Codex
   model: GPT-5
 evidence:
-  - Designer extensions、ContainerShellSource 与 Device Frame 的公开声明
+  - Designer extensions 局部 renderer、ContainerShellSource 与 Device Frame 的公开声明
   - 受控 DevicePicker、品牌 token、消息和物料卡片示例
   - 默认 Container Shell 几何、Canvas Surface 边界和 Device Frame 样式入口
 verification:

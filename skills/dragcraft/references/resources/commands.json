@@ -2,6 +2,7 @@
   "workflow": "commands",
   "docs": [
     { "repositoryPath": "docs/guide/fundamentals/state-commands-and-history.md", "url": "https://hackycy.github.io/dragcraft/guide/fundamentals/state-commands-and-history" },
+    { "repositoryPath": "docs/guide/learn/schema-and-write-path.md", "url": "https://hackycy.github.io/dragcraft/guide/learn/schema-and-write-path" },
     { "repositoryPath": "docs/guide/customization/actions-and-policies.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/actions-and-policies" },
     { "repositoryPath": "docs/reference/designer-schema.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-schema" },
     { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" }

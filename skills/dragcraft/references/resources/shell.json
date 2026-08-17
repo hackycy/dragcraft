@@ -4,6 +4,7 @@
     { "repositoryPath": "docs/guide/customization/panels-and-canvas.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/panels-and-canvas" },
     { "repositoryPath": "docs/guide/customization/theme-device-and-i18n.md", "url": "https://hackycy.github.io/dragcraft/guide/customization/theme-device-and-i18n" },
     { "repositoryPath": "docs/reference/designer-rendering.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-rendering" },
+    { "repositoryPath": "docs/reference/designer.md", "url": "https://hackycy.github.io/dragcraft/reference/designer" },
     { "repositoryPath": "docs/reference/designer-styles.md", "url": "https://hackycy.github.io/dragcraft/reference/designer-styles" },
     { "repositoryPath": "docs/reference/device-frames.md", "url": "https://hackycy.github.io/dragcraft/reference/device-frames" }
   ],
