@@ -13,7 +13,7 @@ boundary:
   - 默认外壳的内部几何不是宿主或自定义 Shell 的扩展协议
 verification:
   - 切换设备后 Designer、Schema 和 history 未重建
-  - flow、regions、chrome、layers、选择和禁止提示仍可用
+  - Document/Viewport mount planes、Region outlet、selection、toolbar 和 drop feedback 仍可用
   - 未传 `containerShell` 时默认外壳为 375px 宽、667px 默认高、最小 480px，Designer 高度随画布变化且内容在 Canvas Surface 内滚动
   - 宿主构建通过且没有内部 package 导入
 ---
