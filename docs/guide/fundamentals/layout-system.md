@@ -129,6 +129,13 @@ const BottomTabFrame = createEdgeFrame(
 
 `fallbackSize` 不是最终布局值：元素挂载后由 `ResizeObserver` 测量，顶部和底部各注册多个 reservation 时会分别相加。不要在内容组件里手动再加一份同样的 padding，否则会出现双重避让。
 
+如果边缘物料的高度是固定且已知的，目标 `Ref` 可以始终保持 `null`。此时 reservation 会持续使用 `fallbackSize`，不会创建 `ResizeObserver`；第一个参数仍需传入该 `Ref`，用于保持与动态测量场景一致的生命周期管理。
+
+```ts
+const element = ref<HTMLElement | null>(null)
+useSurfaceReservation(element, { edge: 'block-start', fallbackSize: 44 })
+```
+
 物料定义只描述语义和 frame：
 
 ```ts
