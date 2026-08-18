@@ -4,7 +4,20 @@ description: "@dragcraft/device-frames 的无状态 Device Frame Definitions、C
 
 # @dragcraft/device-frames
 
-Device Frame Definition 是引用稳定的只读目录项。宿主持有 Active Device Frame，并将整个 definition 传给 `DcDesigner`。
+`@dragcraft/device-frames` 是可选的公开包；`@dragcraft/designer` 不会自动安装或导出它。需要设备外壳、内置设备目录或 `DevicePicker` 时先安装：
+
+```bash
+pnpm add @dragcraft/device-frames
+```
+
+应用入口还必须显式加载设备外壳样式。如果同时使用 Designer Standard 主题，先加载 Designer，再加载设备包：
+
+```ts
+import '@dragcraft/designer/standard.css'
+import '@dragcraft/device-frames/styles.css'
+```
+
+Device Frame Definition 是引用稳定的只读目录项。宿主保存当前选中的 definition，并将整个 definition 传给 `DcDesigner`。
 
 ```ts
 import { createDesigner, DcDesigner } from '@dragcraft/designer'
@@ -12,7 +25,6 @@ import {
   BUILT_IN_DEVICE_FRAMES,
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
-import '@dragcraft/device-frames/styles.css'
 import { computed, ref } from 'vue'
 
 const activeId = ref(IPHONE_DEVICE_FRAME.id)
@@ -97,5 +109,3 @@ const widePreview: DeviceFrameDefinition = Object.freeze({
 slot 已包含完整 Canvas Surface 业务预览、滚动、边缘避让和 empty state。外壳不能读取 Schema、重建业务节点或处理 Designer 的交互层。设备系统 UI 可以放在 slot 前后，并可通过 `--dc-safe-area-*` 变量向 Canvas Surface 声明安全区。
 
 设备 Frame 只用于设计态预览，不负责业务页面运行时。继续阅读 [主题、设备与国际化](/guide/customization/theme-device-and-i18n)。
-
-设备外壳的公开外观 CSS 不会随 JavaScript 入口自动加载；应用入口还必须导入 `@dragcraft/device-frames/styles.css`。如果同时使用 Designer Standard 主题，先导入 `@dragcraft/designer/standard.css`，再导入设备外壳样式。
