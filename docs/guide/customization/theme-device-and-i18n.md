@@ -12,18 +12,6 @@ description: "在 Vue 应用中接入 DragCraft 的主题、设备预览和工�
 
 主题只影响工作台，Device Frame 只包裹设计态 Canvas，消息包只影响编辑器 UI。业务页面内容和生产 Runtime 仍由宿主应用负责。
 
-## 前置条件
-
-先确认应用已经安装并使用 `@dragcraft/designer`、字段 adapter、Vue 和对应 UI 库。最小安装命令见 [5 分钟跑通](/guide/learn/quickstart#安装公开依赖)。
-
-设备预览不是 Designer 的内置依赖。需要设备外壳或 `DevicePicker` 时，额外安装公开包：
-
-```bash
-pnpm add @dragcraft/device-frames
-```
-
-`@dragcraft/device-frames` 依赖 Vue 的 peer dependency；已经按最小接入安装 Vue 的应用不需要再安装其他设备包。业务应用只直接导入 [公开接入边界](/guide/#公开接入边界) 中列出的包。
-
 ## 先加载样式
 
 在应用入口按以下顺序加载样式：
