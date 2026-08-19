@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/i18n",
   "type": "module",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Reactive internationalization context for @dragcraft UI packages",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
