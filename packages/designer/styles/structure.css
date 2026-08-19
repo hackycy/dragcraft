@@ -340,6 +340,7 @@
   position: absolute;
   left: 9px;
   z-index: 1;
+  line-height: 0;
   pointer-events: none;
 }
 
