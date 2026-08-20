@@ -66,6 +66,6 @@ const formSchema = {
 }
 ```
 
-`style.container` 会作用于 Designer 的物料外层容器，`style.content` 会作用于物料内容；数值长度（包括负的 `marginTop`）会在展示时规范化为 CSS 长度。业务 preview 不直接修改 DOM 或 Schema；可持久化修改始终通过受控 Authoring Action。
+`style.container` 会作用于 Designer 的物料外层容器，`style.content` 会作用于物料内容；数值长度（包括负的 `marginTop`）会在展示时规范化为 CSS 长度。在普通文档流中，`style.content.margin` 会成为 NodeHost 的内部布局 footprint，Designer 的 mask 和命中区域会覆盖这部分留白；`style.container.margin` 是 NodeHost 外部间距，不计入 NodeHost 几何。绝对定位等脱离文档流的 Preview 由对应的 Frame 或 Portal 处理：Frame 提供定位上下文，NodeHost 对齐 Preview 的实际矩形；`style.container.margin` 不会写入 viewport NodeHost anchor，viewport 内的定位和间距应由 Frame 或 Preview 根元素负责。root-owned 节点的选中态会在 root plane 绘制横向贯穿的视觉段，但不会扩大 NodeHost、mask 或点击区域；container-owned 节点的选中框严格跟随 NodeHost。业务 preview 不直接修改 DOM 或 Schema；可持久化修改始终通过受控 Authoring Action。
 
 字段配置见 [表单与字段](/guide/customization/forms-and-fields)，容器见 [容器与 region](/guide/customization/layout-and-containers)。

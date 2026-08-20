@@ -64,8 +64,8 @@
     "--dc-scroll-area-thumb-active-color": { "kind": "component", "default": "rgba(9, 9, 11, 0.56)", "description": "Dragged scroll-area thumb color." }
   },
   "integrationProperties": {
-    "--dc-node-selection-root-block-overlap": { "description": "Root block-edge thickness painted outside material bounds without affecting layout." },
-    "--dc-node-selection-root-inline-overlap": { "description": "Root inline-edge width painted in the root-plane edge strips outside material bounds." },
+    "--dc-node-selection-root-block-overlap": { "description": "Root block-edge thickness painted outside NodeHost bounds without affecting layout." },
+    "--dc-node-selection-root-inline-overlap": { "description": "Root inline-edge width painted in the root-plane edge strips outside NodeHost bounds." },
     "--dc-safe-area-block-start": { "description": "Container Shell-provided safe area at the Canvas Surface block start." },
     "--dc-safe-area-block-end": { "description": "Container Shell-provided safe area at the Canvas Surface block end." },
     "--dc-safe-area-inline-start": { "description": "Container Shell-provided safe area at the Canvas Surface inline start." },

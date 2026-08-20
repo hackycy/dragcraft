@@ -15,10 +15,10 @@ import DefaultNodeToolbar from './default-node-toolbar'
 import { useNodeGeometryRegistry } from './geometry-registry'
 import { resolveContainerRegions } from './material-presentation'
 import { MATERIAL_PREVIEW_CONTEXT_KEY } from './material-preview-context'
-import { NODE_MOUNT_PLANE_KEY } from './mount-plane'
 import { resolveNodeInteractionPresentation } from './node-interaction'
 import { NODE_SELECTION_PLANE_KEY } from './selection-presentation'
 import { normalizeStyleValueMap } from './semantic'
+import { VIEWPORT_NODE_MOUNT_KEY } from './surface-geometry'
 import { useMaterialNode } from './use-material-node'
 import { useNodeActions } from './use-node-actions'
 import { useNodeDrag } from './use-node-drag'
@@ -78,6 +78,14 @@ function resolveInteractionPlaneTarget(host: HTMLElement | null): HTMLElement | 
   return host?.closest('.dc-canvas')?.querySelector<HTMLElement>(CANVAS_INTERACTION_PLANE_SELECTOR) ?? 'body'
 }
 
+function omitViewportAnchorMargins(style: StyleValueMap | undefined): StyleValueMap | undefined {
+  if (!style || !Object.keys(style).some(key => key.toLowerCase().startsWith('margin')))
+    return style
+  return Object.fromEntries(
+    Object.entries(style).filter(([key]) => !key.toLowerCase().startsWith('margin')),
+  )
+}
+
 /**
  * NodeHost is a thin Presentation orchestration module.
  *
@@ -101,6 +109,11 @@ export default defineComponent({
       type: String as PropType<NodeSelectionPlane>,
       default: undefined,
     },
+    // Set only by DesignerViewportPortal on the framed root NodeHost.
+    viewportMount: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   setup(props) {
@@ -122,8 +135,9 @@ export default defineComponent({
     const drag = useNodeDrag(() => props.node, ctx)
     const interactionPresentation = resolveNodeInteractionPresentation(props.owner)
     const inheritedSelectionPlane = inject(NODE_SELECTION_PLANE_KEY, ref<NodeSelectionPlane>('content'))
-    const mountPlane = inject(NODE_MOUNT_PLANE_KEY, 'document')
-    const subtreeSelectionPlane = computed(() => props.selectionPlane ?? (mountPlane === 'viewport' ? 'viewport' : inheritedSelectionPlane.value))
+    const mountPlane = computed(() => props.viewportMount ? 'viewport' : 'document')
+    const viewportNodeMount = inject(VIEWPORT_NODE_MOUNT_KEY, null)
+    const subtreeSelectionPlane = computed(() => props.selectionPlane ?? (mountPlane.value === 'viewport' ? 'viewport' : inheritedSelectionPlane.value))
     const projectionPlane = computed<NodeSelectionPlane>(() =>
       props.owner.kind === 'root' ? 'root' : subtreeSelectionPlane.value,
     )
@@ -154,6 +168,7 @@ export default defineComponent({
 
     // Element ref for toolbar fixed positioning (escapes overflow clipping)
     const nodeElRef = ref<HTMLElement | null>(null)
+    const previewElRef = ref<HTMLElement | null>(null)
     const toolbarElRef = ref<HTMLElement | null>(null)
     const handleAnchorElRef = ref<HTMLElement | null>(null)
     const isExternalHandleActive = computed(() =>
@@ -175,7 +190,6 @@ export default defineComponent({
     } = useNodeSelectionProjection(nodeElRef, widget.state.isSelected, {
       kind: interactionPresentation.selectionKind,
       plane: projectionPlane,
-      selfTargetSelector: NODE_SURFACE_SELECTOR,
       viewScale: ctx.viewScale,
     })
     const { position: toolbarPosition } = useToolbarPosition(nodeElRef, toolbarElRef, widget.state.isSelected, {
@@ -203,6 +217,13 @@ export default defineComponent({
       orientation: 'vertical',
     })
 
+    let unregisterViewportNodeMount: (() => void) | null = null
+    onMounted(() => {
+      if (mountPlane.value === 'viewport' && viewportNodeMount)
+        unregisterViewportNodeMount = viewportNodeMount.register(nodeElRef, previewElRef, ctx.viewScale)
+    })
+    onBeforeUnmount(() => unregisterViewportNodeMount?.())
+
     function isDirectNodeHit(event: MouseEvent): boolean {
       const target = event.target
       return target instanceof Element
@@ -219,6 +240,14 @@ export default defineComponent({
         widget.handleMouseEnter()
     }
 
+    function assignPreviewElement(element: unknown): void {
+      previewElRef.value = element instanceof HTMLElement
+        ? element
+        : element && typeof element === 'object' && '$el' in element && (element as { $el?: unknown }).$el instanceof HTMLElement
+          ? (element as { $el: HTMLElement }).$el
+          : null
+    }
+
     return () => {
       // Read the session snapshot to establish the node revision dependency.
       void ctx.schema.value
@@ -233,7 +262,17 @@ export default defineComponent({
       const widgetProps = { ...node.props }
       const nodeStyle = node.style as Record<string, unknown> | undefined
       const wrapperStyle = normalizeStyleValueMap(nodeStyle?.container as Record<string, unknown> | undefined)
+      const viewportAnchorStyle = mountPlane.value === 'viewport'
+        ? omitViewportAnchorMargins(wrapperStyle)
+        : wrapperStyle
       let contentStyle = normalizeStyleValueMap(nodeStyle?.content as Record<string, unknown> | undefined)
+      const viewportSurfaceListeners = mountPlane.value === 'viewport' && widget.selectable.value
+        ? {
+            onClick: widget.handleSelect,
+            onMouseover: widget.handleMouseEnter,
+            onMouseleave: widget.handleMouseLeave,
+          }
+        : {}
 
       // When a blocking mask is active, disable pointer events on widget content
       // so clicks always reach the mask overlay regardless of widget z-index
@@ -249,8 +288,11 @@ export default defineComponent({
       else if (widget.resolvedComponent.value) {
         const material = h(widget.resolvedComponent.value, {
           ...widgetProps,
+          ...viewportSurfaceListeners,
+          'ref': mountPlane.value === 'viewport' ? assignPreviewElement : undefined,
           'style': contentStyle,
           'data-dc-node-surface': '',
+          'data-dc-node-surface-for': mountPlane.value === 'viewport' ? node.id : undefined,
         })
         innerContent = resolvedContainer
           ? h(ContainerRuntimeProvider, { runtime: containerRuntime }, { default: () => material })
@@ -266,9 +308,14 @@ export default defineComponent({
         innerContent = h(DefaultMaterialFallback, {
           'nodeId': node.id,
           'nodeType': node.type,
+          'ref': mountPlane.value === 'viewport' ? assignPreviewElement : undefined,
           'data-dc-node-surface': '',
+          'data-dc-node-surface-for': mountPlane.value === 'viewport' ? node.id : undefined,
         })
       }
+
+      if (mountPlane.value === 'viewport' && viewportNodeMount?.surfaceTarget.value)
+        innerContent = h(Teleport, { to: viewportNodeMount.surfaceTarget.value }, [innerContent])
 
       // Assemble children
       const wrapperChildren: VNode[] = [innerContent]
@@ -416,7 +463,9 @@ export default defineComponent({
           'data-dc-component': 'node',
           'data-dc-state': themeStates,
           'data-dc-node-owner': ownerKind,
-          'style': wrapperStyle,
+          'style': mountPlane.value === 'viewport'
+            ? { ...viewportAnchorStyle, position: 'absolute', pointerEvents: 'none' }
+            : wrapperStyle,
           'data-node-id': node.id,
           'data-node-type': node.type,
           'onMouseover': resolvedContainer ? undefined : handleMouseOver,

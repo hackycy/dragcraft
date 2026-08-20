@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 interface BrowserBackend {
   readonly emptySchema: string
+  readonly marginSelectionSchema: string
   readonly name: string
   readonly roundTripSchema: string
   readonly tabBarMaterial: string
@@ -32,6 +33,42 @@ const backend: BrowserBackend = {
     }],
     structure: { root: ['roundtrip-title'], containers: {} },
   }),
+  marginSelectionSchema: JSON.stringify({
+    version: '1',
+    globalConfig: {},
+    page: { props: {} },
+    nodes: [
+      {
+        id: 'root-margin-text',
+        type: 'text',
+        props: { content: 'Root margin selection', fontSize: 16, fontWeight: 'normal', color: '#333333', textAlign: 'left' },
+        style: {
+          container: { marginTop: 17, marginBottom: 19 },
+          content: { display: 'block', marginTop: 11, marginBottom: 13 },
+        },
+      },
+      {
+        id: 'margin-region',
+        type: 'flex-container',
+        props: { direction: 'column', wrap: false, gap: 0, align: 'stretch' },
+      },
+      {
+        id: 'region-margin-text',
+        type: 'text',
+        props: { content: 'Region margin selection', fontSize: 16, fontWeight: 'normal', color: '#333333', textAlign: 'left' },
+        style: {
+          container: { marginTop: 17, marginBottom: 19 },
+          content: { display: 'block', marginTop: 11, marginBottom: 13 },
+        },
+      },
+    ],
+    structure: {
+      root: ['root-margin-text', 'margin-region'],
+      containers: {
+        'margin-region': { regions: { default: ['region-margin-text'] } },
+      },
+    },
+  }),
 }
 
 test.describe(backend.name, () => {
@@ -46,7 +83,7 @@ test.describe(backend.name, () => {
     await expect(page.locator('[data-dc-component="node-toolbar"]')).toHaveAttribute('data-dc-state', /vertical/)
   })
 
-  test('keeps the root selection plane outside the Device Frame boundary', async ({ page }) => {
+  test('renders root selection as a full-plane segment around the actual NodeHost', async ({ page }) => {
     await page.goto(backend.url)
 
     await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()
@@ -63,24 +100,30 @@ test.describe(backend.name, () => {
     expect(rootPlaneBox.x).toBeLessThan(boundaryBox.x)
     expect(rootPlaneBox.width).toBeGreaterThan(boundaryBox.width)
 
-    const edgeThickness = await rootPlane.locator('.dc-node__selection-edge').evaluateAll((edges) => {
-      return edges.reduce<Record<string, number>>((thickness, edge) => {
-        const rect = edge.getBoundingClientRect()
-        const direction = edge.classList.contains('dc-node__selection-edge--block-start')
-          ? 'blockStart'
-          : edge.classList.contains('dc-node__selection-edge--inline-end')
-            ? 'inlineEnd'
-            : edge.classList.contains('dc-node__selection-edge--block-end')
-              ? 'blockEnd'
-              : 'inlineStart'
-        thickness[direction] = direction.startsWith('block') ? rect.height : rect.width
-        return thickness
-      }, {})
-    })
+    const node = page.locator('[data-dc-component="node"][data-node-id="shop-title"]')
+    const selection = rootPlane.locator('[data-node-id="shop-title"]')
+    const [nodeBounds, selectionBounds] = await Promise.all([
+      node.boundingBox(),
+      selection.boundingBox(),
+    ])
+    if (!nodeBounds || !selectionBounds)
+      throw new Error('Expected root NodeHost and actual-size selection bounds')
 
-    expect(edgeThickness.blockStart).toBe(edgeThickness.inlineEnd)
-    expect(edgeThickness.blockEnd).toBe(edgeThickness.inlineEnd)
-    expect(edgeThickness.inlineStart).toBe(edgeThickness.inlineEnd)
+    await expect(selection.locator('[data-dc-component="node-selection"]')).toHaveAttribute('data-dc-state', 'root-segment')
+    await expect(selection.locator('.dc-node__selection-edge')).toHaveCount(4)
+    expect(Math.abs(selectionBounds.x - rootPlaneBox.x)).toBeLessThan(1)
+    expect(Math.abs(selectionBounds.y - nodeBounds.y)).toBeLessThan(1)
+    expect(Math.abs(selectionBounds.width - rootPlaneBox.width)).toBeLessThan(1)
+    expect(Math.abs(selectionBounds.height - nodeBounds.height)).toBeLessThan(1)
+
+    const [startEdge, endEdge] = await Promise.all([
+      selection.locator('[data-dc-part="block-start-edge"]').boundingBox(),
+      selection.locator('[data-dc-part="block-end-edge"]').boundingBox(),
+    ])
+    if (!startEdge || !endEdge)
+      throw new Error('Expected root selection block edges')
+    expect(startEdge.y + startEdge.height).toBeCloseTo(selectionBounds.y, 1)
+    expect(endEdge.y).toBeCloseTo(selectionBounds.y + selectionBounds.height, 1)
   })
 
   test('selects a container owner from its external handle and a Region child from its bounds', async ({ page }) => {
@@ -94,6 +137,95 @@ test.describe(backend.name, () => {
     await page.locator('[data-dc-component="node"][data-node-id="article-title"]').click()
     await expect(page.locator('[data-dc-selection-plane] [data-node-id="article-title"]')).toBeVisible()
     await expect(page.locator('[data-dc-component="node-toolbar"]')).toHaveAttribute('data-dc-state', /horizontal/)
+  })
+
+  test('projects normal-flow Preview margins through NodeHost selection geometry', async ({ page }) => {
+    await page.goto(backend.url)
+    await page.getByRole('button', { name: 'Import', exact: true }).click()
+    await page.getByPlaceholder('在此粘贴 JSON Schema...').fill(backend.marginSelectionSchema)
+    await page.getByRole('button', { name: 'Import', exact: true }).last().click()
+
+    async function measureNode(nodeId: string) {
+      const node = page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`)
+      await expect(node).toBeVisible()
+      return node.evaluate((host) => {
+        const surface = host.querySelector<HTMLElement>('[data-dc-node-surface]')
+        if (!surface)
+          throw new Error(`Expected ${host.dataset.nodeId} Preview surface`)
+
+        const hostBounds = host.getBoundingClientRect()
+        const surfaceBounds = surface.getBoundingClientRect()
+        const hostStyle = getComputedStyle(host)
+        const surfaceStyle = getComputedStyle(surface)
+        const scale = surfaceBounds.height / surface.offsetHeight
+        return {
+          hostBounds: {
+            top: hostBounds.top,
+            left: hostBounds.left,
+            width: hostBounds.width,
+            height: hostBounds.height,
+          },
+          surfaceBounds: {
+            top: surfaceBounds.top,
+            left: surfaceBounds.left,
+            width: surfaceBounds.width,
+            height: surfaceBounds.height,
+          },
+          contentMarginHeight: (Number.parseFloat(surfaceStyle.marginTop) + Number.parseFloat(surfaceStyle.marginBottom)) * scale,
+          hostMargins: {
+            top: Number.parseFloat(hostStyle.marginTop),
+            bottom: Number.parseFloat(hostStyle.marginBottom),
+          },
+        }
+      })
+    }
+
+    async function assertNodeSelection(nodeId: string, plane: 'root' | 'content') {
+      const node = page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`)
+      const metrics = await measureNode(nodeId)
+      const topMarginGap = metrics.surfaceBounds.top - metrics.hostBounds.top
+
+      expect(metrics.hostMargins).toEqual({ top: 17, bottom: 19 })
+      expect(metrics.hostBounds.height - metrics.surfaceBounds.height).toBeCloseTo(metrics.contentMarginHeight, 1)
+      expect(topMarginGap).toBeGreaterThan(0)
+
+      await page.mouse.click(
+        metrics.hostBounds.left + Math.min(metrics.hostBounds.width / 2, 12),
+        metrics.hostBounds.top + topMarginGap / 2,
+      )
+
+      const selection = page.locator(`[data-dc-selection-plane="${plane}"] [data-node-id="${nodeId}"]`)
+      await expect(selection).toBeVisible()
+      await expect(selection.locator('[data-dc-component="node-selection"]')).toHaveAttribute(
+        'data-dc-state',
+        plane === 'root' ? 'root-segment' : 'material-bounds',
+      )
+      const selectionBounds = await selection.evaluate((element) => {
+        const bounds = element.getBoundingClientRect()
+        return { top: bounds.top, left: bounds.left, width: bounds.width, height: bounds.height }
+      })
+
+      expect(selectionBounds.top).toBeCloseTo(metrics.hostBounds.top, 1)
+      expect(selectionBounds.height).toBeCloseTo(metrics.hostBounds.height, 1)
+      if (plane === 'root') {
+        const rootPlaneBounds = await page.locator('.dc-node-selection-plane--root').boundingBox()
+        if (!rootPlaneBounds)
+          throw new Error('Expected root selection plane bounds')
+        await expect(selection.locator('.dc-node__selection-edge')).toHaveCount(4)
+        expect(selectionBounds.left).toBeCloseTo(rootPlaneBounds.x, 1)
+        expect(selectionBounds.width).toBeCloseTo(rootPlaneBounds.width, 1)
+      }
+      else {
+        await expect(selection.locator('.dc-node__selection-edge')).toHaveCount(0)
+        expect(selectionBounds.left).toBeCloseTo(metrics.hostBounds.left, 1)
+        expect(selectionBounds.width).toBeCloseTo(metrics.hostBounds.width, 1)
+      }
+
+      await expect(node).toHaveAttribute('data-dc-state', /selected/)
+    }
+
+    await assertNodeSelection('root-margin-text', 'root')
+    await assertNodeSelection('region-margin-text', 'content')
   })
 
   test('creates the first material in an empty root canvas', async ({ page }) => {

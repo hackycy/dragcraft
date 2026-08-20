@@ -368,14 +368,16 @@
   pointer-events: none;
 }
 
-.dc-canvas-surface__viewport-plane > .pg-presentation-frame--floating-action {
-  pointer-events: none !important;
+.pg-presentation-frame--viewport-container {
+  position: absolute;
+  inset-block-start: 80px;
+  inset-inline: 24px;
+  z-index: 3;
+  pointer-events: auto;
 }
 
-.pg-presentation-frame--floating-action > [data-dc-component="node"] {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+.dc-canvas-surface__viewport-plane > .pg-presentation-frame--floating-action {
+  pointer-events: none !important;
 }
 
 .pg-presentation-frame--floating-action .pg-widget-floating-button {

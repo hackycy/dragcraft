@@ -16,9 +16,9 @@ disable-model-invocation: true
 | --- | --- |
 | 安装、quickstart、创建实例、注册顺序、Vue 挂载或释放 | [integration](references/integration.md) |
 | Schema action、节点 action、结果、history、事件或撤销 | [commands](references/commands.md) |
-| 普通物料、Schema 托管物料、动作、Presentation 或 Authoring Policy | [widgets](references/widgets.md) |
+| 普通物料、Schema 托管物料、动作、Presentation 或 Authoring Policy；涉及 `style.content.margin`、命中/mask/selection 几何或 `presentation.frame` 时，以 widgets 为主并加载 [layout](references/layout.md) | [widgets](references/widgets.md) |
 | 字段 adapter、绑定、ifShow、联动、转换、验证或全局配置 | [forms](references/forms.md) |
-| 页面 frame、viewport portal、reservation、容器展示或生产运行时边界 | [layout](references/layout.md) |
+| 页面 frame、viewport portal、reservation、NodeHost 布局 footprint、margin 命中/mask/selection 几何、容器展示或生产运行时边界 | [layout](references/layout.md) |
 | region、放置约束、插入几何或容器变体 | [containers](references/containers.md) |
 | 主题、设备、面板、画布扩展、消息或 Container Shell | [shell](references/shell.md) |
 | 导入诊断、草稿、发布或生产运行时 | [lifecycle](references/lifecycle.md) |

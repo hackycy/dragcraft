@@ -3,19 +3,19 @@ id: layout
 workflows:
   - layout
 status: passed
-inputDigest: sha256:e352ac3b40e69e8d4a5d8c8e1901959caca66edfbec3b4076deaa14066013a43
-executedAt: "2026-08-11T06:57:27Z"
+inputDigest: sha256:81475baac9939995d61aa1d885e4b79b7c11ca1b49fef6f23c51a7f989f317f5
+executedAt: "2026-08-20T09:14:20Z"
 runner:
   agent: Codex
   model: GPT-5
 evidence:
   - DocumentSchema 结构、MaterialDefinition.presentation、PresentationFrame、DesignerViewportPortal 与 useSurfaceReservation 的公开声明
-  - layout resources、布局指南、Guide Project 和 Playground 的展示实现
+  - layout resources、更新后的布局指南、Guide Project 和 Playground 的 viewport/margin 展示实现
 verification:
-  - 测试覆盖 root/region 顺序、Frame/Portal 挂载、Device Frame 裁剪、reservation 和未知/headless 恢复
-  - browser smoke 覆盖三模板交互、独立 Runtime 展示和控制台清洁
+  - root/Region content margin、container margin、margin 留白命中与 NodeHost/Preview rect 均有回归覆盖
+  - Navbar、Tab 栏、floating action、framed container、resize/scroll/reservation 与 root/container selection 均保持正确几何
 ---
 
 # PresentationFrame 与独立 Runtime 展示
 
-参考 Agent 只选择 layout。Designer 以 Schema owner/order 渲染 NodeHost，通过 PresentationFrame、DesignerViewportPortal 和 useSurfaceReservation 处理设计态几何；宿主 Runtime 独立解释 DocumentSchema 和稳定 type，不复用设计态 Presentation。
+参考 Agent 只选择 layout。Designer 以 Schema owner/order 渲染 NodeHost，通过 PresentationFrame、DesignerViewportPortal 和 useSurfaceReservation 处理设计态几何；NodeHost 仍是实际命中和 mask 范围，root selection 只是独立视觉段，宿主 Runtime 不复用设计态 Presentation。

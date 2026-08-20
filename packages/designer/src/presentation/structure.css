@@ -166,7 +166,7 @@
   pointer-events: none;
 }
 
-.dc-canvas-surface__viewport-plane > * {
+.dc-canvas-surface__viewport-plane > *:not(.dc-node__selection-projection) {
   pointer-events: auto !important;
 }
 
@@ -201,6 +201,12 @@
 .dc-node {
   position: relative;
   cursor: default;
+}
+
+.dc-node::before,
+.dc-node::after {
+  content: '';
+  display: table;
 }
 
 .dc-node--masked,

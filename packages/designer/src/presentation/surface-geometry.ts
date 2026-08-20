@@ -1,4 +1,5 @@
 import type { ComputedRef, InjectionKey, Ref, VNode } from 'vue'
+import { autoUpdate } from '@floating-ui/dom'
 import { cloneVNode, computed, defineComponent, h, inject, onBeforeUnmount, provide, ref, shallowRef, Teleport, watch } from 'vue'
 
 export type SurfaceReservationEdge = 'block-start' | 'block-end' | 'inline-start' | 'inline-end'
@@ -20,7 +21,17 @@ export interface SurfaceReservationManager {
 
 export const SURFACE_RESERVATION_MANAGER_KEY: InjectionKey<SurfaceReservationManager> = Symbol('dc-surface-reservation-manager')
 export const SURFACE_VIEWPORT_TARGET_KEY: InjectionKey<Ref<HTMLElement | null>> = Symbol('dc-surface-viewport-target')
-export const NODE_MOUNT_PLANE_KEY: InjectionKey<'document' | 'viewport'> = Symbol('dc-node-mount-plane')
+
+export interface ViewportNodeMount {
+  readonly surfaceTarget: Readonly<Ref<HTMLElement | null>>
+  register: (
+    anchor: Ref<HTMLElement | null>,
+    surface: Ref<HTMLElement | null>,
+    viewScale: Ref<number>,
+  ) => () => void
+}
+
+export const VIEWPORT_NODE_MOUNT_KEY: InjectionKey<ViewportNodeMount> = Symbol('dc-viewport-node-mount')
 
 function fallbackSize(value: string | number | undefined): number {
   if (typeof value === 'number' && Number.isFinite(value))
@@ -102,14 +113,92 @@ export function useSurfaceReservation(
   return { size }
 }
 
-function markViewportNodeHost(vnode: VNode): VNode {
+function resolveViewScale(viewScale: number): number {
+  return Number.isFinite(viewScale) && viewScale > 0 ? viewScale : 1
+}
+
+function createViewportNodeMount(): ViewportNodeMount {
+  const surfaceTarget = ref<HTMLElement | null>(null)
+
+  return {
+    surfaceTarget,
+    register(anchor, surface, viewScale) {
+      let cleanupAutoUpdate: (() => void) | null = null
+
+      function clearAnchorBounds(anchorElement: HTMLElement): void {
+        anchorElement.style.width = '0px'
+        anchorElement.style.height = '0px'
+      }
+
+      function sync(): void {
+        const anchorElement = anchor.value
+        const surfaceElement = surface.value
+        const target = surfaceTarget.value
+        if (!anchorElement)
+          return
+        if (!surfaceElement || !target) {
+          clearAnchorBounds(anchorElement)
+          return
+        }
+
+        const surfaceRect = surfaceElement.getBoundingClientRect()
+        const targetRect = target.getBoundingClientRect()
+        if (surfaceRect.width <= 0 || surfaceRect.height <= 0) {
+          clearAnchorBounds(anchorElement)
+          return
+        }
+
+        const scale = resolveViewScale(viewScale.value)
+        anchorElement.style.left = `${(surfaceRect.left - targetRect.left) / scale}px`
+        anchorElement.style.top = `${(surfaceRect.top - targetRect.top) / scale}px`
+        anchorElement.style.width = `${surfaceRect.width / scale}px`
+        anchorElement.style.height = `${surfaceRect.height / scale}px`
+      }
+
+      function stopAutoUpdate(): void {
+        cleanupAutoUpdate?.()
+        cleanupAutoUpdate = null
+      }
+
+      function startAutoUpdate(): void {
+        stopAutoUpdate()
+        const anchorElement = anchor.value
+        if (anchorElement)
+          surfaceTarget.value = anchorElement.parentElement
+
+        const surfaceElement = surface.value
+        if (!anchorElement || !surfaceElement || !surfaceTarget.value)
+          return
+
+        cleanupAutoUpdate = autoUpdate(surfaceElement, anchorElement, sync, {
+          ancestorScroll: true,
+          ancestorResize: true,
+          elementResize: true,
+          layoutShift: true,
+          animationFrame: false,
+        })
+      }
+
+      const stop = watch([anchor, surface, viewScale] as const, startAutoUpdate, {
+        immediate: true,
+        flush: 'post',
+      })
+      return () => {
+        stop()
+        stopAutoUpdate()
+      }
+    },
+  }
+}
+
+function markViewportRootNodeHost(vnode: VNode): VNode {
   const props = vnode.props
   if (props && 'node' in props && 'owner' in props)
-    return cloneVNode(vnode, { selectionPlane: 'viewport' })
+    return cloneVNode(vnode, { selectionPlane: 'viewport', viewportMount: true })
   const children = vnode.children
   if (Array.isArray(children)) {
     const nextChildren = children.map(child => typeof child === 'object' && child !== null && 'type' in child
-      ? markViewportNodeHost(child as VNode)
+      ? markViewportRootNodeHost(child as VNode)
       : child)
     const cloned = cloneVNode(vnode)
     cloned.children = nextChildren
@@ -123,9 +212,9 @@ export const DesignerViewportPortal = defineComponent({
   name: 'DesignerViewportPortal',
   setup(_, { slots }) {
     const target = inject(SURFACE_VIEWPORT_TARGET_KEY)
-    provide(NODE_MOUNT_PLANE_KEY, 'viewport')
+    provide(VIEWPORT_NODE_MOUNT_KEY, createViewportNodeMount())
     return () => {
-      const content = (slots.default?.() ?? []).map(markViewportNodeHost)
+      const content = (slots.default?.() ?? []).map(markViewportRootNodeHost)
       return target?.value
         ? h(Teleport as any, { to: target.value }, content)
         : content

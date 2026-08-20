@@ -79,6 +79,15 @@ const FloatingActionFrame = defineComponent({
   },
 })
 
+const ViewportContainerFrame = defineComponent({
+  name: 'PlaygroundViewportContainerFrame',
+  setup(_, { slots }) {
+    return () => h(DesignerViewportPortal, null, {
+      default: () => h('div', { class: 'pg-presentation-frame pg-presentation-frame--viewport-container' }, slots.default?.()),
+    })
+  },
+})
+
 function addStyleInspector(material: MaterialDefinition): MaterialDefinition {
   if (material.presentation.kind !== 'visual')
     return material
@@ -298,6 +307,16 @@ const basePlaygroundNextMaterials: readonly MaterialDefinition[] = [
     },
     inspector: { formSchema: flexContainerMeta.formSchema },
     presentation: { kind: 'visual', preview: FlexContainer },
+  },
+  {
+    type: 'viewport-flex-container',
+    panel: { title: 'Viewport Flex Container', visible: false },
+    schema: {
+      defaultProps: { direction: 'column', wrap: false, gap: 12, align: 'stretch' },
+      container: { regions: [{ id: 'default', cardinality: { max: 12 } }] },
+    },
+    inspector: { formSchema: flexContainerMeta.formSchema },
+    presentation: { kind: 'visual', preview: FlexContainer, frame: ViewportContainerFrame },
   },
   {
     type: 'split-container',

@@ -32,7 +32,7 @@ test('locks the Guide page header against dragging and duplication', async ({ pa
   await page.goto('http://127.0.0.1:4174/')
 
   const toolbar = page.locator('[data-dc-component="node-toolbar"]')
-  await page.locator('[data-dc-component="node"][data-node-id="page-header-1"]').click()
+  await page.locator('[data-dc-node-surface-for="page-header-1"]').click()
 
   await expect(toolbar.locator('[data-dc-state~="drag"]')).toHaveAttribute('draggable', 'false')
   await expect(toolbar.getByTitle('复制')).toBeDisabled()
@@ -109,7 +109,7 @@ test('positions the Guide floating action at the viewport bottom end', async ({ 
   await page.goto('http://127.0.0.1:4174/')
 
   const viewportPlane = page.locator('.dc-canvas-surface__viewport-plane')
-  const action = page.locator('[data-dc-component="node"][data-node-id="floating-action-1"] .guide-floating-action')
+  const action = page.locator('.guide-floating-action[data-dc-node-surface-for="floating-action-1"]')
   const [planeBounds, actionBounds] = await Promise.all([
     viewportPlane.boundingBox(),
     action.boundingBox(),

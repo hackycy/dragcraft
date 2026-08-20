@@ -220,7 +220,7 @@ export interface NodeSelectionProps {
   nodeType: string
   /** Structural owner that determines the projection kind. */
   owner: NodeOwner
-  /** Presentation-owned material and semantic selection bounds in a coordinate plane. */
+  /** Presentation-owned NodeHost and visual selection bounds in a coordinate plane. */
   projection: NodeSelectionProjection
 }
 

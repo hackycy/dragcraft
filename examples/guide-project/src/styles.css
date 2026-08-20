@@ -114,17 +114,10 @@ button:disabled {
   pointer-events: none !important;
 }
 
-.guide-presentation-frame--floating-action > [data-dc-component="node"] {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 16px;
-  pointer-events: none;
-}
-
 .guide-presentation-frame--floating-action .guide-floating-action {
+  position: absolute;
+  inset-inline-end: 16px;
+  inset-block-end: 16px;
   pointer-events: auto;
 }
 

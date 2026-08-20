@@ -8,6 +8,36 @@ const importedNextSchema = JSON.stringify({
   structure: { root: ['imported-next-title'], containers: {} },
 })
 
+const viewportGeometrySchema = JSON.stringify({
+  version: '1',
+  globalConfig: { title: 'Viewport geometry' },
+  page: { props: {} },
+  nodes: [
+    {
+      id: 'viewport-margin-button',
+      type: 'floating-button',
+      props: { label: '+', side: 'right', bottom: 16, sideOffset: 16, size: 52, backgroundColor: '#07C160', textColor: '#ffffff' },
+      style: { container: { marginTop: 17, marginRight: 19, marginBottom: 23, marginLeft: 29 } },
+    },
+    {
+      id: 'viewport-container',
+      type: 'viewport-flex-container',
+      props: { direction: 'column', wrap: false, gap: 12, align: 'stretch' },
+    },
+    {
+      id: 'viewport-container-child',
+      type: 'text',
+      props: { content: 'Viewport container child', fontSize: 16, fontWeight: 'normal', color: '#333333', textAlign: 'left' },
+    },
+  ],
+  structure: {
+    root: ['viewport-margin-button', 'viewport-container'],
+    containers: {
+      'viewport-container': { regions: { default: ['viewport-container-child'] } },
+    },
+  },
+})
+
 test('mounts the existing workbench with the public Next backend', async ({ page }) => {
   await page.goto('/')
 
@@ -45,7 +75,7 @@ test('keeps special Frames positioned against the scroll viewport', async ({ pag
   const tabbar = page.locator('[data-dc-component="node"][data-node-id="tabbar-main"]')
   const navbarFrame = navbar.locator('xpath=ancestor::*[contains(@class, "sticky-navigation")]')
   const tabbarFrame = tabbar.locator('xpath=ancestor::*[contains(@class, "bottom-navigation")]')
-  const floatingButton = page.locator('[data-node-id="floating-cart"] .pg-widget-floating-button')
+  const floatingButton = page.locator('.pg-widget-floating-button[data-dc-node-surface-for="floating-cart"]')
 
   const [viewportBox, tabbarBox, floatingBox] = await Promise.all([
     viewportPlane.boundingBox(),
@@ -125,6 +155,142 @@ test('keeps special Frames positioned against the scroll viewport', async ({ pag
   expect(edgeOwner?.bottom.some(element => element.className.includes('pg-widget-tabbar'))).toBe(true)
 })
 
+test('keeps viewport NodeHosts aligned with their Preview surfaces and selection projections', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 })
+  await page.goto('/')
+
+  const viewport = page.locator('.dc-canvas-surface__viewport-plane')
+  const rootPlane = page.locator('.dc-node-selection-plane--root')
+  const scrollport = page.locator('.dc-canvas-surface__scrollport > [data-dc-part="viewport"]')
+
+  async function readBounds(nodeId: string) {
+    const node = page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`)
+    const surface = page.locator(`[data-dc-node-surface-for="${nodeId}"]`)
+    const selection = page.locator(`.dc-node__selection-projection[data-node-id="${nodeId}"]`)
+    const [nodeBounds, surfaceBounds, viewportBounds] = await Promise.all([
+      node.boundingBox(),
+      surface.boundingBox(),
+      viewport.boundingBox(),
+    ])
+    if (!nodeBounds || !surfaceBounds || !viewportBounds)
+      throw new Error(`Expected ${nodeId} NodeHost, Preview surface, and viewport bounds`)
+
+    return { node, surface, selection, nodeBounds, surfaceBounds, viewportBounds }
+  }
+
+  async function expectViewportGeometry(nodeId: string) {
+    const { node, surface, selection } = await readBounds(nodeId)
+    await expect.poll(async () => {
+      const [nodeBounds, surfaceBounds, viewportBounds] = await Promise.all([
+        node.boundingBox(),
+        surface.boundingBox(),
+        viewport.boundingBox(),
+      ])
+      if (!nodeBounds || !surfaceBounds || !viewportBounds)
+        return false
+      return Math.abs(nodeBounds.x - surfaceBounds.x) < 0.1
+        && Math.abs(nodeBounds.y - surfaceBounds.y) < 0.1
+        && Math.abs(nodeBounds.width - surfaceBounds.width) < 0.1
+        && Math.abs(nodeBounds.height - surfaceBounds.height) < 0.1
+        && nodeBounds.width * nodeBounds.height < viewportBounds.width * viewportBounds.height / 2
+    }, { message: `${nodeId} NodeHost must converge to its Preview surface` }).toBe(true)
+
+    await surface.click()
+    await expect(node).toHaveAttribute('data-dc-state', /selected/)
+    await expect(selection).toBeVisible()
+    await expect(selection).toHaveAttribute('data-dc-selection-plane', 'root')
+    await expect(selection.locator('[data-dc-component="node-selection"]')).toHaveAttribute('data-dc-state', 'root-segment')
+    await expect(selection.locator('.dc-node__selection-edge')).toHaveCount(4)
+
+    await expect.poll(async () => {
+      const [selectionBounds, surfaceBounds, rootPlaneBounds] = await Promise.all([
+        selection.boundingBox(),
+        surface.boundingBox(),
+        rootPlane.boundingBox(),
+      ])
+      if (!selectionBounds || !surfaceBounds || !rootPlaneBounds)
+        return false
+      return Math.abs(selectionBounds.x - rootPlaneBounds.x) < 0.1
+        && Math.abs(selectionBounds.y - surfaceBounds.y) < 0.1
+        && Math.abs(selectionBounds.width - rootPlaneBounds.width) < 0.1
+        && Math.abs(selectionBounds.height - surfaceBounds.height) < 0.1
+    }, { message: `${nodeId} root selection must span the root plane and keep the Preview height` }).toBe(true)
+  }
+
+  await expectViewportGeometry('floating-cart')
+  await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()
+  await expect(page.locator('[data-dc-component="node"][data-node-id="shop-title"]')).toHaveAttribute('data-dc-state', /selected/)
+  await expectViewportGeometry('nav-ecommerce')
+  await expectViewportGeometry('tabbar-main')
+
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expectViewportGeometry('floating-cart')
+
+  await page.getByLabel('预览设备').selectOption('android')
+  await expectViewportGeometry('floating-cart')
+
+  await scrollport.evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+  })
+  await expectViewportGeometry('floating-cart')
+
+  await page.locator('[data-dc-node-surface-for="floating-cart"]').evaluate((element) => {
+    element.style.display = 'none'
+  })
+  await expect(page.locator('.dc-node__selection-projection[data-node-id="floating-cart"]')).toBeHidden()
+})
+
+test('keeps viewport anchor margins external', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Import', exact: true }).first().click()
+  await page.getByPlaceholder('在此粘贴 JSON Schema...').fill(viewportGeometrySchema)
+  await page.getByRole('button', { name: 'Import', exact: true }).last().click()
+
+  const marginNode = page.locator('[data-dc-component="node"][data-node-id="viewport-margin-button"]')
+  const marginSurface = page.locator('[data-dc-node-surface-for="viewport-margin-button"]')
+  await expect.poll(async () => {
+    const [nodeBounds, surfaceBounds] = await Promise.all([
+      marginNode.boundingBox(),
+      marginSurface.boundingBox(),
+    ])
+    if (!nodeBounds || !surfaceBounds)
+      return false
+    return Math.abs(nodeBounds.x - surfaceBounds.x) < 0.1
+      && Math.abs(nodeBounds.y - surfaceBounds.y) < 0.1
+      && Math.abs(nodeBounds.width - surfaceBounds.width) < 0.1
+      && Math.abs(nodeBounds.height - surfaceBounds.height) < 0.1
+  }, { message: 'Viewport container margins must not move the NodeHost anchor' }).toBe(true)
+})
+
+test('keeps Region children inside framed containers', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Import', exact: true }).first().click()
+  await page.getByPlaceholder('在此粘贴 JSON Schema...').fill(viewportGeometrySchema)
+  await page.getByRole('button', { name: 'Import', exact: true }).last().click()
+
+  const frame = page.locator('.pg-presentation-frame--viewport-container')
+  const childHost = page.locator('[data-dc-component="node"][data-node-id="viewport-container-child"]')
+  const childSurface = childHost.locator(':scope > [data-dc-node-surface]')
+  await expect(childHost).toBeVisible()
+  await expect(childSurface).toHaveCount(1)
+  await expect(frame.locator(':scope > [data-dc-node-surface-for="viewport-container-child"]')).toHaveCount(0)
+
+  await childHost.click()
+  const childSelection = page.locator('.dc-node__selection-projection[data-node-id="viewport-container-child"]')
+  await expect(childSelection).toHaveAttribute('data-dc-selection-plane', 'viewport')
+  await expect(childSelection.locator('[data-dc-component="node-selection"]')).toHaveAttribute('data-dc-state', 'material-bounds')
+  const [childBounds, selectionBounds] = await Promise.all([
+    childHost.boundingBox(),
+    childSelection.boundingBox(),
+  ])
+  if (!childBounds || !selectionBounds)
+    throw new Error('Expected framed Region child and its selection projection')
+  expect(selectionBounds.x).toBeCloseTo(childBounds.x, 1)
+  expect(selectionBounds.y).toBeCloseTo(childBounds.y, 1)
+  expect(selectionBounds.width).toBeCloseTo(childBounds.width, 1)
+  expect(selectionBounds.height).toBeCloseTo(childBounds.height, 1)
+})
+
 test('reserves the fixed Device Frame edge before the first document node', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 800 })
   await page.goto('/')
@@ -176,10 +342,10 @@ test('disables Navbar and Tab bar duplication through their material authoring p
   await page.goto('/')
 
   const toolbar = page.locator('[data-dc-component="node-toolbar"]')
-  await page.locator('[data-dc-component="node"][data-node-id="nav-ecommerce"]').click()
+  await page.locator('[data-dc-node-surface-for="nav-ecommerce"]').click()
   await expect(toolbar.getByTitle('复制')).toBeDisabled()
 
-  await page.locator('[data-dc-component="node"][data-node-id="tabbar-main"]').click()
+  await page.locator('[data-dc-node-surface-for="tabbar-main"]').click()
   await expect(toolbar.getByTitle('复制')).toBeDisabled()
 
   await page.locator('[data-dc-component="node"][data-node-id="shop-title"]').click()
@@ -215,7 +381,11 @@ test('renders inspector fields for image, navigation, and form materials', async
   ]
 
   for (const { nodeId, fieldLabel } of cases) {
-    await page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`).click()
+    const viewportSurface = page.locator(`[data-dc-node-surface-for="${nodeId}"]`)
+    const target = await viewportSurface.count() > 0
+      ? viewportSurface
+      : page.locator(`[data-dc-component="node"][data-node-id="${nodeId}"]`)
+    await target.click()
     await expect(propertyPanel.locator('[data-dc-component="form-field"]').filter({ hasText: fieldLabel })).toBeVisible()
   }
 })

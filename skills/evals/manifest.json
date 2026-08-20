@@ -4,7 +4,7 @@
   "scenarios": [
     { "id": "integration", "workflows": ["integration", "widgets", "forms"], "file": "integration.md", "result": "results/integration.md" },
     { "id": "commands", "workflows": ["commands"], "file": "commands.md", "result": "results/commands.md" },
-    { "id": "widgets", "workflows": ["widgets"], "file": "widgets.md", "result": "results/widgets.md" },
+    { "id": "widgets", "workflows": ["widgets", "layout"], "file": "widgets.md", "result": "results/widgets.md" },
     { "id": "forms", "workflows": ["forms"], "file": "forms.md", "result": "results/forms.md" },
     { "id": "layout", "workflows": ["layout"], "file": "layout.md", "result": "results/layout.md" },
     { "id": "containers", "workflows": ["containers"], "file": "containers.md", "result": "results/containers.md" },

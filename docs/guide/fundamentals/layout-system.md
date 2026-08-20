@@ -63,7 +63,7 @@ const schema = {
 
 ### 固定边缘：Portal 加 reservation
 
-`DesignerViewportPortal` 把完整的 NodeHost slot Teleport 到 viewport plane。`useSurfaceReservation` 注册一个边缘空间，Application Surface 会测量元素尺寸并把所有同边缘的 reservation 累加到 inset 变量。元素还没有测量完成时，`fallbackSize` 提供初始值。
+`DesignerViewportPortal` 把完整的 NodeHost slot Teleport 到 viewport plane。`useSurfaceReservation` 注册一个边缘空间，Application Surface 会测量元素尺寸并把所有同边缘的 reservation 累加到 inset 变量。元素还没有测量完成时，`fallbackSize` 提供初始值。对于 viewport 物料，Frame 提供定位上下文，Designer 在内部将 NodeHost 的交互几何对齐到 Preview 的实际矩形；root-owned 节点的选中视觉仍进入 root plane，横向覆盖该 plane，纵向跟随实际 NodeHost。
 
 下面的工厂同时实现顶部导航和底部 Tab 栏。它只依赖公开入口，可以直接放进宿主的 material 注册文件：
 
@@ -212,7 +212,7 @@ const style = computed(() => ({
 }))
 ```
 
-`--dc-inset-*` 已经包含设备安全区和所有已测量 reservation。浮动按钮本身的尺寸、边距和点击区域仍属于业务组件；Frame 不应读取 props 或直接绘制按钮。
+`--dc-inset-*` 已经包含设备安全区和所有已测量 reservation。浮动按钮本身的尺寸、边距和点击区域仍属于业务组件；Frame 不应读取 props 或直接绘制按钮。Frame 可以是 `position: absolute; inset: 0` 的全屏定位层，但不得用 CSS 把 NodeHost 设为 `inset: 0` 或全屏透明层；应由 Preview 根元素用 `right`、`bottom` 和自身尺寸定位。这样点击与 mask 都只覆盖按钮的实际矩形；作为 root-owned 节点时，选中视觉会在 root plane 横向贯穿，但它是不可命中的独立 overlay。
 
 Playground 中的完整对照实现位于 [`next-fixtures.ts`](https://github.com/hackycy/dragcraft/blob/main/playground/src/config/next-fixtures.ts) 和 [`mini-program.ts`](https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/mini-program.ts)。其中导航栏、Tab 栏和浮动按钮共享同一条 NodeHost 投影链路，差别只有“是否 reservation”和自己的定位 CSS。
 
@@ -225,6 +225,8 @@ Playground 中的完整对照实现位于 [`next-fixtures.ts`](https://github.co
 | 页面背景或整体内边距 | `page.style.surface` | 直接应用到 Content Surface | 页面级背景、内容区域的统一 padding |
 | 节点外层盒子 | `node.style.container` | 应用到 Designer NodeHost 外层 wrapper | 外边距、参与父容器排列的宽高、外层定位 |
 | 业务内容 | `node.style.content` | 作为 `style` 传给 preview 组件 | 文字、按钮、图片等内容的尺寸和颜色 |
+
+在普通文档流中，`style.content.margin` 是 NodeHost 的内部布局 footprint：它会撑开 NodeHost，Designer 的 mask 与命中区域都覆盖这部分留白。`style.container.margin` 则是 NodeHost 外部的相邻间距，不属于 NodeHost 几何。绝对定位等脱离文档流的 Preview 不会由 margin 撑开 NodeHost；在 viewport Frame 中，Designer 会将 NodeHost 对齐到实际 Preview 的矩形，因此不会将 `style.container.margin` 写入 anchor，定位和间距应由 Frame 或 Preview 根元素表达。viewport mount 只处理 Frame 的 root NodeHost，容器 Region child 仍留在容器 Preview 的 DOM 内。container-owned 节点的选中框覆盖同一矩形；root-owned 节点则以该矩形的纵向范围在 root plane 绘制横向 selection segment。
 
 例如物料属性面板可以把“容器内边距”和“内容内边距”分开绑定：
 
@@ -289,7 +291,7 @@ function renderNode(nodeId: string, schema: DocumentSchema) {
 
 - 顶部和底部固定物料在 resize 后仍能避让内容，多个同边缘 reservation 不会覆盖彼此。
 - 浮动按钮不扩大内容高度，透明覆盖层不拦截正文点击，按钮本身可以点击。
-- frame 只包装完整 NodeHost slot；没有在 frame 中重复渲染 preview 或手动创建 NodeHost。
+- frame 只包装完整 NodeHost slot；没有在 frame 中重复渲染 preview、手动创建 NodeHost，或把 NodeHost 扩张成全屏定位层。
 - root 结构顺序、撤销历史和导出的 Schema 与加入 frame 前一致。
 - 容器内部布局由容器 preview 处理，不依赖 root frame。
 - 生产预览使用自己的组件 registry，不把 Designer 的 viewport plane 或设备外壳带入发布包。

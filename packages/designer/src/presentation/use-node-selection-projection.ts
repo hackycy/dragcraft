@@ -11,7 +11,6 @@ import { useNodeSelectionPresentation } from './selection-presentation'
 export interface UseNodeSelectionProjectionOptions {
   kind: NodeSelectionProjectionKind
   plane: Ref<NodeSelectionPlane>
-  selfTargetSelector?: string
   viewScale?: Ref<number>
 }
 
@@ -19,18 +18,6 @@ export interface UseNodeSelectionProjectionReturn {
   projection: Ref<NodeSelectionProjection | null>
   target: Readonly<Ref<HTMLElement | null>>
   update: () => void
-}
-
-function resolveTargetElement(host: HTMLElement, selfTargetSelector: string | undefined): HTMLElement {
-  if (!selfTargetSelector)
-    return host
-
-  const candidate = host.querySelector<HTMLElement>(selfTargetSelector)
-  if (!candidate)
-    return host
-
-  const rect = candidate.getBoundingClientRect()
-  return rect.width > 0 && rect.height > 0 ? candidate : host
 }
 
 function resolveViewScale(viewScale: Ref<number> | undefined): number {
@@ -56,34 +43,32 @@ export function useNodeSelectionProjection(
       return
     }
 
-    const targetElement = resolveTargetElement(host, options.selfTargetSelector)
-    const targetRect = targetElement.getBoundingClientRect()
+    const hostRect = host.getBoundingClientRect()
     const planeRect = plane.getBoundingClientRect()
-    if (targetRect.width <= 0 || targetRect.height <= 0 || planeRect.width <= 0) {
+    if (hostRect.width <= 0 || hostRect.height <= 0 || planeRect.width <= 0) {
       projection.value = null
       return
     }
 
     const viewScale = resolveViewScale(options.viewScale)
-    const materialBounds = {
-      top: (targetRect.top - planeRect.top) / viewScale,
-      left: (targetRect.left - planeRect.left) / viewScale,
-      width: targetRect.width / viewScale,
-      height: targetRect.height / viewScale,
+    const nodeBounds = {
+      top: (hostRect.top - planeRect.top) / viewScale,
+      left: (hostRect.left - planeRect.left) / viewScale,
+      width: hostRect.width / viewScale,
+      height: hostRect.height / viewScale,
     }
     const bounds = options.kind === 'root-segment'
       ? {
-          top: materialBounds.top,
+          top: nodeBounds.top,
           left: 0,
           width: planeRect.width / viewScale,
-          height: materialBounds.height,
+          height: nodeBounds.height,
         }
-      : { ...materialBounds }
-
+      : { ...nodeBounds }
     projection.value = {
       kind: options.kind,
       plane: options.plane.value,
-      materialBounds,
+      nodeBounds,
       bounds,
     }
   }
@@ -102,7 +87,7 @@ export function useNodeSelectionProjection(
       return
     }
 
-    cleanupAutoUpdate = autoUpdate(resolveTargetElement(host, options.selfTargetSelector), plane, update, {
+    cleanupAutoUpdate = autoUpdate(host, plane, update, {
       ancestorScroll: options.plane.value === 'root',
       ancestorResize: true,
       elementResize: true,
