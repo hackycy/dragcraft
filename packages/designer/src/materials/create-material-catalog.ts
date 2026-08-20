@@ -181,7 +181,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
       if (regions.length === 0 || new Set(regionIds).size !== regionIds.length || hasInvalidRegion)
         throw new DesignerConfigurationError('MATERIAL_CONTAINER_INVALID', material.type)
     }
-    const defaultProps = material.schema?.defaultProps as unknown
+    const defaultProps = material.schema?.defaultProps
     const defaultStyle = material.schema?.defaultStyle as unknown
     if ((defaultProps !== undefined && !isJsonObject(defaultProps))
       || (defaultStyle !== undefined && !isJsonObject(defaultStyle))) {
@@ -215,7 +215,7 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
         : {}),
     })])
     bundleDefaultsByType.set(material.type, Object.freeze({
-      props: cloneJsonValue(material.schema?.defaultProps ?? {}) as JsonObject,
+      props: cloneJsonValue(defaultProps ?? {}) as JsonObject,
       regionIds: Object.freeze(container?.regions.map(region => region.id) ?? []),
       ...(material.schema?.defaultStyle
         ? { style: cloneJsonValue(material.schema.defaultStyle) as JsonObject }
@@ -238,8 +238,8 @@ export function createMaterialCatalog(materials: readonly MaterialDefinition[]):
         ? {
             schema: Object.freeze({
               ...(container ? { container: copyContainerDeclaration(container) } : {}),
-              ...(material.schema.defaultProps
-                ? { defaultProps: cloneJsonValue(material.schema.defaultProps) as JsonObject }
+              ...(defaultProps
+                ? { defaultProps: cloneJsonValue(defaultProps) as JsonObject }
                 : {}),
               ...(material.schema.defaultStyle
                 ? { defaultStyle: cloneJsonValue(material.schema.defaultStyle) as JsonObject }

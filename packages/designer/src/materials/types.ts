@@ -32,7 +32,7 @@ export type MaterialPanelVisibility
   = boolean
     | ((context: MaterialPanelVisibilityContext) => boolean)
 
-export interface MaterialSchemaDeclaration<Props extends JsonObject = JsonObject> {
+export interface MaterialSchemaDeclaration<Props extends object = object> {
   readonly container?: ContainerDeclaration
   readonly defaultProps?: Props
   readonly defaultStyle?: JsonObject
@@ -56,18 +56,18 @@ export interface MaterialPanelDefinition {
   readonly visible?: MaterialPanelVisibility
 }
 
-export interface InspectorDefinition<_Props extends JsonObject = JsonObject> {
+export interface InspectorDefinition<_Props extends object = object> {
   readonly formSchema?: FormSchema
 }
 
-export interface MaterialBundleFactoryContext<Props extends JsonObject = JsonObject> {
+export interface MaterialBundleFactoryContext<Props extends object = object> {
   readonly createNodeId: () => string
   readonly defaultProps: Readonly<Props>
   readonly defaultStyle?: Readonly<JsonObject>
   readonly type: NodeType
 }
 
-export type MaterialBundleFactory<Props extends JsonObject = JsonObject>
+export type MaterialBundleFactory<Props extends object = object>
   = (context: MaterialBundleFactoryContext<Props>) => NodeBundle
 
 export type MaterialAuthoringPolicyAction
@@ -95,12 +95,12 @@ export type MaterialAuthoringPolicy = Partial<
   Readonly<Record<MaterialAuthoringPolicyAction, MaterialAuthoringPolicyRule>>
 >
 
-export interface MaterialAuthoringDefinition<Props extends JsonObject = JsonObject> {
+export interface MaterialAuthoringDefinition<Props extends object = object> {
   readonly createBundle?: MaterialBundleFactory<Props>
   readonly policy?: MaterialAuthoringPolicy
 }
 
-export interface MaterialDefinition<Props extends JsonObject = JsonObject> {
+export interface MaterialDefinition<Props extends object = object> {
   readonly type: NodeType
   readonly schema?: MaterialSchemaDeclaration<Props>
   readonly authoring?: MaterialAuthoringDefinition<Props>

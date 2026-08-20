@@ -1,4 +1,4 @@
-import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
+import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, JsonObject, NodeDefinition } from '@dragcraft/core'
 import type { ComputedRef, Ref } from 'vue'
 import type { MaterialDefinition } from '../materials/types'
 import type {
@@ -55,8 +55,8 @@ export interface DesignerSessionDocument {
 export interface DesignerSessionNode {
   readonly id: string
   readonly type: string
-  readonly props: Record<string, unknown>
-  readonly style?: Record<string, unknown>
+  readonly props: JsonObject
+  readonly style?: JsonObject
 }
 
 export interface DesignerSessionMaterials {

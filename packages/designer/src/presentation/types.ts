@@ -1,4 +1,4 @@
-import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, NodeDefinition } from '@dragcraft/core'
+import type { DeepReadonly as CoreDeepReadonly, DocumentSchema, JsonObject, NodeDefinition } from '@dragcraft/core'
 import type { Component, ComputedRef, InjectionKey, Ref } from 'vue'
 import type { MaterialDefinition } from '../materials/types'
 import type { DesignerSession } from '../session/types'
@@ -12,8 +12,8 @@ import type { SurfaceReservationManager } from './surface-geometry'
 export interface PresentationNode {
   readonly id: string
   readonly type: string
-  readonly props: Record<string, unknown>
-  readonly style?: Record<string, unknown>
+  readonly props: JsonObject
+  readonly style?: JsonObject
 }
 
 export type DeepReadonly<T>

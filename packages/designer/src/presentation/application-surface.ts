@@ -134,7 +134,7 @@ export default defineComponent({
     return () => {
       const isDragOver = props.dragOverNodeId?.value === 'root'
       const rootNodes = ctx.session.document.rootNodes.value
-      const pageStyle = ctx.schema.value?.page.style as Record<string, unknown> | undefined
+      const pageStyle = ctx.schema.value?.page.style
 
       // Resolve drop indicator and empty state components
       const DropIndicator = DefaultDropIndicator
@@ -229,7 +229,7 @@ export default defineComponent({
                   h(CanvasSurface, {
                     isEmpty,
                     rootVNodes,
-                    surfaceStyle: normalizeStyleValueMap(pageStyle?.surface as Record<string, unknown> | undefined),
+                    surfaceStyle: normalizeStyleValueMap(pageStyle?.surface),
                     selectionPresentation,
                     viewportPlaneRef: viewportTarget,
                     forbiddenOverlay: forbiddenOverlayVNode,

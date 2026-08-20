@@ -5,6 +5,27 @@ import type { DesignerPresentation, MaterialDefinition } from './materials/types
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import * as publicApi from './index'
 
+interface CarouselItem {
+  link: string
+  src: string
+}
+
+interface CarouselProps {
+  autoplay: boolean
+  height: number
+  interval: number
+  items: CarouselItem[]
+  objectFit: string
+}
+
+const carouselDefaultProps = {
+  height: 300,
+  objectFit: 'cover',
+  autoplay: true,
+  interval: 3,
+  items: [{ src: '', link: '' }] as CarouselItem[],
+}
+
 describe('designer public interface', () => {
   it('exposes the final designer contract and omits legacy runtime protocols', () => {
     expect(typeof publicApi.createDesigner).toBe('function')
@@ -42,5 +63,30 @@ describe('designer public interface', () => {
     expectTypeOf<FormGeneratorContext>().toBeObject()
     expectTypeOf<FormValidation>().toBeObject()
     expectTypeOf<TypedFormSchema<{ Input: { allowClear?: boolean } }>>().toBeObject()
+  })
+
+  it('accepts named props and reads dynamic schema fields without assertions', () => {
+    const material: MaterialDefinition<CarouselProps> = {
+      type: 'carousel',
+      schema: { defaultProps: carouselDefaultProps },
+      presentation: { kind: 'headless' },
+    }
+    const materials: readonly MaterialDefinition[] = [{
+      type: 'registered-carousel',
+      schema: { defaultProps: carouselDefaultProps },
+      presentation: { kind: 'headless' },
+    }]
+    const schema: DocumentSchema = {
+      version: '1',
+      globalConfig: {},
+      page: { props: {}, style: { surface: { backgroundColor: '#fff' } } },
+      nodes: [],
+      structure: { root: [], containers: {} },
+    }
+    const backgroundColor: string | undefined = schema.page.style?.surface?.backgroundColor
+
+    expectTypeOf(material.schema?.defaultProps).toEqualTypeOf<CarouselProps | undefined>()
+    expect(materials[0]!.schema?.defaultProps).toBe(carouselDefaultProps)
+    expect(backgroundColor).toBe('#fff')
   })
 })

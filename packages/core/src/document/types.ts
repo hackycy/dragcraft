@@ -1,8 +1,7 @@
 export type JsonPrimitive = boolean | null | number | string
+/** Dynamic document data; JSON validity is checked at import and material registration. */
+export type JsonObject = Record<string, any>
 export type JsonValue = JsonPrimitive | JsonObject | JsonValue[]
-export interface JsonObject {
-  [key: string]: JsonValue
-}
 
 export type NodeId = string
 export type NodeType = string

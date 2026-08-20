@@ -260,12 +260,12 @@ export default defineComponent({
 
       // Render widget content
       const widgetProps = { ...node.props }
-      const nodeStyle = node.style as Record<string, unknown> | undefined
-      const wrapperStyle = normalizeStyleValueMap(nodeStyle?.container as Record<string, unknown> | undefined)
+      const nodeStyle = node.style
+      const wrapperStyle = normalizeStyleValueMap(nodeStyle?.container)
       const viewportAnchorStyle = mountPlane.value === 'viewport'
         ? omitViewportAnchorMargins(wrapperStyle)
         : wrapperStyle
-      let contentStyle = normalizeStyleValueMap(nodeStyle?.content as Record<string, unknown> | undefined)
+      let contentStyle = normalizeStyleValueMap(nodeStyle?.content)
       const viewportSurfaceListeners = mountPlane.value === 'viewport' && widget.selectable.value
         ? {
             onClick: widget.handleSelect,
