@@ -1,7 +1,7 @@
 {
   "name": "@dragcraft/form-generator",
   "type": "module",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "@dragcraft/form-generator",
   "author": "hackycy <hackycy@outlook.com>",
   "license": "MIT",
