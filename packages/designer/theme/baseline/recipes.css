@@ -590,7 +590,7 @@
   line-height: 1.4;
 }
 
-[data-dc-component="form-field"] > [data-dc-part="tooltip"] {
+[data-dc-component="form-field"] > [data-dc-part="help-message"] {
   color: var(--dc-color-text-subtle);
   font-size: var(--dc-font-size-xs);
   line-height: 1.4;
@@ -612,7 +612,7 @@
   border-radius: var(--dc-radius-md);
 }
 
-[data-dc-component="form-field"] > [data-dc-part="unknown"] {
+[data-dc-component="form-field"] [data-dc-part="unknown"] {
   color: var(--dc-color-warning);
   font-size: var(--dc-font-size-sm);
   border-color: var(--dc-color-warning);

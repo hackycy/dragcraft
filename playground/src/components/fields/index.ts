@@ -213,6 +213,7 @@ export const ArrayField = defineComponent({
         ? fieldComponentMap.value[field.component]
         : undefined
       const rawValue = item[field.key] ?? field.defaultValue
+      const label = typeof field.label === 'string' ? field.label : ''
       const formCtx: FormContext = { values: item }
       const schemaValue = field.valueFormat?.(rawValue, formCtx) ?? rawValue
       const transformCtx = { field, values: item }
@@ -238,7 +239,7 @@ export const ArrayField = defineComponent({
           })
 
       return h('div', { class: 'playground-array-field__field', key: field.key }, [
-        h('span', { class: 'playground-array-field__label' }, field.label),
+        label ? h('span', { class: 'playground-array-field__label' }, label) : null,
         control,
       ])
     }

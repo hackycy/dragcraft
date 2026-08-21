@@ -61,21 +61,31 @@ export type FieldComponentProps<Props extends object = Record<string, unknown>>
     | ((ctx: FormContext) => Props)
 
 /**
- * Reactive form state available to an inline field render factory.
+ * Read-only reactive field state available to field presentation callbacks.
  */
-export interface FieldRenderContext {
+export interface FieldPresentationContext {
   /** Dependency-resolved field schema. */
-  field: ComputedRef<FieldSchema>
+  field: ComputedRef<Readonly<FieldSchema>>
   /** Reactive flat key-value map of all form field values. */
-  values: Record<string, unknown>
+  values: Readonly<Record<string, unknown>>
   /** Current formatted field value. */
   value: ComputedRef<unknown>
   /** Resolved global and field-level disabled state. */
   disabled: ComputedRef<boolean>
-  /** Resolved static or dynamic component props, including i18n transforms. */
-  componentProps: ComputedRef<Record<string, unknown>>
   /** Translate a message key, with an optional fallback. */
   t: (key: string, fallback?: string) => string
+}
+
+/**
+ * Reactive form state available to an inline field render factory.
+ */
+export interface FieldRenderContext extends Omit<FieldPresentationContext, 'field' | 'values'> {
+  /** Dependency-resolved field schema. */
+  field: ComputedRef<FieldSchema>
+  /** Reactive flat key-value map of all form field values. */
+  values: Record<string, unknown>
+  /** Resolved static or dynamic component props, including i18n transforms. */
+  componentProps: ComputedRef<Record<string, unknown>>
   /** Write a value through the field parse, change, and validation pipeline. */
   setValue: (value: unknown) => void
   /** Validate the field against its current resolved schema. */
@@ -90,6 +100,18 @@ export interface FieldRenderContext {
  * string key in FieldComponentMap.
  */
 export type FieldRenderFactory = (ctx: FieldRenderContext) => () => VNodeChild
+
+/**
+ * Renders the label area of a field. Returning empty content omits the label.
+ */
+export type FieldLabelRenderer = (ctx: FieldPresentationContext) => VNodeChild
+
+export type FieldLabel = string | FieldLabelRenderer
+
+/**
+ * Persistent plain-text guidance for a field.
+ */
+export type FieldHelpMessage = string | ((ctx: FieldPresentationContext) => string)
 
 export type FieldBindingScope = 'node' | 'schema' | 'globalConfig' | 'container'
 
@@ -106,9 +128,9 @@ export interface FieldSchema<
 > {
   /** Property key in the values object (e.g., 'text', 'fontSize') */
   key: string
-  /** Human-readable label */
-  label: string
-  /** i18n message key for label; overrides `label` when i18n is active */
+  /** Human-readable label or a custom label renderer. Omit or resolve empty content to hide it. */
+  label?: FieldLabel
+  /** i18n message key for a static label; custom label renderers translate through their context. */
   labelKey?: string
   /** i18n message key for placeholder; overrides field.componentProps.placeholder when i18n is active */
   placeholderKey?: string
@@ -142,8 +164,8 @@ export interface FieldSchema<
   disabled?: (ctx: FormContext) => boolean
   /** Validation rules */
   rules?: ValidationRule[]
-  /** Optional tooltip / help text */
-  tooltip?: string
+  /** Persistent plain-text guidance. Empty results are not rendered. */
+  helpMessage?: FieldHelpMessage
   /** Number of grid columns this field spans (requires section.columns > 1) */
   span?: number
 }

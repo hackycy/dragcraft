@@ -29,6 +29,66 @@ body {
   background: transparent;
 }
 
+/* ── Field Presentation Examples ─────────── */
+
+.pg-field-presentation-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pg-field-presentation-label__badge {
+  padding: 1px 5px;
+  color: var(--dc-color-accent);
+  background: var(--dc-color-accent-subtle);
+  border-radius: 4px;
+  font-size: var(--dc-font-size-xs);
+  font-weight: var(--dc-font-weight-regular);
+  line-height: 1.4;
+}
+
+.pg-field-presentation-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--dc-color-border-subtle);
+  border-radius: 6px;
+  background: var(--dc-color-surface-muted);
+}
+
+.pg-field-presentation-status__indicator {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dc-color-warning);
+}
+
+.pg-field-presentation-status__indicator--ready {
+  background: var(--dc-color-success);
+}
+
+.pg-field-presentation-status__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pg-field-presentation-status__content strong {
+  color: var(--dc-color-text);
+  font-size: var(--dc-font-size-sm);
+  font-weight: var(--dc-font-weight-medium);
+  line-height: 1.4;
+}
+
+.pg-field-presentation-status__content span {
+  color: var(--dc-color-text-subtle);
+  font-size: var(--dc-font-size-xs);
+  line-height: 1.4;
+}
+
 /* ── Playground Material Cards ───────────── */
 
 .pg-material-card {

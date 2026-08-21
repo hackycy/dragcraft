@@ -1,11 +1,19 @@
-import type { PropType } from 'vue'
-import type { FieldSchema } from '../types'
+import type { PropType, VNodeChild } from 'vue'
+import type { FieldPresentationContext, FieldRenderContext, FieldSchema } from '../types'
 import { useI18n } from '@dragcraft/i18n'
-import { computed, defineComponent, h } from 'vue'
+import { computed, defineComponent, h, shallowRef, watch } from 'vue'
 import { useFieldDependencies } from '../composables/useFieldDependencies'
 import { useFieldState } from '../composables/useFieldState'
 import { useFormGeneratorContext } from '../context'
 import { createFormContext, resolveFieldComponentProps, resolveFieldModelValue } from '../utils'
+
+function isEmptyPresentationContent(content: VNodeChild | undefined): boolean {
+  return content === null
+    || content === undefined
+    || content === false
+    || content === ''
+    || (Array.isArray(content) && content.length === 0)
+}
 
 export default defineComponent({
   name: 'DcFormField',
@@ -42,20 +50,48 @@ export default defineComponent({
       ctx.onFieldChange(field.key, transformed)
       validate()
     }
-    const fieldRender = typeof props.field.component === 'function'
-      ? props.field.component({
-          field: resolvedField,
-          values: ctx.values,
-          value,
-          disabled: isDisabled,
-          componentProps,
-          t,
-          setValue,
-          validate,
-        })
-      : undefined
+    const presentationContext: FieldPresentationContext = {
+      field: resolvedField,
+      values: ctx.values,
+      value,
+      disabled: isDisabled,
+      t,
+    }
+    const fieldRenderContext: FieldRenderContext = {
+      ...presentationContext,
+      field: resolvedField,
+      values: ctx.values,
+      componentProps,
+      setValue,
+      validate,
+    }
+    const fieldRender = shallowRef<(() => VNodeChild) | undefined>()
 
-    const renderRegisteredField = (field: FieldSchema, disabled: boolean) => {
+    watch(
+      () => props.field.component,
+      (component) => {
+        fieldRender.value = typeof component === 'function'
+          ? component(fieldRenderContext)
+          : undefined
+      },
+      { immediate: true },
+    )
+
+    const resolveLabel = (field: FieldSchema): VNodeChild | undefined => {
+      if (typeof field.label === 'function')
+        return field.label(presentationContext)
+
+      return field.labelKey ? t(field.labelKey, field.label ?? '') : field.label
+    }
+
+    const resolveHelpMessage = (field: FieldSchema): string | undefined => {
+      const message = typeof field.helpMessage === 'function'
+        ? field.helpMessage(presentationContext)
+        : field.helpMessage
+      return message || undefined
+    }
+
+    const renderRegisteredFieldContent = (field: FieldSchema, disabled: boolean) => {
       const definition = typeof field.component === 'string'
         ? ctx.fieldComponentMap[field.component]
         : undefined
@@ -75,10 +111,7 @@ export default defineComponent({
           })
         : h('div', { 'class': 'dc-field-unknown', 'data-dc-part': 'unknown' }, `Unknown field: ${String(field.component)}`)
 
-      return [
-        h('label', { 'class': 'dc-form-field__label', 'data-dc-part': 'label' }, field.labelKey ? t(field.labelKey, field.label) : field.label),
-        h('div', { 'class': 'dc-form-field__control', 'data-dc-part': 'control' }, [fieldContent]),
-      ]
+      return fieldContent
     }
 
     return () => {
@@ -88,14 +121,26 @@ export default defineComponent({
       const field = resolvedField.value
       const errorMsg = ctx.fieldErrors.value[field.key]
       const disabled = isDisabled.value
+      const label = resolveLabel(field)
+      const helpMessage = resolveHelpMessage(field)
+      const fieldContent = fieldRender.value
+        ? fieldRender.value()
+        : renderRegisteredFieldContent(field, disabled)
+      const children: VNodeChild[] = []
 
-      const children = fieldRender
-        ? [fieldRender()]
-        : renderRegisteredField(field, disabled)
-
-      if (field.tooltip) {
+      if (!isEmptyPresentationContent(label)) {
         children.push(
-          h('div', { 'class': 'dc-form-field__tooltip', 'data-dc-part': 'tooltip' }, field.tooltip),
+          h('label', { 'class': 'dc-form-field__label', 'data-dc-part': 'label' }, [label]),
+        )
+      }
+
+      children.push(
+        h('div', { 'class': 'dc-form-field__control', 'data-dc-part': 'control' }, [fieldContent]),
+      )
+
+      if (helpMessage) {
+        children.push(
+          h('div', { 'class': 'dc-form-field__help-message', 'data-dc-part': 'help-message' }, helpMessage),
         )
       }
 

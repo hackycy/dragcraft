@@ -100,7 +100,7 @@
     "headless-drop-overlay": { "parts": ["text"], "states": [] },
     "form-generator": { "parts": [], "states": [] },
     "form-section": { "parts": ["body", "header", "title", "toggle"], "states": ["collapsed", "expanded"] },
-    "form-field": { "parts": ["control", "error", "label", "tooltip", "unknown"], "states": ["disabled", "error"] },
+    "form-field": { "parts": ["control", "error", "help-message", "label", "unknown"], "states": ["disabled", "error"] },
     "application-surface": { "parts": [], "states": [] },
     "presentation-frame-boundary": { "parts": [], "states": [] },
     "container-shell": { "parts": [], "states": ["default"] },

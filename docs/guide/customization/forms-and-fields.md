@@ -65,6 +65,25 @@ Authoring policy 对物料能力的拒绝优先于 dependency handler。即使�
 
 ## 选择字段组件还是 render factory
 
-可复用 Vue 控件先注册为 `fieldComponentMap` 中的字符串键。函数形式的 `FieldSchema.component` 总是当前表单专用的 render factory，适合说明、分割线和轻量操作区；不要用它替代可复用字段 adapter。
+可复用 Vue 控件先注册为 `fieldComponentMap` 中的字符串键。函数形式的 `FieldSchema.component` 总是当前表单专用的 render factory，适合说明、分割线和轻量操作区；不要用它替代可复用字段 adapter。两者都只负责 control 内容，字段外框始终由 FormGenerator 统一生成。
+
+## 定义标签和辅助说明
+
+`label` 可省略、使用字符串，或使用接收 `FieldPresentationContext` 的 renderer。空字符串和 renderer 的空返回值都不会生成标签节点；自定义标签自行通过 `ctx.t()` 处理翻译，`labelKey` 只作用于静态标签。
+
+`helpMessage` 只接受字符串或返回字符串的函数，并在 control 后持续显示。它与校验错误同时存在时保留，帮助用户理解如何修正输入。空字符串不渲染；原有的 `tooltip` 属性已移除。
+
+```ts
+{
+  key: 'spacing',
+  label: ctx => ctx.values.unit === 'px'
+    ? ctx.t('field.spacing.label', '间距')
+    : null,
+  component: 'InputNumber',
+  helpMessage: ctx => ctx.values.unit === 'px'
+    ? ctx.t('field.spacing.help', '以像素为单位设置间距')
+    : '',
+}
+```
 
 完整字段协议见 [Designer 表单与字段参考](/reference/designer-forms)。

@@ -1,5 +1,5 @@
 import type { DocumentSchema } from '@dragcraft/core'
-import type { FieldComponentDefinition, FieldRenderFactory, FormContext, FormGeneratorContext, FormValidation, TypedFormSchema } from '@dragcraft/form-generator'
+import type { FieldComponentDefinition, FieldLabelRenderer, FieldPresentationContext, FieldRenderFactory, FieldSchema, FormContext, FormGeneratorContext, FormValidation, TypedFormSchema } from '@dragcraft/form-generator'
 import type { ActionInterceptor, DesignerDeviceFrame, DesignerDocumentState, DesignerExtensions, DesignerInstance, NodeActionDefinition } from './index'
 import type { DesignerPresentation, MaterialDefinition } from './materials/types'
 import { describe, expect, expectTypeOf, it } from 'vitest'
@@ -58,6 +58,11 @@ describe('designer public interface', () => {
     expectTypeOf<ActionInterceptor>().toHaveProperty('beforeAction')
     expectTypeOf<NodeActionDefinition>().toHaveProperty('key')
     expectTypeOf<FieldComponentDefinition>().toBeObject()
+    expectTypeOf<FieldLabelRenderer>().toBeFunction()
+    expectTypeOf<FieldPresentationContext>().toBeObject()
+    expectTypeOf<FieldPresentationContext>().not.toHaveProperty('setValue')
+    expectTypeOf<FieldPresentationContext['values']>().toEqualTypeOf<Readonly<Record<string, unknown>>>()
+    expectTypeOf<FieldPresentationContext['field']['value']>().toEqualTypeOf<Readonly<FieldSchema>>()
     expectTypeOf<FieldRenderFactory>().toBeFunction()
     expectTypeOf<FormContext>().toBeObject()
     expectTypeOf<FormGeneratorContext>().toBeObject()

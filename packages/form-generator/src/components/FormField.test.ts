@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import type { FieldComponentMap, FieldRenderFactory, FormSchema } from '../types'
+import type { FieldComponentMap, FieldLabelRenderer, FieldRenderFactory, FormSchema } from '../types'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, reactive, ref } from 'vue'
 import FormGenerator from './FormGenerator'
@@ -140,7 +140,7 @@ describe('formField', () => {
     }
   })
 
-  it('renders inline factory content without the registered field structure', async () => {
+  it('renders inline factory content in the shared field chrome', async () => {
     const factory: FieldRenderFactory = vi.fn(({ t }) => () =>
       h('div', { class: 'form-divider' }, t('form.basic', 'Basic settings')))
     const schema: FormSchema = {
@@ -148,7 +148,7 @@ describe('formField', () => {
         title: 'Basic',
         fields: [{
           key: '__basic-divider',
-          label: '',
+          label: 'Basic settings',
           component: factory,
         }],
       }],
@@ -159,9 +159,84 @@ describe('formField', () => {
       await nextTick()
 
       expect(host.querySelector('.form-divider')?.textContent).toBe('Basic settings')
-      expect(host.querySelector('.dc-form-field__label')).toBeNull()
-      expect(host.querySelector('.dc-form-field__control')).toBeNull()
+      expect(host.querySelector('.dc-form-field__label')?.textContent).toBe('Basic settings')
+      expect(host.querySelector('.dc-form-field__control .form-divider')).not.toBeNull()
       expect(factory).toHaveBeenCalledTimes(1)
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('omits empty static and custom labels without omitting their controls', async () => {
+    const values = reactive({ showCustomLabel: false, static: '', custom: '', omitted: '' })
+    const customLabel: FieldLabelRenderer = ctx =>
+      ctx.values.showCustomLabel ? h('strong', { class: 'custom-field-label' }, 'Custom label') : null
+    const schema: FormSchema = {
+      sections: [{
+        title: 'Basic',
+        fields: [
+          { key: 'static', label: '', component: 'Input' },
+          { key: 'custom', label: customLabel, component: 'Input' },
+          { key: 'omitted', component: 'Input' },
+        ],
+      }],
+    }
+    const { app, host } = mountForm(schema, values)
+
+    try {
+      await nextTick()
+      expect(host.querySelector('.dc-form-field__label')).toBeNull()
+      expect(host.querySelectorAll('.dc-form-field__control')).toHaveLength(3)
+
+      values.showCustomLabel = true
+      await nextTick()
+
+      expect(host.querySelector('.custom-field-label')?.textContent).toBe('Custom label')
+      expect(host.querySelectorAll('.dc-form-field__label')).toHaveLength(1)
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('renders dynamic help messages before validation errors', async () => {
+    const values = reactive({ name: 'Ada', showHelp: false })
+    const schema: FormSchema = {
+      sections: [{
+        title: 'Basic',
+        fields: [{
+          key: 'name',
+          label: 'Name',
+          component: 'Input',
+          helpMessage: ctx => ctx.values.showHelp ? 'Use a full name' : '',
+          parseValue: value => String(value).trim(),
+          rules: [{ required: true, message: 'Name required' }],
+        }],
+      }],
+    }
+    const { app, host } = mountForm(schema, values)
+
+    try {
+      await nextTick()
+      expect(host.querySelector('[data-dc-part="help-message"]')).toBeNull()
+      expect(host.querySelector('[data-dc-part="tooltip"]')).toBeNull()
+
+      values.showHelp = true
+      await nextTick()
+      expect(host.querySelector('[data-dc-part="help-message"]')?.textContent).toBe('Use a full name')
+
+      const input = host.querySelector<HTMLInputElement>('.input-like')!
+      input.value = '   '
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      await nextTick()
+
+      const fieldParts = Array.from(host.querySelector('[data-dc-component="form-field"]')!.children)
+        .map(element => element.getAttribute('data-dc-part'))
+      expect(fieldParts).toEqual(['label', 'control', 'help-message', 'error'])
+      expect(host.querySelector('[data-dc-part="error"]')?.textContent).toBe('Name required')
     }
     finally {
       app.unmount()
@@ -517,6 +592,50 @@ describe('formField', () => {
 
       expect(host.querySelector<HTMLInputElement>('.input-like')?.placeholder).toBe('New placeholder')
       expect(host.querySelector('.dc-form-field__label')?.textContent).toBe('Full name')
+    }
+    finally {
+      app.unmount()
+      host.remove()
+    }
+  })
+
+  it('rebuilds inline factories when a same-key schema replacement changes factory identity', async () => {
+    const firstFactory: FieldRenderFactory = vi.fn(() => () => h('div', { class: 'first-factory' }, 'First'))
+    const secondFactory: FieldRenderFactory = vi.fn(() => () => h('div', { class: 'second-factory' }, 'Second'))
+    const schemaRef = ref<FormSchema>({
+      sections: [{
+        title: 'Basic',
+        fields: [{ key: 'content', label: 'Content', component: firstFactory }],
+      }],
+    })
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const app = createApp({
+      render: () =>
+        h(FormGenerator, {
+          schema: schemaRef.value,
+          values: {},
+          fieldComponentMap,
+        }),
+    })
+    app.mount(host)
+
+    try {
+      await nextTick()
+      expect(host.querySelector('.first-factory')).not.toBeNull()
+      expect(firstFactory).toHaveBeenCalledTimes(1)
+
+      schemaRef.value = {
+        sections: [{
+          title: 'Basic',
+          fields: [{ key: 'content', label: 'Content', component: secondFactory }],
+        }],
+      }
+      await nextTick()
+
+      expect(host.querySelector('.first-factory')).toBeNull()
+      expect(host.querySelector('.second-factory')).not.toBeNull()
+      expect(secondFactory).toHaveBeenCalledTimes(1)
     }
     finally {
       app.unmount()
