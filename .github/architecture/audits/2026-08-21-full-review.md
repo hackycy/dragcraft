@@ -4,6 +4,7 @@
 - 基线 commit：`0a579f6`（chore: release v0.0.9）
 - 范围：`.github/architecture/` 全部 9 篇文档 vs 11 个真实 workspace 包的实现
 - 方法：按区域并行深读（core / designer 状态逻辑 / designer UI 呈现 / form-generator 与 fields / 物料协议与 utils / 外围包 / 包边界与工程规范），逐条对照文档承诺，全部结论带 file:line 证据
+- 复核：2026-08-21 对全部 41 条发现逐条二次代码验证：一.1/一.2/一.3 降级，七.8 部分修正，七.10/八.5 撤销，二.4 从严更新，个别行号已修正
 
 ## 总体评价
 
@@ -16,30 +17,26 @@
 
 ---
 
-## 一、高危问题（正确性 / 核心承诺被破坏）
+## 一、高危问题（正确性 / 核心承诺被破坏；一.1-一.3 经复核降级，见各条标注）
 
-### 1. duplicate-node 静默丢失嵌套子树
+### 1. duplicate-node 嵌套子树收集不递归（复核降级：场景当前不可达）
 
-`packages/designer/src/.../create-authoring-engine.ts:55-89` 的 `duplicateNodeBundle` 只收集 `[nodeId, ...直接 region children]`，containers 映射也只写一层。复制含嵌套容器的物料时，二层以下节点既不入 nodes 也无 containers 条目，内容无声丢失。core 的 insert-bundle 校验对此完全放行（每个节点都有 owner）。
-修复方向：递归展开 `structure.containers` 子树。
+【复核降级：潜在隐患，非现实缺陷】`create-authoring-engine.ts:47-90` 的 `duplicateNodeBundle` 确实只收集 `[nodeId, ...直接 region children]`，containers 映射只写一层。但嵌套容器文档在结构阶段即被 core 的 `CONTAINER_OWNER_NOT_ROOT`（resolve-schema.ts:77-85）整体拒绝，无法成为当前文档，故"复制时丢内容"的场景当前不可达。
+若未来放开单层容器限制，必须先修复：递归展开 `structure.containers` 子树，并让 core 的 insert-bundle 校验能发现缺失的 containers 条目。
 
-### 2. remove 级联非递归
+### 2. remove 级联非递归（复核降级：场景当前不可达）
 
-`packages/core/src/operations/remove.ts:16-19` 仅收集被删容器的直接 region 子节点；子树内还有下级容器时其 `structure.containers[child]` 条目残留成孤儿 → `CONTAINER_OWNER_MISSING` → 整个操作被拒。测试只覆盖单层嵌套（apply-schema-operation.test.ts:767）。
-与问题 1 同源：单层容器约束没有沉淀成共享的树遍历工具。
+【复核降级：潜在隐患，非现实缺陷】`packages/core/src/operations/remove.ts:16-19` 的级联收集确实非递归，孤儿 `structure.containers[child]` 条目会产生 `CONTAINER_OWNER_MISSING` 并拒绝整个操作——机制描述准确。但与问题 1 同因：嵌套容器文档无法通过结构校验成为 currentDocument，场景当前不可达。测试确实只覆盖单层（apply-schema-operation.test.ts:767）。
+若放开单层容器限制，需先将树遍历沉淀为共享工具（与问题 1 同源）并补多层嵌套回归用例。
 
-### 3. 几何注册表内存泄漏
+### 3. node-host 卸载清理死代码（复核修正：无内存泄漏）
 
-`packages/designer/src/presentation/node-host.ts:457-461, 483` 的两条卸载清理路径全部失效：
-
-- 483 行的 `onBeforeUnmount(...)` 位于 setup `return` 渲染函数之后，永不可达，且 `register(...)(...)` 对 void 返回值二次调用的语义也是错的
-- 457-461 行 ref 回调调用 `geometryRegistry.register(node.id, host)` 但未返回其 cleanup 函数
-
-已卸载节点的 HTMLElement 引用滞留 Map（内存泄漏 + 陈旧测量）。
+【复核修正：泄漏结论不成立，仅为死代码】`packages/designer/src/presentation/node-host.ts:480-483` 的 `onBeforeUnmount(...)` 位于 setup `return` 渲染函数之后，永不可达，且 `register(...)(...)` 对 void 返回值二次调用的语义也是错的——死代码属实。但 ref 回调路径（457-461）的清理有效：Vue 卸载时会以 null 调用 ref 回调，`register(id, null)` 会从 Map 删除条目（geometry-registry.ts:14-18），已卸载节点的 HTMLElement 不会滞留。
+处理方式：删除不可达的 onBeforeUnmount 死代码即可，无内存泄漏需修。
 
 ### 4. 一个坏节点锁死全文档
 
-任一 definition error 使全文档进入 `conflicted`（`resolve-schema.ts:315-328`），而 `commitCandidate` 拒绝对 conflicted 文档的一切写入（`operations/shared.ts:17`）。与文档 02 "保留数据，但受影响结构不能写入"矛盾，也不符合降级可用性意图。需要决策：conflicted 应只冻结受影响结构，其余可写。
+任一 definition error 使全文档进入 `conflicted`（`resolve-schema.ts:314-328`），而 `commitCandidate` 拒绝对 conflicted 文档的一切写入（`operations/shared.ts:17`）。与文档 02 "保留数据，但受影响结构不能写入"矛盾，也不符合降级可用性意图。需要决策：conflicted 应只冻结受影响结构，其余可写。
 
 ### 5. Dayjs 泄入"纯数据"Schema
 
@@ -65,7 +62,7 @@
 | core | 单次属性编辑约 5 次全文档遍历（描述符级 JSON 合法性收集 + 逐键 defineProperty 深拷贝 + 两阶段诊断 + ResolvedDocument 重建） | json.ts:45-130、operations/shared.ts:12-25 |
 | core | batch 内每个 op 再各跑一遍完整管线 | apply-schema-operation.ts:43-48 |
 | designer | 双重解析：applySchemaOperation 已返回 resolved 文档，installSchema 再整体 resolveSchema 一遍 | create-authoring-engine.ts:224-236 |
-| designer | session 适配器每 action 双份编译与策略评估 | next-designer-session-adapter.ts:453-484 |
+| designer | session 适配器每 action 3 次 action 编译 + 2 次策略评估（actionDecision 内 compileSchemaAction+evaluateAuthoringPolicy，execute 内再 compileSchemaAction，engine.execute 内又 evaluateAuthoringPolicy+compileAction），比初审所述"双份"更重 | next-designer-session-adapter.ts:455,481,484 |
 
 几百节点的大文档下拖拽/连续输入会明显卡顿。
 优化方向：内部构造的候选跳过 JSON 合法性遍历；消除双重解析；诊断做增量校验。
@@ -81,7 +78,7 @@
 
 ## 四、隐式跨包契约未入文档
 
-1. **device-frames 反向写 designer 内部变量**：`packages/device-frames/src/styles/device-frame.css:18-24` 用 `:has(> .dc-device-frame)` 探测 designer 的 `data-dc-component="presentation-frame-boundary"` DOM 结构，并写入 `--dc-internal-designer-root-selection-plane-outset/radius` 和 `--dc-node-selection-root-block/inline-overlap`。违反项目自定契约（`--dc-internal-*` 为 owner 私有），且 frame 实际参与了它声明不管的选中面计算。修复方向：designer 侧读取 frame 已暴露的公共 token（`--dc-device-frame-border-width/radius` 已存在）。
+1. **device-frames 反向写 designer 内部变量**：`packages/device-frames/src/styles/device-frame.css:25-30` 用 `:has(> .dc-device-frame)` 探测 designer 的 `data-dc-component="presentation-frame-boundary"` DOM 结构，并写入 `--dc-internal-designer-root-selection-plane-outset/radius` 和 `--dc-node-selection-root-block/inline-overlap`。违反项目自定契约（`--dc-internal-*` 为 owner 私有），且 frame 实际参与了它声明不管的选中面计算。修复方向：designer 侧读取 frame 已暴露的公共 token（`--dc-device-frame-border-width/radius` 已存在）。
 2. **shell→designer 隐式握手协议**：shell 根元素声明 `data-dc-canvas-fit="contain"`（shells/device-container-shell.ts:13），被 designer `DcCanvas.ts:57` querySelector 消费；缩放由 designer 的 `--dc-internal-canvas-view-scale`（DcCanvas.ts:142）完成。改名会静默破坏，应写入架构文档 06。
 3. **session 层整层缺席于文档**：presentation 组件全部经由 session seam（session/ 目录 + next-designer-session-adapter，489 行）读写而非文档所述直连 engine；且存在两套 action 词汇（engine 的 SchemaAuthoringAction 与 session 的 AuthoringAction）。文档 02 示例 `move-node` + `to:{kind:'root',index}` 与 core 实际 `move` + `StructuralDestination{owner,position}` 不符、`confirmation-required` 在 core 层不存在，均源于层级标注缺失。
 4. **结构 CSS 所有权表述偏差**：文档称 Designer 拥有结构 CSS，实体在 @dragcraft/ui 导出的 structure.css/recipe.css（designer/theme/*.css 仅 @import），文档未提 ui 层。
@@ -117,9 +114,9 @@
 4. **macOS 重做失效**：DcDesigner.ts:154 只认 Ctrl+Y，Cmd+Y 不触发（Cmd+Shift+Z 正常）。
 5. **常驻 subtree MutationObserver**：DcCanvas.ts:81-84 观察整个画布内容区，可收窄为 childList 或精确 watch。
 6. **node-host 其他**：unwrap 只提升已声明 region 子节点，未知 region 子节点使操作被整体拒绝；update-node 未在运行时剥离 operation.node.id（update.ts:23-24）；markViewportRootNodeHost 以 props 启发式递归识别 NodeHost，对 slot 包装方式脆弱。
-7. **fields 细节**：visible/ifShow 双轨 API 无 deprecated 标记（types.ts:152-154）；dependencies handler 在渲染路径与校验路径取值上下文不一致（useFieldDependencies.ts:16-25 vs FormGenerator.ts:73-76）；min/max 仅对 number 生效，数字字符串静默跳过；index.ts:104-121 全部 as unknown as Component 双重断言，key 拼错仅运行时报错。
+7. **fields 细节**：show/ifShow/visible 三套可见性 API 均无 deprecated 标记（types.ts:152-162）；dependencies handler 在渲染路径与校验路径取值上下文不一致（useFieldDependencies.ts:16-25 vs FormGenerator.ts:73-76）；min/max 仅对 number 生效，数字字符串静默跳过（useFormValidation.ts:78-83）；index.ts:104-121 共 18 处 as unknown as Component 双重断言（组件传错仅运行时暴露；字段映射有显式 Record 类型标注，key 拼错是编译错误）。
 8. **工程链路**：turbo 只缓存 build/dev，test/typecheck 走 pnpm -r 无缓存；根 typecheck 每次强制全量构建；exports 缺显式 types 条件；发布元数据（description/keywords）为占位符。
-9. **仓库卫生**：packages/renderer|themes|widgets|builtin-fields|builtin-widgets 为已删包（commit 1aec197）的磁盘残留 dist，建议删除或 gitignore。
+9. 【复核撤销】packages/renderer|themes|widgets|builtin-fields|builtin-widgets 残留目录经复核已不存在于磁盘（初审后已被清理），无需处理。
 10. **utils 包不成立**：122 行中 EventEmitter 全仓零消费、clone.ts 是一行 lodash-es 转出口；建议并入消费方（designer/core）。
 11. **i18n 边角**：designer 默认文案硬编码 zh-CN（messages.ts:6-24）；device-frames 有英文兜底与装饰性硬编码（'9:41'/'Carrier' 等，phone-container-shell.ts:38,54,81）；labelKey 无共享 key 常量。
 
@@ -131,7 +128,7 @@
 2. 文档 02 示例失真（move-node/to vs move/{owner,position}）、confirmation-required 层级未标注（见 四.3）。
 3. 文档 04 遗漏已实现契约：defaultProps/formatValue/normalizeValue（types.ts:242-247）、defaultValue 兜底（utils.ts:14-17）、span/columns 栅格、'schema' binding scope（types.ts:116）、i18n key 机制。
 4. visible/ifShow 双轨 API 文档只提 visible。
-5. 总览未明示"框架不提供生产 Runtime，宿主自行解释 Schema"这一重大范围选择。
+5. 【复核撤销】总览已在 01-overview.md:3,33 两处明示"宿主在自己的运行时解释同一份纯数据/导出的 DocumentSchema"（03:45、08:12 亦重申），初审结论不成立。
 6. 跨包 DOM 握手协议（data-dc-canvas-fit）与 device-frame CSS 依赖关系未入文档 06。
 
 ---
@@ -162,7 +159,7 @@
 
 | 级别 | 内容 |
 | --- | --- |
-| P0 | 一.1 #2 #3 #6 #7 正确性 bug；一.5 Dayjs 序列化；一.4 conflicted 锁死策略决策 |
-| P1 | 消除双重解析（二）；accepts 进入拖拽层（三.1）；fields 包依赖修复（六.1）；文档补 session 层与握手协议（四.2/四.3） |
-| P2 | core/form-generator 补测试（用本次发现的 bug 做回归用例）；物料栏键盘可达性；版本化迁移设计（五.1）；navbar 约束下沉到 policy（三.2） |
-| P3 | 删残留目录；dispose 实现；utils 并入；exports types 条件；结构树 a11y；macOS 快捷键；发布元数据 |
+| P0 | 一.4 conflicted 锁死策略决策；一.5 Dayjs 序列化；一.6 useDesigner().schema 永久过期；一.7 bundle id 埋雷 |
+| P1 | 消除重复解析与重复编译（二；session 每 action 3 次编译 + 2 次策略评估）；accepts 进入拖拽层（三.1）；fields 包依赖修复（六.1）；文档补 session 层与握手协议（四.2/四.3） |
+| P2 | core/form-generator 补测试（用确认成立的 bug 做回归用例）；物料栏键盘可达性；版本化迁移设计（五.1）；navbar 约束下沉到 policy（三.2）；node-host 死代码清理（一.3） |
+| P3 | dispose 实现；utils 并入；exports types 条件；结构树 a11y；macOS 快捷键；发布元数据；放开单层容器限制前必须先修 一.1/一.2（递归树遍历） |
