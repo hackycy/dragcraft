@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { createConfirmActionInterceptor, createDesigner, createI18n, DcDesigner, designerMessages } from '@dragcraft/designer'
+import { createI18n, DcDesigner, designerMessages } from '@dragcraft/designer'
 import type { DesignerExtensions, MaterialItemIcon } from '@dragcraft/designer'
 import {
   BUILT_IN_DEVICE_FRAMES,
   DevicePicker,
   IPHONE_DEVICE_FRAME,
 } from '@dragcraft/device-frames'
-import { Modal } from 'ant-design-vue'
 import { computed, h, ref } from 'vue'
 import PlaygroundHeader from './components/PlaygroundHeader.vue'
-import { buildPlaygroundFieldComponentMap } from './components/fields'
-import { playgroundWidgetMessages } from './components/widgets/messages'
-import { globalConfigSchema } from './config/global-config-schema'
-import { playgroundNextMaterials, playgroundNextTemplates } from './config/next-fixtures'
-import { useTemplateSwitch } from './composables/useTemplateSwitch'
+import { DECORATION_DEMO_SCHEMA } from './decoration/demo-schema'
+import { createDecorationDesigner } from './decoration/designer'
+import { createPageBackgroundCssVars } from './decoration/page-background'
 import SchemaIOModal from './shared/SchemaIOModal.vue'
 import { isFinalDocumentSchema } from './shared/schema-validation'
 import { useSchemaIO } from './shared/use-schema-io'
@@ -53,74 +50,25 @@ const materialItemRenderer: DesignerExtensions['materialItemRenderer'] = ({
     h('span', { class: 'pg-material-card__title' }, material.title),
   ])
 
-interface ConfirmModalOptions {
-  title: string
-  content: string
-  okText?: string
-  okType?: 'primary' | 'danger'
-}
-
-function confirmWithModal(options: ConfirmModalOptions): Promise<boolean> {
-  return new Promise((resolve) => {
-    let settled = false
-    const settle = (value: boolean) => {
-      if (settled)
-        return
-      settled = true
-      resolve(value)
-    }
-
-    Modal.confirm({
-      title: options.title,
-      content: options.content,
-      okText: options.okText ?? '确定',
-      cancelText: '取消',
-      okType: options.okType,
-      onOk: () => settle(true),
-      onCancel: () => settle(false),
-      afterClose: () => settle(false),
-    })
-  })
-}
-
 // ── Create designer instance ─────────────────
 
-const actionInterceptors = [
-  createConfirmActionInterceptor({
-    confirm: () => confirmWithModal({
-      title: '确认删除',
-      content: '删除后可通过撤销恢复，是否继续？',
-      okText: '删除',
-      okType: 'danger',
-    }),
-  }),
-]
+// 初始画布用示例装修 schema（14 个物料各出现一次）；空画布仍由 createEmptyDocumentSchema() 提供，
+// 见 decoration/designer.ts 的默认参数。
+const designer = createDecorationDesigner(DECORATION_DEMO_SCHEMA)
 
-const extensions: DesignerExtensions = {
-  materialItemRenderer,
-}
+/**
+ * 页面背景：prod 在它的 `index.vue` 里把 `globalConfig.background` 翻译成 CSS 自定义属性，
+ * 再由样式覆盖画布的 surface 元素（**不写 `page.style.surface`**，保持 `globalConfig` 为唯一真源）。
+ * 这里搬的是同一套做法，覆盖规则见 `styles/playground.css`。
+ *
+ * `designer.document` 是设计器公开的响应式文档状态，所以改全局配置会即时反映到画布。
+ */
+const pageBackgroundStyle = computed(() => {
+  const state = designer.document.value
 
-const designer = createDesigner({
-  schema: playgroundNextTemplates[0].schema,
-  materials: playgroundNextMaterials,
-  fieldComponentMap: buildPlaygroundFieldComponentMap(),
-  globalConfigSchema,
-  messages: playgroundWidgetMessages,
-  actionInterceptors,
-  extensions,
-  maxHistoryEntries: 50,
-})
-
-const confirmTemplateSwitch = () => confirmWithModal({
-    title: '确认切换模板',
-    content: '当前修改将丢失，是否切换？',
-    okText: '切换',
-  })
-const templateSwitch = useTemplateSwitch({
-  importSchema: designer.importSchema,
-  exportSchema: designer.exportSchema,
-  templates: playgroundNextTemplates,
-  confirmSwitch: confirmTemplateSwitch,
+  return createPageBackgroundCssVars(
+    state.status === 'rejected' ? undefined : state.schema.globalConfig.background,
+  )
 })
 
 const io = useSchemaIO({
@@ -129,30 +77,13 @@ const io = useSchemaIO({
   invalidSchemaMessage: '无效的 Schema 格式：缺少 version、globalConfig、page、nodes 或 structure 字段',
   isValidSchema: isFinalDocumentSchema,
 })
-
-function toggleLocale() {
-  const next = hostI18n.locale.value === 'zh-CN' ? 'en' : 'zh-CN'
-  hostI18n.setLocale(next)
-  designer.setLocale(next)
-}
-
-async function handleTemplateSwitch(id: string, target: HTMLSelectElement) {
-  const switched = await templateSwitch.switchTemplate(id)
-  if (!switched)
-    target.value = templateSwitch.activeTemplateId.value
-}
 </script>
 
 <template>
-  <div class="playground-root">
+  <div class="playground-root" :style="pageBackgroundStyle">
     <PlaygroundHeader
-      :active-template-id="templateSwitch.activeTemplateId.value"
-      :templates="templateSwitch.templates"
-      :locale="hostI18n.locale.value"
-      @template-switch="handleTemplateSwitch"
       @import-open="io.handleImportOpen()"
       @export-open="io.handleExport()"
-      @toggle-locale="toggleLocale"
     >
       <template #preview-controls>
         <DevicePicker

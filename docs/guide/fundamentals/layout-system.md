@@ -214,7 +214,7 @@ const style = computed(() => ({
 
 `--dc-inset-*` 已经包含设备安全区和所有已测量 reservation。浮动按钮本身的尺寸、边距和点击区域仍属于业务组件；Frame 不应读取 props 或直接绘制按钮。Frame 可以是 `position: absolute; inset: 0` 的全屏定位层，但不得用 CSS 把 NodeHost 设为 `inset: 0` 或全屏透明层；应由 Preview 根元素用 `right`、`bottom` 和自身尺寸定位。这样点击与 mask 都只覆盖按钮的实际矩形；作为 root-owned 节点时，选中视觉会在 root plane 横向贯穿，但它是不可命中的独立 overlay。
 
-Playground 中的完整对照实现位于 [`next-fixtures.ts`](https://github.com/hackycy/dragcraft/blob/main/playground/src/config/next-fixtures.ts) 和 [`mini-program.ts`](https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/mini-program.ts)。其中导航栏、Tab 栏和浮动按钮共享同一条 NodeHost 投影链路，差别只有“是否 reservation”和自己的定位 CSS。
+Playground 中的完整对照实现是三份 Frame：[导航栏](https://github.com/hackycy/dragcraft/blob/main/playground/src/decoration/materials/NavBar/NavBarFrame.vue)、[Tab 栏](https://github.com/hackycy/dragcraft/blob/main/playground/src/decoration/materials/TabBar/TabBarFrame.vue)与[浮动按钮](https://github.com/hackycy/dragcraft/blob/main/playground/src/decoration/materials/FloatingButton/FloatingButtonFrame.vue)。三者共享同一条 NodeHost 投影链路，差别只有“是否 reservation”和自己的定位 CSS——前两者分别用 `useSurfaceReservation` 占住 `block-start` 与 `block-end`，浮动按钮不占位、只靠 Preview 的定位。
 
 ## 样式应该写到哪里
 

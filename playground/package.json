@@ -13,10 +13,12 @@
     "@dragcraft/device-frames": "workspace:*",
     "@dragcraft/fields-ant-design-vue": "workspace:*",
     "ant-design-vue": "catalog:vue",
-    "vue": "catalog:vue"
+    "vue": "catalog:vue",
+    "vue-draggable-plus": "catalog:vue"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "catalog:vue",
+    "happy-dom": "catalog:testing",
     "vite": "catalog:cli",
     "vitest": "catalog:testing"
   }

@@ -88,7 +88,7 @@ export const cardMaterial: MaterialDefinition = {
 | `cardinality.max` | Region 最多允许的 child 数 | 拖放指示器的位置 |
 | `accepts.types` | 允许放入的 material `type` 白名单 | Vue 组件名或运行时实例 |
 
-Region 声明决定 Designer 的能力检查。Flex 的方向、wrap、gap、Grid 的轨道和 Split 的排列都应该由 preview props 和 CSS 决定，而不是写进 `container.regions`。Playground 用这种方式验证了 Flex 与 Split 的 schema 声明没有混入 `display`、`gridTemplate` 或 breakpoint 字段，参见 [`container.ts`](https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/container.ts)。
+Region 声明决定 Designer 的能力检查。Flex 的方向、wrap、gap、Grid 的轨道和 Split 的排列都应该由 preview props 和 CSS 决定，而不是写进 `container.regions`。
 
 ## 单 Region Flex：完整实现
 
@@ -459,7 +459,7 @@ it('inserts before the first midpoint and after the last item', () => {
 - 重复 outlet 时出现 `CONTAINER_REGION_DUPLICATE_OUTLET`，不会复制 children。
 - Region 拖放的 forbidden overlay 会在 capacity 或 accepted type 不满足时出现。
 
-Playground 的 [`container.test.ts`](https://github.com/hackycy/dragcraft/blob/main/playground/src/components/widgets/container.test.ts) 覆盖了 Region ID、声明与 CSS 解耦以及线性插入中点；Designer 的 container tests 还覆盖了 missing/duplicate outlet recovery。
+Designer 的 container tests 覆盖了 missing/duplicate outlet recovery。
 
 ## 生产 Runtime 的对接方式
 

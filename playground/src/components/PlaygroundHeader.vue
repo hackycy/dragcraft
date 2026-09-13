@@ -1,38 +1,14 @@
 <!-- playground/src/components/PlaygroundHeader.vue -->
 <script setup lang="ts">
-import type { TemplateOption } from '../config/templates'
-
-defineProps<{
-  activeTemplateId: string
-  templates: readonly TemplateOption[]
-  locale: string
-}>()
-
 const emit = defineEmits<{
-  templateSwitch: [id: string, target: HTMLSelectElement]
   importOpen: []
   exportOpen: []
-  toggleLocale: []
 }>()
 </script>
 
 <template>
   <header class="playground-header">
     <span class="playground-header__brand">Dragcraft Playground</span>
-
-    <select
-      class="playground-header__select"
-      :value="activeTemplateId"
-      @change="emit('templateSwitch', ($event.target as HTMLSelectElement).value, $event.target as HTMLSelectElement)"
-    >
-      <option
-        v-for="t in templates"
-        :key="t.id"
-        :value="t.id"
-      >
-        {{ t.label }}
-      </option>
-    </select>
 
     <div class="playground-header__preview-controls">
       <slot name="preview-controls" />
@@ -57,12 +33,6 @@ const emit = defineEmits<{
         @click="emit('exportOpen')"
       >
         Export
-      </button>
-
-      <div class="playground-header__divider" />
-
-      <button class="playground-header__btn" @click="emit('toggleLocale')">
-        {{ locale === 'zh-CN' ? 'English' : '中文' }}
       </button>
     </div>
   </header>

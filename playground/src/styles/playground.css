@@ -16,77 +16,8 @@ body {
   height: 100%;
 }
 
-/* ── Mini-program preview brand ──────────── */
-
-:root {
-  --pg-brand: #07c160;
-  --pg-brand-hover: #06ad56;
-  --pg-brand-subtle: rgba(7, 193, 96, 0.08);
-  --pg-brand-ring: rgba(7, 193, 96, 0.2);
-}
-
 .dc-application-surface {
   background: transparent;
-}
-
-/* ── Field Presentation Examples ─────────── */
-
-.pg-field-presentation-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pg-field-presentation-label__badge {
-  padding: 1px 5px;
-  color: var(--dc-color-accent);
-  background: var(--dc-color-accent-subtle);
-  border-radius: 4px;
-  font-size: var(--dc-font-size-xs);
-  font-weight: var(--dc-font-weight-regular);
-  line-height: 1.4;
-}
-
-.pg-field-presentation-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--dc-color-border-subtle);
-  border-radius: 6px;
-  background: var(--dc-color-surface-muted);
-}
-
-.pg-field-presentation-status__indicator {
-  flex: 0 0 auto;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--dc-color-warning);
-}
-
-.pg-field-presentation-status__indicator--ready {
-  background: var(--dc-color-success);
-}
-
-.pg-field-presentation-status__content {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.pg-field-presentation-status__content strong {
-  color: var(--dc-color-text);
-  font-size: var(--dc-font-size-sm);
-  font-weight: var(--dc-font-weight-medium);
-  line-height: 1.4;
-}
-
-.pg-field-presentation-status__content span {
-  color: var(--dc-color-text-subtle);
-  font-size: var(--dc-font-size-xs);
-  line-height: 1.4;
 }
 
 /* ── Playground Material Cards ───────────── */
@@ -128,66 +59,6 @@ body {
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* ── Widget Visual Enhancement (Mini-Program Style) ── */
-
-/* Button — WeChat pill style */
-.dc-widget-button {
-  min-height: 40px;
-  min-width: 120px;
-  font-size: 15px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  border: none;
-  background: var(--pg-brand);
-  color: #ffffff;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-/* Text — Better typography */
-.dc-widget-text {
-  line-height: 1.8;
-  letter-spacing: 0.3px;
-}
-
-/* Form inputs */
-.dc-node--widget input[type="text"],
-.dc-node--widget input[type="email"],
-.dc-node--widget input[type="tel"],
-.dc-node--widget input[type="number"],
-.dc-node--widget input[type="password"],
-.dc-node--widget select {
-  height: 40px;
-  font-size: 14px;
-  padding: 0 12px;
-  border: 1px solid #e8e8e8;
-  background: #fafafa;
-  transition: all 0.2s ease;
-}
-
-.dc-node--widget textarea {
-  font-size: 14px;
-  padding: 8px 12px;
-  border: 1px solid #e8e8e8;
-  background: #fafafa;
-  transition: all 0.2s ease;
-}
-
-.dc-node--widget input:focus,
-.dc-node--widget textarea:focus,
-.dc-node--widget select:focus {
-  border-color: var(--pg-brand);
-  background: #ffffff;
-}
-
-/* Divider — Thinner, lighter */
-.dc-node--widget hr {
-  border: none;
-  height: 1px;
-  background: #f0f0f0;
-  margin: 4px 0;
 }
 
 /* ── JSON Modal ───────────────────────────── */
@@ -314,42 +185,8 @@ body {
   white-space: nowrap;
 }
 
-.playground-header__select {
-  height: 32px;
-  padding: 0 28px 0 12px;
-  font-size: 13px;
-  font-family: var(--dc-font-sans);
-  border: 1px solid var(--dc-color-border);
-  border-radius: 6px;
-  background: var(--dc-color-surface);
-  color: var(--dc-color-text);
-  cursor: pointer;
-  outline: none;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  transition: border-color 0.2s;
-}
-
-.playground-header__select:hover {
-  border-color: var(--dc-color-accent);
-}
-
-.playground-header__select:focus {
-  border-color: var(--dc-color-accent);
-  box-shadow: 0 0 0 2px var(--dc-color-accent-ring);
-}
-
 .playground-header__spacer {
   flex: 1;
-}
-
-.playground-header__divider {
-  width: 1px;
-  height: 20px;
-  background: var(--dc-color-border-subtle);
-  flex-shrink: 0;
 }
 
 .playground-header__btn {
@@ -421,15 +258,6 @@ body {
     display: none;
   }
 
-  .playground-header__select {
-    grid-column: 1;
-    grid-row: 1;
-    width: 100%;
-    min-width: 0;
-    max-width: 130px;
-    height: 30px;
-  }
-
   .playground-header__actions {
     grid-column: 2;
     grid-row: 1;
@@ -442,10 +270,6 @@ body {
     font-size: 12px;
   }
 
-  .playground-header__divider {
-    display: none;
-  }
-
   .playground-header__preview-controls {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -453,8 +277,23 @@ body {
   }
 }
 
-/* ── Swiper Widget ──────────────────────────── */
+/* ── Page background (driven by the global config) ── */
 
-.dc-widget-swiper {
-  background: #f5f5f5;
+/*
+ * prod 的 index.vue 不写 `page.style.surface`，而是把全局背景算成 CSS 自定义属性、再在样式里
+ * 覆盖画布的 surface 元素——这样 `globalConfig` 是唯一真源，导出的 schema 里不会多出一份派生数据。
+ * 这里照搬同一套；变量由 App.vue 的 pageBackgroundStyle 绑在 .playground-root 上。
+ *
+ * `[data-dc-component="canvas-surface"]` 与 FloatingButton 用的 `.dc-canvas-surface__viewport-plane`
+ * 同属 dragcraft 的**内部 DOM 约定**（由 presentation/canvas-surface.ts 产出），不是公开契约，
+ * 升级有断裂风险。prod 也是这么依赖的。
+ */
+.playground-root [data-dc-component="canvas-surface"] {
+  --dc-color-surface: var(--dc-internal-page-background-color);
+
+  background-color: var(--dc-internal-page-background-color) !important;
+  background-image: var(--dc-internal-page-background-image) !important;
+  background-position: var(--dc-internal-page-background-position) !important;
+  background-repeat: var(--dc-internal-page-background-repeat) !important;
+  background-size: var(--dc-internal-page-background-size) !important;
 }
