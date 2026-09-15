@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="material-symbols:signpost-outline" :size="size" />
+  <Icon icon="fluent:apps-list-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>

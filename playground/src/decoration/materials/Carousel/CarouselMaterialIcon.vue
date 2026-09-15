@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="material-symbols:view-carousel-outline" :size="size" />
+  <Icon icon="fluent:content-view-gallery-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>

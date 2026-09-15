@@ -2,7 +2,7 @@
   <div class="pg-notice" :class="`pg-notice--${resolvedStyle}`">
     <div v-if="shouldShowNoticeIcon" class="pg-notice__icon" :style="iconStyle">
       <img v-if="resolvedNoticeIcon" :src="resolvedNoticeIcon" alt="">
-      <Icon v-else icon="bx:bxs-volume-full" :size="resolvedTextFontSize" />
+      <Icon v-else icon="fluent:speaker-2-24-regular" :size="resolvedTextFontSize" />
     </div>
 
     <div class="pg-notice__content" :style="textStyle">
@@ -43,7 +43,7 @@
     >
       <template v-if="resolvedButtonType === 'text'">{{ resolvedButtonText }}</template>
       <img v-else-if="resolvedButtonIcon" :src="resolvedButtonIcon" alt="">
-      <Icon v-else icon="ant-design:right-outlined" :size="16" />
+      <Icon v-else icon="fluent:chevron-right-24-regular" :size="16" />
     </span>
   </div>
 </template>

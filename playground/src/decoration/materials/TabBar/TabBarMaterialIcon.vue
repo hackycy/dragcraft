@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="material-symbols:bottom-navigation" :size="size" />
+  <Icon icon="fluent:tab-group-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>

@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="material-symbols:touch-app-outline" :size="size" />
+  <Icon icon="fluent:tap-single-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>

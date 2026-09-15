@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="material-symbols:campaign-outline" :size="size" />
+  <Icon icon="fluent:megaphone-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>

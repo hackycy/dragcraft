@@ -21,7 +21,7 @@
 
     <span v-if="resolvedShowMore" class="pg-title__more" :style="moreStyle">
       <span class="pg-title__more-text">{{ resolvedMoreText }}</span>
-      <Icon class="pg-title__more-icon" icon="ant-design:right-outlined" :size="12" />
+      <Icon class="pg-title__more-icon" icon="fluent:chevron-right-24-regular" :size="12" />
     </span>
   </div>
 </template>

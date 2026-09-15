@@ -18,7 +18,7 @@
         >
           <div class="tab-bar-items-field__heading">
             <span class="tab-bar-items-field__title">
-              <Icon class="tab-bar-items-field__handle" icon="ant-design:drag-outlined" :size="14" />
+              <Icon class="tab-bar-items-field__handle" icon="fluent:re-order-dots-vertical-24-regular" :size="14" />
               导航项 {{ String(index + 1).padStart(2, '0') }}
             </span>
             <Button
@@ -28,7 +28,7 @@
               aria-label="删除导航项"
               @click="handleDelete(item.id)"
             >
-              <Icon class="tab-bar-items-field__delete" icon="ant-design:close-circle-filled" :size="14" />
+              <Icon class="tab-bar-items-field__delete" icon="fluent:dismiss-circle-24-regular" :size="14" />
             </Button>
           </div>
 

@@ -18,7 +18,7 @@
         >
           <template #title>
             <span class="carousel-items-field__title">
-              <Icon class="carousel-items-field__handle" icon="ant-design:drag-outlined" :size="14" />
+              <Icon class="carousel-items-field__handle" icon="fluent:re-order-dots-vertical-24-regular" :size="14" />
               图片 {{ index + 1 }}
             </span>
           </template>
@@ -29,7 +29,7 @@
               :disabled="disabled || innerItems.length <= 1"
               @click="handleDelete(item.id)"
             >
-              <Icon class="carousel-items-field__delete" icon="ant-design:close-circle-filled" :size="14" />
+              <Icon class="carousel-items-field__delete" icon="fluent:dismiss-circle-24-regular" :size="14" />
             </Button>
           </template>
 

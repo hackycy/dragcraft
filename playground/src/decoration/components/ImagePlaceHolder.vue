@@ -1,6 +1,6 @@
 <template>
   <div class="image-placeholder">
-    <Icon icon="ant-design:picture-outlined" :size="size" color="#e6f1ff" />
+    <Icon icon="fluent:image-24-regular" :size="size" color="#e6f1ff" />
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="ant-design:column-height-outlined" :size="size" />
+  <Icon icon="fluent:spacebar-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>

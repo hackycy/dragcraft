@@ -18,7 +18,7 @@
         >
           <template #title>
             <span class="navigation-items-field__title">
-              <Icon class="navigation-items-field__handle" icon="ant-design:drag-outlined" :size="14" />
+              <Icon class="navigation-items-field__handle" icon="fluent:re-order-dots-vertical-24-regular" :size="14" />
               导航项 {{ index + 1 }}
             </span>
           </template>
@@ -30,7 +30,7 @@
               aria-label="删除导航项"
               @click="handleDelete(item.id)"
             >
-              <Icon class="navigation-items-field__delete" icon="ant-design:close-circle-filled" :size="14" />
+              <Icon class="navigation-items-field__delete" icon="fluent:dismiss-circle-24-regular" :size="14" />
             </Button>
           </template>
 

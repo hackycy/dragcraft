@@ -13,7 +13,7 @@
         :value="option.value"
         class="pg-background-color-config__direction-button"
       >
-        <Icon :icon="option.icon" :size="14" :class="option.iconClass" aria-hidden="true" />
+        <Icon :icon="option.icon" :size="14" aria-hidden="true" />
         <span>{{ option.label }}</span>
       </RadioButton>
     </RadioGroup>
@@ -70,7 +70,7 @@
                 aria-label="删除色标"
                 @click="removeStop(index)"
               >
-                <Icon icon="ant-design:delete-outlined" :size="14" />
+                <Icon icon="fluent:delete-24-regular" :size="14" />
               </Button>
             </Tooltip>
           </div>
@@ -86,7 +86,7 @@
         :disabled="props.disabled || normalizedValue.stops.length >= MAX_BACKGROUND_STOPS"
         @click="addStop"
       >
-        <Icon icon="ant-design:plus-outlined" :size="14" />
+        <Icon icon="fluent:add-24-regular" :size="14" />
         添加色标
       </Button>
     </div>
@@ -120,22 +120,12 @@ const directionOptions: ReadonlyArray<{
   label: string
   value: DiyV2BackgroundDirection
   icon: string
-  iconClass?: string
 }> = [
-  { label: '纵向', value: 'vertical', icon: 'ant-design:column-height-outlined' },
-  { label: '横向', value: 'horizontal', icon: 'ant-design:column-width-outlined' },
-  {
-    label: '左斜',
-    value: 'diagonalLeft',
-    icon: 'ant-design:arrow-down-outlined',
-    iconClass: 'is-diagonal-left',
-  },
-  {
-    label: '右斜',
-    value: 'diagonalRight',
-    icon: 'ant-design:arrow-down-outlined',
-    iconClass: 'is-diagonal-right',
-  },
+  { label: '纵向', value: 'vertical', icon: 'fluent:arrow-bidirectional-up-down-24-regular' },
+  { label: '横向', value: 'horizontal', icon: 'fluent:arrow-bidirectional-left-right-24-regular' },
+  // 斜向箭头按渲染方向配对，不要按名字配对：diagonalLeft 走 to bottom right，diagonalRight 走 to bottom left
+  { label: '左斜', value: 'diagonalLeft', icon: 'fluent:arrow-down-right-24-regular' },
+  { label: '右斜', value: 'diagonalRight', icon: 'fluent:arrow-down-left-24-regular' },
 ]
 
 const normalizedValue = computed(() => normalizeDiyV2BackgroundColor(props.value))
@@ -269,14 +259,6 @@ function removeStop(index: number) {
   justify-content: center;
   gap: 4px;
   padding: 0 6px;
-}
-
-.pg-background-color-config__direction .is-diagonal-left {
-  transform: rotate(-45deg);
-}
-
-.pg-background-color-config__direction .is-diagonal-right {
-  transform: rotate(45deg);
 }
 
 .pg-background-color-config__preview {

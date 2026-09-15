@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="ant-design:picture-outlined" :size="size" />
+  <Icon icon="fluent:image-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>

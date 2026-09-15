@@ -11,35 +11,36 @@ import { Icon } from './Icon'
  * 少一个则意味着某个物料或检查器字段会渲染失败。新增字形时在这里追加并说明用途。
  */
 const EXPECTED_GLYPH_NAMES: readonly string[] = [
-  // 物料面板 / 运行时字形（见 research/iconify-glyphs.md；那份文档的 14 个物料里有 3 个后来被移出，
-  // 对应字形已删，所以这里比文档少 3 项）
-  'ant-design:picture-outlined',
-  'material-symbols:view-carousel-outline',
-  'material-symbols:signpost-outline',
-  'material-symbols:campaign-outline',
-  'material-symbols:bottom-navigation',
-  'ant-design:font-size-outlined',
-  'ant-design:border-horizontal-outlined',
-  'ant-design:column-height-outlined',
-  'material-symbols:touch-app-outline',
-  'bx:bxs-volume-full',
-  'ant-design:right-outlined',
-  'material-symbols:page-header',
-  // 11 个检查器字段字形（prod 里来自 @ant-design/icons-vue）
-  'ant-design:appstore-outlined',
-  'ant-design:fullscreen-outlined',
-  'ant-design:vertical-align-top-outlined',
-  'ant-design:vertical-align-bottom-outlined',
-  'ant-design:vertical-align-middle-outlined',
-  'ant-design:link-outlined',
-  'ant-design:disconnect-outlined',
-  'ant-design:arrow-down-outlined',
-  'ant-design:column-width-outlined',
-  'ant-design:delete-outlined',
-  'ant-design:plus-outlined',
-  // 2 个物料 items 字段字形（prod 里来自 @ant-design/icons-vue）
-  'ant-design:close-circle-filled',
-  'ant-design:drag-outlined',
+  // 物料面板 / 运行时字形
+  'fluent:image-24-regular',
+  'fluent:content-view-gallery-24-regular',
+  'fluent:apps-list-24-regular',
+  'fluent:megaphone-24-regular',
+  'fluent:tab-group-24-regular',
+  'fluent:text-header-1-24-regular',
+  'fluent:line-horizontal-1-24-regular',
+  'fluent:spacebar-24-regular',
+  'fluent:tap-single-24-regular',
+  'fluent:window-24-regular',
+  'fluent:speaker-2-24-regular',
+  'fluent:chevron-right-24-regular',
+  // 检查器字段字形
+  'fluent:align-top-24-regular',
+  'fluent:align-bottom-24-regular',
+  'fluent:align-center-vertical-24-regular',
+  'fluent:grid-24-regular',
+  'fluent:full-screen-maximize-24-regular',
+  'fluent:arrow-bidirectional-up-down-24-regular',
+  'fluent:arrow-bidirectional-left-right-24-regular',
+  'fluent:arrow-down-right-24-regular',
+  'fluent:arrow-down-left-24-regular',
+  'fluent:link-24-regular',
+  'fluent:link-dismiss-24-regular',
+  'fluent:delete-24-regular',
+  'fluent:add-24-regular',
+  // items 字段字形
+  'fluent:dismiss-circle-24-regular',
+  'fluent:re-order-dots-vertical-24-regular',
 ]
 
 interface IconTestProps {
@@ -72,7 +73,7 @@ describe('decoration Icon', () => {
   })
 
   it('sizes the glyph through width/height rather than assuming a coordinate system', () => {
-    const { app, svg } = mountIcon({ icon: 'material-symbols:page-header', size: 24 })
+    const { app, svg } = mountIcon({ icon: 'fluent:window-24-regular', size: 24 })
 
     expect(svg!.getAttribute('width')).toBe('24')
     expect(svg!.getAttribute('height')).toBe('24')
@@ -81,7 +82,7 @@ describe('decoration Icon', () => {
   })
 
   it('lets the color prop reach the glyph, since every path is currentColor', () => {
-    const { app, svg } = mountIcon({ icon: 'ant-design:picture-outlined', color: 'red' })
+    const { app, svg } = mountIcon({ icon: 'fluent:image-24-regular', color: 'red' })
 
     expect(svg!.getAttribute('style')).toContain('color')
     expect(svg!.style.color).not.toBe('')
@@ -91,7 +92,7 @@ describe('decoration Icon', () => {
   })
 
   it('throws instead of silently rendering an empty glyph for an unknown name', () => {
-    expect(() => mountIcon({ icon: 'material-symbols:does-not-exist' }))
-      .toThrow(/material-symbols:does-not-exist/)
+    expect(() => mountIcon({ icon: 'fluent:does-not-exist' }))
+      .toThrow(/fluent:does-not-exist/)
   })
 })

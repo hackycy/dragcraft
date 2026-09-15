@@ -49,31 +49,31 @@ const modeOptions: ReadonlyArray<{
     label: '居上',
     value: 'top',
     tooltip: '居上：图片完整显示并贴近画布顶部',
-    icon: 'ant-design:vertical-align-top-outlined',
+    icon: 'fluent:align-top-24-regular',
   },
   {
     label: '居下',
     value: 'bottom',
     tooltip: '居下：图片完整显示并贴近画布底部',
-    icon: 'ant-design:vertical-align-bottom-outlined',
+    icon: 'fluent:align-bottom-24-regular',
   },
   {
     label: '居中',
     value: 'center',
     tooltip: '居中：图片完整显示并保持居中',
-    icon: 'ant-design:vertical-align-middle-outlined',
+    icon: 'fluent:align-center-vertical-24-regular',
   },
   {
     label: '平铺',
     value: 'repeat',
     tooltip: '平铺：按图片原尺寸重复铺设',
-    icon: 'ant-design:appstore-outlined',
+    icon: 'fluent:grid-24-regular',
   },
   {
     label: '铺满',
     value: 'cover',
     tooltip: '铺满：覆盖整个画布，可能裁切图片边缘',
-    icon: 'ant-design:fullscreen-outlined',
+    icon: 'fluent:full-screen-maximize-24-regular',
   },
 ]
 

@@ -7,8 +7,7 @@ import { ICON_GLYPHS } from './glyphs'
  * 渲染本地字形注册表里的 Iconify 字形。
  *
  * prop 名沿用 prod 调用点的 `icon`（prod 的 `<Icon :icon="..." />`），这样照搬过来的
- * 物料 .vue 文件不需要改调用。尺寸通过 width/height 给出，不依赖字形的坐标系，
- * 因为 ant-design 字形是 1024 单位、material-symbols 与 bx 是 24 单位。
+ * 物料 .vue 文件不需要改调用。尺寸通过 width/height 给出，不依赖字形的坐标系。
  */
 export const Icon = defineComponent({
   name: 'DecorationIcon',

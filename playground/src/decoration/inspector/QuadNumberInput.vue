@@ -17,7 +17,7 @@
           aria-label="解除联动"
           @click="startIndividualEditing"
         >
-          <Icon icon="ant-design:link-outlined" :size="14" />
+          <Icon icon="fluent:link-24-regular" :size="14" />
         </Button>
       </Tooltip>
     </div>
@@ -45,7 +45,7 @@
           aria-label="恢复联动"
           @click="relink"
         >
-          <Icon icon="ant-design:disconnect-outlined" :size="14" />
+          <Icon icon="fluent:link-dismiss-24-regular" :size="14" />
         </Button>
       </Tooltip>
     </div>

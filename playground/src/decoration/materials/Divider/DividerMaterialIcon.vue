@@ -1,5 +1,5 @@
 <template>
-  <Icon icon="ant-design:border-horizontal-outlined" :size="size" />
+  <Icon icon="fluent:line-horizontal-1-24-regular" :size="size" />
 </template>
 
 <script lang="ts" setup>
