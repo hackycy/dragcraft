@@ -221,8 +221,6 @@ export type LeftPanelTabKey = 'materials' | 'structure'
  * Return type of useDesigner composable.
  */
 export interface UseDesignerReturn {
-  /** Reactive final document schema, or null after a rejected import. */
-  schema: import('vue').ComputedRef<DocumentSchema | null>
   /** Currently selected node ID (reactive). */
   selectedNodeId: DesignerSelection['selectedNodeId']
   /** Currently hovered node ID (reactive). */

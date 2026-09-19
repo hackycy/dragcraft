@@ -15,7 +15,7 @@ Designer 将每次 Schema 修改作为原子 `AuthoringAction` 执行。只有�
 | `designer.document` | 读取当前文档状态、Schema 与 diagnostics；`status: 'rejected'` 时没有可安装的 schema。 |
 | `designer.selection` | 读取当前 selected 和 hovered 节点。 |
 | `designer.history` | 读取 undo/redo 是否可用及其计数。 |
-| `useDesigner(instance).schema` | 在 Vue 组件中响应 DocumentSchema。 |
+| `useDesigner(instance)` | 在 Vue 组件中读取同一份选择与历史状态，并调用 execute 与导入导出操作。 |
 
 需要保存或传输时调用 `designer.exportSchema()`。不要修改任何只读状态返回的对象。
 

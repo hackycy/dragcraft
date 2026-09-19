@@ -22,7 +22,7 @@ const designer = createDesigner({
 | --- | --- |
 | `createDesigner({ schema?, materials, ... })` | 创建 Next Designer 实例；`materials` 必须提供且可以为空。 |
 | `DcDesigner` | 挂载标准工作台。 |
-| `useDesigner(instance)` | 读取文档、选择、历史以及导入导出操作。 |
+| `useDesigner(instance)` | 读取选择、历史以及导入导出操作。 |
 | `MaterialDefinition` | 聚合一个稳定 `type` 的 Schema、authoring、inspector 与 Presentation。 |
 | `DesignerExtensions` | 扩展面板、物料项和 rail。 |
 | `DesignerDeviceFrame` | `DcDesigner.deviceFrame` 的只读设计态设备外壳定义。 |

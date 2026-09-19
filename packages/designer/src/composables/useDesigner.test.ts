@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { defineComponent } from 'vue'
 import { createDesigner } from '../factory'
 import { useDesigner } from './useDesigner'
 
@@ -14,21 +13,25 @@ function makeSchema() {
 }
 
 describe('useDesigner', () => {
-  it('exports an isolated copy of the session document', () => {
-    const designer = createDesigner({
-      schema: makeSchema(),
-      materials: [{
-        type: 'text',
-        presentation: { kind: 'visual', preview: defineComponent({ setup: () => () => null }) },
-      }],
-    })
-    const { exportSchema, schema } = useDesigner(designer)
-    const exported = exportSchema()
+  it('curries undo and redo through the instance history', () => {
+    const designer = createDesigner({ schema: makeSchema(), materials: [] })
+    const { execute, undo, redo, canUndo, canRedo } = useDesigner(designer)
 
-    exported!.globalConfig.theme = 'dark'
+    expect(canUndo()).toBe(false)
+    expect(canRedo()).toBe(false)
 
-    expect(exported).not.toBe(schema.value)
-    expect(schema.value?.globalConfig).toEqual({ theme: 'light' })
+    execute({ type: 'update-global-config', globalConfig: { theme: 'dark' } })
+    expect(canUndo()).toBe(true)
+    expect(designer.exportSchema()?.globalConfig).toEqual({ theme: 'dark' })
+
+    undo()
+    expect(canUndo()).toBe(false)
+    expect(canRedo()).toBe(true)
+    expect(designer.exportSchema()?.globalConfig).toEqual({ theme: 'light' })
+
+    redo()
+    expect(canRedo()).toBe(false)
+    expect(designer.exportSchema()?.globalConfig).toEqual({ theme: 'dark' })
 
     designer.dispose()
   })

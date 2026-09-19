@@ -1,5 +1,4 @@
 import type { DesignerInstance, UseDesignerReturn } from '../types'
-import { computed } from 'vue'
 
 /**
  * Composable that provides reactive access to designer state and operations.
@@ -8,14 +7,11 @@ import { computed } from 'vue'
  * @example
  * ```ts
  * const designer = createDesigner()
- * const { schema, selectedNodeId, undo, redo } = useDesigner(designer)
+ * const { selectedNodeId, undo, redo } = useDesigner(designer)
  * ```
  */
 export function useDesigner(instance: DesignerInstance): UseDesignerReturn {
-  const schema = computed(() => instance.exportSchema())
-
   return {
-    schema,
     selectedNodeId: instance.selection.selectedNodeId,
     hoveredNodeId: instance.selection.hoveredNodeId,
     execute: instance.execute,
